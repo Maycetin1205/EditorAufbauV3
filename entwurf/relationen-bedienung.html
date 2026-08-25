@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entwurf — Relationen-Bedienung</title>
+<style>
+:root {
+  --rand:#d5d9e0; --rand-stark:#b3bac6; --kopf:#f2f4f7; --bg:#eef1f5;
+  --aktiv:#2563eb; --aktiv-bg:#eaf1ff; --text:#1a1f2b; --muted:#5b6472;
+  --gruen:#15803d; --rot:#b91c1c; --mono:ui-monospace,Consolas,monospace;
+}
+* { box-sizing:border-box; }
+body { margin:0; font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--text); background:var(--bg); padding:20px; }
+h1 { font-size:18px; margin:0 0 2px; }
+.unter { color:var(--muted); font-size:12.5px; margin:0 0 16px; }
+.badge { display:inline-block; background:#fde68a; color:#7c5e00; border-radius:4px; padding:1px 7px; font-size:11.5px; font-weight:600; vertical-align:2px; margin-left:8px; }
+.spalten { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
+.kette { flex:1 1 520px; max-width:680px; }
+.lauf { flex:1 1 300px; max-width:420px; position:sticky; top:16px; }
+
+.tafel { background:#fff; border:1px solid var(--rand-stark); border-radius:8px; box-shadow:0 1px 3px rgba(20,30,50,.08); }
+.tafel-kopf { padding:10px 14px; border-bottom:1px solid var(--rand); background:var(--kopf); border-radius:8px 8px 0 0; font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px; }
+.tafel-rumpf { padding:12px 14px; }
+
+.wenn { display:flex; align-items:center; gap:8px; }
+.wenn select { font-weight:600; }
+
+.schritt { border:1px solid var(--rand-stark); border-radius:8px; background:#fff; margin:0 0 10px; overflow:hidden; }
+.schritt-kopf { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--kopf); border-bottom:1px solid var(--rand); }
+.schritt-nr { font-weight:700; font-size:12.5px; color:var(--muted); min-width:64px; }
+.schritt-kopf select.verb { font-weight:700; color:var(--aktiv); }
+.schritt-kopf .rechts { margin-left:auto; display:flex; gap:4px; }
+.mini { border:1px solid var(--rand-stark); background:#fff; border-radius:5px; width:26px; height:26px; cursor:pointer; font:inherit; line-height:1; color:var(--muted); }
+.mini:hover { background:var(--aktiv-bg); color:var(--text); }
+.mini:disabled { opacity:.35; cursor:default; }
+.mini.loesch:hover { background:#fee2e2; color:var(--rot); }
+
+.schritt-rumpf { padding:10px 12px; display:grid; gap:8px; }
+.zeile { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.zeile label { color:var(--muted); font-size:12.5px; min-width:110px; }
+input[type=text] { font:inherit; border:1px solid var(--rand-stark); border-radius:6px; padding:5px 8px; }
+input[type=text]:focus, select:focus { outline:2px solid var(--aktiv); outline-offset:0; border-color:var(--aktiv); }
+input.schmal { width:90px; }
+select { font:inherit; border:1px solid var(--rand-stark); border-radius:6px; padding:5px 6px; background:#fff; }
+
+.technik-knopf { background:none; border:0; color:var(--muted); font:12px inherit; cursor:pointer; padding:0; text-align:left; }
+.technik-knopf:hover { color:var(--aktiv); }
+.technik { background:#f8fafc; border:1px dashed var(--rand-stark); border-radius:6px; padding:6px 10px; font:12.5px var(--mono); color:var(--muted); }
+.technik b { color:var(--text); font-weight:600; }
+
+.vorschau { border-top:1px solid var(--rand); background:#fbfcfe; padding:7px 12px; font:12.5px var(--mono); color:var(--muted); white-space:pre-wrap; word-break:break-word; }
+.vorschau .verb { color:var(--aktiv); font-weight:700; }
+.vorschau .erg { color:var(--gruen); }
+
+.fuss { display:flex; gap:10px; align-items:center; margin-top:12px; }
+button.gross { font:inherit; padding:8px 14px; border-radius:6px; border:1px solid var(--rand-stark); background:#fff; cursor:pointer; }
+button.gross:hover { background:var(--aktiv-bg); }
+button.haupt { background:var(--aktiv); border-color:var(--aktiv); color:#fff; font-weight:600; }
+button.haupt:hover { background:#1d4fd8; }
+
+.log { font:12.5px var(--mono); padding:4px 0; display:grid; gap:6px; }
+.log-zeile { display:flex; gap:8px; align-items:baseline; }
+.log-zeile .punkt { color:var(--aktiv); }
+.log-zeile .antwort { color:var(--gruen); }
+.log-leer { color:var(--muted); font-size:12.5px; }
+.hinweisklein { color:var(--muted); font-size:11.5px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<h1>Kette bearbeiten <span class="badge">Klick-Entwurf — Beispieldaten, nichts wird gesendet</span></h1>
+<p class="unter">Entwurf für die neue Relationen-Bedienung: Felder wählt man mit Klarnamen, die Technik (Position, Länge, Relations-ID) füllt sich selbst und bleibt einsehbar.</p>
+
+<div class="spalten">
+  <div class="kette">
+    <div class="tafel">
+      <div class="tafel-kopf wenn">
+        Wenn:
+        <select id="ausloeser">
+          <option>Knopf „Speichern" geklickt</option>
+          <option>Zeile in Tabelle „Positionen" gewählt</option>
+          <option>Karte im Kanban verschoben</option>
+          <option>Maske geladen</option>
+        </select>
+      </div>
+      <div class="tafel-rumpf">
+        <div id="schritte"></div>
+        <button class="gross" id="addSchritt" type="button">+ Schritt hinzufügen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lauf">
+    <div class="tafel">
+      <div class="tafel-kopf">Probelauf</div>
+      <div class="tafel-rumpf">
+        <div class="log" id="log"><div class="log-leer">Noch nicht gelaufen. „Probelauf" zeigt, was die Kette der Reihe nach tun würde.</div></div>
+        <div class="fuss">
+          <button class="gross haupt" id="probelauf" type="button">Probelauf</button>
+          <button class="gross" id="logLeeren" type="button">Leeren</button>
+        </div>
+        <div class="hinweisklein">Vorschau — es wird nichts an SoftEngine geschickt.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* Klick-Entwurf. Alles hier ist Attrappe: Felder, Quellen und Antworten sind
+   erfundene Beispieldaten, damit sich die Bedienung echt anfühlt. */
+
+const FELDER = [
+  { name:"Belegnummer",     pos:"26",  len:"12", art:"L", rel:"ID0001" },
+  { name:"Kundenname",      pos:"40",  len:"30", art:"L", rel:"ID0001" },
+  { name:"Termin (Datum)",  pos:"120", len:"10", art:"D", rel:"ID0001" },
+  { name:"Uhrzeit",         pos:"131", len:"5",  art:"Z", rel:"ID0001" },
+  { name:"Menge",           pos:"150", len:"8",  art:"L", rel:"ID0001" },
+  { name:"Bemerkung",       pos:"170", len:"60", art:"L", rel:"ID0001" },
+];
+const ARTNAME = { L:"Text", D:"Datum", Z:"Uhrzeit" };
+const MASKE = [
+  "Eingabefeld „Menge"",
+  "Eingabefeld „Bemerkung"",
+  "Tabelle „Positionen" — gewählte Zeile: Artikelnummer",
+  "Auswahl „Tierart"",
+];
+const VERBEN = ["GET_RELATION","PUT_RELATION","PUTADD_RELATION","START_TOOL"];
+
+const $ = s => document.querySelector(s);
+function esc(x){ return String(x).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[m]); }
+
+let schritte = [
+  neuerSchritt("GET_RELATION"),
+  neuerSchritt("PUT_RELATION"),
+];
+
+function neuerSchritt(verb){
+  return {
+    verb,
+    nr: verb === "GET_RELATION" ? "69" : "174",
+    nummer: "300",                       // nur START_TOOL
+    feld: 0,                             // nur PUT/PUTADD: Index in FELDER
+    wert: { q:"maske", fest:"", maske:0, schritt:0 },
+    params: [ { q:"fest", fest:"0NL26105743", maske:0, schritt:0 } ], // nur GET
+    technikOffen: false,
+  };
+}
+
+/* ---------- Wert-Herkunft (Fester Wert / Feld der Maske / Ergebnis) ---------- */
+
+function wertZeileHtml(w, si, pfad){
+  const vorher = schritte.slice(0, si);
+  const schrittOpts = vorher.map((s, i) =>
+    `<option value="${i}" ${w.q==="schritt" && w.schritt===i ? "selected":""}>Ergebnis von Schritt ${i+1}</option>`).join("");
+  let rechts = "";
+  if (w.q === "fest")
+    rechts = `<input type="text" data-p="${pfad}.fest" value="${esc(w.fest)}" placeholder="fester Wert">`;
+  else if (w.q === "maske")
+    rechts = `<select data-p="${pfad}.maske">` +
+      MASKE.map((m,i)=>`<option value="${i}" ${w.maske===i?"selected":""}>${esc(m)}</option>`).join("") + `</select>`;
+  else
+    rechts = vorher.length
+      ? `<select data-p="${pfad}.schritt">${schrittOpts}</select>`
+      : `<span style="color:var(--muted);font-size:12.5px">— kein früherer Schritt vorhanden —</span>`;
+  return `<select data-p="${pfad}.q">
+      <option value="fest"    ${w.q==="fest"?"selected":""}>Fester Wert</option>
+      <option value="maske"   ${w.q==="maske"?"selected":""}>Feld der Maske</option>
+      <option value="schritt" ${w.q==="schritt"?"selected":""}>Ergebnis eines Schritts</option>
+    </select> ${rechts}`;
+}
+
+function wertText(w, si){
+  if (w.q === "fest")   return w.fest === "" ? "„"" : "„" + w.fest + "";
+  if (w.q === "maske")  return "{" + MASKE[w.maske] + "}";
+  return si > 0 ? "Ergebnis von Schritt " + (Math.min(w.schritt, si-1) + 1) : "—";
+}
+
+/* ---------- Schritt-Karten ---------- */
+
+function schrittHtml(s, i){
+  const verbSel = `<select class="verb" data-p="${i}.verb">` +
+    VERBEN.map(v=>`<option ${v===s.verb?"selected":""}>${v}</option>`).join("") + `</select>`;
+
+  let rumpf = "";
+  if (s.verb === "START_TOOL") {
+    rumpf = `<div class="zeile"><label>Werkzeug-Nummer</label>
+      <input type="text" class="schmal" data-p="${i}.nummer" value="${esc(s.nummer)}"></div>`;
+  }
+  else if (s.verb === "GET_RELATION") {
+    const params = s.params.map((p, pi) => `
+      <div class="zeile"><label>Parameter ${pi+1}</label>
+        ${wertZeileHtml(p, i, i + ".params." + pi)}
+        <button class="mini loesch" type="button" data-act="paramWeg" data-i="${i}" data-pi="${pi}" title="Parameter entfernen">×</button>
+      </div>`).join("");
+    rumpf = `<div class="zeile"><label>Relation NR</label>
+        <input type="text" class="schmal" data-p="${i}.nr" value="${esc(s.nr)}"></div>
+      ${params}
+      <div class="zeile"><label></label>
+        <button class="gross" type="button" data-act="paramDazu" data-i="${i}">+ Parameter</button></div>
+      <div class="zeile"><label></label>
+        <span style="color:var(--gruen);font-size:12.5px">Antwort steht danach als „Ergebnis von Schritt ${i+1}" bereit.</span></div>`;
+  }
+  else { // PUT_RELATION / PUTADD_RELATION
+    const f = FELDER[s.feld];
+    const feldSel = `<select data-p="${i}.feld">` +
+      FELDER.map((x,xi)=>`<option value="${xi}" ${xi===s.feld?"selected":""}>${esc(x.name)}</option>`).join("") + `</select>`;
+    const technik = s.technikOffen
+      ? `<div class="technik">Position <b>${f.pos}</b> · Länge <b>${f.len}</b> · Art <b>${f.art}</b> (${ARTNAME[f.art]}) · Satz <b>gewählte Zeile</b> · Relation <b>${f.rel}</b> — füllt sich aus dem gewählten Feld, hier nichts zu tippen</div>`
+      : "";
+    rumpf = `<div class="zeile"><label>Relation NR</label>
+        <input type="text" class="schmal" data-p="${i}.nr" value="${esc(s.nr)}"></div>
+      <div class="zeile"><label>Feld (Klarname)</label>${feldSel}</div>
+      <div class="zeile"><label>Neuer Wert</label>${wertZeileHtml(s.wert, i, i + ".wert")}</div>
+      <div class="zeile"><label></label>
+        <button class="technik-knopf" type="button" data-act="technik" data-i="${i}">${s.technikOffen ? "▾ Technik ausblenden" : "▸ Technik anzeigen"}</button></div>
+      ${technik}`;
+  }
+
+  return `<div class="schritt" data-schritt="${i}">
+    <div class="schritt-kopf">
+      <span class="schritt-nr">Schritt ${i+1}</span>
+      ${verbSel}
+      <span class="rechts">
+        <button class="mini" type="button" data-act="hoch"   data-i="${i}" ${i===0?"disabled":""} title="nach oben">↑</button>
+        <button class="mini" type="button" data-act="runter" data-i="${i}" ${i===schritte.length-1?"disabled":""} title="nach unten">↓</button>
+        <button class="mini loesch" type="button" data-act="weg" data-i="${i}" title="Schritt löschen">×</button>
+      </span>
+    </div>
+    <div class="schritt-rumpf">${rumpf}</div>
+    <div class="vorschau">${vorschauHtml(s, i)}</div>
+  </div>`;
+}
+
+function vorschauHtml(s, i){
+  if (s.verb === "START_TOOL")
+    return `<span class="verb">START_TOOL</span>[${esc(s.nummer)}]`;
+  if (s.verb === "GET_RELATION"){
+    const p = s.params.map(x=>esc(wertText(x, i))).join(", ");
+    return `<span class="verb">GET_RELATION</span>[${esc(s.nr)}] · Parameter: ${p || "—"} <span class="erg">→ Ergebnis von Schritt ${i+1}</span>`;
+  }
+  const f = FELDER[s.feld];
+  return `<span class="verb">${s.verb}</span>[${esc(s.nr)}] · ${esc(f.name)} ← ${esc(wertText(s.wert, i))}`;
+}
+
+/* ---------- Zeichnen + Ereignisse ---------- */
+
+function zeichne(){
+  $("#schritte").innerHTML = schritte.map(schrittHtml).join("");
+}
+
+function setzePfad(pfad, wert){
+  // Pfad wie "2.wert.q" oder "1.params.0.fest" oder "0.nr"
+  const teile = pfad.split(".");
+  const s = schritte[Number(teile[0])];
+  if (!s) return;
+  if (teile[1] === "wert")        s.wert[teile[2]] = teile[2]==="fest" ? wert : (teile[2]==="q" ? wert : Number(wert));
+  else if (teile[1] === "params") { const p = s.params[Number(teile[2])]; if (p) p[teile[3]] = teile[3]==="fest" ? wert : (teile[3]==="q" ? wert : Number(wert)); }
+  else if (teile[1] === "feld")   s.feld = Number(wert);
+  else                            s[teile[1]] = wert;
+}
+
+document.addEventListener("change", ev => {
+  const p = ev.target.getAttribute && ev.target.getAttribute("data-p");
+  if (!p) return;
+  setzePfad(p, ev.target.value);
+  zeichne();
+});
+document.addEventListener("input", ev => {
+  const p = ev.target.getAttribute && ev.target.getAttribute("data-p");
+  if (!p || ev.target.tagName !== "INPUT") return;
+  setzePfad(p, ev.target.value);
+  const karte = ev.target.closest(".schritt");
+  if (karte){ const i = Number(karte.getAttribute("data-schritt"));
+    karte.querySelector(".vorschau").innerHTML = vorschauHtml(schritte[i], i); }
+});
+document.addEventListener("click", ev => {
+  const k = ev.target.closest("[data-act]");
+  if (!k) return;
+  const act = k.getAttribute("data-act"), i = Number(k.getAttribute("data-i"));
+  if (act === "weg")      schritte.splice(i, 1);
+  if (act === "hoch"   && i > 0)                  [schritte[i-1], schritte[i]] = [schritte[i], schritte[i-1]];
+  if (act === "runter" && i < schritte.length-1)  [schritte[i+1], schritte[i]] = [schritte[i], schritte[i+1]];
+  if (act === "technik")  schritte[i].technikOffen = !schritte[i].technikOffen;
+  if (act === "paramDazu") schritte[i].params.push({ q:"fest", fest:"", maske:0, schritt:0 });
+  if (act === "paramWeg")  schritte[i].params.splice(Number(k.getAttribute("data-pi")), 1);
+  zeichne();
+});
+$("#addSchritt").addEventListener("click", () => { schritte.push(neuerSchritt("PUT_RELATION")); zeichne(); });
+
+/* ---------- Probelauf (Attrappe) ---------- */
+
+$("#probelauf").addEventListener("click", () => {
+  const log = $("#log");
+  log.innerHTML = "";
+  if (!schritte.length){ log.innerHTML = '<div class="log-leer">Die Kette hat keine Schritte.</div>'; return; }
+  const zeilen = [];
+  zeilen.push(`Auslöser: ${esc($("#ausloeser").value)}`);
+  schritte.forEach((s, i) => {
+    if (s.verb === "START_TOOL")
+      zeilen.push(`Schritt ${i+1} · START_TOOL ${esc(s.nummer)} … <span class="antwort">Werkzeug gestartet</span>`);
+    else if (s.verb === "GET_RELATION")
+      zeilen.push(`Schritt ${i+1} · GET_RELATION ${esc(s.nr)} … <span class="antwort">Antwort: „21" (Beispiel)</span>`);
+    else {
+      const f = FELDER[s.feld];
+      zeilen.push(`Schritt ${i+1} · ${s.verb} ${esc(s.nr)} · ${esc(f.name)} = ${esc(wertText(s.wert, i))} … <span class="antwort">OK</span>`);
+    }
+  });
+  zeilen.push(`Fertig — das war eine Vorschau, gesendet wurde nichts.`);
+  let n = 0;
+  const timer = setInterval(() => {
+    if (n >= zeilen.length){ clearInterval(timer); return; }
+    const div = document.createElement("div");
+    div.className = "log-zeile";
+    div.innerHTML = `<span class="punkt">●</span><span>${zeilen[n]}</span>`;
+    log.appendChild(div);
+    n++;
+  }, 160);
+});
+$("#logLeeren").addEventListener("click", () => {
+  $("#log").innerHTML = '<div class="log-leer">Noch nicht gelaufen. „Probelauf" zeigt, was die Kette der Reihe nach tun würde.</div>';
+});
+
+zeichne();
+</script>
+</body>
+</html>

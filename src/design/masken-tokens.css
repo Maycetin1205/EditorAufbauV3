@@ -1,0 +1,66 @@
+:root {
+
+  --se-bg:        #fbf5ea;
+  --se-panel:     #fffdf8;
+  --se-panel-2:   #f3eada;
+
+  --se-ink:       #3d2b22;
+  --se-muted:     #7a6558;
+  --se-faint:     #a99a8d;
+
+  --se-line:      #e9dec9;
+  --se-line-soft: #f1e8d6;
+
+  --se-scrim:     rgba(61, 43, 34, 0.45);
+
+  --se-accent:      #e85c3f;
+  --se-accent-dark: #c74628;
+  --se-accent-soft: #fbe5dc;
+
+  --se-red:         #c74628;
+  --se-red-soft:    #fef2ee;
+  --se-amber:       #e2a233;
+  --se-amber-soft:  #faedd0;
+  --se-blue:        #5e93be;
+  --se-blue-soft:   #e2edf5;
+  --se-violet:      #9784c1;
+  --se-violet-soft: #ece7f4;
+  --se-green:       #6e9b69;
+  --se-green-soft:  #e5eede;
+
+  --se-red-shell:   #fef7f4;  --se-red-line:   #f3d3c7;
+  --se-amber-shell: #fdf8ec;  --se-amber-line: #eeddb9;
+  --se-blue-shell:  #f5f9fc;  --se-blue-line:  #d2e2ee;
+  --se-green-shell: #f7faf3;  --se-green-line: #d8e5cf;
+
+  --se-card-bg:     #fffdf8;
+  --se-card-line:   #e9dec9;
+
+  --se-border: 1.5px;
+
+  --se-r-sm:   3px;
+  --se-r-md:   5px;
+  --se-r-lg:   7px;
+
+  --se-font: "Figtree", "Segoe UI", Tahoma, sans-serif;
+  --se-font-schmuck: Georgia, "Times New Roman", serif;
+  --se-mono: "IBM Plex Mono", Consolas, monospace;
+  --se-fs:    13.5px;
+  --se-fs-sm: 12px;
+  --se-fs-xs: 10.5px;
+  --se-fs-lg: 15px;
+
+  --se-lh: 1.55;
+
+  --se-gap-sm: 6px;
+  --se-gap:    10px;
+  --se-gap-lg: 16px;
+
+  --se-move: 130ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --se-move: 0ms;
+  }
+}

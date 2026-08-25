@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+:root{
+  /* ── Farben (digitail.com) ─────────────────────────── */
+  --c-bg:#F4FAFB; --c-surface:#FFFFFF;
+  --c-ink:#112337; --c-ink-2:#46586C; --c-ink-3:#7C8CA0;
+  --c-primary:#00778F; --c-primary-hover:#00647A; --c-primary-active:#00515F;
+  --c-aqua:#A8E8F1; --c-tint:#E8F6F9; --c-tint-2:#F6FBFC; --c-selected:#D3EEF5;
+  --c-border:#DCE8EC; --c-border-strong:#AFC7D0;
+  --c-focus:#0095B3; --c-focus-glow:rgba(0,149,179,.30);
+  --c-auto:#0B5E71;
+  --c-ok:#1F7A4D; --c-ok-bg:#E2F3EA;
+  --c-warn:#8A5A00; --c-warn-bg:#FBF0DA;
+  --c-err:#B3261E; --c-err-bg:#FBE9E8;
+  --c-statusbar:#112337; --c-statusbar-text:#C9DDE6;
+  /* ── Typografie: Poppins wie digitail.com, geometrische Fallbacks ── */
+  --font-ui:"Poppins","Poppins Regular","Century Gothic","Avenir Next","Avenir",Futura,"Trebuchet MS","Segoe UI",sans-serif;
+  --font-mono:"Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+  --fs-10:10.5px; --fs-11:11px; --fs-12:12.5px; --fs-13:13px; --fs-15:15px; --fs-18:18px; --fs-26:26px;
+  /* ── Abstände ── */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  /* ── Radien (digitail: stark gerundet, Pill-Buttons) ── */
+  --r-s:6px; --r-m:10px; --r-l:18px; --r-pill:999px;
+  /* ── Schatten ── */
+  --sh-1:0 1px 2px rgba(17,35,55,.05),0 6px 16px rgba(17,35,55,.07);
+  --sh-2:0 2px 6px rgba(17,35,55,.10),0 12px 32px rgba(17,35,55,.14);
+  --sh-pop:0 8px 24px rgba(17,35,55,.18);
+  --sh-focus:inset 0 0 0 2px var(--c-focus),0 0 0 3px var(--c-focus-glow);
+  /* ── Tabelle ── */
+  --row-h:30px; --row-h-head:34px;
+  --cols-beleg:34px 88px minmax(210px,1fr) 60px 78px 100px 82px 150px 92px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--c-bg);color:var(--c-ink);font-family:var(--font-ui);font-size:var(--fs-13)}
+a{color:var(--c-primary)} a:hover{color:var(--c-primary-hover)}
+button{font-family:var(--font-ui)}
+</style>
+</helmet>
+<div style="max-width:1380px;margin:0 auto;padding:var(--sp-7) var(--sp-6) 96px">
+
+  <header style="margin-bottom:var(--sp-6)">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--c-aqua);color:var(--c-ink);border-radius:var(--r-pill);padding:5px 14px;font-size:var(--fs-11);font-weight:600;letter-spacing:.04em;margin-bottom:var(--sp-3)">DESIGN-MUSTERBOGEN · NUR OPTIK, KEINE FUNKTION</div>
+    <h1 style="margin:0;font-size:var(--fs-26);font-weight:700;letter-spacing:-.01em">ERP-Belegerfassung</h1>
+    <p style="margin:var(--sp-2) 0 0;color:var(--c-ink-2);font-size:var(--fs-13);max-width:74ch">Desktop, Bedienung primär per Tastatur. Designsprache nach digitail.com: Poppins, Teal auf Navy, Aqua-Tönungen, starke Rundungen, weiche Schatten. Beispieldaten: Baytril 2,5 % (Enrofloxacin), Tierart Rind, Dosierung 2,5–5 mg/kg subkutan.</p>
+  </header>
+
+  <section>
+    <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">0 · Gestaltungswerte</h2>
+    <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Alle Farben, Schriftgrößen, Abstände, Radien und Schatten zentral als CSS-Variablen. Schrift: Poppins (lokal), Fallback Century Gothic / Futura — keine nachgeladenen Ressourcen.</p>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:var(--sp-4)">
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4)">
+        <div style="font-family:var(--font-mono);font-size:var(--fs-10);letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink-3);margin-bottom:var(--sp-3)">Farben</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-2)">
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-primary)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">primary #00778F</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-aqua)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">aqua #A8E8F1</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-ink)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">ink #112337</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-focus)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">focus #0095B3</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-tint);border:1px solid var(--c-border)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">tint #E8F6F9</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-selected);border:1px solid var(--c-border)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">selected #D3EEF5</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-ok)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">ok #1F7A4D</div></div>
+          <div><div style="height:34px;border-radius:var(--r-s);background:var(--c-err)"></div><div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-2);margin-top:3px">err #B3261E</div></div>
+        </div>
+      </div>
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4)">
+        <div style="font-family:var(--font-mono);font-size:var(--fs-10);letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink-3);margin-bottom:var(--sp-3)">Typografie · Poppins</div>
+        <div style="display:flex;flex-direction:column;gap:var(--sp-2)">
+          <div style="font-size:var(--fs-26);font-weight:700;line-height:1.15;letter-spacing:-.01em">Titel 26</div>
+          <div style="font-size:var(--fs-15);font-weight:700">Abschnitt 15 fett</div>
+          <div style="font-size:var(--fs-13)">Oberfläche 13</div>
+          <div style="font-size:var(--fs-12)">Tabelle 12,5 · <span style="font-variant-numeric:tabular-nums">1.234,50 €</span></div>
+          <div style="font-family:var(--font-mono);font-size:var(--fs-11);color:var(--c-ink-3)">MONO 11 · BESCHRIFTUNG</div>
+        </div>
+      </div>
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4)">
+        <div style="font-family:var(--font-mono);font-size:var(--fs-10);letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink-3);margin-bottom:var(--sp-3)">Radien · Schatten · Abstände</div>
+        <div style="display:flex;gap:var(--sp-3);align-items:flex-end;margin-bottom:var(--sp-4)">
+          <div style="width:44px;height:34px;border:1px solid var(--c-border-strong);border-radius:var(--r-s)"></div>
+          <div style="width:44px;height:34px;border:1px solid var(--c-border-strong);border-radius:var(--r-m)"></div>
+          <div style="width:44px;height:34px;border:1px solid var(--c-border-strong);border-radius:var(--r-l)"></div>
+          <div style="width:60px;height:28px;border:1px solid var(--c-border-strong);border-radius:var(--r-pill)"></div>
+          <div style="width:44px;height:34px;background:var(--c-surface);border-radius:var(--r-m);box-shadow:var(--sh-1)"></div>
+          <div style="width:44px;height:34px;background:var(--c-surface);border-radius:var(--r-m);box-shadow:var(--sh-2)"></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:var(--sp-2)">
+          <div style="width:var(--sp-1);height:14px;background:var(--c-aqua)"></div>
+          <div style="width:var(--sp-2);height:14px;background:var(--c-aqua)"></div>
+          <div style="width:var(--sp-3);height:14px;background:var(--c-aqua)"></div>
+          <div style="width:var(--sp-4);height:14px;background:var(--c-aqua)"></div>
+          <div style="width:var(--sp-5);height:14px;background:var(--c-aqua)"></div>
+          <div style="width:var(--sp-6);height:14px;background:var(--c-aqua)"></div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3)">4 · 8 · 12 · 16 · 24 · 32</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:var(--sp-7)">
+    <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">1 · Datentabelle — ERP-Dichte</h2>
+    <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Zeilenhöhe 30 px, Zahlen rechtsbündig mit Tabellenziffern. Zustände am linken Rand beschriftet.</p>
+    <div style="padding-left:170px">
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1)">
+
+        <div style="position:relative;display:flex;align-items:center;gap:var(--sp-3);height:46px;padding:0 var(--sp-3)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Suchzeile</span>
+          <div style="display:flex;align-items:center;gap:var(--sp-2);width:320px;height:30px;border:1px solid var(--c-border-strong);border-radius:var(--r-pill);padding:0 12px;background:var(--c-surface)">
+            <span style="color:var(--c-ink-3);font-size:var(--fs-12)">⌕</span>
+            <span style="font-size:var(--fs-12)">baytril</span>
+          </div>
+          <span style="font-size:var(--fs-11);color:var(--c-ink-2)">2 Treffer</span>
+          <div style="display:flex;gap:var(--sp-2);align-items:center;font-size:var(--fs-11);color:var(--c-ink-2);margin-left:auto">
+            <span style="font-family:var(--font-mono);font-size:10px;border:1px solid var(--c-border);border-radius:4px;padding:1px 5px;background:var(--c-tint-2)">F3</span><span>Suche</span>
+            <span style="font-family:var(--font-mono);font-size:10px;border:1px solid var(--c-border);border-radius:4px;padding:1px 5px;background:var(--c-tint-2)">Einfg</span><span>Neue Zeile</span>
+            <span style="font-family:var(--font-mono);font-size:10px;border:1px solid var(--c-border);border-radius:4px;padding:1px 5px;background:var(--c-tint-2)">F5</span><span>Buchen</span>
+          </div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h-head);background:var(--c-tint);border-top:1px solid var(--c-border)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Kopfzeile</span>
+          <div></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Art.-Nr.</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Bezeichnung</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Menge</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Tierart</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Dosierung</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Tieranzahl</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Art der Verabreichung</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Rohertrag</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h);border-top:1px solid var(--c-border);background:var(--c-surface)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Zeile gerade · gebucht</span>
+          <div style="display:flex;align-items:center;justify-content:center"><span title="gebucht" style="width:8px;height:8px;border-radius:50%;background:var(--c-ok)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100421</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 100 ml</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">2</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Rind</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">5 mg/kg</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">3</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">subkutan</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">24,80 €</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h);border-top:1px solid var(--c-border);background:var(--c-tint-2)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Zeile ungerade · gebucht</span>
+          <div style="display:flex;align-items:center;justify-content:center"><span title="gebucht" style="width:8px;height:8px;border-radius:50%;background:var(--c-ok)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100420</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 50 ml</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">1</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Kalb</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">2,5 mg/kg</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">1</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">subkutan</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">13,10 €</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h);border-top:1px solid var(--c-border);background:var(--c-tint)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Zeile unter der Maus</span>
+          <div style="display:flex;align-items:center;justify-content:center"><span title="erfasst" style="width:8px;height:8px;border-radius:50%;background:var(--c-warn)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100421</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 100 ml</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">4</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Rind</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">5 mg/kg</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">6</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">subkutan</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">49,60 €</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h);border-top:1px solid var(--c-border);background:var(--c-selected);box-shadow:inset 3px 0 0 var(--c-primary)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">gewählte Zeile</span>
+          <div style="display:flex;align-items:center;justify-content:center"><span title="erfasst" style="width:8px;height:8px;border-radius:50%;background:var(--c-warn)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100420</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 50 ml</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">2</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Kalb</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">2,5 mg/kg</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">2</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">subkutan</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">26,20 €</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h);border-top:1px solid var(--c-border);background:var(--c-selected);box-shadow:inset 3px 0 0 var(--c-primary)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">aktive Zelle · Fokus</span>
+          <div style="display:flex;align-items:center;justify-content:center"><span title="erfasst" style="width:8px;height:8px;border-radius:50%;background:var(--c-warn)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100421</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 100 ml</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">1</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Rind</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);background:var(--c-surface);box-shadow:var(--sh-focus);border-radius:3px;position:relative;z-index:1">5 mg/kg<span style="display:inline-block;width:1.5px;height:15px;background:var(--c-focus);margin-left:2px"></span></div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">2</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">subkutan</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">12,40 €</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:var(--row-h);border-top:1px solid var(--c-border);background:var(--c-surface)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Zeile mit Fehler-Marke</span>
+          <div style="display:flex;align-items:center;justify-content:center"><span title="Fehler" style="width:8px;height:8px;border-radius:50%;background:var(--c-err);box-shadow:0 0 0 3px var(--c-err-bg)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100421</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 100 ml <span style="margin-left:8px;color:var(--c-err);font-size:var(--fs-11)">Bestand unterschritten</span></div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums;color:var(--c-err);font-weight:600">12</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Rind</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">5 mg/kg</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">12</div>
+          <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">subkutan</div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);color:var(--c-ink-3)">–</div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:var(--cols-beleg);height:38px;border-top:2px solid var(--c-border-strong);background:var(--c-tint-2)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Erfassungszeile (Tipp-Zeile)</span>
+          <div style="display:flex;align-items:center;justify-content:center;color:var(--c-primary);font-weight:700">+</div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;height:26px;padding:0 8px;border-radius:var(--r-s);background:var(--c-surface);box-shadow:var(--sh-focus);font-size:var(--fs-12);font-variant-numeric:tabular-nums">1004<span style="display:inline-block;width:1.5px;height:14px;background:var(--c-focus);margin-left:1px"></span></span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-tint);font-size:var(--fs-12);color:var(--c-auto);font-style:italic;white-space:nowrap;overflow:hidden">Baytril 2,5% 100 ml</span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;justify-content:flex-end;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);color:var(--c-ink-3)">0</span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-tint);font-size:var(--fs-12);color:var(--c-auto);font-style:italic">Rind</span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);color:var(--c-ink-3)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;justify-content:flex-end;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);color:var(--c-ink-3)">0</span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);color:var(--c-ink-3)"></span></div>
+          <div style="display:flex;align-items:center;padding:0 4px"><span style="flex:1;display:flex;align-items:center;justify-content:flex-end;height:26px;padding:0 8px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);color:var(--c-ink-3)">0,00 €</span></div>
+        </div>
+
+        <div style="position:relative;display:flex;align-items:center;justify-content:space-between;height:40px;padding:0 var(--sp-3);background:var(--c-tint);border-top:1px solid var(--c-border);border-radius:0 0 var(--r-l) var(--r-l)">
+          <span style="position:absolute;left:-170px;top:50%;transform:translateY(-50%);width:156px;text-align:right;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3)">Fußzeile · Blättern</span>
+          <span style="font-size:var(--fs-11);color:var(--c-ink-2);font-variant-numeric:tabular-nums">Zeilen 1–6 von 6 · Summe Rohertrag: <strong style="color:var(--c-ink)">126,10 €</strong></span>
+          <div style="display:flex;align-items:center;gap:var(--sp-2)">
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3)">BILD ↑ / BILD ↓</span>
+            <button style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--c-border-strong);border-radius:var(--r-pill);background:var(--c-surface);color:var(--c-ink-3);cursor:default;font-size:var(--fs-12)">«</button>
+            <button style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--c-border-strong);border-radius:var(--r-pill);background:var(--c-surface);color:var(--c-ink);cursor:pointer;font-size:var(--fs-12)" style-hover="background:var(--c-tint-2)">‹</button>
+            <span style="font-size:var(--fs-11);color:var(--c-ink-2);font-variant-numeric:tabular-nums">Seite 1 / 1</span>
+            <button style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--c-border-strong);border-radius:var(--r-pill);background:var(--c-surface);color:var(--c-ink);cursor:pointer;font-size:var(--fs-12)" style-hover="background:var(--c-tint-2)">›</button>
+            <button style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--c-border-strong);border-radius:var(--r-pill);background:var(--c-surface);color:var(--c-ink);cursor:pointer;font-size:var(--fs-12)" style-hover="background:var(--c-tint-2)">»</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:var(--sp-7)">
+    <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">2 · Erfassungszeile — Zell-Zustände</h2>
+    <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Selbst getippte Werte aufrecht in Navy; automatisch gefüllte Werte kursiv in Teal auf Aqua-Tönung.</p>
+    <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4);display:flex;gap:var(--sp-5);flex-wrap:wrap">
+      <div style="width:190px">
+        <span style="display:flex;align-items:center;height:28px;padding:0 9px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);color:var(--c-ink-3)">Art.-Nr. …</span>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-top:6px">leer · Platzhalter</div>
+      </div>
+      <div style="width:190px">
+        <span style="display:flex;align-items:center;height:28px;padding:0 9px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-surface);font-size:var(--fs-12);font-variant-numeric:tabular-nums">100421</span>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-top:6px">gefüllt · selbst getippt</div>
+      </div>
+      <div style="width:190px">
+        <span style="display:flex;align-items:center;height:28px;padding:0 9px;border:1px solid var(--c-border);border-radius:var(--r-s);background:var(--c-tint);font-size:var(--fs-12);color:var(--c-auto);font-style:italic">Baytril 2,5% 100 ml</span>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-top:6px">automatisch gefüllt</div>
+      </div>
+      <div style="width:190px">
+        <span style="display:flex;align-items:center;height:28px;padding:0 9px;border-radius:var(--r-s);background:var(--c-surface);box-shadow:var(--sh-focus);font-size:var(--fs-12);font-variant-numeric:tabular-nums">5<span style="display:inline-block;width:1.5px;height:14px;background:var(--c-focus);margin-left:1px"></span></span>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-top:6px">fokussiert · Einfügemarke</div>
+      </div>
+      <div style="width:190px">
+        <span style="display:flex;align-items:center;height:28px;padding:0 9px;border-radius:var(--r-s);background:var(--c-tint);box-shadow:var(--sh-focus);font-size:var(--fs-12);color:var(--c-auto);font-style:italic">Rind</span>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-top:6px">fokussiert · Wert übernommen</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:var(--sp-7)">
+    <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">3 · Vorschlagsliste an einer Zelle</h2>
+    <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Hauptwert links, Bezeichnung als graue Zweitinfo. Öffnet je nach Platz nach unten oder oben.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4)">
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4)">
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-bottom:var(--sp-3)">öffnet nach unten</div>
+        <div style="width:260px">
+          <span style="display:flex;align-items:center;height:28px;padding:0 9px;border-radius:var(--r-s) var(--r-s) 0 0;background:var(--c-surface);box-shadow:var(--sh-focus);font-size:var(--fs-12)">bay<span style="display:inline-block;width:1.5px;height:14px;background:var(--c-focus);margin-left:1px"></span></span>
+          <div style="border:1px solid var(--c-border);border-radius:0 0 var(--r-m) var(--r-m);background:var(--c-surface);box-shadow:var(--sh-pop);overflow:hidden">
+            <div style="display:flex;align-items:baseline;gap:8px;padding:6px 10px"><span style="font-size:var(--fs-12);font-weight:600;font-variant-numeric:tabular-nums">100420</span><span style="font-size:var(--fs-11);color:var(--c-ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 50 ml</span></div>
+            <div style="display:flex;align-items:baseline;gap:8px;padding:6px 10px;background:var(--c-selected);box-shadow:inset 3px 0 0 var(--c-primary)"><span style="font-size:var(--fs-12);font-weight:600;font-variant-numeric:tabular-nums">100421</span><span style="font-size:var(--fs-11);color:var(--c-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Baytril 2,5% 100 ml</span></div>
+            <div style="padding:5px 10px;border-top:1px solid var(--c-border);background:var(--c-tint-2);font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3)">↑↓ WÄHLEN · ENTER ÜBERNEHMEN</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4);display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="width:260px">
+          <div style="border:1px solid var(--c-border);border-radius:var(--r-m) var(--r-m) 0 0;background:var(--c-surface);box-shadow:var(--sh-pop);overflow:hidden">
+            <div style="padding:5px 10px;border-bottom:1px solid var(--c-border);background:var(--c-tint-2);font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3)">↑↓ WÄHLEN · ENTER ÜBERNEHMEN</div>
+            <div style="display:flex;align-items:baseline;gap:8px;padding:6px 10px;background:var(--c-selected);box-shadow:inset 3px 0 0 var(--c-primary)"><span style="font-size:var(--fs-12);font-weight:600">Rind</span><span style="font-size:var(--fs-11);color:var(--c-ink-2)">lebensmittelliefernd</span></div>
+            <div style="display:flex;align-items:baseline;gap:8px;padding:6px 10px"><span style="font-size:var(--fs-12);font-weight:600">Kalb</span><span style="font-size:var(--fs-11);color:var(--c-ink-3)">Rind bis 6 Monate</span></div>
+          </div>
+          <span style="display:flex;align-items:center;height:28px;padding:0 9px;border-radius:0 0 var(--r-s) var(--r-s);background:var(--c-surface);box-shadow:var(--sh-focus);font-size:var(--fs-12)">ri<span style="display:inline-block;width:1.5px;height:14px;background:var(--c-focus);margin-left:1px"></span></span>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-top:var(--sp-3)">öffnet nach oben · Platz unten fehlt</div>
+      </div>
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4)">
+        <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;color:var(--c-ink-3);margin-bottom:var(--sp-3)">kein Treffer</div>
+        <div style="width:260px">
+          <span style="display:flex;align-items:center;height:28px;padding:0 9px;border-radius:var(--r-s) var(--r-s) 0 0;background:var(--c-surface);box-shadow:var(--sh-focus);font-size:var(--fs-12)">baytrill<span style="display:inline-block;width:1.5px;height:14px;background:var(--c-focus);margin-left:1px"></span></span>
+          <div style="border:1px solid var(--c-border);border-radius:0 0 var(--r-m) var(--r-m);background:var(--c-surface);box-shadow:var(--sh-pop)">
+            <div style="padding:10px;font-size:var(--fs-12);color:var(--c-ink-3);font-style:italic">Kein Treffer</div>
+            <div style="padding:5px 10px;border-top:1px solid var(--c-border);background:var(--c-tint-2);font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3)">ESC SCHLIESST · F4 NACHSCHLAGEN</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:var(--sp-7)">
+    <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">4 · Nachschlage-Fenster</h2>
+    <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Dialog über abgedunkelter Fläche, Aufruf mit F4 aus der Zelle.</p>
+    <div style="position:relative;border-radius:var(--r-l);overflow:hidden;background:rgba(17,35,55,.45);padding:var(--sp-6);display:flex;justify-content:center">
+      <div style="width:640px;background:var(--c-surface);border-radius:var(--r-l);box-shadow:var(--sh-2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-4) var(--sp-4) var(--sp-3)">
+          <div style="font-size:var(--fs-15);font-weight:700">Artikel nachschlagen</div>
+          <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-pill);color:var(--c-ink-3);border:1px solid var(--c-border)">✕</span>
+        </div>
+        <div style="padding:0 var(--sp-4) var(--sp-3)">
+          <div style="display:flex;align-items:center;gap:var(--sp-2);height:32px;border-radius:var(--r-pill);padding:0 12px;background:var(--c-surface);box-shadow:var(--sh-focus)">
+            <span style="color:var(--c-ink-3)">⌕</span>
+            <span style="font-size:var(--fs-12)">baytril</span><span style="display:inline-block;width:1.5px;height:14px;background:var(--c-focus)"></span>
+          </div>
+        </div>
+        <div style="margin:0 var(--sp-4);border:1px solid var(--c-border);border-radius:var(--r-m);overflow:hidden">
+          <div style="display:grid;grid-template-columns:90px 1fr 90px;height:28px;background:var(--c-tint)">
+            <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Art.-Nr.</div>
+            <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Bezeichnung</div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-10);font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--c-ink-2)">Bestand</div>
+          </div>
+          <div style="display:grid;grid-template-columns:90px 1fr 90px;height:28px;border-top:1px solid var(--c-border)">
+            <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">100420</div>
+            <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12)">Baytril 2,5% 50 ml</div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-variant-numeric:tabular-nums">14</div>
+          </div>
+          <div style="display:grid;grid-template-columns:90px 1fr 90px;height:28px;border-top:1px solid var(--c-border);background:var(--c-selected);box-shadow:inset 3px 0 0 var(--c-primary)">
+            <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-weight:600;font-variant-numeric:tabular-nums">100421</div>
+            <div style="display:flex;align-items:center;padding:0 10px;font-size:var(--fs-12);font-weight:600">Baytril 2,5% 100 ml</div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;padding:0 10px;font-size:var(--fs-12);font-weight:600;font-variant-numeric:tabular-nums">6</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-4)">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3)">ENTER ÜBERNEHMEN · ESC ABBRECHEN</span>
+          <div style="display:flex;gap:var(--sp-2)">
+            <button style="height:34px;padding:0 20px;border-radius:var(--r-pill);border:1px solid var(--c-border-strong);background:var(--c-surface);color:var(--c-ink);font-size:var(--fs-12);font-weight:600;cursor:pointer" style-hover="background:var(--c-tint-2)">Abbrechen</button>
+            <button style="height:34px;padding:0 22px;border-radius:var(--r-pill);border:none;background:var(--c-primary);color:#fff;font-size:var(--fs-12);font-weight:600;cursor:pointer;box-shadow:0 0 0 3px var(--c-focus-glow)" style-hover="background:var(--c-primary-hover)">Übernehmen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:var(--sp-7);display:grid;grid-template-columns:1.3fr 1fr;gap:var(--sp-4)">
+    <div>
+      <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">5 · Schaltflächen</h2>
+      <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Pill-Form wie digitail.com. Haupt-Schaltfläche „Buchen" in vier Zuständen, daneben Neben-Schaltfläche.</p>
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4);display:flex;gap:var(--sp-5);flex-wrap:wrap;align-items:flex-start">
+        <div style="text-align:center">
+          <button style="height:38px;padding:0 26px;border-radius:var(--r-pill);border:none;background:var(--c-primary);color:#fff;font-size:var(--fs-13);font-weight:600;cursor:pointer">Buchen</button>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);margin-top:6px">normal</div>
+        </div>
+        <div style="text-align:center">
+          <button style="height:38px;padding:0 26px;border-radius:var(--r-pill);border:none;background:var(--c-primary-hover);color:#fff;font-size:var(--fs-13);font-weight:600;cursor:pointer;box-shadow:var(--sh-1)">Buchen</button>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);margin-top:6px">hover</div>
+        </div>
+        <div style="text-align:center">
+          <button style="height:38px;padding:0 26px;border-radius:var(--r-pill);border:none;background:var(--c-primary-active);color:#fff;font-size:var(--fs-13);font-weight:600;cursor:pointer;box-shadow:inset 0 2px 4px rgba(0,0,0,.25)">Buchen</button>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);margin-top:6px">gedrückt</div>
+        </div>
+        <div style="text-align:center">
+          <button style="height:38px;padding:0 26px;border-radius:var(--r-pill);border:none;background:var(--c-border);color:var(--c-ink-3);font-size:var(--fs-13);font-weight:600;cursor:not-allowed">Buchen</button>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);margin-top:6px">deaktiviert</div>
+        </div>
+        <div style="text-align:center">
+          <button style="height:38px;padding:0 26px;border-radius:var(--r-pill);border:none;background:var(--c-primary);color:#fff;font-size:var(--fs-13);font-weight:600;cursor:pointer;box-shadow:0 0 0 3px var(--c-focus-glow),inset 0 0 0 2px #fff">Buchen</button>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);margin-top:6px">Tastatur-Fokus</div>
+        </div>
+        <div style="text-align:center">
+          <button style="height:38px;padding:0 22px;border-radius:var(--r-pill);border:1px solid var(--c-border-strong);background:var(--c-surface);color:var(--c-ink);font-size:var(--fs-13);font-weight:600;cursor:pointer" style-hover="background:var(--c-tint-2)">Beleg verwerfen</button>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--c-ink-3);margin-top:6px">Neben-Schaltfläche</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">6 · Zeilen-Status-Marken</h2>
+      <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Punkt in der Zeile, Pill mit Text bei Platz.</p>
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-l);box-shadow:var(--sh-1);padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3)">
+        <div style="display:flex;align-items:center;gap:var(--sp-3)">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--c-warn)"></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 10px;border-radius:var(--r-pill);background:var(--c-warn-bg);color:var(--c-warn);font-size:var(--fs-11);font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:var(--c-warn)"></span>erfasst</span>
+          <span style="font-size:var(--fs-11);color:var(--c-ink-3)">noch nicht gebucht</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--sp-3)">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--c-ok)"></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 10px;border-radius:var(--r-pill);background:var(--c-ok-bg);color:var(--c-ok);font-size:var(--fs-11);font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:var(--c-ok)"></span>gebucht</span>
+          <span style="font-size:var(--fs-11);color:var(--c-ink-3)">festgeschrieben</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--sp-3)">
+          <span style="width:8px;height:8px;border-radius:50%;background:var(--c-err);box-shadow:0 0 0 3px var(--c-err-bg)"></span>
+          <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 10px;border-radius:var(--r-pill);background:var(--c-err-bg);color:var(--c-err);font-size:var(--fs-11);font-weight:600"><span style="width:6px;height:6px;border-radius:50%;background:var(--c-err)"></span>Fehler</span>
+          <span style="font-size:var(--fs-11);color:var(--c-ink-3)">Buchung abgewiesen</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:var(--sp-7)">
+    <h2 style="font-size:var(--fs-15);font-weight:700;margin:0 0 var(--sp-1)">7 · Statusleiste</h2>
+    <p style="margin:0 0 var(--sp-4);color:var(--c-ink-2);font-size:var(--fs-12)">Schmale technische Meldezeile am unteren Fensterrand.</p>
+    <div style="display:flex;align-items:center;gap:var(--sp-4);height:30px;padding:0 var(--sp-3);background:var(--c-statusbar);color:var(--c-statusbar-text);border-radius:var(--r-s);font-family:var(--font-mono);font-size:var(--fs-11)">
+      <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:var(--c-aqua)"></span>BEREIT</span>
+      <span>Beleg 2026-0841 · Zeile 5/6 · Spalte: Dosierung</span>
+      <span style="margin-left:auto">EINFG</span>
+      <span>NUM</span>
+      <span>14:32</span>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+</body>
+</html>

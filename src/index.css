@@ -1,0 +1,52 @@
+@import '@fontsource-variable/inter';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+
+    --background: 40 20% 95%;
+    --card: 40 40% 99%;
+    --popover: 40 40% 99%;
+    --secondary: 40 16% 90%;
+    --muted: 40 15% 91%;
+
+    --foreground: 30 14% 13%;
+    --card-foreground: 30 14% 13%;
+    --popover-foreground: 30 14% 13%;
+    --secondary-foreground: 30 14% 13%;
+
+    --muted-foreground: 32 10% 36%;
+
+    --primary: 246 52% 44%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 246 45% 93%;
+    --accent-foreground: 246 55% 34%;
+    --ring: 246 60% 56%;
+
+    --destructive: 4 66% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 38 14% 82%;
+    --input: 38 14% 79%;
+
+    --radius: 0.25rem;
+
+    --canvas-bg: 36 20% 82%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    font-size: 90%;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}

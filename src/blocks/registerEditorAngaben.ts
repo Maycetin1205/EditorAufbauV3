@@ -1,0 +1,13 @@
+import './register'
+
+import './ansicht/editorAngaben'
+import './button/editorAngaben'
+import './card/editorAngaben'
+import './datum/editorAngaben'
+import './formfeld/editorAngaben'
+import './kanban/editorAngaben'
+import './navi/editorAngaben'
+import './popup/editorAngaben'
+import './tabelle/editorAngaben'
+import './text/editorAngaben'
+import './trenner/editorAngaben'

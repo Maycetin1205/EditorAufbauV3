@@ -1,0 +1,40 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+grundlast/
+
+# Notiz-Fotos des Nutzers (Chef-Skizze + Lernnotizen) — bewusst NUR lokal,
+# Nutzer-Entscheidung 2026-07-20. Kurzfassung des Inhalts: CLAUDE.md, Fahrplan Punkt 4.
+docs/Test-note*
+
+# SoftEngine-Mitschnitte des Nutzers (Debugger-Protokolle, oft mehrere MB) —
+# bleiben LOKAL, Nutzer-Entscheidung 2026-08-04. Sie sind Arbeitsmaterial:
+# was daraus belegt wurde (Relations-Nummern, Aufruf-Formen), steht in
+# docs/softengine-wiki bzw. CLAUDE.md; das Rohprotokoll blaeht nur das Repo.
+docs/chef-maske/Test.txt
+docs/chef-maske/*.log
+
+# TRIP/Codex-Skills: Laufzeit-Zustand (Thread-IDs, Review-Text, Event-Logs)
+# je Plan/Sitzung — Skripte/Prompts bleiben getrackt, der Zustand nicht.
+.claude/skills/*/state/
