@@ -308,13 +308,23 @@ export function useFeldBindung({
                 const ziel = next[listenPicker.index]
                 if (!ziel) return
 
-                ziel[listenBindung.titelKey] = wert === ''
-                  ? listenStandardTitel(listenBindung, listenPicker.index)
-                  : (proQuelle
-                      ? (quelleAusProp.fields.find((f) => f.code === wert)?.label ?? '')
-                      : bibliotheksAngebot
-                        ? klarnameAusBibliothek(roh)
-                        : klarnameVon(wert, quellen)) || wert
+                // Der Titel gehoert dem Bediener. Von selbst gesetzt wird er
+                // NUR, solange die Spalte noch gar keinen eigenen Namen hat
+                // ("Spalte 3"). Vorher ueberschrieb JEDE Feldwahl den Titel
+                // mit dem Feldnamen — wer seine Spalte "Artikel-Nr" genannt
+                // hatte, verlor den Namen beim Binden, und beim Umbinden auf
+                // eine andere Quelle gleich noch einmal (Nutzer 2026-08-27).
+                const standardTitel = listenStandardTitel(listenBindung, listenPicker.index)
+                const bisher = String(ziel[listenBindung.titelKey] ?? '').trim()
+                if (bisher === '' || bisher === standardTitel) {
+                  ziel[listenBindung.titelKey] = wert === ''
+                    ? standardTitel
+                    : (proQuelle
+                        ? (quelleAusProp.fields.find((f) => f.code === wert)?.label ?? '')
+                        : bibliotheksAngebot
+                          ? klarnameAusBibliothek(roh)
+                          : klarnameVon(wert, quellen)) || wert
+                }
                 ziel[listenBindung.feldKey] = wert
                 editor.updateProperty(block.id, listenBindung.prop, next)
               })
