@@ -36,10 +36,11 @@ Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mi
 
 `vitest` liegt ungenutzt in den devDependencies. `"test": "vitest run"` in package.json ergänzen.
 
-1. **Export-Wächter scharf schalten:** `src/export/validator.ts` (`validateMaskHtml`) hat aktuell **keinen Aufrufer**. In `exportMask()` bzw. am Export-Knopf (`src/editor/shell/Toolbar.tsx:43-54`) einhängen: schlägt eine Prüfung fehl (CRLF, Non-ASCII, fehlende Marker), bricht der Export mit Klartext ab. Dazu ein Test, der eine kaputte Maske absichtlich durchschickt.
-2. **Runtime-Bündel-Wächter:** Test, der `npm run build:runtime`-Output gegen das eingecheckte `src/export/generated/ff-runtime.js` byte-vergleicht. Abweichung = roter Test mit Meldung "build:runtime vergessen".
-3. **Logik-Tests** (browserfrei, die Klassen sind dafür geschnitten): `erfassungsLauf` (Tastenentscheid, gleicheAb-Fixpunkt, schluesselWert über Verknüpfungskette), `erfassungsZellen` (passendeSaetze: undefined=unbekannt vs. ''=bekannt-leer), `aenderungen.ts` (Satznummer-Schlüsselung, Rücknahme bei Originalwert), `schrittPruefung` (jede Fehlermeldung einmal), `sevariablen` (Kopfsatz-Loops zwangsweise zuletzt, varZusammen).
-4. **Abschnitts-Test für die Ketten-Laufzeit:** `abschnitteVon`/`laufeSchritte` in `src/blocks/shared/seAktionen.ts` — ein Schritt ohne Zeilenbezug hängt am laufenden Abschnitt; zwei Listen in einem Schritt = Fehler; Lauf ist sequenziell.
+1. ✅ **Export-Wächter testen:** `validateMaskHtml` ist bereits verdrahtet — `src/editor/shell/Toolbar.tsx:44` bricht den Export mit Klartext ab. Es bleibt bei diesem **einen** Prüfpunkt, kein zweiter in `exportMask()`. Es fehlt nur der Test: eine absichtlich kaputte Maske (CR-Zeichen, Umlaut, fehlender Start-Marker, fehlendes Interface-Script) meldet genau die passenden Fehler; eine echt exportierte Maske meldet null.
+2. ✅ **Runtime-Bündel-Wächter:** Test, der `npm run build:runtime`-Output gegen das eingecheckte `src/export/generated/ff-runtime.js` byte-vergleicht. Abweichung = roter Test mit Meldung "build:runtime vergessen". Der Wächter baut in einen **Temp-Ordner** (`--outDir`), nie in place — ein paralleler Dev-Server übernähme den Zwischenzustand per HMR (Warnung in `vite.runtime.config.ts:20-22`).
+3. ✅ **Logik-Tests** (browserfrei, die Klassen sind dafür geschnitten): `erfassungsLauf` (Tastenentscheid, gleicheAb-Fixpunkt, schluesselWert über Verknüpfungskette), `erfassungsZellen` (passendeSaetze: undefined=unbekannt vs. ''=bekannt-leer), `aenderungen.ts` (Satznummer-Schlüsselung, Rücknahme bei Originalwert), `schrittPruefung` (jede Fehlermeldung einmal), `sevariablen` (Kopfsatz-Loops zwangsweise zuletzt, varZusammen).
+4. ✅ **Abschnitts-Test für die Ketten-Laufzeit:** `abschnitteVon`/`laufeSchritte` in `src/blocks/shared/seAktionen.ts` — ein Schritt ohne Zeilenbezug hängt am laufenden Abschnitt; zwei Listen in einem Schritt = Fehler; Lauf ist sequenziell. Beide Funktionen dafür exportieren — reine Sichtbarkeitsänderung, kein Verhaltensunterschied.
+5. ✅ Jeden neuen Test einmal absichtlich rot machen (Erwartung verdrehen), damit er beweisbar prüft und nicht leer durchläuft.
 
 ## Etappe 2 — Aufräumen (Stunden)
 
@@ -80,19 +81,64 @@ Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (
 5. Datencenter (`zentrale/`) auf Overlay + Atome umstellen; Aktionen bekommen eine Heimat: Inspector listet Ereignisse und öffnet den Ketten-Editor als Overlay — keine Doppelbearbeitung an zwei Orten mehr.
 6. Alte Atome/`tailwind-merge`/`clsx`-Reste entfernen, wenn aufruferlos. (Abhängigkeiten selbst erst entfernen, wenn wirklich nichts mehr importiert.)
 
+### Quellen-UI: Hauptquelle vs. Hilfsquellen (Nutzer-Vorgabe, Pflichtteil)
+
+Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den Beleg schreibt, z. B. Belegposition) und beliebig viele **Hilfsquellen** (liefern nur Datensätze zum Nachschlagen und Befüllen, z. B. Artikelsuche — sie werden **nie** geschrieben). Genau diese zwei Wörter verwendet das UI — nicht "weitere Quellen".
+
+1. **QuellenListe neu, zwei beschriftete Abschnitte.** Je Hilfsquelle auf einen Blick: (a) woran sie hängt (Schlüsselpaare zur Hauptquelle oder zu einer anderen Hilfsquelle), (b) welche Spalten/Erfassungszellen sie befüllt, (c) ob die Verknüpfung vollständig ist. Unvollständig (kein Schlüsselpaar, Paar zeigt auf gelöschtes Feld, keine Zelle nutzt die Quelle) = Klartext-Hinweis direkt am Eintrag statt stillem Nichtfunktionieren.
+2. Dafür eine reine Prüf-Funktion `quellenProblem()` nach dem Vorbild `stepProblem()` (`src/core/data/schrittPruefung.ts`) — läuft live im Panel, wird wie die Etappe-1-Tests abgesichert.
+3. **FieldPicker zeigt die Herkunft:** bei jeder Feldwahl steht dran, aus welcher Quelle das Feld kommt. Eine Spalte, deren Feld aus einer Hilfsquelle kommt, trägt im Editor (nur im Editor, nie im Export) einen gedimmten Quellnamen unter dem Spaltentitel — man sieht der Tabelle sofort an, welche Spalten eigene (Belegposition) und welche nachgeschlagene sind.
+4. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für Etappe 5.
+
+### Ketten-Editor: Parameter wählbar statt rätselbar (Nutzer-Vorgabe, Pflichtteil)
+
+Kernproblem: Eine echte Relation hat dutzende positionsbasierte Parameter — `PUT_RELATION[82!GJ!BELART!BELNR!STSPALTE!ARTNR!TEXT!MENGE!EPREIS!…]` (vollständige Doku im Anhang). Begriffe wie `PINDEX`, `VALUE`, `FELD_POS` versteht kein Mensch. Ziel: **an jedem Parameter ist in deutschen Worten ersichtlich, was er bedeutet und wo sein Wert herkommt** — und die richtige Wahl ist der bequemste Weg. Der Ketten-Editor wird dafür **neu gezeichnet, nicht umgestylt**.
+
+**1. Relations-Katalog als Datenmodell** (`src/core/data/relations.ts` erweitern, mit Tests, Verbot 4 beachten). Ein Parameter einer `RelationTemplate` trägt künftig optional:
+- `name` — der Positionsname aus der Klammer (`MENGE`, `EINFUEGE_SNR`)
+- `beschreibung` — der Doku-Text ("Satznummer nach der eingefügt wird")
+- `feld` — das dokumentierte Zielfeld, wenn die Doku eins nennt (`TEXT` → POS `45_60`), als `{datei, pos, len}`
+- `werte` — dokumentierte Aufzählung als Wert+Klartext-Paare (`J` = "Langtext automatisch auflösen", `1` = "Prüfen ob Einfügesnr Z-Zeilen folgen")
+- `leerVerhalten` — was bei leerem Parameter passiert ("ohne Preis wird die Standardermittlung durchgeführt", "automatische Belegnummernvergabe")
+
+Je Relation zusätzlich: `zweck` ("Position zu einem Beleg hinzufügen"), `rueckgabe` (GET 1020 → `BEL_0_11`), `wiederholGruppe` (die Folge `P!L!A!W`, bis 16× wiederholbar). Alles optional — die bestehende Vorlage 174 bleibt ohne Änderung gültig.
+
+**2. Import aus Doku-Text — bewusst dumm gehalten.** Der SE-Doku-Text ist **freie Erklärung für Menschen, kein Format** — jede Relation ist anders beschrieben. Deshalb parst der Import ausschließlich, was wirklich maschinenlesbar ist: die **Syntaxzeile** (`PUT_RELATION[82!GJ!BELART!…]` → Verb, Nummer, Parameternamen in Reihenfolge, `...` = Zusatz-/Wiederholteil). Der gesamte restliche Text wird **unverändert** als Hilfetext angehängt (Absatz, der mit einem Parameternamen beginnt → Hilfetext dieses Parameters; Rest → Hilfetext der Relation) und im Formular angezeigt. **Aus Prosa wird nichts Semantisches geraten** — keine automatischen Wertelisten, keine automatischen Feld-Zuordnungen, keine Flag-Erkennung. Die strukturierten Extras aus Punkt 1 (feld, werte/Schalter, leerVerhalten) pflegt der Nutzer danach per Hand am Parameter, wo er den Komfort will — komplett optional, ohne sie funktioniert alles trotzdem (dann eben zweistufiger Wähler + Hilfetext). Testfälle: die drei Anhang-Dokus — erwartet werden nur Namen in richtiger Reihenfolge plus angehängte Hilfetexte.
+
+**3. Das Parameter-Formular.** Oberste Regel: **Leer ist der Normalfall — niemand muss Werte wählen, die er nicht kennt.** Sichtbar sind zuerst nur die Parameter, die ein Auto-Vorschlag trifft oder die für den Zweck nötig sind (bei PUT 82: BELNR, ARTNR, TEXT, MENGE, EPREIS, EINFUEGE_SNR). Alle übrigen (STSPALTE, LANGTEXT, PRUEFZ, …) liegen zugeklappt unter "Erweitert — leer = Standardverhalten", jeweils mit ihrem dokumentierten Leer-Verhalten daneben. Eine Zeile je Parameter, Links Name + Beschreibung, rechts die Wert-Bindung:
+- a) **Automatischer Vorschlag:** Nur wenn dem Parameter im Katalog **von Hand** ein Feld zugewiesen wurde (`TEXT` → POS 45_60; der Import setzt so etwas nie) und in der Maske eine Spalte/Erfassungszelle an genau diesem Feld hängt, schlägt der Editor die Bindung sichtbar vor: "aus Erfassungszelle ‚Bezeichnung' (POS_45_60)" — ein Klick übernimmt. Ohne Handzuweisung kein Vorschlag — geraten wird nie.
+- b) **Schalter statt Rätsel:** Flag-Parameter (LANGTEXT mit nur "J=…") sind ein einfacher Aus/An-Schalter mit Klartext-Beschriftung ("Langtext automatisch auflösen"), aus = Parameter bleibt leer. Echte Aufzählungen (PRUEFZ 1/2) sind eine Auswahl mit Klartext plus vorausgewählter Option "leer (Standard)". Nie Freitext, nie nackte Kürzel wie "J".
+- c) **Zweistufiger Wähler** für den Rest: erst Quelle (nur die hier möglichen aus `ACTION_PARAM_SOURCES`, verständlich beschriftet), dann passender Wähler: Datenfeld → FieldPicker mit Herkunft; Baustein-Wert → Bausteinliste mit Klarnamen; Schritt-Ergebnis → nur GET-Schritte davor (`ergebnisSchritteVor()`) plus Rückgabefeld; Zellen-Quellen → Spaltenwahl der Tabelle; SE-Variable → Liste wo möglich.
+- **Herkunftssatz an jeder gesetzten Bindung**, immer sichtbar: "kommt aus: Ergebnis von Schritt 1 ‚Belegkopf anlegen', Rückgabe BEL_0_11" / "fest: J (Langtext automatisch auflösen)" / "leer — dann: automatische Belegnummernvergabe".
+- **Kein Jargon, nirgends:** interne Platzhalter erscheinen nie roh. Übersetzung an genau einer Stelle: `PINDEX` → "Satznummer der jeweiligen Zeile (automatisch aus der Vormerk-Liste)", `DROP_PINDEX` → "Satznummer der Löschzeile (automatisch)", `VALUE` → "Wert", `NOW_DATE` → "heutiges Datum", `RELID`/`ZIMMER` sinngemäß.
+- **Wiederholgruppen:** `P!L!A!W` erscheint als "+ weiteres Feld schreiben" (bis 16), jede Wiederholung als Vierergruppe mit denselben Wählern (P/L aus dem FieldPicker ableiten — Feldposition und -länge stecken in der Feldwahl, der Nutzer wählt nur das Feld und die Eingabeart L/R/D).
+- **Symbolische Vorschau** unter dem Formular: die zusammengesetzte Klammer mit Herkunfts-Etiketten statt Werten, z. B. `PUT_RELATION[82!fest:5!Belegkopf-Feld 2_1!…!Erfassungszelle Menge!…]` — Reihenfolge und Lücken auf einen Blick.
+- Fehler am betroffenen Parameter (`stepProblem()` bleibt die eine Prüfquelle); je Schritt eine Klartext-Zusammenfassungszeile (`schrittZusammenfassung.ts` weiterverwenden).
+
+**4. Durchgedachtes Zielszenario** (Referenz für alles obige, wird in Etappe 5 real gebaut). Kette am Schreiben-Knopf der Positionstabelle:
+1. Schritt "Belegkopf anlegen" — GET_RELATION[1020], Rückgabe `BEL_0_11`. (Bei Rahmen00001 existiert der Beleg schon — dann entfällt dieser Schritt und BELNR kommt aus dem offenen Satz BEL.)
+2. Abschnitt je **erfasster** Zeile: erst GET_RELATION[678] "Einfüge-Satznummer ermitteln" (läuft dank Abschnittslogik automatisch einmal je Zeile), dann PUT_RELATION[82] "Position hinzufügen" — BELNR aus offenem Satz bzw. Schritt-1-Ergebnis, ARTNR/TEXT/MENGE/EPREIS aus den Erfassungszellen (Auto-Vorschlag), EINFUEGE_SNR aus dem GET davor, LANGTEXT fest "J", Rest leer mit dokumentiertem Standardverhalten.
+3. Abschnitt je **geänderter** Zeile: Feld-Schreib-Relation (Muster 174), Satznummer automatisch.
+4. Abschnitt je **Löschvormerkung**: Lösch-Relation, Satznummer der Löschzeile automatisch.
+Die Abschnitts-Laufzeit (`seAktionen.ts`) kann das heute schon — neu ist ausschließlich, dass das UI es ohne Jargon zusammenklickbar macht.
+
+**5. Abnahme:** Die Kette aus Punkt 4 ist baubar, ohne dass irgendwo ein roher Platzhalter-Begriff auftaucht und ohne Freitext (außer bewussten Fixwerten); jeder Parameter zeigt Beschreibung und Herkunftssatz; die drei Anhang-Relationen sind über den Doku-Import angelegt.
+
 Spalten-Einstellungen bleiben **am Ding** (Klick auf Kopf = Feld, Doppelklick = Umbenennen, +/− in der Tabelle) — das ist gut und bleibt; der "In der Zeile änderbar"-Schalter erscheint im Spalten-Popover in Werkbank-Optik.
 
 ## Etappe 5 — Nachweis: Rahmen00001 aus dem Editor erzeugen
 
 Ziel: die Handmaske `E:\DATA\VSES-Muhammed\Vorlagen\Belegerfassung\LAYOUTRAHMEN\00001\Rahmen00001.basis.source.html` (887 Z. Handschrift, "Buchen" ist dort nur ein console.log-Stub) durch eine **im Editor gebaute** Maske ersetzen:
 
-1. Im Editor anlegen: Belegkopf als Formfelder auf offenem Satz `BEL` (VAR: 2_1 Art, 3_8 Nr, 19_10 Datum, 11_8 + 3440_60 Kunde, 453_12 Summe); Positionstabelle auf SEFILELOOP `POS` (KOPFSATZ_INDEX `BEL_0_11`; Spalten: 18_25 ArtNr, 45_60 Bezeichnung, 164_8 Menge **änderbar**, 689_5 Einheit, 246_9 EPreis, 280_12 Gesamt, 1401_12 Rohertrag; Satznummer 888_10); Artikelsuche als ERPAPICALL `ARTIKEL.GET` für die Erfassungszeile; ein Schreiben-Knopf mit Ketten-Abschnitten für erfasst/geändert/gelöscht. Nur benutzte Felder deklarieren — der tote Ballast der Handmaske (BELERF_*, 9 ungenutzte POS-Felder) wird NICHT übernommen.
+1. Im Editor anlegen: Belegkopf als Formfelder auf offenem Satz `BEL` (VAR: 2_1 Art, 3_8 Nr, 19_10 Datum, 11_8 + 3440_60 Kunde, 453_12 Summe); Positionstabelle auf SEFILELOOP `POS` (KOPFSATZ_INDEX `BEL_0_11`; Spalten: 18_25 ArtNr, 45_60 Bezeichnung, 164_8 Menge **änderbar**, 689_5 Einheit, 246_9 EPreis, 280_12 Gesamt, 1401_12 Rohertrag; Satznummer 888_10); Artikelsuche als ERPAPICALL `ARTIKEL.GET`, angelegt als **Hilfsquelle** über das neue Quellen-UI (Abnahme aus Etappe 4), für die Erfassungszeile; ein Schreiben-Knopf mit Ketten-Abschnitten für erfasst/geändert/gelöscht. Nur benutzte Felder deklarieren — der tote Ballast der Handmaske (BELERF_*, 9 ungenutzte POS-Felder) wird NICHT übernommen.
 2. Export, Dateien als `Rahmen00001.basis.source.html` + `.SEvariablen.json` in den Ordner legen (Original vorher als `_hand`-Kopie sichern).
 3. **Echttest in der WEBWARE macht der Nutzer.** Fehlerbilder zurück in die Tests aus Etappe 1.
 
-### BLOCKER — muss der Nutzer liefern, bevor Etappe 5 fertig werden kann
+### Lieferstand der Schreib-Relationen
 
-Die **Relationsnummern zum Schreiben**: Position anlegen (PUTADD?), Position ändern, Position löschen (+ Parameterreihenfolge). Quelle: SE-Variablenauswahl Dialog 1756 bzw. ein Ausführungslog einer echten Positionsänderung. Bis dahin werden die Ketten mit der vorhandenen Standard-Vorlage (PUT_RELATION 174) gebaut und die Stelle im Editor-Datencenter klar benannt. `pindex` = Satznummer des Zielsatzes ist bereits belegt.
+**Bereits geliefert** (Doku im Anhang, per Doku-Import anlegen): PUT_RELATION[82] "Position zu einem Beleg hinzufügen", GET_RELATION[1020] "Neuanlage Belegkopf" (Rückgabe BEL_0_11), GET_RELATION[640] "Neuen IDB-Satz automatisch anlegen".
+
+**Fehlt noch — muss der Nutzer im selben Doku-Format liefern:** (a) Relation "Position ändern" (oder Bestätigung, dass Muster 174 mit PINDEX=Satznummer der Weg ist), (b) Relation "Position löschen", (c) die vollständige Signatur von GET_RELATION[678] "Einfüge-Satznummer ermitteln" (in der 82er-Doku nur erwähnt). Quelle: SE-Doku / Variablenauswahl Dialog 1756. Bis dahin werden diese zwei Ketten-Abschnitte mit der Standard-Vorlage 174 gebaut und im Datencenter klar als "Relation folgt" benannt. `pindex` = Satznummer des Zielsatzes ist belegt.
 
 ---
 
@@ -102,3 +148,68 @@ Die **Relationsnummern zum Schreiben**: Position anlegen (PUTADD?), Position än
 - Keine Änderungen an der Masken-Designsprache (V11-Palette) — nur der Editor wird neu.
 - Kein Umbau der Ketten-/Abschnittslogik in `seAktionen.ts` über Etappe 3 hinaus — sie ist die klügste Stelle des Projekts.
 - Keine neuen Bausteintypen, keine Mehrseiten-Features, nichts, was nicht auf dem Weg zu Rahmen00001 liegt.
+
+---
+
+## Anhang — Relations-Doku (vom Nutzer geliefert 2026-08-27; Seed und Parser-Testfälle für den Doku-Import)
+
+```
+PUT_RELATION[82!GJ!BELART!BELNR!STSPALTE!ARTNR!TEXT!MENGE!EPREIS!PEH!EK!RABP!RABADR!VTRNR!EINFUEGE_SNR!EAPINFO!EAN!LANGTEXT!BUCHUNGSART!BUDAT!LAGER!TIDENT!SERNR!CHANR!PRUEFZ!KOID!KOGID!SACHKONTO!MARK!P!L!A!W!...]
+
+Position zu einem Beleg hinzufügen
+
+Parameter/Rückgabe:
+GJ            Geschäftsjahr 0-9
+BELART        Belegart NALRGblrgI
+BELNR         Belegnummer -> der Beleg muß bereits existieren !
+STSPALTE      Steuerspalte POS_17_1
+ARTNR         Artikelnummer
+TEXT          POS_45_60
+MENGE         Menge
+EPREIS        Einzelpreis -> ohne Preis wird die Standardermittlung durchgeführt
+PEH           Preiseinheit POS_798_6
+EK            Einkaufspreis POS_308_12
+RABP          Rabatt % POS_265_5
+RABADR        Kundenrabatt POS_780_5
+VTRNR         Vertreternummer POS_695_8
+EINFUEGE_SNR  Satznummer nach der eingefügt wird (zu ermitteln via GET_RELATION[678!...]
+EAPINFO       POS_317_1
+KATALOGART/EAN POS_617_25
+LANGTEXT      J=Langtext automatisch auflösen
+BUCHUNGSART   POS_116_1
+BUDAT         Buchungsdatum POS_330_10
+LAGER         Lagerangabe POS_350_8
+TIDENT        Textilident POS_460_10
+SERNR         J/N setzt POS_112_1
+CHANR         J/N setzt POS_113_1; J -> Mit Charge
+PRUEFZ        Prüfung Z/K-Zeilen: 1 -> Prüfen ob Einfügesnr Z-Zeilen folgen; 2 -> Auf K-Zeilen
+KONTRAKT_ID   POS_494_7
+KONTINGENT_ID POS_504_1
+SACHKONTO     POS_442_8
+MARK          POS_490_1
+P             frei wählbare Feldposition
+L             frei wählbare Feldlänge
+A             Eingabeart: L=Linksbündig, R=Rechtsbündig, D=Datum
+W             Wert (max. Länge 128 Bytes)
+HINWEIS       Parameter (P!L!A!W) können bis zu 16 mal wiederholt werden
+```
+
+```
+GET_RELATION[640!IDBID!DATUMBEDIENER!PROTOKOLL]
+
+Neuen IDB-Satz automatisch anlegen
+
+Parameter/Rückgabe:
+DATUMBEDIENER Soll im neuen Satz auch Anlagedatum und Bediener gesetzt werden: 0 = nicht setzen, 1 = setzen
+PROTOKOLL     Soll die Vergabe bereits im Ereignisprotokoll protokolliert werden: 0 = Nein, 1 = Ja
+```
+
+```
+GET_RELATION[1020!BELEGART!BGRUPPE!ADRNR!BELDATUM!PRJNR!BELNR!JAHR]
+
+Neuanlage Belegkopf, Rückgabe BEL_0_11
+
+Parameter/Rückgabe:
+BELNR         bei keiner Angabe erfolgt automatische Belegnummernvergabe
+JAHR          Belegjahr (0-9), ohne Angabe wird der aktuelle Belegzeitraum verwendet
+```

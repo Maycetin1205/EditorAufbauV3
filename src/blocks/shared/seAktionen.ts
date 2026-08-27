@@ -133,7 +133,7 @@ function zeilenBezug(step: RuntimeStep): { art: ListenArt; blockId: string } | n
 // Zeilen-Bezug haengt sich an den laufenden Abschnitt an — sonst risse das
 // Muster „Satz anlegen, dann seine Felder schreiben" auseinander, in dem der
 // zweite Schritt vom Ergebnis des ersten lebt.
-function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
+export function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
   const raus: Abschnitt[] = []
   for (const [platz, step] of steps.entries()) {
     const bezug = zeilenBezug(step)
@@ -164,7 +164,7 @@ function sucheTraeger(
     .find((el) => el.getAttribute(ACTION_VALUE_ID_ATTR) === blockId)
 }
 
-async function laufeSchritte(
+export async function laufeSchritte(
   el: HTMLElement,
   steps: readonly RuntimeStep[],
   context: RelationContext,

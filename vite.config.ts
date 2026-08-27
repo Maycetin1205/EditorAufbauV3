@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 // __dirname-Äquivalent für ESM-Config.
@@ -17,5 +17,11 @@ export default defineConfig({
     alias: {
       '@': path.resolve(here, 'src'),
     },
+  },
+  test: {
+    // Ohne das liefert der `?raw`-Import von masken-tokens.css im Testlauf
+    // einen LEEREN String (vitest stubbt CSS): der Export-Test pruefte dann
+    // eine Maske ohne Masken-Tokens — nicht die, die der Editor abgibt.
+    css: true,
   },
 })

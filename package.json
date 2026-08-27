@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "build:runtime": "vite build --config vite.runtime.config.ts",
-    "check": "tsc -b && eslint src"
+    "check": "tsc -b && eslint src",
+    "test": "vitest run"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
