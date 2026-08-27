@@ -22,15 +22,15 @@ export default {
       },
       colors: {
         // Die Werkbank-Palette. Mehr Farben gibt es im Editor nicht.
-        grund: 'hsl(var(--wb-grund))',
-        panel: 'hsl(var(--wb-panel))',
-        control: 'hsl(var(--wb-control))',
-        linie: 'hsl(var(--wb-linie))',
-        tinte: 'hsl(var(--wb-tinte))',
-        matt: 'hsl(var(--wb-matt))',
-        akzent: 'hsl(var(--wb-akzent))',
-        fehler: 'hsl(var(--wb-fehler))',
-        vormerkung: 'hsl(var(--wb-vormerkung))',
+        grund: 'hsl(var(--wb-grund) / <alpha-value>)',
+        panel: 'hsl(var(--wb-panel) / <alpha-value>)',
+        control: 'hsl(var(--wb-control) / <alpha-value>)',
+        linie: 'hsl(var(--wb-linie) / <alpha-value>)',
+        tinte: 'hsl(var(--wb-tinte) / <alpha-value>)',
+        matt: 'hsl(var(--wb-matt) / <alpha-value>)',
+        akzent: 'hsl(var(--wb-akzent) / <alpha-value>)',
+        fehler: 'hsl(var(--wb-fehler) / <alpha-value>)',
+        vormerkung: 'hsl(var(--wb-vormerkung) / <alpha-value>)',
 
         // Die shadcn-Namen der alten Atome. Sie zeigen auf dieselben Werte
         // (index.css) und gehen mit ihren letzten Aufrufern.
