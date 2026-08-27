@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type RefObject } from 'react'
 import { AuswahlFenster } from '@/ui/molecules/auswahl-fenster'
 import { TextInput } from '@/ui/atoms/text-input'
 import type {
@@ -14,6 +14,10 @@ interface FeldUebernahmePickerProps {
   current: string
   top: number
   left: number
+
+  // Der Griff, aus dem die Liste aufgegangen ist — ein Druck darauf darf sie
+  // nicht hier schliessen, sonst geht sie durch den Folge-Klick sofort wieder auf.
+  anker?: RefObject<HTMLElement | null>
   onPick: (sourceId: string, code: string) => void
   onClose: () => void
 }
@@ -25,6 +29,7 @@ export function FeldUebernahmePicker({
   current,
   top,
   left,
+  anker,
   onPick,
   onClose,
 }: FeldUebernahmePickerProps) {
@@ -56,6 +61,7 @@ export function FeldUebernahmePicker({
       bezeichnung="Feld übernehmen"
       oben={top}
       links={left}
+      anker={anker}
       onClose={onClose}
       imBildHalten
       escapeAbfangen

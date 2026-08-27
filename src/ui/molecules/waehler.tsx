@@ -175,7 +175,11 @@ export function WaehlerKnopf({
   const treffer = gruppen.flatMap((g) => g.eintraege).find((e) => e.wert === wert)
   const unbekannt = wert !== '' && treffer === undefined
 
-  const oeffne = () => {
+  const umschalten = () => {
+    if (offen) {
+      setOffen(null)
+      return
+    }
     const r = knopfRef.current?.getBoundingClientRect()
     if (!r) return
     setOffen({
@@ -191,7 +195,7 @@ export function WaehlerKnopf({
       aria-describedby={beschrieben}
       aria-invalid={ungueltig}
       type="button"
-      onClick={oeffne}
+      onClick={umschalten}
       className={cn(
         'flex h-8 w-full min-w-0 items-center gap-2 rounded-md border border-input bg-background px-2.5 text-left text-xs',
         'hover:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -230,6 +234,7 @@ export function WaehlerKnopf({
           bezeichnung={bezeichnung}
           oben={offen.top}
           links={offen.left}
+          anker={knopfRef}
           className={FENSTER_KLASSE}
           imBildHalten
           escapeAbfangen

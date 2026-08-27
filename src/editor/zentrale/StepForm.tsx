@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Plus } from '@/ui/zeichen'
 import { Button } from '@/ui/atoms/button'
 import { TextInput } from '@/ui/atoms/text-input'
@@ -108,6 +108,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
   const [zeigeFehler, setZeigeFehler] = useState(false)
   const [pickerZiel, setPickerZiel] = useState<FeldUebernahmeZiel | null>(null)
   const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 })
+  const pickerAnker = useRef<HTMLElement | null>(null)
   const [uebernahmeBestaetigung, setUebernahmeBestaetigung] = useState('')
 
   const relation = relations.get(relationId)
@@ -148,7 +149,13 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
   }
 
   function oeffneUebernahmePicker(ziel: FeldUebernahmeZiel, anchor: HTMLElement) {
+    // Zweiter Druck auf denselben Griff macht die Liste wieder zu.
+    if (pickerZiel === ziel && pickerAnker.current === anchor) {
+      setPickerZiel(null)
+      return
+    }
     const rect = anchor.getBoundingClientRect()
+    pickerAnker.current = anchor
     setPickerPosition({ top: rect.bottom + 4, left: rect.left })
     setPickerZiel(ziel)
   }
@@ -385,6 +392,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   current={currentUebernahmeCode}
                   top={pickerPosition.top}
                   left={pickerPosition.left}
+                  anker={pickerAnker}
                   onPick={uebernehmeFeld}
                   onClose={() => setPickerZiel(null)}
                 />

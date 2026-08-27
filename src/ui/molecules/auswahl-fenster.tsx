@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 
@@ -9,6 +16,12 @@ interface AuswahlFensterProps {
 
   oben: number
   links: number
+
+  // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
+  // schliesst hier nicht — sonst raeumt dieser Druck das Fenster ab und der
+  // Klick unmittelbar danach oeffnet es wieder: das Fenster liess sich mit
+  // seinem eigenen Knopf nicht zumachen (Nutzer-Befund 2026-08-27).
+  anker?: RefObject<HTMLElement | null>
 
   className: string
   imBildHalten?: boolean
@@ -21,6 +34,7 @@ export function AuswahlFenster({
   bezeichnung,
   oben,
   links,
+  anker,
   className,
   imBildHalten = false,
   escapeAbfangen = false,
@@ -53,7 +67,9 @@ export function AuswahlFenster({
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+      const ziel = e.target as Node
+      if (ref.current?.contains(ziel) || anker?.current?.contains(ziel)) return
+      onClose()
     }
     const onScroll = (e: Event) => {
       if (ref.current && e.target instanceof Node && ref.current.contains(e.target)) return
@@ -77,7 +93,7 @@ export function AuswahlFenster({
       document.removeEventListener('scroll', onScroll, true)
       tastenZiel.removeEventListener('keydown', onKeyDown, true)
     }
-  }, [onClose, escapeAbfangen])
+  }, [anker, onClose, escapeAbfangen])
 
   return createPortal(
     <div
