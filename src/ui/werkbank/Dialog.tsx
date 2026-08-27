@@ -80,7 +80,7 @@ export function Dialog({
     <div
       className={cn(
         'fixed inset-0 z-40',
-        schmal ? 'flex items-center justify-center bg-grund/80 p-6' : '',
+        schmal ? 'flex items-center justify-center bg-tinte/30 p-6' : '',
       )}
       onPointerDown={(e) => {
         if (schmal && e.target === e.currentTarget) onClose()

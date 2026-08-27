@@ -53,11 +53,6 @@ export function Canvas() {
           style={{
             minHeight: 400,
             background: 'var(--se-bg)',
-            // Das Editor-Chrome laeuft auf color-scheme: dark (index.css). Ohne
-            // diese Zeile faerbt der Browser die NATIVEN Bedienelemente der
-            // Maske (Auswahlfeld, Ankreuzfeld) mit ein — im Export tut er das
-            // nicht, und die Flaeche zeigte etwas anderes als die Datei.
-            colorScheme: 'light',
             fontFamily: 'var(--se-font)',
             fontSize: 'var(--se-fs)',
             lineHeight: 'var(--se-lh)',

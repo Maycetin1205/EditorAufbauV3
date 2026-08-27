@@ -103,7 +103,7 @@ export default {
       },
       boxShadow: {
         // Keine Schatten ausser Overlays, und dort genau EINE Stufe.
-        overlay: '0 1.5rem 3rem -1rem rgb(0 0 0 / 0.7)',
+        overlay: '0 0.5rem 1.5rem -0.5rem rgb(40 30 20 / 0.25)',
       },
     },
   },

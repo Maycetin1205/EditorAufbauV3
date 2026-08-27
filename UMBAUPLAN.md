@@ -89,8 +89,8 @@ Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (
 
 ### Designsprache (verbindlich, nicht verhandelbar)
 
-- **Flächen:** Grund `#111417`, Panel `#191d21`, Control `#22272c`, Linie `#2e343a` (1px), Text `#e6e9ec`, gedimmt `#8b949c`. Dunkel ist der einzige Modus.
-- **Ein Akzent:** Petrol `#2f9e8f` — nur für Auswahl, Fokusring, primären Knopf. Fehler `#d5544f`, Vormerkung `#d9a13b`. Sonst keine Farben.
+- **Flächen: HELL. Die dunkle Fassung ist gestrichen** (Nutzer-Ansage 2026-08-27, unmittelbar nach der ersten Bedienprobe: „ich sehe nichts mehr"). Gebaut und am selben Tag zurückgenommen war Grund `#111417` / Panel `#191d21` / Control `#22272c` / Linie `#2e343a` / Text `#e6e9ec` / gedimmt `#8b949c`. **Nicht wieder vorschlagen, auch nicht als Umschalter.** Gültig sind die hellen Werte in `src/index.css` (`--wb-*`).
+- **Ein Akzent:** das Indigo `hsl(246 52% 44%)` — nur für Auswahl, Fokusring, primären Knopf. Fehler und Vormerkung stehen als `--wb-fehler` / `--wb-vormerkung`. Sonst keine Farben. (Petrol `#2f9e8f` fiel mit der dunklen Fassung.)
 - **Schrift:** Inter (liegt als Abhängigkeit vor), 13px Standard, 12px in dichten Listen, tabellarische Ziffern in Zahlfeldern.
 - **Form:** Radius 4px überall, keine Schatten außer Overlays (eine Stufe), keine Verläufe, 4er-Abstandsskala. Inspector-Zeile: 28px hoch, Label links 40 %, Control rechts 60 %.
 - **Atom-Bibliothek** in `src/ui/werkbank/` (genau diese, nicht mehr): `Zeile`, `Feld`, `Zahl`, `Wahl`, `Schalter`, `Segment`, `Knopf` (primär/still/gefahr), `Gruppe` (einklappbar), `Trenner`, `Popover` (verankert, kein getBoundingClientRect-Gefrickel), `Dialog` (Vollflächen-Overlay), `Liste` (wählbare Zeilen). **Tailwind-Utilities sind nur innerhalb dieser Atome erlaubt** — Panels komponieren ausschließlich Atome. Radix-Select und die alten `src/ui`-Atome fliegen raus, sobald kein Aufrufer mehr existiert.

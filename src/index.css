@@ -6,90 +6,71 @@
 
 @layer base {
   /* ============================================================
-     Werkbank — die Farbwelt des EDITORS. Dunkel ist der einzige Modus.
+     Werkbank — die Farbwelt des EDITORS. HELL (Nutzer-Ansage 2026-08-27:
+     die dunkle Fassung war unbenutzbar, "ich sehe nichts mehr").
      Die Maskenwelt hat ihre eigene Liste (design/masken-tokens.css, --se-*)
      und bleibt davon unberuehrt; die zwei Welten mischen nie.
 
-     Die --wb-* halten HSL-TRIPEL, keine Farben — deshalb kann sie sowohl
-     `hsl(var(--wb-panel))` als auch die Tailwind-Farbliste benutzen. Der
-     Hex-Wert daneben ist die Vorgabe, aus der das Tripel gerechnet ist.
+     Die --wb-* halten HSL-TRIPEL, keine Farben — deshalb koennen sie sowohl
+     `hsl(var(--wb-panel))` als auch die Tailwind-Farbliste bedienen.
      ============================================================ */
   :root {
-    color-scheme: dark;
-
-    --wb-grund: 210 15% 8%; /* #111417 */
-    --wb-panel: 210 14% 11%; /* #191d21 */
-    --wb-control: 210 13% 15%; /* #22272c */
-    --wb-linie: 210 12% 20%; /* #2e343a */
-    --wb-tinte: 210 14% 91%; /* #e6e9ec */
-    --wb-matt: 208 8% 58%; /* #8b949c */
+    --wb-grund: 40 20% 95%;
+    --wb-panel: 40 40% 99%;
+    --wb-control: 40 16% 90%;
+    --wb-linie: 38 14% 82%;
+    --wb-tinte: 30 14% 13%;
+    --wb-matt: 32 10% 36%;
 
     /* EIN Akzent — Auswahl, Fokusring, primaerer Knopf. Sonst keine Farben. */
-    --wb-akzent: 172 54% 40%; /* #2f9e8f */
-    --wb-fehler: 2 61% 57%; /* #d5544f */
-    --wb-vormerkung: 39 68% 54%; /* #d9a13b */
+    --wb-akzent: 246 52% 44%;
+    --wb-fehler: 4 66% 47%;
+    --wb-vormerkung: 39 68% 54%;
 
-    /* Die Flaeche HINTER der Maske liegt tiefer als der Grund: so liest sich
-       die Maske als Blatt darauf, ohne dass sie einen Schatten braucht. */
-    --canvas-bg: 210 16% 5%;
+    /* Die shadcn-Namen des alten Editor-Chromes. Sie stehen hier mit ihren
+       EIGENEN Werten und nicht als Verweis auf die --wb-*: so sehen die 33
+       noch nicht umgestellten Dateien exakt so aus wie vorher. Sie gehen
+       Paket fuer Paket mit ihren letzten Aufrufern. */
+    --background: 40 20% 95%;
+    --card: 40 40% 99%;
+    --popover: 40 40% 99%;
+    --secondary: 40 16% 90%;
+    --muted: 40 15% 91%;
+
+    --foreground: 30 14% 13%;
+    --card-foreground: 30 14% 13%;
+    --popover-foreground: 30 14% 13%;
+    --secondary-foreground: 30 14% 13%;
+
+    --muted-foreground: 32 10% 36%;
+
+    --primary: 246 52% 44%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 246 45% 93%;
+    --accent-foreground: 246 55% 34%;
+    --ring: 246 60% 56%;
+
+    --destructive: 4 66% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 38 14% 82%;
+    --input: 38 14% 79%;
 
     --radius: 0.25rem;
 
-    /* Die shadcn-Namen des alten Editor-Chromes zeigen auf dieselben Tripel.
-       Grund: 33 Dateien benutzen sie noch. Sie verschwinden Paket fuer Paket
-       mit ihren Aufrufern — bis dahin ist der Editor trotzdem aus EINER
-       Palette gezeichnet und nicht halb hell. */
-    --background: var(--wb-grund);
-    --foreground: var(--wb-tinte);
-    --card: var(--wb-panel);
-    --card-foreground: var(--wb-tinte);
-    --popover: var(--wb-panel);
-    --popover-foreground: var(--wb-tinte);
-    --secondary: var(--wb-control);
-    --secondary-foreground: var(--wb-tinte);
-    --muted: var(--wb-control);
-    --muted-foreground: var(--wb-matt);
-    --accent: var(--wb-control);
-    --accent-foreground: var(--wb-tinte);
-    --primary: var(--wb-akzent);
-    --primary-foreground: var(--wb-grund);
-    --destructive: var(--wb-fehler);
-    --destructive-foreground: var(--wb-grund);
-    --border: var(--wb-linie);
-    --input: var(--wb-linie);
-    --ring: var(--wb-akzent);
+    --canvas-bg: 36 20% 82%;
   }
 
   * {
     border-color: hsl(var(--border));
   }
 
+  html {
+    font-size: 90%;
+  }
+
   body {
-    background-color: hsl(var(--wb-grund));
-    color: hsl(var(--wb-tinte));
-  }
-
-  ::selection {
-    background-color: hsl(var(--wb-akzent) / 0.35);
-  }
-
-  /* Die Rollbalken im Editor-Chrome. Die Maske bekommt sie nicht: ihre
-     Bausteine leben im Shadow-DOM, wohin diese Regel nicht reicht. */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--wb-linie));
-    border-radius: var(--radius);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--wb-matt) / 0.6);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
