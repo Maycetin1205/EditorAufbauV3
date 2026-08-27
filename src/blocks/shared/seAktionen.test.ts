@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ActionParamBinding, RuntimeStep } from '../../core/data/aktionen'
+import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 
 const laeufe: string[] = []
 const fehler: string[] = []
+const gerufen: { id: string; params: string[] }[] = []
 let gleichzeitig = 0
 let hoechstensGleichzeitig = 0
+
+// Der Ruf kommt nicht durch, wenn die Vorlage so heisst oder ein Parameter so
+// lautet. Das Zweite ist der Weg, EINE Zeile scheitern zu lassen: die Kette
+// ist fuer jede Zeile dieselbe, verschieden sind nur die Zellwerte.
+const KAPUTT = 'FEHLER'
 
 vi.mock('../../softengine/relations', async (echte) => {
   const modul = await echte<typeof import('../../softengine/relations')>()
@@ -18,14 +25,30 @@ vi.mock('../../softengine/relations', async (echte) => {
           nr: '174',
           params: [],
         }),
-    resolveActionParam: (binding: { value: string }) => binding.value,
-    executeRelation: async (vorlage: { id: string }) => {
+    resolveActionParam: (
+      binding: { source: string; value: string; blockId?: string },
+      werte: {
+        context: Record<string, string | undefined>
+        zeilenZelle?: (blockId: string, spalte: number) => string
+      },
+    ) => {
+      if (binding.source === 'context') return werte.context[binding.value] ?? ''
+      if (binding.source.endsWith('zelle')) {
+        return werte.zeilenZelle?.(binding.blockId ?? '', Number(binding.value)) ?? ''
+      }
+      return binding.value
+    },
+    executeRelation: async (vorlage: { id: string }, params: readonly string[]) => {
       gleichzeitig += 1
       hoechstensGleichzeitig = Math.max(hoechstensGleichzeitig, gleichzeitig)
       laeufe.push(`start ${vorlage.id}`)
+      gerufen.push({ id: vorlage.id, params: [...params] })
       await new Promise((fertig) => setTimeout(fertig, 5))
       laeufe.push(`ende ${vorlage.id}`)
       gleichzeitig -= 1
+      if (vorlage.id.startsWith('kaputt') || params.includes(KAPUTT)) {
+        return { wert: '', roh: undefined, fehler: 'Nicht durchgekommen' }
+      }
       return { wert: `W-${vorlage.id}`, roh: undefined }
     },
   }
@@ -59,14 +82,72 @@ function zelle(
   return { source: quelle, value: '0', blockId }
 }
 
+function ausKontext(name: string): ActionParamBinding {
+  return { source: 'context', value: name }
+}
+
 const el = {
   hasAttribute: () => false,
   getAttribute: () => null,
 } as unknown as HTMLElement
 
+// Eine Tabelle, wie die Kette sie sieht: eine Vormerk-Liste und der
+// Lauf-Bericht. Mehr braucht runEvent von einem Baustein nicht. Die Kennung
+// einer Zeile steht zugleich in ihrer ersten Zelle — so kann der Test sagen,
+// WELCHE Zeile haengen bleibt.
+interface Attrappe {
+  el: HTMLElement
+  bericht: string[]
+  offen: () => readonly string[]
+}
+
+function tabelle(blockId: string, art: VormerkArt, kennungen: readonly string[]): Attrappe {
+  let liste = [...kennungen]
+  const bericht: string[] = []
+  const zeilen = (): { satz: string; werte: readonly string[] }[] =>
+    liste.map((k) => ({ satz: k, werte: [k] }))
+  const traeger = {
+    getAttribute: (name: string) => (name === 'data-ff-block-id' ? blockId : null),
+    get erfassteZeilen(): string[][] | undefined {
+      return art === 'erfasst' ? liste.map((k) => [k]) : undefined
+    },
+    get erfassteSchluessel(): string[] | undefined {
+      return art === 'erfasst' ? [...liste] : undefined
+    },
+    get geaenderteZeilen(): { satz: string; werte: readonly string[] }[] | undefined {
+      return art === 'geaendert' ? zeilen() : undefined
+    },
+    get geloeschteZeilen(): { satz: string; werte: readonly string[] }[] | undefined {
+      return art === 'geloescht' ? zeilen() : undefined
+    },
+    zeileSchreibt: (a: VormerkArt, k: string) => { bericht.push(`schreibt ${a} ${k}`) },
+    zeileGescheitert: (a: VormerkArt, k: string, m: string) => {
+      bericht.push(`fehler ${a} ${k} ${m}`)
+    },
+    laufFertig: (a: VormerkArt, fertig: readonly string[]) => {
+      bericht.push(`fertig ${a} [${fertig.join(',')}]`)
+      liste = liste.filter((k) => !fertig.includes(k))
+    },
+  }
+  return {
+    el: traeger as unknown as HTMLElement,
+    bericht,
+    offen: () => liste,
+  }
+}
+
+function knopf(kette: Record<string, RuntimeStep[]>, traeger: Attrappe): HTMLElement {
+  return {
+    hasAttribute: (name: string) => name === 'data-ff-aktionen',
+    getAttribute: (name: string) => (name === 'data-ff-aktionen' ? JSON.stringify(kette) : null),
+    ownerDocument: { querySelectorAll: () => [traeger.el] },
+  } as unknown as HTMLElement
+}
+
 beforeEach(() => {
   laeufe.length = 0
   fehler.length = 0
+  gerufen.length = 0
   gleichzeitig = 0
   hoechstensGleichzeitig = 0
 })
@@ -161,15 +242,97 @@ describe('laufeSchritte', () => {
   })
 
   test('geschrieben meldet nur, wer wirklich schreibt', async () => {
-    expect(await laufeSchritte(el, [relationsSchritt('get-a')], {}, undefined)).toBe(false)
-    expect(await laufeSchritte(el, [relationsSchritt('put-a')], {}, undefined)).toBe(true)
+    const gelesen = await laufeSchritte(el, [relationsSchritt('get-a')], {}, undefined)
+    const geschrieben = await laufeSchritte(el, [relationsSchritt('put-a')], {}, undefined)
+    expect(gelesen).toEqual({ geschrieben: false, fehler: '' })
+    expect(geschrieben).toEqual({ geschrieben: true, fehler: '' })
   })
 
   test('eine unbekannte Vorlage laesst den Rest der Kette laufen', async () => {
     const steps: RuntimeStep[] = [relationsSchritt(''), relationsSchritt('put-b')]
-    expect(await laufeSchritte(el, steps, {}, undefined)).toBe(true)
+    expect((await laufeSchritte(el, steps, {}, undefined)).geschrieben).toBe(true)
     expect(laeufe).toEqual(['start put-b', 'ende put-b'])
   })
+
+  // Weiterlaufen hiesse, die naechsten Schritte auf ein Ergebnis zu setzen,
+  // das es nicht gibt.
+  test('ein nicht durchgekommener Ruf stoppt die restlichen Schritte', async () => {
+    const steps: RuntimeStep[] = [relationsSchritt('kaputt-put'), relationsSchritt('put-b')]
+    expect(await laufeSchritte(el, steps, {}, undefined))
+      .toEqual({ geschrieben: true, fehler: 'Nicht durchgekommen' })
+    expect(laeufe).toEqual(['start kaputt-put', 'ende kaputt-put'])
+  })
+})
+
+describe('Lauf-Bericht je Zeile', () => {
+  test('alle Zeilen durch: jede gemeldet, alle ausgetragen, frische Daten', async () => {
+    const t = tabelle('t1', 'geaendert', ['48', '49'])
+    const kette = { klick: [relationsSchritt('put-1', [zelle('aenderungszelle', 't1')])] }
+    await runEvent(knopf(kette, t), 'klick', {})
+    expect(t.bericht).toEqual([
+      'schreibt geaendert 48',
+      'schreibt geaendert 49',
+      'fertig geaendert [48,49]',
+    ])
+    expect(t.offen()).toEqual([])
+    expect(laeufe.at(-1)).toBe('frische Daten')
+  })
+
+  // Der Kern von Etappe 3: ein Fehler in Zeile 2 von 3 darf den Zeilen 2 und 3
+  // nicht ihre Vormerkung nehmen — sonst waere die Eingabe verloren.
+  test('Fehler stoppt den Lauf, die Zeilen dahinter bleiben vorgemerkt', async () => {
+    const t = tabelle('t1', 'erfasst', ['e1', KAPUTT, 'e3'])
+    const kette = { klick: [relationsSchritt('put-1', [zelle('erfassungszelle', 't1')])] }
+    await runEvent(knopf(kette, t), 'klick', {})
+    expect(t.bericht).toEqual([
+      'schreibt erfasst e1',
+      `schreibt erfasst ${KAPUTT}`,
+      `fehler erfasst ${KAPUTT} Nicht durchgekommen`,
+      'fertig erfasst [e1]',
+    ])
+    expect(t.offen()).toEqual([KAPUTT, 'e3'])
+    // Zeile 3 kam nie an die Reihe.
+    expect(gerufen.map((r) => r.params[0])).toEqual(['e1', KAPUTT])
+  })
+
+  test('leere Liste: kein Lauf, kein Bericht, kein Fehler', async () => {
+    const t = tabelle('t1', 'geloescht', [])
+    const kette = { klick: [relationsSchritt('put-1', [zelle('loeschzelle', 't1')])] }
+    await runEvent(knopf(kette, t), 'klick', {})
+    expect(t.bericht).toEqual([])
+    expect(laeufe).toEqual([])
+    expect(fehler).toEqual([])
+  })
+})
+
+// Der Bediener soll den Unterschied zwischen den Platzhalter-Namen zweier
+// Relationen nicht kennen muessen: beim Loeschen traegt die Satznummer beide.
+test('die Loeschzeile fuellt PINDEX UND DROP_PINDEX', async () => {
+  const t = tabelle('t1', 'geloescht', ['48'])
+  const kette = {
+    klick: [relationsSchritt('put-weg', [
+      zelle('loeschzelle', 't1'),
+      ausKontext('PINDEX'),
+      ausKontext('DROP_PINDEX'),
+    ])],
+  }
+  await runEvent(knopf(kette, t), 'klick', {})
+  expect(gerufen).toEqual([{ id: 'put-weg', params: ['48', '48', '48'] }])
+})
+
+// Eine geaenderte Zeile kennt DROP_PINDEX nicht: der Platzhalter gehoert der
+// Loeschung, und ein leerer Parameter ist besser als ein falscher.
+test('eine geaenderte Zeile fuellt nur PINDEX', async () => {
+  const t = tabelle('t1', 'geaendert', ['48'])
+  const kette = {
+    klick: [relationsSchritt('put-1', [
+      zelle('aenderungszelle', 't1'),
+      ausKontext('PINDEX'),
+      ausKontext('DROP_PINDEX'),
+    ])],
+  }
+  await runEvent(knopf(kette, t), 'klick', {})
+  expect(gerufen).toEqual([{ id: 'put-1', params: ['48', '48', ''] }])
 })
 
 test('runEvent meldet Klartext, wenn ein Schritt zwei Listen liest', async () => {

@@ -1,5 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit'
-import { vormerkText } from './aenderungen'
+import { vormerkText } from '../shared/vormerkStand'
 import { datensatzText } from './suche'
 
 export interface FussLage {
@@ -14,22 +14,40 @@ export interface FussLage {
 
   summen: readonly { titel: string; text: string }[]
 
-  // Vorgemerkte Zell-Aenderungen. Geschrieben werden sie erst durch eine
-  // Kette an einem Knopf — bis dahin sagt die Fusszeile, dass etwas offen ist.
-  vorgemerkt: number
+  // Die Vormerkungen dieser Tabelle, in ZEILEN. Geschrieben werden sie erst
+  // durch eine Kette an einem Knopf — bis dahin sagt die Fusszeile, dass
+  // etwas offen ist, und der Knopf sagt es mit denselben Worten.
+  erfasst: number
 
-  loeschungen: number
+  geaendert: number
+
+  geloescht: number
 
   // Beim Rollen gibt es nur eine Seite — dann waere „Seite 1 von 1" mit zwei
   // toten Knoepfen daneben. Die Zaehlzeile bleibt, sie traegt den Filterstand.
   blaettert: boolean
+
+  leer: boolean
 }
 
 export interface FussHandeln {
   blaettere: (zu: number) => void
 }
 
-export function tabelleFuss(lage: FussLage, tun: FussHandeln): TemplateResult {
+// Ob es die Fusszeile ueberhaupt gibt, entscheidet sie selbst: sie erscheint
+// nur, wenn sie etwas zu sagen hat. Sonst stuende unter jeder kurzen Tabelle
+// eine leere Leiste.
+export function tabelleFuss(
+  lage: FussLage,
+  tun: FussHandeln,
+): TemplateResult | typeof nothing {
+  const vorgemerkt = lage.erfasst + lage.geaendert + lage.geloescht
+  const noetig = lage.seiten > 1
+    || lage.summen.length > 0
+    || vorgemerkt > 0
+    || lage.suchtAktiv
+    || lage.auswahlAktiv
+  if (lage.leer || !noetig) return nothing
   return html`<div class="fusszeile">
     <div class="seiten-info">${datensatzText({
       hatQuelle: lage.hatQuelle,
@@ -38,8 +56,8 @@ export function tabelleFuss(lage: FussLage, tun: FussHandeln): TemplateResult {
       suchtAktiv: lage.suchtAktiv,
       auswahlAktiv: lage.auswahlAktiv,
     })}</div>
-    ${lage.vorgemerkt === 0 && lage.loeschungen === 0 ? nothing : html`<div class="vorgemerkt">${
-      vormerkText(lage.vorgemerkt, lage.loeschungen)
+    ${vorgemerkt === 0 ? nothing : html`<div class="vorgemerkt">${
+      vormerkText(lage.erfasst, lage.geaendert, lage.geloescht)
     }</div>`}
     ${lage.summen.length === 0 ? nothing : html`<div class="summen">
       ${lage.summen.map((s) => html`<span class="summe">

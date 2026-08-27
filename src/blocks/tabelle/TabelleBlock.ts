@@ -8,6 +8,7 @@ import type {
   ErfassungsFaehigkeit,
   ListenBindung,
   SatzWahl,
+  VormerkArt,
 } from '../../core/blocks/BlockDefinition'
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
@@ -29,13 +30,14 @@ import {
 import { connectTable, disconnectTable, hatSatzNummer } from './seRuntime'
 import { zeigtEchteDaten } from './suche'
 import {
-  benenneSpalteUm,
   feldPickerAbbestellen,
-  oeffneFeldPicker,
+  kopfGriffe,
   spaltenSteuerung,
 } from './spaltenBearbeiten'
 import { zeilenHoeheFuer } from './spaltenArten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
+import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
+import { meldeVormerkungen } from '../shared/vormerkStand'
 import { AnsichtsStand } from './ansichtsStand'
 import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
@@ -166,6 +168,10 @@ export class TabelleBlock extends BasicBlock {
   // fallen nur mit dem Zweckwechsel oder dem Ketten-Lauf des Knopfs.
   private _erfassung = new ErfassungsAnschluss()
 
+  // Was der Ketten-Lauf ueber einzelne Zeilen gemeldet hat (schreibt, haengen
+  // geblieben). Der Baustein haelt ihn, weil er beide Sorten Zeilen zeigt.
+  private readonly _lauf = new LaufStand(() => this.requestUpdate())
+
   // Vormerkungen und Zellbedienung der GEBUCHTEN Zeilen — Stand und
   // Bedienung liegen in zeilenBearbeitung, der Baustein delegiert nur.
   private readonly _zeilen = new ZeilenBearbeitung({
@@ -174,6 +180,7 @@ export class TabelleBlock extends BasicBlock {
     rohzeilen: () => this.rohzeilen,
     datenzeilen: () => this.datenzeilen,
     melde: () => this.requestUpdate(),
+    lauf: this._lauf,
     erfassungAn: () => this.erfassungAn,
     fokussiereErfassungsZelle: (index) => this.fokussiereErfassungsZelle(index),
   })
@@ -216,34 +223,45 @@ export class TabelleBlock extends BasicBlock {
     this._erfassung.zuruecksetzen()
   }
 
-  // Der Laufzeit-Vertrag der Faehigkeit kannErfassen (ErfassungsTraegerElement
-  // in core/blocks/BlockDefinition.ts): die Kette am Knopf liest die Zeilen
-  // ueber data-ff-block-id und leert sie nach dem Lauf.
+  // Die Laufzeit-Vertraege ErfassungsTraegerElement, AenderungsTraegerElement,
+  // LoeschTraegerElement und LaufBerichtElement (core/blocks/BlockDefinition.ts):
+  // die Kette am Knopf liest sie ueber die Element-Referenz (data-ff-block-id)
+  // — darum stehen sie am Baustein und delegieren nur.
   get erfassteZeilen(): readonly (readonly string[])[] {
     return this._erfassung.zeilen
   }
 
-  erfassungLeeren(): void {
-    if (this._erfassung.leeren()) this.requestUpdate()
+  get erfassteSchluessel(): readonly string[] {
+    return this._erfassung.schluessel
   }
 
-  // Die Laufzeit-Vertraege AenderungsTraegerElement und LoeschTraegerElement
-  // (core/blocks/BlockDefinition.ts): die Kette am Knopf liest sie ueber die
-  // Element-Referenz — darum stehen sie am Baustein und delegieren nur.
   get geaenderteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
     return this._zeilen.geaenderteZeilen
-  }
-
-  aenderungenLeeren(): void {
-    this._zeilen.aenderungenLeeren()
   }
 
   get geloeschteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
     return this._zeilen.geloeschteZeilen
   }
 
-  loeschungenLeeren(): void {
-    this._zeilen.loeschungenLeeren()
+  zeileSchreibt(art: VormerkArt, schluessel: string): void {
+    this._lauf.schreibt(art, schluessel)
+  }
+
+  zeileGescheitert(art: VormerkArt, schluessel: string, meldung: string): void {
+    this._lauf.gescheitert(art, schluessel, meldung)
+  }
+
+  laufFertig(art: VormerkArt, geschrieben: readonly string[]): void {
+    this._lauf.fertig(art, geschrieben)
+    if (art === 'erfasst') {
+      if (this._erfassung.austragen(geschrieben)) this.requestUpdate()
+      return
+    }
+    this._zeilen.austragen(art, geschrieben)
+  }
+
+  private erfasstStand(index: number): ZeilenZeichen {
+    return this._lauf.zeigt('erfasst', this._erfassung.schluessel[index] ?? '', 'erfasst')
   }
 
   // Enter am Zeilenende (G4): die Zeile bleibt stehen, die Erfassung rueckt
@@ -346,8 +364,12 @@ export class TabelleBlock extends BasicBlock {
     this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())
   }
 
+  // Der Schreiben-Knopf haengt nicht an diesem Baustein, sondern an seiner
+  // eigenen Kette. Er erfaehrt hier, dass sich die Zahl geaendert hat — an
+  // EINER Stelle, damit kein Weg (Tippen, Loeschkreuz, Push) sie vergisst.
   protected override updated(): void {
     this._ansicht.nachRendern()
+    meldeVormerkungen(this)
   }
 
   override disconnectedCallback(): void {
@@ -387,8 +409,6 @@ export class TabelleBlock extends BasicBlock {
       wertVon: (zeile, spalte) => this._zeilen.zellWert(zeile, spalte),
       blaettert: this.blaettern === 'ja',
     })
-    const vorgemerkt = this._zeilen.vorgemerkteAnzahl()
-    const loeschungen = this._zeilen.vorgemerkteLoeschungen()
     const tafelKlassen = ['tabelle']
     if (this.schlank === 'ja') tafelKlassen.push('schlank')
     if (this.blaettern !== 'ja') tafelKlassen.push('rollt')
@@ -421,12 +441,11 @@ export class TabelleBlock extends BasicBlock {
           && !this.hasAttribute('data-ff-editor')
           && ansicht.hatQuelle
           && hatSatzNummer(this),
-        istGeloescht: (zeile) => this._zeilen.istGeloescht(zeile),
-        zellWert: (zeile, spalte) => this._zeilen.zellWert(zeile, spalte),
-        istGeaendert: (zeile, spalte) => this._zeilen.istGeaendert(zeile, spalte),
+        zeilenStand: this._zeilen,
         leer: ansicht.leer,
         leerText: this.leerText,
         erfasste: this._erfassung.zeilen,
+        erfasstStand: (index) => this.erfasstStand(index),
         erfassung: this.erfassungAn
           ? erfassungsZeileFuer(
               this.erfassungsWirt(),
@@ -438,22 +457,14 @@ export class TabelleBlock extends BasicBlock {
           : nothing,
       }, {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
-        dblklickKopf: (e, i) => {
-          if (!this.editable) return
-
-          feldPickerAbbestellen(this)
-          benenneSpalteUm(e, i, () => this.spaltenListe(), (l) => this.aendere(l))
-        },
-        klickKopf: (e, i) => {
-          if (this.editable) {
-            oeffneFeldPicker(this, e, {
-              prop: TabelleBlock.listenBindung.prop,
-              index: i,
-              liste: () => this.spaltenListe(),
-            })
-          }
-          this._ansicht.klickSortiere(i)
-        },
+        ...kopfGriffe({
+          baustein: this,
+          editable: () => this.editable,
+          prop: TabelleBlock.listenBindung.prop,
+          liste: () => this.spaltenListe(),
+          aendere: (l) => this.aendere(l),
+          sortiere: (i) => this._ansicht.klickSortiere(i),
+        }),
         aktiviereZeile: (rohIndex, ansichtIndex) =>
           aktiviereZeile(this, this.rohzeilen, rohIndex, ansichtIndex),
         zeileDoppelt: (rohIndex) => zeileDoppelt(this, this.rohzeilen, rohIndex),
@@ -461,15 +472,8 @@ export class TabelleBlock extends BasicBlock {
           if (this._erfassung.entferne(index)) this.requestUpdate()
         },
         schalteLoeschung: (rohIndex) => this._zeilen.schalteLoeschung(rohIndex),
-        tippeZelle: (zeile, spalte, text) => this._zeilen.tippeZelle(zeile, spalte, text),
-        verlasseZelle: (zeile, spalte, text) => this._zeilen.verlasseZelle(zeile, spalte, text),
-        tasteZelle: (zeile, spalte, e) => this._zeilen.tasteZelle(zeile, spalte, e),
       })}
-      ${ ''}
-      ${ansicht.leer || !this._ansicht.fussNoetig(
-        ansicht.seiten, ansicht.summen.length, vorgemerkt, loeschungen, this.durchAuswahlGefiltert)
-        ? nothing
-        : tabelleFuss({
+      ${tabelleFuss({
         hatQuelle: ansicht.hatQuelle,
         sichtbar: ansicht.gesamt,
         gesamt: this.datenzeilen.length,
@@ -479,8 +483,10 @@ export class TabelleBlock extends BasicBlock {
         seiten: ansicht.seiten,
         blaettert: this.blaettern === 'ja',
         summen: ansicht.summen,
-        vorgemerkt,
-        loeschungen,
+        erfasst: this._erfassung.zeilen.length,
+        geaendert: this._zeilen.vorgemerkteAenderungen(),
+        geloescht: this._zeilen.vorgemerkteLoeschungen(),
+        leer: ansicht.leer,
       }, {
         blaettere: (zu) => this._ansicht.blaettere(zu),
       })}

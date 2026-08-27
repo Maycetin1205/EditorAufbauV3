@@ -246,7 +246,30 @@ export const tabelleStil = css`
       /* Zum Loeschen vorgemerkt: durchgestrichen und blass — die Zeile ist
          noch da, aber sie geht. Zurueckgenommen wird sie am selben Kreuz. */
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
-      .zeile.geloescht { background: var(--se-red-shell); }
+
+      /* Der Zeilen-Status ist EIN Balken links, sonst nichts: keine Worte in
+         der Zeile (Nutzer-Vorgabe). Er steht NACH .gewaehlt, weil er den
+         Auswahl-Balken schlagen muss — was noch nicht geschrieben ist, ist
+         die dringendere Auskunft. Der Klartext haengt im title. */
+      .zeile[data-status="erfasst"] {
+        box-shadow: inset 3px 0 0 var(--se-accent);
+        background: var(--se-accent-soft);
+      }
+      .zeile[data-status="geaendert"],
+      .zeile[data-status="loeschung"] { box-shadow: inset 3px 0 0 var(--se-amber); }
+      .zeile[data-status="loeschung"] { background: var(--se-red-shell); }
+      .zeile[data-status="schreibt"] {
+        box-shadow: inset 3px 0 0 var(--se-accent);
+        animation: se-schreibt 1.1s ease-in-out infinite;
+      }
+      .zeile[data-status="fehler"] {
+        box-shadow: inset 3px 0 0 var(--se-red);
+        background: var(--se-red-shell);
+      }
+      @keyframes se-schreibt { 50% { opacity: 0.55; } }
+      @media (prefers-reduced-motion: reduce) {
+        .zeile[data-status="schreibt"] { animation: none; }
+      }
 
       /* Das Kreuz sitzt am rechten Rand der Zeile, ueber dem letzten Feld. */
       .zeile { position: relative; }

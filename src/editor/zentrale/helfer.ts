@@ -47,7 +47,7 @@ export const PLATZHALTER_KLARTEXT: Record<string, string> = {
   FELD_LEN: 'Feld-Länge (aus dem gebundenen Feld)',
   PINDEX: 'Nummer des Datensatzes',
   SELKEY: 'Schlüssel der gewählten Zeile',
-  DROP_PINDEX: 'Nummer des Ziel-Datensatzes beim Ablegen',
+  DROP_PINDEX: 'Satznummer der Löschzeile (automatisch)',
   RELID: 'Tabellen-ID der Datenquelle (ohne IDB-Präfix)',
   VALUE: 'Neuer Wert (z. B. Titel der Zielspalte)',
   ZIMMER: 'Titel des Ziel-Zimmers beim Ablegen (leer ohne Zimmer)',

@@ -98,23 +98,6 @@ export class AnsichtsStand {
     this.wirt.melde()
   }
 
-  // Die Fusszeile nur, wenn sie etwas zu sagen hat: geblaettert werden muss
-  // oder ein Filter greift (G5). Sonst gehoert der Platz den Zeilen.
-  fussNoetig(
-    seiten: number,
-    summen: number,
-    vorgemerkt: number,
-    loeschungen: number,
-    auswahlGefiltert: boolean,
-  ): boolean {
-    return seiten > 1
-      || summen > 0
-      || vorgemerkt > 0
-      || loeschungen > 0
-      || this.suchtAktiv
-      || auswahlGefiltert
-  }
-
   fokussiereSuche(): boolean {
     const feld = this.wirt.baustein.shadowRoot
       ?.querySelector<HTMLInputElement>('.suchzeile input')

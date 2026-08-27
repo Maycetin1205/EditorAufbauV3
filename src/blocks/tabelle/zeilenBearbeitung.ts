@@ -1,7 +1,9 @@
+import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 import { AenderungsSpeicher } from './aenderungen'
 import { zeilenIndexVon } from './seRuntime'
 import type { Spalte } from './spalten'
 import { spaltenArt, zellText } from './spaltenArten'
+import type { LaufStand, ZeilenZeichen } from './zeilenStatus'
 
 // Was an einer GEBUCHTEN Zeile passiert: die Vormerkungen (geaendert, weg)
 // und die Bedienung der aenderbaren Zellen. Getrennt vom Baustein wie die
@@ -18,6 +20,10 @@ export interface ZeilenWirt {
   datenzeilen: () => readonly string[][]
 
   melde: () => void
+
+  // Was der Ketten-Lauf ueber die Zeilen gemeldet hat. Der Baustein haelt ihn,
+  // weil auch die erfassten Zeilen darin stehen.
+  lauf: LaufStand
 
   // Enter unter der letzten Zeile rueckt in die Erfassungszeile — die haelt
   // der Baustein.
@@ -45,6 +51,9 @@ export class ZeilenBearbeitung {
   // und ALLE Spaltenwerte — die geaenderten inbegriffen. So kann die Kette
   // auch unveraenderte Felder derselben Zeile mitschreiben.
   get geaenderteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
+    // Nichts vorgemerkt: kein Nachschlagen. satzPlaetze liefe sonst bei JEDEM
+    // Rendern ueber alle Zeilen der Liste.
+    if (this.aenderungen.anzahl === 0) return []
     const spaltenAnzahl = this.wirt.spalten().length
     const plaetze = this.satzPlaetze()
     const raus: { satz: string; werte: readonly string[] }[] = []
@@ -62,14 +71,11 @@ export class ZeilenBearbeitung {
     return raus
   }
 
-  aenderungenLeeren(): void {
-    if (this.aenderungen.leeren()) this.wirt.melde()
-  }
-
   // Der Vertrag der Faehigkeit kannLoeschen (LoeschTraegerElement): je
   // vorgemerkter Zeile ihre Satznummer und alle Spaltenwerte. Zeilen, die
   // ein Push inzwischen weggenommen hat, fallen raus — sie sind schon weg.
   get geloeschteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
+    if (this.geloescht.size === 0) return []
     const spaltenAnzahl = this.wirt.spalten().length
     const plaetze = this.satzPlaetze()
     const raus: { satz: string; werte: readonly string[] }[] = []
@@ -84,27 +90,38 @@ export class ZeilenBearbeitung {
     return raus
   }
 
-  loeschungenLeeren(): void {
-    if (this.geloescht.size === 0) return
-    this.geloescht.clear()
-    this.wirt.melde()
+  // Was der Ketten-Lauf geschrieben hat, ist keine Vormerkung mehr. Nur diese
+  // Zeilen — die haengengebliebenen und die dahinter bleiben stehen.
+  austragen(art: VormerkArt, kennungen: readonly string[]): void {
+    let weg = false
+    for (const satz of kennungen) {
+      if (art === 'geaendert') weg = this.aenderungen.nimmSatzZurueck(satz) || weg
+      else weg = this.geloescht.delete(satz) || weg
+    }
+    if (weg) this.wirt.melde()
   }
 
   // Vorgemerkt heisst: noch schreibbar. Eine Zeile, die ein Push aus der
   // Liste genommen hat, zaehlt nicht mehr mit — sonst stuende unter der
   // Tabelle eine Zahl, die der Knopf nicht einloest.
-  vorgemerkteAnzahl(): number {
-    if (this.aenderungen.anzahl === 0) return 0
-    const plaetze = this.satzPlaetze()
-    let anzahl = 0
-    for (const eintrag of this.aenderungen.proSatz()) {
-      if (plaetze.has(eintrag.satz)) anzahl += eintrag.aenderungen.length
-    }
-    return anzahl
+  vorgemerkteAenderungen(): number {
+    return this.geaenderteZeilen.length
   }
 
   vorgemerkteLoeschungen(): number {
     return this.geloeschteZeilen.length
+  }
+
+  // Der Balken links an der Zeile. Was der Lauf meldet, schlaegt die
+  // Vormerkung; unter den Vormerkungen schlaegt die Loeschung die Aenderung,
+  // weil sie die Aenderung ohnehin mitnimmt (schalteLoeschung).
+  statusVon(rohIndex: number): ZeilenZeichen {
+    const satz = this.satzVon(rohIndex)
+    if (satz === '') return { status: 'gebucht', titel: '' }
+    if (this.geloescht.has(satz)) return this.wirt.lauf.zeigt('geloescht', satz, 'loeschung')
+    const geaendert = this.wirt.spalten()
+      .some((_, spalte) => this.aenderungen.wert(satz, spalte) !== undefined)
+    return this.wirt.lauf.zeigt('geaendert', satz, geaendert ? 'geaendert' : 'gebucht')
   }
 
   // Satznummer -> Platz in der Liste. Einmal gebaut statt je Vormerkung

@@ -92,6 +92,42 @@ export interface FeldPickerRuf {
   liste?: () => Spalte[]
 }
 
+export interface KopfGriffWirt {
+  baustein: HTMLElement
+
+  // Im Editor gehoert der Kopfklick dem Binden, an der Maske dem Sortieren.
+  editable: () => boolean
+
+  prop: string
+
+  liste: () => Spalte[]
+
+  aendere: (spalten: Spalte[]) => void
+
+  sortiere: (index: number) => void
+}
+
+// Was ein Klick und ein Doppelklick auf den Spaltenkopf tun. Steht hier, weil
+// alles daran Spaltenbearbeitung ist — der Baustein reicht es nur durch.
+export function kopfGriffe(wirt: KopfGriffWirt): {
+  dblklickKopf: (e: MouseEvent, index: number) => void
+  klickKopf: (e: MouseEvent, index: number) => void
+} {
+  return {
+    dblklickKopf: (e, index) => {
+      if (!wirt.editable()) return
+      feldPickerAbbestellen(wirt.baustein)
+      benenneSpalteUm(e, index, wirt.liste, wirt.aendere)
+    },
+    klickKopf: (e, index) => {
+      if (wirt.editable()) {
+        oeffneFeldPicker(wirt.baustein, e, { prop: wirt.prop, index, liste: wirt.liste })
+      }
+      wirt.sortiere(index)
+    },
+  }
+}
+
 export function oeffneFeldPicker(
   baustein: HTMLElement,
   e: MouseEvent,

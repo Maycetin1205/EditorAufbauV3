@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { AenderungsSpeicher, vormerkText } from './aenderungen'
+import { AenderungsSpeicher } from './aenderungen'
 
 test('geschluesselt wird nach Satznummer, nicht nach Platz in der Liste', () => {
   const speicher = new AenderungsSpeicher()
@@ -52,17 +52,25 @@ test('proSatz buendelt je Zeile, in der Reihenfolge der ersten Aenderung', () =>
   ])
 })
 
-test('leeren meldet nur beim ersten Mal etwas', () => {
+// Was die Kette geschrieben hat, faellt weg — und nur das. Ein leeren() gaebe
+// es nicht mehr: nach einem abgebrochenen Lauf bleibt der Rest vorgemerkt.
+test('nimmSatzZurueck loescht eine ganze Zeile, die anderen bleiben', () => {
   const speicher = new AenderungsSpeicher()
   speicher.setze('48', 0, 'a')
-  expect(speicher.leeren()).toBe(true)
-  expect(speicher.leeren()).toBe(false)
+  speicher.setze('48', 2, 'b')
+  speicher.setze('49', 0, 'c')
+  expect(speicher.nimmSatzZurueck('48')).toBe(true)
+  expect(speicher.anzahl).toBe(1)
+  expect(speicher.wert('49', 0)).toBe('c')
+  expect(speicher.nimmSatzZurueck('48')).toBe(false)
 })
 
-test('vormerkText: eine Stelle fuer Fusszeile und Knopf', () => {
-  expect(vormerkText(0)).toBe('')
-  expect(vormerkText(1)).toBe('1 Änderung vorgemerkt')
-  expect(vormerkText(3)).toBe('3 Änderungen vorgemerkt')
-  expect(vormerkText(0, 1)).toBe('1 Löschung vorgemerkt')
-  expect(vormerkText(3, 2)).toBe('3 Änderungen, 2 Löschungen vorgemerkt')
+// Die Satznummer steht VOR dem Trenner. Ohne die Grenze traefe '4' auch '48'.
+test('nimmSatzZurueck trifft nur die genaue Satznummer', () => {
+  const speicher = new AenderungsSpeicher()
+  speicher.setze('4', 0, 'a')
+  speicher.setze('48', 0, 'b')
+  expect(speicher.nimmSatzZurueck('4')).toBe(true)
+  expect(speicher.wert('48', 0)).toBe('b')
+  expect(speicher.anzahl).toBe(1)
 })

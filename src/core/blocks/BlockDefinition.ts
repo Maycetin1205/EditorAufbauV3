@@ -116,13 +116,22 @@ export interface ErfassungsFaehigkeit {
   wenn?: PropertyVisibilityCondition
 }
 
+// Die drei Vormerk-Listen eines Bausteins. Ueber diese Vokabel reden Kette,
+// Baustein und Statusbalken — der Ketten-Lauf kennt keinen Bausteintyp.
+export type VormerkArt = 'erfasst' | 'geaendert' | 'geloescht'
+
 // Der Laufzeit-Vertrag eines Bausteins mit dieser Fähigkeit: die Kette am
-// Knopf liest die erfassten Zeilen (Werte je Spalte, in Spalten-Reihenfolge)
-// und leert sie nach dem Lauf. Rein als Typ — die Laufzeit findet den
-// Baustein über data-ff-block-id, nie über einen Import (Regel 2).
+// Knopf liest die erfassten Zeilen (Werte je Spalte, in Spalten-Reihenfolge).
+// Rein als Typ — die Laufzeit findet den Baustein über data-ff-block-id, nie
+// über einen Import (Regel 2).
+//
+// erfassteSchluessel steht Platz fuer Platz neben erfassteZeilen: eine
+// erfasste Zeile hat noch keine Satznummer, und ihr PLATZ taugt nicht als
+// Kennung — nimmt der Bediener waehrend eines laufenden GET eine Zeile weg,
+// zeigte er hinterher auf die falsche.
 export interface ErfassungsTraegerElement {
   erfassteZeilen: readonly (readonly string[])[]
-  erfassungLeeren: () => void
+  erfassteSchluessel: readonly string[]
 }
 
 // Und derselbe fuer Zeilen, die WEG sollen. Die Werte reisen mit, weil eine
@@ -130,15 +139,27 @@ export interface ErfassungsTraegerElement {
 // Belegnummer, Positionsnummer stehen in den Spalten).
 export interface LoeschTraegerElement {
   geloeschteZeilen: readonly { satz: string; werte: readonly string[] }[]
-  loeschungenLeeren: () => void
 }
 
 // Derselbe Vertrag fuer GEAENDERTE Zeilen: je Zeile ihre Satznummer (damit
 // die Kette weiss, WEN sie schreibt) und die Werte aller Spalten, mit der
-// Aenderung darin. Geleert wird erst nach dem vollstaendigen Lauf.
+// Aenderung darin.
 export interface AenderungsTraegerElement {
   geaenderteZeilen: readonly { satz: string; werte: readonly string[] }[]
-  aenderungenLeeren: () => void
+}
+
+// Der Bericht des Ketten-Laufs an den Baustein, dessen Liste er abarbeitet.
+// Ohne ihn waere ein Lauf alles-oder-nichts: ein Fehler in Zeile 3 von 10
+// naehme auch den Vormerkungen 4-10 ihre Chance.
+//
+// laufFertig kommt erst, wenn ALLE Abschnitte durch sind — ein spaeterer
+// Abschnitt darf dieselbe Liste noch einmal lesen. Es traegt die
+// geschriebenen Zeilen aus und nimmt jede „schreibt"-Marke dieser Liste
+// zurueck; die gescheiterte Zeile behaelt ihre.
+export interface LaufBerichtElement {
+  zeileSchreibt: (art: VormerkArt, schluessel: string) => void
+  zeileGescheitert: (art: VormerkArt, schluessel: string, meldung: string) => void
+  laufFertig: (art: VormerkArt, geschrieben: readonly string[]) => void
 }
 
 export interface BlockDefinition {

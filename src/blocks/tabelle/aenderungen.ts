@@ -65,22 +65,13 @@ export class AenderungsSpeicher {
     return raus
   }
 
-  leeren(): boolean {
-    if (this.werte.size === 0) return false
-    this.werte.clear()
-    return true
+  // Alles, was an EINER Zeile vorgemerkt war, faellt weg — die Zeile ist
+  // geschrieben. Nicht dasselbe wie leeren: die anderen Zeilen bleiben.
+  nimmSatzZurueck(satz: string): boolean {
+    let weg = false
+    for (const k of [...this.werte.keys()]) {
+      if (k.slice(0, k.indexOf(TRENNER)) === satz && this.werte.delete(k)) weg = true
+    }
+    return weg
   }
-}
-
-// „3 Änderungen, 1 Löschung vorgemerkt" — eine Stelle, damit Fusszeile und
-// Knopf dieselbe Zahl in denselben Worten sagen.
-export function vormerkText(aenderungen: number, loeschungen = 0): string {
-  const teile: string[] = []
-  if (aenderungen > 0) {
-    teile.push(aenderungen === 1 ? '1 Änderung' : `${aenderungen} Änderungen`)
-  }
-  if (loeschungen > 0) {
-    teile.push(loeschungen === 1 ? '1 Löschung' : `${loeschungen} Löschungen`)
-  }
-  return teile.length === 0 ? '' : `${teile.join(', ')} vorgemerkt`
 }

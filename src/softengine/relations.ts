@@ -17,6 +17,11 @@ export interface RelationAntwort {
   wert: string
 
   roh: unknown
+
+  // Gesetzt, wenn der Ruf gar nicht erst hinausging oder unbeantwortet blieb
+  // — derselbe Klartext, den der Balken zeigt. Leer heisst NICHT „die ERP hat
+  // uebernommen": ein PUT ist ein Einweg-Ruf, seine Ablehnung sieht niemand.
+  fehler?: string
 }
 
 function fehlertext(error: unknown): string {
@@ -193,14 +198,14 @@ function runNextGet(): void {
   const before = new Set(seMessageKeys(g.SEDATA))
   let settled = false
 
-  const finish = (wert: string, roh: unknown): void => {
+  const finish = (wert: string, roh: unknown, fehler?: string): void => {
     if (settled) return
     settled = true
     unsubscribe()
     clearInterval(poll)
     clearTimeout(timeout)
     getBusy = false
-    job.resolve({ wert, roh })
+    job.resolve(fehler === undefined ? { wert, roh } : { wert, roh, fehler })
 
     queueMicrotask(runNextGet)
   }
@@ -217,18 +222,20 @@ function runNextGet(): void {
     if (antwort !== undefined) finish(antwort.wert, antwort.roh)
   }, GET_POLL_MS)
 
+  // Der Balken schweigt bei 'still' (Hintergrund-Nachladen), der Bericht an
+  // die Kette nie: sonst braeche ein Lauf ab, ohne dass jemand sagen kann,
+  // woran.
+  const gescheitert = (text: string): void => {
+    if (!job.optionen.still) meldeFehler(text)
+    finish('', undefined, text)
+  }
+
   const timeout = setTimeout(() => {
-    if (!job.optionen.still) {
-      meldeFehler(`Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. ${job.template.nr}).`)
-    }
-    finish('', undefined)
+    gescheitert(`Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. ${job.template.nr}).`)
   }, GET_TIMEOUT_MS)
 
   if (typeof g.basisHTML_SND_MSG !== 'function') {
-    if (!job.optionen.still) {
-      meldeFehler('Daten laden nicht möglich: keine Verbindung zu SoftEngine.')
-    }
-    finish('', undefined)
+    gescheitert('Daten laden nicht möglich: keine Verbindung zu SoftEngine.')
     return
   }
   try {
@@ -237,10 +244,7 @@ function runNextGet(): void {
       PARAMS: job.params,
     })
   } catch (error) {
-    if (!job.optionen.still) {
-      meldeFehler(`Daten laden fehlgeschlagen (Relation Nr. ${job.template.nr}): ${fehlertext(error)}`)
-    }
-    finish('', undefined)
+    gescheitert(`Daten laden fehlgeschlagen (Relation Nr. ${job.template.nr}): ${fehlertext(error)}`)
   }
 }
 
@@ -253,13 +257,16 @@ export function executeRelation(
   const g = seGlobal()
   if (template.verb !== 'GET_RELATION') {
     if (typeof g.basisHTML_SND_MSG !== 'function') {
-      meldeFehler('Speichern nicht möglich: keine Verbindung zu SoftEngine. Die Eingabe wurde NICHT übernommen.')
-      return Promise.resolve({ wert: '', roh: undefined })
+      const text = 'Speichern nicht möglich: keine Verbindung zu SoftEngine. Die Eingabe wurde NICHT übernommen.'
+      meldeFehler(text)
+      return Promise.resolve({ wert: '', roh: undefined, fehler: text })
     }
     try {
       g.basisHTML_SND_MSG(template.verb, { NR: template.nr, PARAMS: [...params] })
     } catch (error) {
-      meldeFehler(`Speichern fehlgeschlagen (Relation Nr. ${template.nr}): ${fehlertext(error)}`)
+      const text = `Speichern fehlgeschlagen (Relation Nr. ${template.nr}): ${fehlertext(error)}`
+      meldeFehler(text)
+      return Promise.resolve({ wert: '', roh: undefined, fehler: text })
     }
 
     return Promise.resolve({ wert: '', roh: undefined })

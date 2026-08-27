@@ -10,12 +10,21 @@ import type { Spalte } from './spalten'
 export class ErfassungsAnschluss {
   readonly lauf = new ErfassungsLauf()
 
-  private _zeilen: string[][] = []
+  private _zeilen: { kennung: string; werte: string[] }[] = []
+
+  private naechsteKennung = 1
 
   // Werte je Spalte, in Spalten-Reihenfolge — das liest die Kette am Knopf
   // (ErfassungsTraegerElement in core/blocks/BlockDefinition.ts).
   get zeilen(): readonly (readonly string[])[] {
-    return this._zeilen
+    return this._zeilen.map((z) => z.werte)
+  }
+
+  // Dieselbe Reihenfolge, aber die Kennungen: der Ketten-Bericht sagt damit,
+  // WELCHE Zeile geschrieben ist — der Platz taugt dafuer nicht, er
+  // verschiebt sich, sobald der Bediener eine Zeile wegnimmt.
+  get schluessel(): readonly string[] {
+    return this._zeilen.map((z) => z.kennung)
   }
 
   // Die Erfassungszeile leitet alles aus zwei vorhandenen Angaben ab: der
@@ -36,7 +45,8 @@ export class ErfassungsAnschluss {
   erfasse(umfeld: ErfassungsUmfeld): boolean {
     const werte = umfeld.spalten.map((_, i) => this.lauf.wertVon(umfeld, i))
     if (werte.every((w) => w === '')) return false
-    this._zeilen = [...this._zeilen, werte]
+    this._zeilen = [...this._zeilen, { kennung: `e${this.naechsteKennung}`, werte }]
+    this.naechsteKennung += 1
     this.lauf.zuruecksetzen()
     return true
   }
@@ -50,9 +60,13 @@ export class ErfassungsAnschluss {
     return true
   }
 
-  leeren(): boolean {
-    if (this._zeilen.length === 0) return false
-    this._zeilen = []
+  // Was die Kette geschrieben hat, ist keine Vormerkung mehr. Alles andere
+  // bleibt stehen — auch die Zeile, an der der Lauf haengengeblieben ist.
+  austragen(kennungen: readonly string[]): boolean {
+    if (kennungen.length === 0) return false
+    const bleibt = this._zeilen.filter((z) => !kennungen.includes(z.kennung))
+    if (bleibt.length === this._zeilen.length) return false
+    this._zeilen = bleibt
     return true
   }
 

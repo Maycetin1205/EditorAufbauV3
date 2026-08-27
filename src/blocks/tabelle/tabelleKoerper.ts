@@ -9,6 +9,28 @@ import {
   fokussiereErsteZeile,
   fokussiereSuchzeile,
 } from './zeilenAktivierung'
+import type { ZeilenZeichen } from './zeilenStatus'
+
+// Was eine GEBUCHTE Zeile zeigt und was mit ihr passiert — als EIN Gegenueber
+// statt als sieben Rueckrufe. Die Tabelle reicht dafuer ihre ZeilenBearbeitung
+// durch; der Rumpf sieht nur diese Form.
+export interface ZeilenStand {
+  // Was in der Zelle steht — vorgemerkter Wert, sonst der Wert der Zeile.
+  zellWert: (rohIndex: number, spalte: number) => string
+
+  istGeaendert: (rohIndex: number, spalte: number) => boolean
+
+  istGeloescht: (rohIndex: number) => boolean
+
+  // Der Balken links plus sein Klartext.
+  statusVon: (rohIndex: number) => ZeilenZeichen
+
+  tippeZelle: (rohIndex: number, spalte: number, text: string) => void
+
+  verlasseZelle: (rohIndex: number, spalte: number, text: string) => void
+
+  tasteZelle: (rohIndex: number, spalte: number, e: KeyboardEvent) => void
+}
 
 export interface KoerperLage {
   spalten: readonly Spalte[]
@@ -45,15 +67,10 @@ export interface KoerperLage {
   // Aus heisst: auch eine als aenderbar gestellte Spalte bleibt Text.
   aendernMoeglich: boolean
 
-  // Was in der Zelle steht — vorgemerkter Wert, sonst der Wert der Zeile.
-  zellWert: (rohIndex: number, spalte: number) => string
-
-  istGeaendert: (rohIndex: number, spalte: number) => boolean
+  zeilenStand: ZeilenStand
 
   // Zeilen lassen sich zum Loeschen vormerken (Schalter am Baustein).
   loeschbar: boolean
-
-  istGeloescht: (rohIndex: number) => boolean
 
   leer: boolean
   leerText: string
@@ -62,6 +79,8 @@ export interface KoerperLage {
   // letzten Datenzeile und der Erfassungszeile, links markiert — erst der
   // Ketten-Lauf des Knopfs macht aus ihnen echte Positionen.
   erfasste: readonly (readonly string[])[]
+
+  erfasstStand: (index: number) => ZeilenZeichen
 
   // Die fertige Erfassungszeile. Der Rumpf kennt ihre Rollen nicht — er
   // setzt sie nur an die richtige Stelle: sie ist die naechste FREIE Zeile,
@@ -84,12 +103,6 @@ export interface KoerperHandeln {
   nimmErfassteZeile: (index: number) => void
 
   schalteLoeschung: (rohIndex: number) => void
-
-  tippeZelle: (rohIndex: number, spalte: number, text: string) => void
-
-  verlasseZelle: (rohIndex: number, spalte: number, text: string) => void
-
-  tasteZelle: (rohIndex: number, spalte: number, e: KeyboardEvent) => void
 }
 
 function lineal(lage: KoerperLage): TemplateResult | typeof nothing {
@@ -140,12 +153,17 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
         ${lage.hatQuelle ? nothing : lage.erfassung}
         ${lage.zeilen.map((rohIndex, ansichtIndex) => {
           const aktivierbar = rohIndex !== null && !lage.imEditor
-          const geloescht = rohIndex !== null && lage.istGeloescht(rohIndex)
+          const geloescht = rohIndex !== null && lage.zeilenStand.istGeloescht(rohIndex)
+          const zeichen: ZeilenZeichen = rohIndex === null
+            ? { status: 'gebucht', titel: '' }
+            : lage.zeilenStand.statusVon(rohIndex)
           return html`<div
             class="zeile${rohIndex !== null && lage.hatQuelle ? ' waehlbar' : ''}${
               rohIndex !== null && rohIndex === lage.auswahlIndex ? ' gewaehlt' : ''}${
               geloescht ? ' geloescht' : ''}"
             role="row"
+            data-status=${zeichen.status === 'gebucht' ? nothing : zeichen.status}
+            title=${zeichen.titel === '' ? nothing : zeichen.titel}
             data-ff-roh=${rohIndex ?? nothing}
             tabindex=${aktivierbar ? '0' : nothing}
             aria-selected=${lage.auswahlSemantik && rohIndex !== null
@@ -191,18 +209,19 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               // Aenderbare Zelle einer gebuchten Zeile: ein Eingabefeld statt
               // Text. Es traegt den vorgemerkten Wert, solange einer da ist.
               if (lage.aendernMoeglich && s.aenderbar === true && rohIndex !== null) {
+                const stand = lage.zeilenStand
                 return html`<div class=${art.klasse} role="cell">
                 <input
-                  class=${lage.istGeaendert(rohIndex, i) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
+                  class=${stand.istGeaendert(rohIndex, i) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
                   type="text"
                   data-spalte=${i}
                   aria-label=${s.titel}
-                  .value=${lage.zellWert(rohIndex, i)}
+                  .value=${stand.zellWert(rohIndex, i)}
                   @input=${(e: Event) =>
-                    tun.tippeZelle(rohIndex, i, (e.target as HTMLInputElement).value)}
+                    stand.tippeZelle(rohIndex, i, (e.target as HTMLInputElement).value)}
                   @blur=${(e: Event) =>
-                    tun.verlasseZelle(rohIndex, i, (e.target as HTMLInputElement).value)}
-                  @keydown=${(e: KeyboardEvent) => tun.tasteZelle(rohIndex, i, e)}
+                    stand.verlasseZelle(rohIndex, i, (e.target as HTMLInputElement).value)}
+                  @keydown=${(e: KeyboardEvent) => stand.tasteZelle(rohIndex, i, e)}
                 />
               </div>`
               }
@@ -230,7 +249,15 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               : nothing}
           </div>`
         })}
-        ${lage.erfasste.map((werte, zeilenIndex) => html`<div class="zeile erfasst" role="row" style=${styleMap(lage.cols)}>
+        ${lage.erfasste.map((werte, zeilenIndex) => {
+          const zeichen = lage.erfasstStand(zeilenIndex)
+          return html`<div
+          class="zeile erfasst"
+          role="row"
+          data-status=${zeichen.status}
+          title=${zeichen.titel}
+          style=${styleMap(lage.cols)}
+        >
           ${lage.spalten.map((s, i) => {
             const art = spaltenArt(s.art)
             // Das Wegnehmen sitzt in der ERSTEN Zelle, wie in der Handmaske:
@@ -248,7 +275,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               art.zelle(werte[i] ?? '', s.zuordnung ?? [], {})
             }</div>`
           })}
-        </div>`)}
+        </div>`
+        })}
         ${lage.hatQuelle ? lage.erfassung : nothing}
         ${lineal(lage)}`}
       </div>

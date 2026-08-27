@@ -2,7 +2,9 @@ import { ACTION_VALUE_ID_ATTR, parseBlockEvents, type RuntimeStep } from '../../
 import type {
   AenderungsTraegerElement,
   ErfassungsTraegerElement,
+  LaufBerichtElement,
   LoeschTraegerElement,
+  VormerkArt,
 } from '../../core/blocks/BlockDefinition'
 import { auswahlFuer } from './auswahl'
 import { PopupBlock } from '../popup/PopupBlock'
@@ -93,9 +95,9 @@ export function meldeKettenFehler(fehler: unknown): void {
   meldeFehler('Aktionskette fehlgeschlagen: ' + text)
 }
 
-type ListenArt = 'einmal' | 'erfasst' | 'geaendert' | 'geloescht'
+type ListenArt = 'einmal' | VormerkArt
 
-const ZELLEN_HERKUNFT: Record<string, ListenArt> = {
+const ZELLEN_HERKUNFT: Record<string, VormerkArt> = {
   erfassungszelle: 'erfasst',
   aenderungszelle: 'geaendert',
   loeschzelle: 'geloescht',
@@ -114,9 +116,9 @@ interface Abschnitt {
 
 // Woher DIESER Schritt seine Zellen liest. Kein Bausteintyp kommt vor: es
 // zaehlt allein, was in seinen Parametern steht (Regel 2).
-function zeilenBezug(step: RuntimeStep): { art: ListenArt; blockId: string } | null {
+function zeilenBezug(step: RuntimeStep): { art: VormerkArt; blockId: string } | null {
   if (step.type !== 'RELATION') return null
-  let treffer: { art: ListenArt; blockId: string } | null = null
+  let treffer: { art: VormerkArt; blockId: string } | null = null
   for (const binding of [...step.params, ...step.extraParams]) {
     const art = ZELLEN_HERKUNFT[binding.source]
     const blockId = binding.blockId ?? ''
@@ -152,16 +154,66 @@ export function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
   return raus
 }
 
-function sucheTraeger(
-  root: ParentNode,
-  blockId: string,
-): (HTMLElement
+// Was ein Baustein KANN, steht in seiner Deklaration — hier ist jedes Stueck
+// des Vertrags optional, damit die Kette auch einen Baustein bedienen kann,
+// der nur eine der drei Listen fuehrt.
+type ZeilenTraeger = HTMLElement
   & Partial<ErfassungsTraegerElement>
   & Partial<AenderungsTraegerElement>
-  & Partial<LoeschTraegerElement>)
-  | undefined {
+  & Partial<LoeschTraegerElement>
+  & Partial<LaufBerichtElement>
+
+// Die EINE Stelle, die data-ff-block-id in ein Element aufloest.
+export function sucheTraeger(root: ParentNode, blockId: string): ZeilenTraeger | undefined {
   return Array.from(root.querySelectorAll<HTMLElement>(`[${ACTION_VALUE_ID_ATTR}]`))
     .find((el) => el.getAttribute(ACTION_VALUE_ID_ATTR) === blockId)
+}
+
+// Eine Zeile, wie die Kette sie abarbeitet. satz ist die Satznummer ({PINDEX})
+// und leer, solange die Zeile im ERP nicht existiert; schluessel ist ihre
+// Kennung im Bericht und immer gesetzt.
+interface LaufZeile {
+  satz: string
+  schluessel: string
+  werte: readonly string[]
+}
+
+export interface LaufErgebnis {
+  geschrieben: boolean
+
+  // Leer = durchgelaufen. Sonst der Klartext, an dem es haengengeblieben ist.
+  fehler: string
+}
+
+function zeilenDerListe(traeger: ZeilenTraeger, art: VormerkArt): LaufZeile[] | undefined {
+  if (art === 'erfasst') {
+    const roh = traeger.erfassteZeilen
+    if (!Array.isArray(roh)) return undefined
+    const kennungen = traeger.erfassteSchluessel
+    return roh.map((werte, platz) => ({
+      satz: '',
+      schluessel: Array.isArray(kennungen) ? (kennungen[platz] ?? String(platz)) : String(platz),
+      werte,
+    }))
+  }
+  const roh = art === 'geaendert' ? traeger.geaenderteZeilen : traeger.geloeschteZeilen
+  if (!Array.isArray(roh)) return undefined
+  return roh.map((z) => ({ satz: z.satz, schluessel: z.satz, werte: z.werte }))
+}
+
+// Die Satznummer der Zeile, die gerade dran ist. Beim Loeschen zusaetzlich als
+// {DROP_PINDEX}: eine Loesch-Relation nennt ihre Satznummer anders als eine
+// Schreib-Relation, und der Bediener soll den Unterschied nicht kennen muessen.
+function zeilenKontext(
+  context: RelationContext,
+  art: VormerkArt,
+  zeile: LaufZeile,
+): RelationContext {
+  if (zeile.satz === '') return context
+  if (art === 'geloescht') {
+    return { ...context, PINDEX: zeile.satz, DROP_PINDEX: zeile.satz }
+  }
+  return { ...context, PINDEX: zeile.satz }
 }
 
 export async function laufeSchritte(
@@ -173,7 +225,7 @@ export async function laufeSchritte(
   // Welche Schritte in DIESEM Lauf drankommen (Platz in der Kette).
   // undefined = alle.
   nur?: ReadonlySet<number>,
-): Promise<boolean> {
+): Promise<LaufErgebnis> {
   let geschrieben = false
   const values: Record<string, string | undefined> = {
     ...context,
@@ -231,9 +283,14 @@ export async function laufeSchritte(
 
     if (relation.verb === 'GET_RELATION') previousResult = result
     else geschrieben = true
+    // Der Ruf ging nicht hinaus oder blieb unbeantwortet. Weiterlaufen hiesse,
+    // die naechsten Schritte auf ein Ergebnis zu setzen, das es nicht gibt.
+    if (antwort.fehler !== undefined && antwort.fehler !== '') {
+      return { geschrieben, fehler: antwort.fehler }
+    }
     if (step.resultKey !== '') values[step.resultKey] = result
   }
-  return geschrieben
+  return { geschrieben, fehler: '' }
 }
 
 export async function runEvent(
@@ -254,57 +311,54 @@ export async function runEvent(
   locks.add(eventKey)
   try {
     const abschnitte = abschnitteVon(steps)
-    const gelaufen: { traeger: HTMLElement & Partial<ErfassungsTraegerElement>
-      & Partial<AenderungsTraegerElement> & Partial<LoeschTraegerElement>;
-      art: ListenArt }[] = []
+    const berichte: { traeger: ZeilenTraeger; art: VormerkArt; fertige: string[] }[] = []
     let geschrieben = false
+    let abgebrochen = false
 
     for (const abschnitt of abschnitte) {
       if (abschnitt.art === 'einmal') {
-        if (await laufeSchritte(el, steps, context, undefined, abschnitt.plaetze)) {
-          geschrieben = true
-        }
+        const ergebnis = await laufeSchritte(el, steps, context, undefined, abschnitt.plaetze)
+        if (ergebnis.geschrieben) geschrieben = true
+        if (ergebnis.fehler !== '') { abgebrochen = true; break }
         continue
       }
       if (abschnitt.blockId === '') {
         meldeFehler('Ein Schritt liest Zellen aus zwei verschiedenen Listen — das geht nicht.')
-        return
+        break
       }
       const traeger = sucheTraeger(el.ownerDocument ?? document, abschnitt.blockId)
-      const roh = abschnitt.art === 'erfasst'
-        ? traeger?.erfassteZeilen
-        : abschnitt.art === 'geaendert'
-          ? traeger?.geaenderteZeilen
-          : traeger?.geloeschteZeilen
-      if (!traeger || !Array.isArray(roh)) {
+      const zeilen = traeger && zeilenDerListe(traeger, abschnitt.art)
+      if (!traeger || !zeilen) {
         meldeFehler('Den Baustein, dessen Zellen die Kette liest, gibt es in dieser Maske nicht.')
-        return
+        break
       }
-      // Beide Listen in EINER Form: Werte je Spalte, dazu die Satznummer, wo
-      // es eine gibt (geaenderte Zeile).
-      const zeilen: { satz: string; werte: readonly string[] }[] = abschnitt.art === 'erfasst'
-        ? (roh as readonly (readonly string[])[]).map((werte) => ({ satz: '', werte }))
-        : (roh as readonly { satz: string; werte: readonly string[] }[])
-          .map((z) => ({ satz: z.satz, werte: z.werte }))
       // Keine Zeile: nichts zu schreiben, kein Lauf. Kein Fehler — der
       // Bediener sieht in der Tabelle, dass nichts ansteht.
+      if (zeilen.length === 0) continue
+      const bericht = { traeger, art: abschnitt.art, fertige: [] as string[] }
+      berichte.push(bericht)
       for (const zeile of zeilen) {
-        const zeilenKontext = zeile.satz === '' ? context : { ...context, PINDEX: zeile.satz }
-        if (await laufeSchritte(el, steps, zeilenKontext, (blockId, spaltenIndex) =>
-          (blockId === abschnitt.blockId ? String(zeile.werte[spaltenIndex] ?? '') : ''),
-        abschnitt.plaetze)) {
-          geschrieben = true
+        traeger.zeileSchreibt?.(abschnitt.art, zeile.schluessel)
+        const ergebnis = await laufeSchritte(el, steps, zeilenKontext(context, abschnitt.art, zeile),
+          (blockId, spaltenIndex) =>
+            (blockId === abschnitt.blockId ? String(zeile.werte[spaltenIndex] ?? '') : ''),
+          abschnitt.plaetze)
+        if (ergebnis.geschrieben) geschrieben = true
+        // Haengengeblieben: die Zeile behaelt ihre Vormerkung und traegt die
+        // Meldung. Die Zeilen dahinter bleiben unangetastet stehen — sonst
+        // naehme ein Fehler in Zeile 3 auch den Zeilen 4-10 ihre Chance.
+        if (ergebnis.fehler !== '') {
+          traeger.zeileGescheitert?.(abschnitt.art, zeile.schluessel, ergebnis.fehler)
+          abgebrochen = true
+          break
         }
+        bericht.fertige.push(zeile.schluessel)
       }
-      if (zeilen.length > 0) gelaufen.push({ traeger, art: abschnitt.art })
+      if (abgebrochen) break
     }
-    // Geleert wird erst, wenn ALLE Abschnitte durch sind: ein spaeterer
+    // Ausgetragen wird erst, wenn ALLE Abschnitte durch sind: ein spaeterer
     // Abschnitt kann dieselbe Liste noch einmal lesen.
-    for (const { traeger, art } of gelaufen) {
-      if (art === 'erfasst') traeger.erfassungLeeren?.()
-      else if (art === 'geaendert') traeger.aenderungenLeeren?.()
-      else traeger.loeschungenLeeren?.()
-    }
+    for (const { traeger, art, fertige } of berichte) traeger.laufFertig?.(art, fertige)
     // Geschrieben heisst: der Stand auf dem Schirm ist von gestern. Die Maske
     // holt sich den neuen — ohne dass jemand eine Kette dafuer bauen muss.
     if (geschrieben) frischeDatenAnfordern()

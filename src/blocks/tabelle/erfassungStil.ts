@@ -57,12 +57,9 @@ export const erfassungStil = css`
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }
 
       /* Erfasste, noch nicht geschriebene Zeilen (G4): wie Datenzeilen, nur
-         links markiert — erst der Knopf macht aus ihnen echte Positionen. */
-      .zeile.erfasst {
-        flex: none;
-        box-shadow: inset 3px 0 0 var(--se-accent);
-        background: var(--se-accent-soft);
-      }
+         links markiert — erst der Knopf macht aus ihnen echte Positionen.
+         Die Markierung selbst macht der Statusbalken (tabelleStil). */
+      .zeile.erfasst { flex: none; }
       .erfasst-weg {
         margin-right: 6px;
         padding: 0 3px;

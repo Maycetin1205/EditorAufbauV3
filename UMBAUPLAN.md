@@ -50,17 +50,28 @@ Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mi
    - `ansichtsStand.ts` (185 Z.) — Suchtext, Sortierung, Seite, Rumpf-Messung, Zeilenfokus.
    - `zeilenEreignisse.ts` (41 Z.) — Klick/Doppelklick auf eine Datenzeile.
 
-## Etappe 3 — Zeilen-Lebenszyklus komplettieren (das Kern-Feature)
+## Etappe 3 — Zeilen-Lebenszyklus komplettieren (das Kern-Feature) ✅
 
 Was schon existiert und **nicht neu gebaut wird**: drei Vormerk-Listen (`erfassteZeilen`, `geaenderteZeilen` via `aenderungen.ts`, `geloescheZeilen` via `_geloescht`), Löschkreuz pro Zeile, Wegnehmen-Kreuz an erfassten Zeilen, Ketten-Abschnitte mit `erfassungszelle`/`aenderungszelle`/`loeschzelle`, sequenzieller Lauf einmal je Zeile mit PINDEX=Satznummer (`seAktionen.ts:239-314`), `frischeDatenAnfordern()` nach dem Schreiben, "In der Zeile änderbar"-Schalter je Spalte (`spaltenBindung.ts:34`).
 
 Was fehlt:
 
-1. **Zeilen-Status als Laufzeit-Zustand:** je Zeile einer aus `gebucht` (Normalfall, keine Marke), `erfasst`, `geaendert`, `loeschung`, `schreibt`, `fehler`. Anzeige **ausschließlich** als 3px-Statusbalken am linken Zeilenrand (Farben: Vormerkung = Warn-Gelb, schreibt = Akzent pulsierend, fehler = Rot) plus `title`-Tooltip mit Klartext. **Niemals Text-Badges** ("NEU", "geändert" o. ä.) in der Zeile — ausdrückliche Nutzer-Vorgabe.
-2. **Lauf-Bericht statt Alles-oder-Nichts:** Heute leert `seAktionen.ts:301-307` nach dem Lauf alle Listen und fordert frische Daten an — ein Fehler in Zeile 3 von 10 verliert die Vormerkungen 4–10. Neu: `laufeSchritte` liefert je Zeile ok/fehler+Meldung zurück; bei Fehler **stoppt** der Lauf, nur die erfolgreichen Zeilen werden aus den Vormerk-Listen ausgetragen, die Fehlerzeile bekommt Status `fehler` mit Meldung, der Rest bleibt vorgemerkt. Der Schreiben-Knopf zeigt danach den Rest-Zähler. Wichtig: das "Aufräumen erst am Ende"-Prinzip (spätere Abschnitte dürfen dieselbe Liste nochmal lesen) bleibt erhalten — ausgetragen wird nach Abschluss ALLER Abschnitte, nicht mitten im Lauf.
-3. **Schreiben-Knopf-Vertrag:** ein normaler `ff-button` mit Kette; Label zeigt die Summe der Vormerkungen ("Schreiben (5)"), disabled bei 0. Der Zähler-Text kommt aus `vormerkText()` (`aenderungen.ts:77`) — eine Stelle, Fußzeile und Knopf sagen dasselbe.
-4. **Löschen gebuchter Zeilen:** Kette mit `loeschzelle`-Abschnitt + Lösch-Relation; sicherstellen, dass der Platzhalter `DROP_PINDEX` (`src/core/data/relations.ts`) mit der Satznummer der Löschzeile gefüllt wird. Ungebuchte Zeilen löschen bleibt rein lokal (existiert).
-5. `npm run build:runtime` nicht vergessen; Statusbalken auch in der exportierten Maske prüfen (gleiche Bausteine).
+1. ✅ **Zeilen-Status als Laufzeit-Zustand:** je Zeile einer aus `gebucht` (Normalfall, keine Marke), `erfasst`, `geaendert`, `loeschung`, `schreibt`, `fehler`. Anzeige **ausschließlich** als 3px-Statusbalken am linken Zeilenrand (Farben: Vormerkung = Warn-Gelb, schreibt = Akzent pulsierend, fehler = Rot) plus `title`-Tooltip mit Klartext. **Niemals Text-Badges** ("NEU", "geändert" o. ä.) in der Zeile — ausdrückliche Nutzer-Vorgabe.
+2. ✅ **Lauf-Bericht statt Alles-oder-Nichts:** Heute leert `seAktionen.ts:301-307` nach dem Lauf alle Listen und fordert frische Daten an — ein Fehler in Zeile 3 von 10 verliert die Vormerkungen 4–10. Neu: `laufeSchritte` liefert je Zeile ok/fehler+Meldung zurück; bei Fehler **stoppt** der Lauf, nur die erfolgreichen Zeilen werden aus den Vormerk-Listen ausgetragen, die Fehlerzeile bekommt Status `fehler` mit Meldung, der Rest bleibt vorgemerkt. Der Schreiben-Knopf zeigt danach den Rest-Zähler. Wichtig: das "Aufräumen erst am Ende"-Prinzip (spätere Abschnitte dürfen dieselbe Liste nochmal lesen) bleibt erhalten — ausgetragen wird nach Abschluss ALLER Abschnitte, nicht mitten im Lauf.
+3. ✅ **Schreiben-Knopf-Vertrag:** ein normaler `ff-button` mit Kette; Label zeigt die Summe der Vormerkungen ("Schreiben (5)"), disabled bei 0. Der Zähler-Text kommt aus `vormerkText()` (`aenderungen.ts:77`) — eine Stelle, Fußzeile und Knopf sagen dasselbe.
+4. ✅ **Löschen gebuchter Zeilen:** Kette mit `loeschzelle`-Abschnitt + Lösch-Relation; sicherstellen, dass der Platzhalter `DROP_PINDEX` (`src/core/data/relations.ts`) mit der Satznummer der Löschzeile gefüllt wird. Ungebuchte Zeilen löschen bleibt rein lokal (existiert).
+5. ✅ `npm run build:runtime` nicht vergessen; Statusbalken auch in der exportierten Maske prüfen (gleiche Bausteine).
+
+Beim Bauen zusätzlich nötig geworden, weil ohne das kein Zeilen-Bericht möglich
+ist: `executeRelation` (`src/softengine/relations.ts`) lieferte einen gescheiterten
+Ruf bis dahin genauso aus wie einen geglückten — `RelationAntwort` trägt jetzt ein
+optionales `fehler` (mit Test, Verbot 4). Der Zähler-Text `vormerkText()` ist von
+`aenderungen.ts` nach `shared/vormerkStand.ts` gezogen und zählt ZEILEN statt Zellen,
+damit Fußzeile und Knopf dieselbe Zahl sagen; der Knopf darf keinen Baustein-Ordner
+importieren. `fussNoetig` ist von `ansichtsStand.ts` in `tabelleFuss.ts` gewandert und
+die Kopf-Griffe von `TabelleBlock.ts` nach `spaltenBearbeiten.ts` (500-Zeilen-Deckel).
+Offen und nur im Echttest zu klären: ein PUT ist ein Einweg-Ruf — `fehler` fängt
+Brücken- und Timeout-Fehler, **nicht** ein „die ERP hat abgelehnt".
 
 ## Etappe 4 — Editor-UI komplett neu: Designsprache "Werkbank"
 
