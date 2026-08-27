@@ -471,6 +471,9 @@ export class TabelleBlock extends BasicBlock {
         nimmErfassteZeile: (index) => {
           if (this._erfassung.entferne(index)) this.requestUpdate()
         },
+        tippeErfassteZelle: (index, spalte, text) => {
+          if (this._erfassung.setzeWert(index, spalte, text)) this.requestUpdate()
+        },
         schalteLoeschung: (rohIndex) => this._zeilen.schalteLoeschung(rohIndex),
       })}
       ${tabelleFuss({

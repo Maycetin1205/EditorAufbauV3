@@ -1,4 +1,6 @@
 import type { ListenBindung } from '../../core/blocks/BlockDefinition'
+import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
+import type { Spalte } from './spalten'
 import { STATUS_BEDEUTUNGEN } from '../shared/statusVariant'
 import { STANDARD_TITEL } from './spalten'
 import {
@@ -34,6 +36,12 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       key: 'aenderbar',
       label: 'In der Zeile änderbar',
       nurBeiWahl: AENDERBARE_ARTEN,
+
+      // An, solange niemand ihn ausschaltet: der Bediener erwartet, in jeder
+      // Zeile tippen zu koennen (Nutzer-Ansage). Ausschalten braucht, wer eine
+      // vom ERP gerechnete Spalte zeigt — Gesamt, Rohertrag: dort schreibt
+      // ohnehin keine Kette, und der naechste Datenschub raeumt das Getippte weg.
+      standard: true,
     },
   ],
 
@@ -46,4 +54,16 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     bedeutungLabel: 'Bedeutung',
     bedeutungen: STATUS_BEDEUTUNGEN,
   },
+}
+
+// Darf der Bediener in dieser Spalte einer GEBUCHTEN Zeile tippen? Dieselbe
+// Frage beantwortet der Export ueber traegtAenderungen (treeQuery) — beide
+// lesen den Standard aus dem Schalter oben, damit es nur EINE Vorgabe gibt.
+export function spalteAenderbar(spalte: Spalte): boolean {
+  const eintrag = spalte as unknown as Record<string, unknown>
+  const schalter = SPALTEN_BINDUNG.eintragsSchalter?.find((s) => s.key === 'aenderbar')
+  return schalter !== undefined
+    && spalte.feld !== ''
+    && schalterFuer(SPALTEN_BINDUNG, eintrag).includes(schalter)
+    && schalterAn(schalter, eintrag)
 }

@@ -12,13 +12,19 @@ export const erfassungStil = css`
 
       /* Die Liste haengt aus der Zelle heraus; ohne sichtbaren Ueberlauf
          schnitte die Zelle sie ab. Gilt fuer jede Zelle, weil jede gebundene
-         Spalte eine Liste zeigen kann. */
-      .zeile.erfassung > div {
-        padding: 0 4px;
+         Spalte eine Liste zeigen kann.
+
+         5px + 4px Eingabe-Polster + 1px Rahmen = die 10px einer Datenzelle:
+         der Text steht auf derselben Kante wie eine Zeile darueber. */
+      .zeile.erfassung > div,
+      .zeile.erfasst > div {
+        padding: 0 5px;
         display: flex;
         align-items: center;
         overflow: visible;
       }
+      .tabelle.schlank .zeile.erfassung > div,
+      .tabelle.schlank .zeile.erfasst > div { padding: 0 1px; }
 
       .erf-halter {
         position: relative;
@@ -34,23 +40,31 @@ export const erfassungStil = css`
         margin: 0 0 2px;
       }
 
+      /* Eine Eingabe sieht aus wie eine Zelle, nicht wie ein Formularfeld:
+         der Editor zeigt an dieser Stelle einen schlichten Zellinhalt, und
+         was im Editor steht, IST der Export (Regel 1). Rahmen erst, wenn die
+         Zeile darunter liegt oder die Schreibmarke drin steht — dasselbe
+         Muster wie die aenderbare Zelle (tabelleStil .zell-eingabe). */
       .erf-eingabe {
         box-sizing: border-box;
         width: 100%;
         min-width: 0;
         height: calc(var(--zeilen-hoehe) - 8px);
-        padding: 0 6px;
+        padding: 0 4px;
         font-family: var(--se-font);
         font-size: var(--se-fs);
         color: var(--se-ink);
-        background: var(--se-panel);
-        border: var(--se-border) solid var(--se-line);
+        background: transparent;
+        border: var(--se-border) solid transparent;
         border-radius: var(--se-r-sm);
       }
+      .zeile:hover .erf-eingabe { border-color: var(--se-line); background: var(--se-panel); }
       .erf-eingabe:focus {
         outline: none;
         border-color: var(--se-accent);
+        background: var(--se-panel);
       }
+      .zeile > div.zahl .erf-eingabe { text-align: right; }
       .erf-eingabe::placeholder { color: var(--se-faint); }
 
       /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */

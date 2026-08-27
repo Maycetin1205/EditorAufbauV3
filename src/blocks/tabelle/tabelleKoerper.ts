@@ -4,6 +4,7 @@ import { leerZustand } from '../shared/leerZustand'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { spaltenArt } from './spaltenArten'
+import { spalteAenderbar } from './spaltenBindung'
 import {
   bewegeZeilenFokus,
   fokussiereErsteZeile,
@@ -101,6 +102,11 @@ export interface KoerperHandeln {
   zeileDoppelt: (rohIndex: number | null) => void
 
   nimmErfassteZeile: (index: number) => void
+
+  // Eine erfasste Zeile ist noch nichts als eine Vormerkung: der Bediener
+  // muss in sie zurueckklicken und den Vertipper geradeziehen koennen, ohne
+  // sie wegzuwerfen und neu zu tippen.
+  tippeErfassteZelle: (zeilenIndex: number, spalte: number, text: string) => void
 
   schalteLoeschung: (rohIndex: number) => void
 }
@@ -208,7 +214,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
 
               // Aenderbare Zelle einer gebuchten Zeile: ein Eingabefeld statt
               // Text. Es traegt den vorgemerkten Wert, solange einer da ist.
-              if (lage.aendernMoeglich && s.aenderbar === true && rohIndex !== null) {
+              if (lage.aendernMoeglich && rohIndex !== null && spalteAenderbar(s)) {
                 const stand = lage.zeilenStand
                 return html`<div class=${art.klasse} role="cell">
                 <input
@@ -271,9 +277,21 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                   @click=${() => tun.nimmErfassteZeile(zeilenIndex)}
                 >&#x2715;</button>`
               : nothing
-            return html`<div class=${art.klasse} role="cell">${weg}${
-              art.zelle(werte[i] ?? '', s.zuordnung ?? [], {})
-            }</div>`
+            // Im Editor gibt es keine Eingaben, sondern Striche — wie in der
+            // Erfassungszeile darueber (Regel 7).
+            if (lage.imEditor) {
+              return html`<div class=${art.klasse} role="cell">${
+                art.zelle(werte[i] ?? '', s.zuordnung ?? [], {})
+              }</div>`
+            }
+            return html`<div class=${art.klasse} role="cell">${weg}<input
+              class="erf-eingabe"
+              type="text"
+              aria-label=${s.titel}
+              .value=${werte[i] ?? ''}
+              @input=${(e: Event) =>
+                tun.tippeErfassteZelle(zeilenIndex, i, (e.target as HTMLInputElement).value)}
+            /></div>`
           })}
         </div>`
         })}

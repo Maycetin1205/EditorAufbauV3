@@ -73,6 +73,16 @@ die Kopf-Griffe von `TabelleBlock.ts` nach `spaltenBearbeiten.ts` (500-Zeilen-De
 Offen und nur im Echttest zu klären: ein PUT ist ein Einweg-Ruf — `fehler` fängt
 Brücken- und Timeout-Fehler, **nicht** ein „die ERP hat abgelehnt".
 
+Nach der ersten Bedienprobe nachgezogen (Nutzer-Ansage): (a) Eingaben in
+Erfassungszeile und erfassten Zeilen sehen aus wie Zellen, nicht wie
+Formularfelder — Rahmen erst bei Hover/Fokus, sonst wäre die Maske anders als
+der Editor (Regel 1). (b) Eine erfasste Zeile ist bis zum Schreiben
+korrigierbar; vorher musste man sie wegwerfen und neu tippen. (c) **„In der
+Zeile änderbar" hat jetzt die Vorgabe JA** — jede gebundene Spalte einer
+änderbaren Darstellung ist schreibbar; der Schalter bleibt zum AUSschalten
+gerechneter Spalten (Gesamt, Rohertrag). Der Standard steht am Schalter
+(`EintragsSchalter.standard`), gespeichert wird nur die Abweichung.
+
 ## Etappe 4 — Editor-UI komplett neu: Designsprache "Werkbank"
 
 Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (masken-tokens.css, V11-Palette) bleibt unangetastet. Das darunterliegende Modell (`PropertyDescription`, `ListenBindung`, `BlockDefinition`, `schrittPruefung`) bleibt **exakt wie es ist** — es wird nur neu gezeichnet.

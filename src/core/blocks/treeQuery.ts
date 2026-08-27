@@ -1,6 +1,7 @@
 import { ROOT_ID, type BlockNode, type BlockTree } from './BlockData'
 import type { ActionValueSpot, BindableSpot } from './BlockDefinition'
 import { getBlockDefinition } from './blockRegistry'
+import { schalterAn, schalterFuer } from './listenBindung'
 import { propertySichtbar } from './PropertyDescription'
 
 export interface ActionValueTarget {
@@ -143,10 +144,18 @@ export function traegtAenderungen(node: BlockNode): boolean {
   if (schluessel === undefined || !bindung) return false
   const roh = node.props[bindung.prop]
   if (!Array.isArray(roh)) return false
-  return roh.some((eintrag) =>
-    Boolean(eintrag)
-    && typeof eintrag === 'object'
-    && (eintrag as Record<string, unknown>)[schluessel] === true)
+  const schalter = (bindung.eintragsSchalter ?? []).find((s) => s.key === schluessel)
+  if (!schalter) return false
+  // Aenderbar ist ein Eintrag, dessen Schalter fuer seine Darstellung ueberhaupt
+  // gilt, der ansteht (Standard eingerechnet) und der an einem Feld haengt —
+  // eine ungebundene Spalte hat nichts zu schreiben.
+  return roh.some((x) => {
+    if (!x || typeof x !== 'object') return false
+    const eintrag = x as Record<string, unknown>
+    return schalterFuer(bindung, eintrag).includes(schalter)
+      && schalterAn(schalter, eintrag)
+      && String(eintrag[bindung.feldKey] ?? '') !== ''
+  })
 }
 
 // Bausteine, die einer Kette geaenderte Zeilen geben koennen.

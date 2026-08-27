@@ -29,6 +29,11 @@ export interface EintragsSchalter {
   label: string
 
   nurBeiWahl?: readonly string[]
+
+  // Wie der Schalter steht, solange niemand ihn angefasst hat. Ohne Angabe
+  // aus. Gespeichert wird nur die ABWEICHUNG davon (listeFuerExport) — sonst
+  // stuende in jedem Eintrag derselbe Wert.
+  standard?: boolean
 }
 
 export interface EintragsZuordnung {
@@ -92,7 +97,8 @@ export function schalterAn(
   schalter: EintragsSchalter,
   eintrag: Record<string, unknown>,
 ): boolean {
-  return eintrag[schalter.key] === true
+  const wert = eintrag[schalter.key]
+  return typeof wert === 'boolean' ? wert : schalter.standard === true
 }
 
 // Welche Schalter dieser Eintrag ueberhaupt zeigt. Ohne Wahl am Bindungs-
@@ -171,9 +177,13 @@ function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
     }
   }
   for (const schalter of b.eintragsSchalter ?? []) {
+    // Behalten wird ein Schalterwert nur, wenn er sichtbar ist UND vom
+    // Standard abweicht. Ein ausdrueckliches „nein" bei Standard „ja" ist
+    // damit genauso wichtig wie frueher das ausdrueckliche „ja".
     regeln.push({
       key: schalter.key,
-      erlaubt: (e) => schalterAn(schalter, e) && schalterFuer(b, e).includes(schalter),
+      erlaubt: (e) => schalterFuer(b, e).includes(schalter)
+        && schalterAn(schalter, e) !== (schalter.standard === true),
     })
   }
   return regeln

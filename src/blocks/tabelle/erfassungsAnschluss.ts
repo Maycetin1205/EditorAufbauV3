@@ -51,6 +51,16 @@ export class ErfassungsAnschluss {
     return true
   }
 
+  // Eine erfasste Zeile ist bis zum Schreiben nichts als eine Vormerkung —
+  // also bleibt sie aenderbar. Ohne diesen Weg muesste der Bediener eine
+  // Zeile wegen eines Vertippers ganz wegwerfen und neu tippen.
+  setzeWert(index: number, spalte: number, text: string): boolean {
+    const zeile = this._zeilen[index]
+    if (!zeile || zeile.werte[spalte] === text) return false
+    zeile.werte = zeile.werte.map((w, i) => (i === spalte ? text : w))
+    return true
+  }
+
   // Eine erfasste Zeile wieder wegnehmen — vor dem Schreiben ist sie nichts
   // als eine Vormerkung. Ohne diesen Weg bliebe ein Vertipper stehen, bis
   // die Kette ihn in die ERP traegt.
