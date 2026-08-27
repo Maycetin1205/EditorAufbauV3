@@ -9,12 +9,11 @@ import type {
   ListenBindung,
   SatzWahl,
 } from '../../core/blocks/BlockDefinition'
-import { geberIdVon, waehleAuswahl } from '../shared/auswahl'
+import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
 import { vorschlagStil } from '../shared/vorschlagListe'
 import { chipStyles } from '../shared/statusVariant'
 import { schliesseNachschlagenFuer } from '../formfeld/nachschlagen'
-import { beobachteRumpf, gemessenesMass, OHNE_RUMPF, rumpfHoehe } from './rumpfMessung'
 import {
   erfassungsZeileFuer,
   type ErfassungsWirt,
@@ -27,9 +26,7 @@ import {
   type BereitgestellteZeile,
   type Datenbesitz,
 } from './datenBesitz'
-import type { Zeilenmass } from './seitengroesse'
-import { connectTable, disconnectTable, hatSatzNummer, zeilenIndexVon } from './seRuntime'
-import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
+import { connectTable, disconnectTable, hatSatzNummer } from './seRuntime'
 import { zeigtEchteDaten } from './suche'
 import {
   benenneSpalteUm,
@@ -37,19 +34,16 @@ import {
   oeffneFeldPicker,
   spaltenSteuerung,
 } from './spaltenBearbeiten'
-import { spaltenArt, zeilenHoeheFuer, zellText } from './spaltenArten'
-import { AenderungsSpeicher } from './aenderungen'
+import { zeilenHoeheFuer } from './spaltenArten'
+import { ZeilenBearbeitung } from './zeilenBearbeitung'
+import { AnsichtsStand } from './ansichtsStand'
+import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
 import { tabelleAnsicht } from './tabelleAnsicht'
 import { TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
 import { tabelleFuss } from './tabelleFuss'
 import { tabelleKoerper } from './tabelleKoerper'
 import { tabelleStil } from './tabelleStil'
-import {
-  fokussierterRohIndex,
-  sendeZeileAktiviert,
-  stelleZeilenFokusHer,
-} from './zeilenAktivierung'
 import {
   coerceSpalten,
   standardSpalten,
@@ -145,8 +139,6 @@ export class TabelleBlock extends BasicBlock {
 
   @property() leerText = LEER_TEXT_STANDARD
 
-  private _suchtext = ''
-
   @property({ attribute: false }) datenzeilen: string[][] = []
 
   @property({ attribute: false }) zusatzzeilen: Record<string, string>[][] = []
@@ -159,33 +151,32 @@ export class TabelleBlock extends BasicBlock {
 
   @property({ attribute: false }) datenGeliefert = false
 
-  private _sortSpalte = -1
-  private _sortAuf = true
-
-  private _seite = 0
-
-  private _mass: Zeilenmass | null = null
-  private _beobachter: ResizeObserver | null = null
-
-  private _taktGemessen = 0
-
-  private _rumpfGemessen = OHNE_RUMPF
-
-  private _fokusZeile: number | null = null
-  private _fokusHolen = false
-
   private _besitz: Datenbesitz = 'softengine'
+
+  // Suchtext, Sortierung, Seite, Messung, Zeilenfokus — der Stand, in dem die
+  // Tabelle dasteht. Er liegt in ansichtsStand, der Baustein delegiert nur.
+  private readonly _ansicht = new AnsichtsStand({
+    baustein: this,
+    editable: () => this.editable,
+    zeilenHoehe: () => this.zeilenHoehe,
+    melde: () => this.requestUpdate(),
+  })
 
   // Tipp-Zustand + erfasste Zeilen; sie ueberleben jeden Daten-Push und
   // fallen nur mit dem Zweckwechsel oder dem Ketten-Lauf des Knopfs.
   private _erfassung = new ErfassungsAnschluss()
 
-  // Vorgemerkte Aenderungen an GEBUCHTEN Zeilen. Ueberleben jeden Push
-  // (sie haengen an der Satznummer, nicht am Platz in der Liste).
-  private readonly _aenderungen = new AenderungsSpeicher()
-
-  // Satznummern der Zeilen, die weg sollen. Auch sie ueberleben einen Push.
-  private readonly _geloescht = new Set<string>()
+  // Vormerkungen und Zellbedienung der GEBUCHTEN Zeilen — Stand und
+  // Bedienung liegen in zeilenBearbeitung, der Baustein delegiert nur.
+  private readonly _zeilen = new ZeilenBearbeitung({
+    baustein: this,
+    spalten: () => this.spaltenListe(),
+    rohzeilen: () => this.rohzeilen,
+    datenzeilen: () => this.datenzeilen,
+    melde: () => this.requestUpdate(),
+    erfassungAn: () => this.erfassungAn,
+    fokussiereErfassungsZelle: (index) => this.fokussiereErfassungsZelle(index),
+  })
 
   get besitz(): Datenbesitz {
     return this._besitz
@@ -210,10 +201,7 @@ export class TabelleBlock extends BasicBlock {
     this.datenGeliefert = true
     this.auswahlIndex = -1
     this.durchAuswahlGefiltert = false
-    this._seite = 0
-    this._mass = null
-    this._taktGemessen = 0
-    this._rumpfGemessen = OHNE_RUMPF
+    this._ansicht.nachPush()
     this.requestUpdate()
   }
 
@@ -224,15 +212,7 @@ export class TabelleBlock extends BasicBlock {
     this.datenGeliefert = false
     this.auswahlIndex = -1
     this.durchAuswahlGefiltert = false
-    this._suchtext = ''
-    this._sortSpalte = -1
-    this._sortAuf = true
-    this._seite = 0
-    this._mass = null
-    this._taktGemessen = 0
-    this._rumpfGemessen = OHNE_RUMPF
-    this._fokusZeile = null
-    this._fokusHolen = false
+    this._ansicht.zuruecksetzen()
     this._erfassung.zuruecksetzen()
   }
 
@@ -247,82 +227,23 @@ export class TabelleBlock extends BasicBlock {
     if (this._erfassung.leeren()) this.requestUpdate()
   }
 
-  // Der Vertrag der Faehigkeit aenderungsSchluessel (AenderungsTraegerElement
-  // in core/blocks/BlockDefinition.ts): je vorgemerkter Zeile ihre Satznummer
-  // und ALLE Spaltenwerte — die geaenderten inbegriffen. So kann die Kette
-  // auch unveraenderte Felder derselben Zeile mitschreiben.
-  // Satznummer -> Platz in der Liste. Einmal gebaut statt je Vormerkung
-  // gesucht: bei tausenden Zeilen waere das Suchen je Aenderung spuerbar.
-  private satzPlaetze(): Map<string, number> {
-    const plaetze = new Map<string, number>()
-    this.rohzeilen.forEach((zeile, index) => {
-      const satz = zeilenIndexVon(this, zeile)
-      if (satz !== '' && !plaetze.has(satz)) plaetze.set(satz, index)
-    })
-    return plaetze
-  }
-
-  // Vorgemerkt heisst: noch schreibbar. Eine Zeile, die ein Push aus der
-  // Liste genommen hat, zaehlt nicht mehr mit — sonst stuende unter der
-  // Tabelle eine Zahl, die der Knopf nicht einloest.
-  private vorgemerkteAnzahl(): number {
-    if (this._aenderungen.anzahl === 0) return 0
-    const plaetze = this.satzPlaetze()
-    let anzahl = 0
-    for (const eintrag of this._aenderungen.proSatz()) {
-      if (plaetze.has(eintrag.satz)) anzahl += eintrag.aenderungen.length
-    }
-    return anzahl
-  }
-
+  // Die Laufzeit-Vertraege AenderungsTraegerElement und LoeschTraegerElement
+  // (core/blocks/BlockDefinition.ts): die Kette am Knopf liest sie ueber die
+  // Element-Referenz — darum stehen sie am Baustein und delegieren nur.
   get geaenderteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
-    const spaltenAnzahl = this.spaltenListe().length
-    const plaetze = this.satzPlaetze()
-    const raus: { satz: string; werte: readonly string[] }[] = []
-    for (const { satz } of this._aenderungen.proSatz()) {
-      const rohIndex = plaetze.get(satz)
-      // Die Zeile ist seit der Aenderung aus der Liste verschwunden (ein Push
-      // hat sie weggenommen). Sie wird NICHT geschrieben: mit leeren Werten
-      // zu schreiben hiesse, den Satz in der ERP leerzuraeumen.
-      if (rohIndex === undefined) continue
-      raus.push({
-        satz,
-        werte: Array.from({ length: spaltenAnzahl }, (_, spalte) => this.zellWert(rohIndex, spalte)),
-      })
-    }
-    return raus
+    return this._zeilen.geaenderteZeilen
   }
 
   aenderungenLeeren(): void {
-    if (this._aenderungen.leeren()) this.requestUpdate()
+    this._zeilen.aenderungenLeeren()
   }
 
-  // Der Vertrag der Faehigkeit kannLoeschen (LoeschTraegerElement): je
-  // vorgemerkter Zeile ihre Satznummer und alle Spaltenwerte. Zeilen, die
-  // ein Push inzwischen weggenommen hat, fallen raus — sie sind schon weg.
   get geloeschteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
-    const spaltenAnzahl = this.spaltenListe().length
-    const plaetze = this.satzPlaetze()
-    const raus: { satz: string; werte: readonly string[] }[] = []
-    for (const satz of this._geloescht) {
-      const rohIndex = plaetze.get(satz)
-      if (rohIndex === undefined) continue
-      raus.push({
-        satz,
-        werte: Array.from({ length: spaltenAnzahl }, (_, spalte) => this.zellWert(rohIndex, spalte)),
-      })
-    }
-    return raus
+    return this._zeilen.geloeschteZeilen
   }
 
   loeschungenLeeren(): void {
-    if (this._geloescht.size === 0) return
-    this._geloescht.clear()
-    this.requestUpdate()
-  }
-
-  private vorgemerkteLoeschungen(): number {
-    return this.geloeschteZeilen.length
+    this._zeilen.loeschungenLeeren()
   }
 
   // Enter am Zeilenende (G4): die Zeile bleibt stehen, die Erfassung rueckt
@@ -333,33 +254,16 @@ export class TabelleBlock extends BasicBlock {
     this.fokussiereErfassungsZelle(0)
   }
 
+  // Das Nachschlage-Fenster setzt den Fokus in die Suchzeile der Tabelle,
+  // die es zeigt (nachschlagen.ts) — darum bleibt der Weg am Baustein.
   fokussiereSuche(): boolean {
-    const feld = this.shadowRoot?.querySelector<HTMLInputElement>('.suchzeile input')
-    if (!feld) return false
-    feld.focus()
-    return true
+    return this._ansicht.fokussiereSuche()
   }
 
   private get hatQuelle(): boolean {
     return this._besitz === 'provided'
       ? true
       : zeigtEchteDaten(this.hasAttribute('data-ff-editor'), this.source)
-  }
-
-  private merkeZeilenFokus(): void {
-    const roh = fokussierterRohIndex(this.shadowRoot)
-    this._fokusHolen = roh !== undefined
-    this._fokusZeile = roh ?? null
-  }
-
-  private messeRumpf(): void {
-    const takt = this.zeilenHoehe
-    this._taktGemessen = takt
-    const { mass, hoehe } = gemessenesMass(this, takt)
-    this._rumpfGemessen = hoehe
-    if (mass?.passen === this._mass?.passen && mass?.zeilenHoehe === this._mass?.zeilenHoehe) return
-    this._mass = mass
-    this.requestUpdate()
   }
 
   private spaltenListe(): Spalte[] {
@@ -370,199 +274,8 @@ export class TabelleBlock extends BasicBlock {
     return zeilenHoeheFuer(this.spaltenListe())
   }
 
-  // ---- Aendern in der Zeile ----------------------------------------
-  // Der Schluessel einer Vormerkung ist die Satznummer der Zeile. Ohne sie
-  // wird gar nicht erst ein Eingabefeld gezeigt (aendernMoeglich).
-  private satzVon(rohIndex: number): string {
-    const rohzeile = this.rohzeilen[rohIndex]
-    return rohzeile === undefined ? '' : zeilenIndexVon(this, rohzeile)
-  }
-
-  private zellAnzeige(spaltenIndex: number, roh: string): string {
-    const spalte = this.spaltenListe()[spaltenIndex]
-    return spalte === undefined ? roh : zellText(spaltenArt(spalte.art), roh)
-  }
-
-  // Eine Zeile, die weg soll, braucht keine Zell-Aenderung mehr: was an ihr
-  // vorgemerkt war, faellt mit. Sonst schriebe derselbe Klick erst einen
-  // neuen Wert und loeschte die Zeile gleich danach.
-  private schalteLoeschung(rohIndex: number): void {
-    const satz = this.satzVon(rohIndex)
-    if (satz === '') return
-    if (this._geloescht.has(satz)) this._geloescht.delete(satz)
-    else {
-      this._geloescht.add(satz)
-      this.spaltenListe().forEach((_, spalte) => {
-        this._aenderungen.nimmZurueck(satz, spalte)
-      })
-    }
-    this.requestUpdate()
-  }
-
-  private istGeloescht(rohIndex: number): boolean {
-    const satz = this.satzVon(rohIndex)
-    return satz !== '' && this._geloescht.has(satz)
-  }
-
-  private zellWert(rohIndex: number, spaltenIndex: number): string {
-    const vorgemerkt = this._aenderungen.wert(this.satzVon(rohIndex), spaltenIndex)
-    if (vorgemerkt !== undefined) return vorgemerkt
-    return this.zellAnzeige(spaltenIndex, this.datenzeilen[rohIndex]?.[spaltenIndex] ?? '')
-  }
-
-  private istGeaendert(rohIndex: number, spaltenIndex: number): boolean {
-    return this._aenderungen.wert(this.satzVon(rohIndex), spaltenIndex) !== undefined
-  }
-
-  // Waehrend des Tippens bleibt stehen, was getippt ist — nicht formatiert,
-  // sonst spraenge die Schreibmarke. Geformt wird beim Verlassen.
-  private tippeZelle(rohIndex: number, spaltenIndex: number, text: string): void {
-    if (this._aenderungen.setze(this.satzVon(rohIndex), spaltenIndex, text)) {
-      this.requestUpdate()
-    }
-  }
-
-  // Beim Verlassen wird der getippte Wert in die Form der Spalte gebracht.
-  // Steht danach wieder der urspruengliche Wert da, ist es keine Aenderung
-  // mehr — die Vormerkung faellt weg, samt Marke.
-  private verlasseZelle(rohIndex: number, spaltenIndex: number, text: string): void {
-    const satz = this.satzVon(rohIndex)
-    const geformt = this.zellAnzeige(spaltenIndex, text)
-    const urspruenglich = this.zellAnzeige(
-      spaltenIndex,
-      this.datenzeilen[rohIndex]?.[spaltenIndex] ?? '',
-    )
-    const geaendert = geformt === urspruenglich
-      ? this._aenderungen.nimmZurueck(satz, spaltenIndex)
-      : this._aenderungen.setze(satz, spaltenIndex, geformt)
-    if (geaendert) this.requestUpdate()
-  }
-
-  // Senkrecht durch DIESELBE Spalte, wie in der Handmaske (dort der „Anker"
-  // ueber die Mengen-Spalte). Der Fokuswechsel loest das Verlassen der alten
-  // Zelle aus — geformt und verglichen wird dort. Waagerecht bleibt Tab:
-  // eine Zeile kann mehrere aenderbare Spalten haben, und dann ist die
-  // Nachbarzelle rechts das Naheliegende.
-  private zelleNachbar(
-    spaltenIndex: number,
-    von: HTMLInputElement,
-    schritt: number,
-    enterModus: boolean,
-  ): void {
-    const felder = Array.from(this.shadowRoot?.querySelectorAll<HTMLInputElement>(
-      `.koerper > .zeile:not(.erfassung) .zell-eingabe[data-spalte="${spaltenIndex}"]`,
-    ) ?? [])
-    const jetzt = felder.indexOf(von)
-    if (jetzt < 0) return
-    let ziel = jetzt + schritt
-    if (ziel > felder.length - 1) {
-      // Enter unter der letzten Zeile: weiter in die Erfassungszeile — dort
-      // tippt der Bediener die naechste Position (Handmaske: enterModus).
-      if (enterModus && this.erfassungAn) {
-        this.fokussiereErfassungsZelle(0)
-        return
-      }
-      ziel = felder.length - 1
-    }
-    if (ziel < 0) ziel = 0
-    const feld = felder[ziel]
-    if (!feld || feld === von) return
-    feld.focus()
-    // Der Inhalt steht markiert da: wer weitertippt, ueberschreibt — genau
-    // der Editier-Start der Handmaske (dort selectNodeContents).
-    feld.select()
-    feld.scrollIntoView({ block: 'nearest' })
-  }
-
-  // Escape nimmt die Vormerkung zurueck (der Wert der Zeile gilt wieder).
-  // Keine dieser Tasten darf bis zur Zeile durchfallen: dort loeste Enter die
-  // Kette „Zeile gewaehlt" aus, und Pfeile blaetterten den Rumpf.
-  private tasteZelle(rohIndex: number, spaltenIndex: number, e: KeyboardEvent): void {
-    const feld = e.target as HTMLInputElement
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      e.stopPropagation()
-      if (this._aenderungen.nimmZurueck(this.satzVon(rohIndex), spaltenIndex)) {
-        this.requestUpdate()
-      }
-      return
-    }
-    const schritte: Record<string, number> = {
-      Enter: 1,
-      ArrowDown: 1,
-      ArrowUp: -1,
-      PageDown: 10,
-      PageUp: -10,
-    }
-    const schritt = schritte[e.key]
-    if (schritt === undefined) return
-    e.preventDefault()
-    e.stopPropagation()
-    this.zelleNachbar(spaltenIndex, feld, schritt, e.key === 'Enter')
-  }
-
-  private zeileDoppelt(rohIndex: number | null): void {
-    if (rohIndex === null || this.hasAttribute('data-ff-editor')) return
-    const rohzeile = this.rohzeilen[rohIndex]
-    if (rohzeile === undefined) return
-    runEvent(this, 'onRowDblClick', { PINDEX: zeilenIndexVon(this, rohzeile) })
-      .catch(meldeKettenFehler)
-  }
-
-  private aktiviereZeile(rohIndex: number | null, ansichtIndex: number): void {
-    if (rohIndex === null || this.hasAttribute('data-ff-editor')) return
-    const rohzeile = this.rohzeilen[rohIndex]
-    if (rohzeile === undefined) return
-    sendeZeileAktiviert(this, { rohzeile, rohIndex, ansichtIndex })
-    this.toggleAuswahl(rohzeile)
-    runEvent(this, 'onRowClick', { PINDEX: zeilenIndexVon(this, rohzeile) })
-      .catch(meldeKettenFehler)
-  }
-
-  private toggleAuswahl(rohzeile: unknown): void {
-    const geberId = geberIdVon(this)
-    if (geberId === '') return
-    waehleAuswahl(geberId, rohzeile)
-  }
-
-  private setzeSuchtext(text: string): void {
-    this.merkeZeilenFokus()
-    this._suchtext = text
-    this._seite = 0
-    this.requestUpdate()
-  }
-
-  private klickSortiere(index: number): void {
-    if (this.editable) return
-    this.merkeZeilenFokus()
-    if (this._sortSpalte === index) {
-      this._sortAuf = !this._sortAuf
-    } else {
-      this._sortSpalte = index
-      this._sortAuf = true
-    }
-    this._seite = 0
-    this.requestUpdate()
-  }
-
   private get erfassungAn(): boolean {
     return this.erfassung === 'ja'
-  }
-
-  // Die Fusszeile nur, wenn sie etwas zu sagen hat: geblaettert werden muss
-  // oder ein Filter greift (G5). Sonst gehoert der Platz den Zeilen.
-  private fussNoetig(
-    seiten: number,
-    summen: number,
-    vorgemerkt: number,
-    loeschungen: number,
-  ): boolean {
-    return seiten > 1
-      || summen > 0
-      || vorgemerkt > 0
-      || loeschungen > 0
-      || this._suchtext.trim() !== ''
-      || this.durchAuswahlGefiltert
   }
 
   // Der Baustein haelt nur den Stand; was die Zellen tun, steht in
@@ -601,12 +314,6 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
-  private beobachte(): void {
-    if (this._beobachter) return
-    this._beobachter = beobachteRumpf(this, () => this.messeRumpf())
-    if (this._beobachter) this.messeRumpf()
-  }
-
   // Gibt die ERP der Maske den Fokus, springt er in die Erfassungszeile —
   // dort tippt der Bediener weiter (Handmaske Rahmen00001 V11:
   // basisHTML_DoSetFocusToHTML setzt den Fokus in die erste Erfassungszelle).
@@ -623,11 +330,11 @@ export class TabelleBlock extends BasicBlock {
     super.connectedCallback()
     if (this._besitz === 'softengine') connectTable(this)
     document.addEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
-    this.beobachte()
+    this._ansicht.beobachte()
   }
 
   protected override firstUpdated(): void {
-    this.beobachte()
+    this._ansicht.beobachte()
   }
 
   // Wie beim Nachschlage-Feld (G1): einmal je Darstellung berechnet, damit
@@ -640,25 +347,14 @@ export class TabelleBlock extends BasicBlock {
   }
 
   protected override updated(): void {
-    // Neu messen, sobald der Rumpf nicht mehr so hoch ist wie beim Rechnen: die
-    // Fusszeile haengt an der Seitenzahl, erscheint also erst NACH der Messung
-    // und nimmt dem Rumpf ihren Platz weg. Sonst haengt die Korrektur allein am
-    // ResizeObserver, einen Frame zu spaet — bis dahin ist die letzte Zeile
-    // angeschnitten. Kippen kann das nicht: die Fusszeile macht nur kleiner.
-    if (this._taktGemessen !== this.zeilenHoehe || this._rumpfGemessen !== rumpfHoehe(this)) {
-      this.messeRumpf()
-    }
-    if (!this._fokusHolen) return
-    this._fokusHolen = false
-    stelleZeilenFokusHer(this.shadowRoot, this._fokusZeile)
+    this._ansicht.nachRendern()
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback()
     document.removeEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
     feldPickerAbbestellen(this)
-    this._beobachter?.disconnect()
-    this._beobachter = null
+    this._ansicht.loese()
     schliesseNachschlagenFuer(this)
     disconnectTable(this)
   }
@@ -681,18 +377,18 @@ export class TabelleBlock extends BasicBlock {
       hatQuelle: this.hatQuelle,
       datenGeliefert: this.datenGeliefert,
       datenzeilen: this.datenzeilen,
-      suchtext: this._suchtext,
-      sortSpalte: this._sortSpalte,
-      sortAuf: this._sortAuf,
-      wunschSeite: this._seite,
-      gemessen: this._mass,
+      suchtext: this._ansicht.suchtext,
+      sortSpalte: this._ansicht.sortSpalte,
+      sortAuf: this._ansicht.sortAuf,
+      wunschSeite: this._ansicht.seite,
+      gemessen: this._ansicht.mass,
       erfassungAn: this.erfassungAn,
       erfassteAnzahl: this._erfassung.zeilen.length,
-      wertVon: (zeile, spalte) => this.zellWert(zeile, spalte),
+      wertVon: (zeile, spalte) => this._zeilen.zellWert(zeile, spalte),
       blaettert: this.blaettern === 'ja',
     })
-    const vorgemerkt = this.vorgemerkteAnzahl()
-    const loeschungen = this.vorgemerkteLoeschungen()
+    const vorgemerkt = this._zeilen.vorgemerkteAnzahl()
+    const loeschungen = this._zeilen.vorgemerkteLoeschungen()
     const tafelKlassen = ['tabelle']
     if (this.schlank === 'ja') tafelKlassen.push('schlank')
     if (this.blaettern !== 'ja') tafelKlassen.push('rollt')
@@ -709,9 +405,9 @@ export class TabelleBlock extends BasicBlock {
         zeigeKopf: this.kopfzeile === 'ja',
         auswahlSemantik: geberIdVon(this) !== '',
         zeigeSuche: this.suche === 'ja',
-        suchtext: this._suchtext,
-        sortSpalte: this._sortSpalte,
-        sortAuf: this._sortAuf,
+        suchtext: this._ansicht.suchtext,
+        sortSpalte: this._ansicht.sortSpalte,
+        sortAuf: this._ansicht.sortAuf,
         zeilen: ansicht.zeilen,
         linealTakte: ansicht.linealTakte,
         datenzeilen: this.datenzeilen,
@@ -725,9 +421,9 @@ export class TabelleBlock extends BasicBlock {
           && !this.hasAttribute('data-ff-editor')
           && ansicht.hatQuelle
           && hatSatzNummer(this),
-        istGeloescht: (zeile) => this.istGeloescht(zeile),
-        zellWert: (zeile, spalte) => this.zellWert(zeile, spalte),
-        istGeaendert: (zeile, spalte) => this.istGeaendert(zeile, spalte),
+        istGeloescht: (zeile) => this._zeilen.istGeloescht(zeile),
+        zellWert: (zeile, spalte) => this._zeilen.zellWert(zeile, spalte),
+        istGeaendert: (zeile, spalte) => this._zeilen.istGeaendert(zeile, spalte),
         leer: ansicht.leer,
         leerText: this.leerText,
         erfasste: this._erfassung.zeilen,
@@ -741,7 +437,7 @@ export class TabelleBlock extends BasicBlock {
             )
           : nothing,
       }, {
-        setzeSuchtext: (text) => this.setzeSuchtext(text),
+        setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
         dblklickKopf: (e, i) => {
           if (!this.editable) return
 
@@ -756,26 +452,28 @@ export class TabelleBlock extends BasicBlock {
               liste: () => this.spaltenListe(),
             })
           }
-          this.klickSortiere(i)
+          this._ansicht.klickSortiere(i)
         },
-        aktiviereZeile: (rohIndex, ansichtIndex) => this.aktiviereZeile(rohIndex, ansichtIndex),
-        zeileDoppelt: (rohIndex) => this.zeileDoppelt(rohIndex),
+        aktiviereZeile: (rohIndex, ansichtIndex) =>
+          aktiviereZeile(this, this.rohzeilen, rohIndex, ansichtIndex),
+        zeileDoppelt: (rohIndex) => zeileDoppelt(this, this.rohzeilen, rohIndex),
         nimmErfassteZeile: (index) => {
           if (this._erfassung.entferne(index)) this.requestUpdate()
         },
-        schalteLoeschung: (rohIndex) => this.schalteLoeschung(rohIndex),
-        tippeZelle: (zeile, spalte, text) => this.tippeZelle(zeile, spalte, text),
-        verlasseZelle: (zeile, spalte, text) => this.verlasseZelle(zeile, spalte, text),
-        tasteZelle: (zeile, spalte, e) => this.tasteZelle(zeile, spalte, e),
+        schalteLoeschung: (rohIndex) => this._zeilen.schalteLoeschung(rohIndex),
+        tippeZelle: (zeile, spalte, text) => this._zeilen.tippeZelle(zeile, spalte, text),
+        verlasseZelle: (zeile, spalte, text) => this._zeilen.verlasseZelle(zeile, spalte, text),
+        tasteZelle: (zeile, spalte, e) => this._zeilen.tasteZelle(zeile, spalte, e),
       })}
       ${ ''}
-      ${ansicht.leer || !this.fussNoetig(ansicht.seiten, ansicht.summen.length, vorgemerkt, loeschungen)
+      ${ansicht.leer || !this._ansicht.fussNoetig(
+        ansicht.seiten, ansicht.summen.length, vorgemerkt, loeschungen, this.durchAuswahlGefiltert)
         ? nothing
         : tabelleFuss({
         hatQuelle: ansicht.hatQuelle,
         sichtbar: ansicht.gesamt,
         gesamt: this.datenzeilen.length,
-        suchtAktiv: this._suchtext.trim() !== '',
+        suchtAktiv: this._ansicht.suchtAktiv,
         auswahlAktiv: this.durchAuswahlGefiltert,
         seite: ansicht.seite,
         seiten: ansicht.seiten,
@@ -784,11 +482,7 @@ export class TabelleBlock extends BasicBlock {
         vorgemerkt,
         loeschungen,
       }, {
-        blaettere: (zu) => {
-          this.merkeZeilenFokus()
-          this._seite = zu
-          this.requestUpdate()
-        },
+        blaettere: (zu) => this._ansicht.blaettere(zu),
       })}
     </div>`
   }

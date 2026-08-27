@@ -13,7 +13,7 @@ Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mi
 3. **Keine neuen npm-Abhängigkeiten.** Auch keine UI-Bibliothek für die neue Designsprache — die Atome werden selbst gebaut.
 4. **Keine Änderung in `src/core/`, `src/softengine/`, `src/export/` ohne zugehörigen Test** (ab Etappe 1 vorhanden).
 5. **Kein `if (type === 'tabelle')` in generischem Code.** Fähigkeiten laufen über `BlockDefinition`/Registry, wie bisher.
-6. **500-Zeilen-Deckel pro Datei.** Aktuell verletzt nur `src/blocks/tabelle/TabelleBlock.ts` (797) — wird in Etappe 2 gesplittet.
+6. **500-Zeilen-Deckel pro Datei.** Seit Etappe 2 hält ihn jede Datei ein (größte: `FormFeldBlock.ts` 498, `TabelleBlock.ts` 491).
 7. **Deutsche Benennung**, wie im Bestand.
 
 ## Pflichten (jede Etappe)
@@ -42,10 +42,13 @@ Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mi
 4. ✅ **Abschnitts-Test für die Ketten-Laufzeit:** `abschnitteVon`/`laufeSchritte` in `src/blocks/shared/seAktionen.ts` — ein Schritt ohne Zeilenbezug hängt am laufenden Abschnitt; zwei Listen in einem Schritt = Fehler; Lauf ist sequenziell. Beide Funktionen dafür exportieren — reine Sichtbarkeitsänderung, kein Verhaltensunterschied.
 5. ✅ Jeden neuen Test einmal absichtlich rot machen (Erwartung verdrehen), damit er beweisbar prüft und nicht leer durchläuft.
 
-## Etappe 2 — Aufräumen (Stunden)
+## Etappe 2 — Aufräumen (Stunden) ✅
 
-1. `src/design/masken-schriften.css` löschen (0 Importeure).
-2. `TabelleBlock.ts` (797 Z.) splitten: `zellWert`/`tippeZelle`/`verlasseZelle`/`zelleNachbar`/`tasteZelle` + Änderungs-/Lösch-Getter in neue `src/blocks/tabelle/zeilenBearbeitung.ts`, analog zum Schnitt `erfassungsBedienung.ts`. Deckel wieder eingehalten, Verhalten identisch (Tests aus Etappe 1 bleiben grün).
+1. ✅ `src/design/masken-schriften.css` gelöscht (die vier Importeure waren schon in Etappe 0 gefallen — die Datei war seit `a20f390` toter Code).
+2. ✅ `TabelleBlock.ts` (797 Z.) gesplittet. Der eine im Plan genannte Schnitt reichte nicht: er landete bei 612 Z. Es sind **drei** Schnitte geworden, Verhalten identisch (normalisierter Zeilenvergleich alt↔neu, Prüfbündel grün):
+   - `zeilenBearbeitung.ts` (250 Z.) — Vormerkungen an gebuchten Zeilen + Zellbedienung (`zellWert`/`tippeZelle`/`verlasseZelle`/`zelleNachbar`/`tasteZelle`, Änderungs-/Lösch-Getter). Die vier Laufzeit-Vertrag-Namen (`geaenderteZeilen`/`aenderungenLeeren`/`geloeschteZeilen`/`loeschungenLeeren`) bleiben als Delegationen **am Element** — die Kette liest sie über die Element-Referenz (`seAktionen.ts:275-306`).
+   - `ansichtsStand.ts` (185 Z.) — Suchtext, Sortierung, Seite, Rumpf-Messung, Zeilenfokus.
+   - `zeilenEreignisse.ts` (41 Z.) — Klick/Doppelklick auf eine Datenzeile.
 
 ## Etappe 3 — Zeilen-Lebenszyklus komplettieren (das Kern-Feature)
 
