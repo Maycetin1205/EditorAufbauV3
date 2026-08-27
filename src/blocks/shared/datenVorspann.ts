@@ -23,7 +23,7 @@ export function holeDatenVorspann(el: HTMLElement): DatenVorspann | null {
   const quelle = findRuntimeDataSource(seGlobal().FF_DATA_SOURCES, sourceId)
   if (!quelle) return null
   const zeilen = zeilenAmTag(
-    rowsFor(seGlobal().SEDATA, quelle.name, quelle.tableId),
+    rowsFor(seGlobal().SEDATA, quelle.name, quelle.tableId, quelle.offenerSatz),
     el.getAttribute('tagfield') ?? '',
     gewaehlterTag(),
   )

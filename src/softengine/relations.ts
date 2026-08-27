@@ -280,9 +280,9 @@ export interface RuntimeActionValues {
 
   gewaehlteZeile?: (geberId: string) => unknown
 
-  // Gesetzt, wenn die Kette gerade eine erfasste Zeile abarbeitet (G4):
-  // liefert den Zellwert der Spalte dieser einen Zeile.
-  erfassteZelle?: (blockId: string, spaltenIndex: number) => string
+  // Gesetzt, wenn die Kette gerade EINE Zeile abarbeitet — eine erfasste
+  // (G4) oder eine geaenderte: liefert den Zellwert der Spalte dieser Zeile.
+  zeilenZelle?: (blockId: string, spaltenIndex: number) => string
 }
 
 function resolveBlockValue(binding: ActionParamBinding, runtime: unknown): string {
@@ -314,10 +314,12 @@ export function resolveActionParam(
     return extractRelationFeld(values.stepRohErgebnisse?.[idx], feld)
   }
   if (binding.source === 'block_value') return resolveBlockValue(binding, runtime)
-  if (binding.source === 'erfassungszelle') {
+  if (binding.source === 'erfassungszelle'
+    || binding.source === 'aenderungszelle'
+    || binding.source === 'loeschzelle') {
     const index = Number(binding.value)
     if (!Number.isInteger(index) || index < 0) return ''
-    return values.erfassteZelle?.(binding.blockId ?? '', index) ?? ''
+    return values.zeilenZelle?.(binding.blockId ?? '', index) ?? ''
   }
   if (binding.source === 'gewaehlte_zeile') {
     const zeile = values.gewaehlteZeile?.(binding.blockId ?? '')
@@ -334,7 +336,7 @@ export function resolveActionParam(
 
   const source = findRuntimeDataSource(runtime.FF_DATA_SOURCES, binding.dataSourceId ?? '')
   if (!source) return ''
-  const rows = rowsFor(runtime.SEDATA, source.name, source.tableId)
+  const rows = rowsFor(runtime.SEDATA, source.name, source.tableId, source.offenerSatz)
   const pindex = values.context.PINDEX ?? ''
 
   const row = pindex !== '' && source.indexField !== ''

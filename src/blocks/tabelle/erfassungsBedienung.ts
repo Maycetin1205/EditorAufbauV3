@@ -64,32 +64,55 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
   })
 }
 
-// Der Sprung zur nächsten leeren Zelle (G3b). Rechts nichts Leeres mehr:
-// Enter erfasst die Zeile (G4, `abschliessen`); Tab lässt den Fokus stehen —
-// eine Taste zum Weiterrücken, EINE zum Abschließen.
-function springe(wirt: ErfassungsWirt, index: number, abschliessen: boolean): void {
-  const ziel = wirt.lauf.naechsteLeere(wirt.umfeld(), index)
+// Weiterrücken — auf ZWEI Arten, die sich nicht vermischen dürfen:
+//
+// Enter folgt dem Fluss (G3b/G4): die nächste LEERE Zelle, und ist rechts
+// nichts Leeres mehr, ist die Zeile fertig. Selbstgefülltes wird dabei
+// übersprungen — das ist der Sinn.
+//
+// Tab geht dagegen Zelle für Zelle, auch in gefüllte. Vorher sprang es
+// ebenfalls nur auf Leeres; damit war eine einmal gefüllte Zelle vorwärts
+// nie wieder erreichbar, während Shift+Tab rückwärts an jede kam. Zwei
+// Richtungen mit zwei Regeln — genau daran lief der Bediener auf.
+// Hinter der letzten Spalte gibt Tab an den Browser ab (false): der führt
+// aus der Zeile heraus, wie überall sonst.
+function springe(wirt: ErfassungsWirt, index: number, taste: string): boolean {
+  const umfeld = wirt.umfeld()
+  if (taste === 'Tab') {
+    const naechste = index + 1
+    if (naechste >= umfeld.spalten.length) return false
+    wirt.fokussiere(naechste)
+    return true
+  }
+  const ziel = wirt.lauf.naechsteLeere(umfeld, index)
   if (ziel !== -1) wirt.fokussiere(ziel)
-  else if (abschliessen) wirt.erfasseZeile()
+  else if (taste === 'Enter') wirt.erfasseZeile()
+  return true
 }
 
 function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
   // Rückwärts (Shift+Tab) bleibt Browser-Sache — jede Zelle ist erreichbar.
   if (e.key === 'Tab' && e.shiftKey) return
-  const folge = wirt.lauf.entscheideTaste(wirt.umfeld(), index, e.key)
+  // Alt+Pfeil-runter ist derselbe Wunsch wie F4: das große Fenster. Der
+  // Entscheid kennt nur Tastennamen, darum hier abgebildet.
+  const gedrueckt = e.key === 'ArrowDown' && e.altKey ? 'F4' : e.key
+  const folge = wirt.lauf.entscheideTaste(wirt.umfeld(), index, gedrueckt)
   if (folge === 'nichts') {
     // Enter darf trotzdem kein Formular abschicken.
     if (e.key === 'Enter') e.preventDefault()
     return
   }
-  e.preventDefault()
-  const abschliessen = e.key === 'Enter'
+  let behalte = true
   if (folge === 'uebernehmen') {
     waehle(wirt, index, wirt.lauf.marke)
-    springe(wirt, index, abschliessen)
+    behalte = springe(wirt, index, e.key)
   } else if (folge === 'fenster') fenster(wirt, index)
-  else if (folge === 'weiter') springe(wirt, index, abschliessen)
+  else if (folge === 'liste-auf') wirt.lauf.oeffneListe(index)
+  else if (folge === 'weiter') behalte = springe(wirt, index, e.key)
   else if (folge === 'leeren') wirt.lauf.leere(wirt.umfeld(), index)
+  // Nur was wir selbst erledigen, nehmen wir dem Browser weg: Tab hinter
+  // der letzten Spalte gehört ihm, sonst säße der Fokus in der Zeile fest.
+  if (behalte) e.preventDefault()
   wirt.melde()
 }
 

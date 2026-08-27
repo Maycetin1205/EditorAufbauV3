@@ -1,6 +1,11 @@
 import type { RelationTemplate } from './relations'
 
-export type StepTypeKey = 'START_TOOL' | 'RELATION' | 'POPUP_OPEN' | 'POPUP_CLOSE'
+export type StepTypeKey =
+  | 'START_TOOL'
+  | 'BW_LINK'
+  | 'RELATION'
+  | 'POPUP_OPEN'
+  | 'POPUP_CLOSE'
 
 export interface StepTypeSpec {
   key: StepTypeKey
@@ -10,6 +15,7 @@ export interface StepTypeSpec {
 export const STEP_TYPES: readonly StepTypeSpec[] = [
 
   { key: 'START_TOOL', name: 'START_TOOL' },
+  { key: 'BW_LINK', name: 'BW-Befehl' },
   { key: 'RELATION', name: 'Relation' },
 
   { key: 'POPUP_OPEN', name: 'Popup öffnen' },
@@ -34,6 +40,16 @@ export const ACTION_PARAM_SOURCES = [
   // gewaehlt oder frei getippt (Formularfeld-Prinzip, G4). blockId = die
   // Tabelle, value = der Spalten-Index. Die Kette laeuft einmal je Zeile.
   'erfassungszelle',
+
+  // "Wert aus geaenderter Zelle <Spalte>": wie oben, nur fuer die vorgemerkten
+  // Aenderungen an GEBUCHTEN Zeilen. Die Kette laeuft einmal je geaenderter
+  // Zeile; {PINDEX} traegt dabei die Satznummer genau dieser Zeile.
+  'aenderungszelle',
+
+  // „Wert aus geloeschter Zeile <Spalte>": die Zeilen, die der Bediener zum
+  // Loeschen vorgemerkt hat. Die Kette laeuft einmal je Zeile; {PINDEX}
+  // traegt die Satznummer.
+  'loeschzelle',
   'previous_result',
   'step_result',
   'se_variable',
@@ -102,6 +118,15 @@ export interface StartToolStep extends ActionStepBase {
   toolParams: string[]
 }
 
+// Ein freier BüroWARE-Befehl. START_TOOL hat eine eigene Art, weil sein Link
+// fest aufgebaut ist ('0,START_TOOL,<nr>'); hier gibt der Nutzer die ganze
+// Zeile vor, weil die Befehle je Installation andere sind.
+export interface BwLinkStep extends ActionStepBase {
+  type: 'BW_LINK'
+
+  befehl: string
+}
+
 export interface RelationStep extends ActionStepBase {
   type: 'RELATION'
 
@@ -124,7 +149,7 @@ export interface PopupCloseStep extends ActionStepBase {
 
 export type PopupStep = PopupOpenStep | PopupCloseStep
 
-export type ActionStep = StartToolStep | RelationStep | PopupStep
+export type ActionStep = StartToolStep | BwLinkStep | RelationStep | PopupStep
 export type BlockEventsMap = Record<string, ActionStep[]>
 
 export const AKTIONS_PLATZHALTER = ['PINDEX', 'VALUE', 'ZIMMER', 'NOW_DATE'] as const
@@ -152,6 +177,7 @@ export type RuntimePopupStep =
 
 export type RuntimeStep =
   | Omit<StartToolStep, 'id'>
+  | Omit<BwLinkStep, 'id'>
   | Omit<RelationStep, 'id'>
   | RuntimePopupStep
 
@@ -194,6 +220,10 @@ function stepFields(raw: unknown): RuntimeStep | null {
       toolNr: raw.toolNr,
       toolParams: [...raw.toolParams] as string[],
     }
+  }
+  if (raw.type === 'BW_LINK') {
+    if (typeof raw.befehl !== 'string') return null
+    return { type: 'BW_LINK', resultKey: raw.resultKey, befehl: raw.befehl }
   }
   if (raw.type === 'POPUP_OPEN' || raw.type === 'POPUP_CLOSE') {
     const popupId = typeof raw.popupId === 'string' ? raw.popupId : undefined
@@ -280,6 +310,9 @@ function withoutEditorId(
       toolNr: step.toolNr,
       toolParams: [...step.toolParams],
     }
+  }
+  if (step.type === 'BW_LINK') {
+    return { type: step.type, resultKey: step.resultKey, befehl: step.befehl }
   }
   if (step.type === 'POPUP_OPEN' || step.type === 'POPUP_CLOSE') {
     return {

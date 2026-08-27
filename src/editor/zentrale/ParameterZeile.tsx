@@ -32,6 +32,8 @@ const QUELLEN_NAMEN: Record<ActionParamSource, string> = {
   block_value: 'Baustein',
   gewaehlte_zeile: 'Gewählte Zeile',
   erfassungszelle: 'Erfassungszelle',
+  aenderungszelle: 'Geänderte Zelle',
+  loeschzelle: 'Gelöschte Zeile',
   previous_result: 'Vorheriger Schritt',
   step_result: 'Ergebnis von Schritt',
   se_variable: 'SE VAR-Array',
@@ -45,6 +47,8 @@ function BindingValue({
   blockValues,
   geber,
   erfassungen,
+  aenderungen,
+  loeschungen,
   schritte,
   platzhalter,
   onChange,
@@ -54,6 +58,8 @@ function BindingValue({
   blockValues: readonly BlockValueOption[]
   geber: readonly AuswahlGeberOption[]
   erfassungen: readonly ErfassungsOption[]
+  aenderungen: readonly ErfassungsOption[]
+  loeschungen: readonly ErfassungsOption[]
   schritte: readonly ErgebnisSchritt[]
   platzhalter?: string
   onChange: (binding: ActionParamBinding) => void
@@ -203,23 +209,29 @@ function BindingValue({
       </div>
     )
   }
-  if (binding.source === 'erfassungszelle') {
-    const tabelle = erfassungen.find((t) => t.blockId === binding.blockId)
-    const tabellenEintraege: WaehlerEintrag[] = erfassungen.map((t) => ({ wert: t.blockId, name: t.label }))
+  if (binding.source === 'erfassungszelle'
+    || binding.source === 'aenderungszelle'
+    || binding.source === 'loeschzelle') {
+    const erfasst = binding.source === 'erfassungszelle'
+    const liste = erfasst
+      ? erfassungen
+      : binding.source === 'aenderungszelle' ? aenderungen : loeschungen
+    const tabelle = liste.find((t) => t.blockId === binding.blockId)
+    const tabellenEintraege: WaehlerEintrag[] = liste.map((t) => ({ wert: t.blockId, name: t.label }))
     if (binding.blockId && !tabelle) {
       tabellenEintraege.push({ wert: binding.blockId, name: '(gelöschter Baustein)' })
     }
     return (
       <div className="grid grid-cols-2 gap-1">
         <WaehlerKnopf
-          bezeichnung="Tabelle mit Erfassungszeile"
+          bezeichnung={erfasst ? 'Tabelle mit Erfassungszeile' : 'Tabelle mit den Zeilen'}
           gruppen={[{ key: 'tabellen', eintraege: tabellenEintraege }]}
           wert={binding.blockId ?? ''}
           platzhalter="— Tabelle —"
           onWaehle={(id) => onChange({ ...binding, blockId: id, value: '' })}
         />
         <WaehlerKnopf
-          bezeichnung="Spalte der Erfassungszeile"
+          bezeichnung={erfasst ? 'Spalte der Erfassungszeile' : 'Spalte der Zeile'}
           gruppen={[{
             key: 'spalten',
             eintraege: (tabelle?.spalten ?? []).map((s) => ({
@@ -271,6 +283,8 @@ export function ParameterZeile({
   blockValues,
   geber,
   erfassungen,
+  aenderungen,
+  loeschungen,
   schritte,
   platzhalter,
   entfernen,
@@ -284,6 +298,8 @@ export function ParameterZeile({
   blockValues: readonly BlockValueOption[]
   geber: readonly AuswahlGeberOption[]
   erfassungen: readonly ErfassungsOption[]
+  aenderungen: readonly ErfassungsOption[]
+  loeschungen: readonly ErfassungsOption[]
   schritte: readonly ErgebnisSchritt[]
 
   platzhalter?: string
@@ -308,6 +324,14 @@ export function ParameterZeile({
       onChange({ source, blockId: erfassungen[0].blockId, value: '' })
       return
     }
+    if (source === 'aenderungszelle' && aenderungen.length === 1) {
+      onChange({ source, blockId: aenderungen[0].blockId, value: '' })
+      return
+    }
+    if (source === 'loeschzelle' && loeschungen.length === 1) {
+      onChange({ source, blockId: loeschungen[0].blockId, value: '' })
+      return
+    }
     const value = source === 'context'
       ? 'VALUE'
 
@@ -324,6 +348,8 @@ export function ParameterZeile({
       || (source === 'block_value' && blockValues.length === 0)
       || (source === 'gewaehlte_zeile' && geber.length === 0)
       || (source === 'erfassungszelle' && erfassungen.length === 0)
+      || (source === 'aenderungszelle' && aenderungen.length === 0)
+      || (source === 'loeschzelle' && loeschungen.length === 0)
       || (source === 'step_result' && schritte.length === 0),
   }))
 
@@ -357,6 +383,8 @@ export function ParameterZeile({
           blockValues={blockValues}
           geber={geber}
           erfassungen={erfassungen}
+          aenderungen={aenderungen}
+          loeschungen={loeschungen}
           schritte={schritte}
           platzhalter={platzhalter}
           onChange={onChange}

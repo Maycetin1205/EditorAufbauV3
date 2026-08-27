@@ -26,6 +26,13 @@ export interface PickerWahl {
   onWaehle: (wert: string) => void
 }
 
+export interface PickerSchalter {
+  key: string
+  label: string
+  an: boolean
+  onSchalte: (an: boolean) => void
+}
+
 export interface PickerFeld {
   key: string
   label: string
@@ -55,6 +62,8 @@ interface FieldPickerProps {
 
   felder?: readonly PickerFeld[]
 
+  schalter?: readonly PickerSchalter[]
+
   zuordnung?: PickerZuordnung
 
   current?: string
@@ -71,6 +80,7 @@ export function FieldPicker({
   gruppen,
   wahl,
   felder,
+  schalter,
   zuordnung,
   current,
   top,
@@ -130,6 +140,21 @@ export function FieldPicker({
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {schalter && schalter.length > 0 && (
+        <div className="mb-1 border-b border-border pb-1">
+          {schalter.map((s) => (
+            <label key={s.key} className="flex items-center gap-2 px-2 py-1 text-xs">
+              <input
+                type="checkbox"
+                checked={s.an}
+                onChange={(e) => s.onSchalte(e.target.checked)}
+              />
+              <span className="min-w-0 flex-1">{s.label}</span>
+            </label>
+          ))}
         </div>
       )}
 

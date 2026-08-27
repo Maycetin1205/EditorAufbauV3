@@ -39,7 +39,7 @@ export function leseGebundeneStelle(el: HTMLElement, bindungsAttr: string): Gebu
 
   const zeile = ersteZeileNachAuswahl(
     el,
-    rowsFor(seGlobal().SEDATA, quelle.name, quelle.tableId),
+    rowsFor(seGlobal().SEDATA, quelle.name, quelle.tableId, quelle.offenerSatz),
   )
   if (zeile === undefined) return { art: 'ohneZeile' }
 

@@ -1,4 +1,4 @@
-function woerterVon(text: string): string[] {
+export function woerterVon(text: string): string[] {
   return text.trim().toLowerCase().split(/\s+/).filter((w) => w !== '')
 }
 

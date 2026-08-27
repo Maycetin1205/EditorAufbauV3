@@ -132,6 +132,7 @@ export function SchrittListe({
                 <span className="block truncate text-xs">
                   {zus.was}
                   {s.type === 'START_TOOL' && s.toolNr.trim() !== '' ? ` — Nr. ${s.toolNr}` : ''}
+                  {s.type === 'BW_LINK' && s.befehl.trim() !== '' ? ` — ${s.befehl}` : ''}
                   {popupName ? ` — ${popupName}` : ''}
                   {problem !== null ? ' — unvollständig' : ''}
                 </span>

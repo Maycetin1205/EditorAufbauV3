@@ -1,4 +1,5 @@
-import { html, type TemplateResult } from 'lit'
+import { html, nothing, type TemplateResult } from 'lit'
+import { vormerkText } from './aenderungen'
 import { datensatzText } from './suche'
 
 export interface FussLage {
@@ -10,6 +11,18 @@ export interface FussLage {
   auswahlAktiv: boolean
   seite: number
   seiten: number
+
+  summen: readonly { titel: string; text: string }[]
+
+  // Vorgemerkte Zell-Aenderungen. Geschrieben werden sie erst durch eine
+  // Kette an einem Knopf — bis dahin sagt die Fusszeile, dass etwas offen ist.
+  vorgemerkt: number
+
+  loeschungen: number
+
+  // Beim Rollen gibt es nur eine Seite — dann waere „Seite 1 von 1" mit zwei
+  // toten Knoepfen daneben. Die Zaehlzeile bleibt, sie traegt den Filterstand.
+  blaettert: boolean
 }
 
 export interface FussHandeln {
@@ -25,7 +38,16 @@ export function tabelleFuss(lage: FussLage, tun: FussHandeln): TemplateResult {
       suchtAktiv: lage.suchtAktiv,
       auswahlAktiv: lage.auswahlAktiv,
     })}</div>
-    <div class="seiten-nav">
+    ${lage.vorgemerkt === 0 && lage.loeschungen === 0 ? nothing : html`<div class="vorgemerkt">${
+      vormerkText(lage.vorgemerkt, lage.loeschungen)
+    }</div>`}
+    ${lage.summen.length === 0 ? nothing : html`<div class="summen">
+      ${lage.summen.map((s) => html`<span class="summe">
+        <span class="summe-titel">${s.titel}</span>
+        <b>${s.text}</b>
+      </span>`)}
+    </div>`}
+    ${!lage.blaettert ? nothing : html`<div class="seiten-nav">
       <button
         aria-label="Seite zurück"
         ?disabled=${lage.seite <= 0}
@@ -37,6 +59,6 @@ export function tabelleFuss(lage: FussLage, tun: FussHandeln): TemplateResult {
         ?disabled=${lage.seite >= lage.seiten - 1}
         @click=${() => tun.blaettere(lage.seite + 1)}
       >›</button>
-    </div>
+    </div>`}
   </div>`
 }

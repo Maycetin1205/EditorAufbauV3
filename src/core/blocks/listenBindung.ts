@@ -15,6 +15,20 @@ export interface ListenBindung {
   eintragsWahl?: EintragsWahl
 
   eintragsZuordnung?: EintragsZuordnung
+
+  eintragsSchalter?: readonly EintragsSchalter[]
+}
+
+// Ein Ja/Nein je Eintrag. Anders als die Wahl (eine aus mehreren) und die
+// Zuordnung (eine Tabelle) ist er ein einzelner Schalter — z. B. „diese
+// Spalte summieren". 'nurBeiWahl' haelt ihn dort verborgen, wo er nichts
+// bedeutet: eine Textspalte laesst sich nicht summieren.
+export interface EintragsSchalter {
+  key: string
+
+  label: string
+
+  nurBeiWahl?: readonly string[]
 }
 
 export interface EintragsZuordnung {
@@ -72,6 +86,27 @@ export function eintragsZuordnungLesen(
       name: typeof r.name === 'string' ? r.name : '',
       bedeutung: typeof r.bedeutung === 'string' ? r.bedeutung : '',
     }))
+}
+
+export function schalterAn(
+  schalter: EintragsSchalter,
+  eintrag: Record<string, unknown>,
+): boolean {
+  return eintrag[schalter.key] === true
+}
+
+// Welche Schalter dieser Eintrag ueberhaupt zeigt. Ohne Wahl am Bindungs-
+// Modell gibt es keine Darstellung, an der sich etwas festmachen liesse —
+// dann gelten alle.
+export function schalterFuer(
+  b: ListenBindung,
+  eintrag: Record<string, unknown>,
+): readonly EintragsSchalter[] {
+  const alle = b.eintragsSchalter ?? []
+  const wahl = b.eintragsWahl
+  if (!wahl) return alle
+  const gewaehlt = eintragsWahlWert(wahl, eintrag)
+  return alle.filter((s) => s.nurBeiWahl === undefined || s.nurBeiWahl.includes(gewaehlt))
 }
 
 export function eintragsFelderVon(
@@ -134,6 +169,12 @@ function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
     if (zuo) {
       regeln.push({ key: zuo.key, erlaubt: (e) => eintragsWahlWert(wahl, e) === zuo.nurBeiWahl })
     }
+  }
+  for (const schalter of b.eintragsSchalter ?? []) {
+    regeln.push({
+      key: schalter.key,
+      erlaubt: (e) => schalterAn(schalter, e) && schalterFuer(b, e).includes(schalter),
+    })
   }
   return regeln
 }

@@ -1,8 +1,10 @@
 import { spaltenArt, zeilenHoeheFuer } from './spaltenArten'
+import { summeText } from './zahlFormat'
 import {
   linealTakte,
   OHNE_MESSUNG,
   platzhalterZeilen,
+  rollAufteilung,
   seitenAufteilung,
   type Zeilenmass,
 } from './seitengroesse'
@@ -32,6 +34,18 @@ export interface AnsichtFrage {
   // Erfasste, noch nicht geschriebene Zeilen (G4) belegen genauso je einen
   // Platz zwischen den Daten und der Erfassungszeile.
   erfassteAnzahl: number
+
+  // Was in einer Zelle STEHT — vorgemerkte Aenderung eingerechnet. Die
+  // Summe muss zeigen, was der Bediener sieht: sonst stuende unter einer
+  // geaenderten Menge weiter die alte Summe (so rechnet auch die Handmaske
+  // Rahmen00001 V11, die die geaenderte Menge in die Summe nimmt).
+  wertVon: (rohIndex: number, spalte: number) => string
+
+  // Blaettern: lange Listen in Seiten schneiden. Aus = rollen — alle Treffer
+  // untereinander, der Rumpf rollt. Die Messung bleibt in BEIDEN Faellen
+  // noetig: sie sagt, wie viele Zeilen passen, und damit, wie viel Lineal
+  // unter der letzten Zeile noch zu zeichnen ist.
+  blaettert: boolean
 }
 
 export interface TabelleAnsicht {
@@ -50,6 +64,29 @@ export interface TabelleAnsicht {
   zeilen: readonly (number | null)[]
 
   linealTakte: number | null
+
+  // Was unter der Tabelle steht. Gezaehlt wird ueber ALLE Treffer, nicht nur
+  // ueber die sichtbare Seite: die Summe gehoert zum Filterstand, nicht zum
+  // Blaetterstand (so rechnet auch die Handmaske Rahmen00001 V11).
+  summen: readonly { titel: string; text: string }[]
+}
+
+function summenVon(
+  frage: AnsichtFrage,
+  sichtbar: readonly number[],
+): { titel: string; text: string }[] {
+  const raus: { titel: string; text: string }[] = []
+  frage.spalten.forEach((spalte, i) => {
+    const nachkomma = spaltenArt(spalte.art).summe
+    if (spalte.summe !== true || nachkomma === undefined) return
+    const text = summeText(
+      sichtbar.map((zeile) => frage.wertVon(zeile, i)),
+      nachkomma.min,
+      nachkomma.max,
+    )
+    if (text !== '') raus.push({ titel: spalte.titel, text })
+  })
+  return raus
 }
 
 function sichtbareIndizes(frage: AnsichtFrage): number[] {
@@ -82,13 +119,16 @@ export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
     ? null
     : Math.max(1, frage.gemessen.passen - belegt)
   const proSeite = gemessenPassen ?? Math.max(1, OHNE_MESSUNG - belegt)
-  const { seiten, seite, zeilen } = seitenAufteilung({
+  const aufteilungsFrage = {
     sichtbar: alleSichtbar,
     hatQuelle,
     proSeite,
     wunschSeite: frage.wunschSeite,
     platzhalterZeilen: platzhalterZeilen(gemessenPassen),
-  })
+  }
+  const { seiten, seite, zeilen } = frage.blaettert
+    ? seitenAufteilung(aufteilungsFrage)
+    : rollAufteilung(aufteilungsFrage)
   return {
     cols,
     takt,
@@ -101,5 +141,7 @@ export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
     zeilen,
 
     linealTakte: linealTakte(gemessenPassen, zeilen.length),
+
+    summen: summenVon(frage, alleSichtbar),
   }
 }

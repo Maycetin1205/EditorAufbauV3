@@ -1,4 +1,4 @@
-export const ZEILEN_HOEHE = 32
+export const ZEILEN_HOEHE = 28
 
 export const OHNE_MESSUNG = 10
 
@@ -55,6 +55,21 @@ export interface AufteilungFrage {
   wunschSeite: number
 
   platzhalterZeilen: number
+}
+
+// Rollen statt Blaettern: alle Treffer stehen untereinander im Rumpf, der
+// Rumpf rollt. Es gibt genau EINE Seite — die Fusszeile zeigt dann keine
+// Blaetter-Knoepfe. Ohne Quelle bleibt es bei den Platzhalter-Strichen, damit
+// der Editor keine Daten erfindet.
+export function rollAufteilung({
+  sichtbar,
+  hatQuelle,
+  platzhalterZeilen,
+}: AufteilungFrage): Aufteilung {
+  if (!hatQuelle) {
+    return { seiten: 1, seite: 0, zeilen: Array.from({ length: platzhalterZeilen }, () => null) }
+  }
+  return { seiten: 1, seite: 0, zeilen: [...sichtbar] }
 }
 
 export function seitenAufteilung({

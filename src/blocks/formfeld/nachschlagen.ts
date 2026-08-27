@@ -171,7 +171,7 @@ export type EintraegeErgebnis =
 export function quellenZeilen(quelleId: string): unknown[] | null {
   const quelle = findRuntimeDataSource(seGlobal().FF_DATA_SOURCES, quelleId)
   if (!quelle) return null
-  return rowsFor(seGlobal().SEDATA, quelle.name, quelle.tableId)
+  return rowsFor(seGlobal().SEDATA, quelle.name, quelle.tableId, quelle.offenerSatz)
 }
 
 export function holeEintraege(e: NachschlagEinstellung): EintraegeErgebnis {

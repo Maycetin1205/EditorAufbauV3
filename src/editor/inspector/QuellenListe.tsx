@@ -5,7 +5,6 @@ import { WaehlerKnopf } from '@/ui/molecules/waehler'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { quellenKennung } from '../../core/data/dataSources'
 import {
-  quelleBrauchbar,
   WEITERE_QUELLEN_PROP,
   weitereQuellenAus,
   type BausteinQuelle,
@@ -40,6 +39,71 @@ export function QuellenListe({ block }: QuellenListeProps) {
     const belegt = new Set([erste, ...weitere.map((q) => q.quelleId)])
     belegt.delete(eigene)
     return bibliothek.filter((s) => !belegt.has(s.id))
+  }
+
+  // Die Stellenbezeichnung einer Quelle DIESES Bausteins — dieselbe Zaehlung,
+  // die auch ueber den Waehlern steht.
+  function stelle(id: string): string {
+    if (id === '') return 'verbundenen Datenquelle'
+    if (id === erste) return 'Datenquelle 1'
+    const at = weitere.findIndex((q) => q.quelleId === id)
+    return at === -1 ? 'Datenquelle 1' : `Datenquelle ${at + 2}`
+  }
+
+  // Woran diese Quelle haengt. Drei Zustaende, und sie muessen auseinander
+  // bleiben — sonst sprang „keine" beim naechsten Zeichnen auf Datenquelle 1
+  // zurueck (Nutzer-Befund 2026-08-27):
+  //   KEIN Feldpaar   -> gar keine Verbindung (reine Nachschlagequelle)
+  //   partnerId leer  -> die Hauptquelle (so lesen sich auch alte Masken)
+  //   partnerId gesetzt -> eine andere weitere Quelle (2 an 3, 3 an 4)
+  // Gezaehlt werden ALLE Paarzeilen, auch halb gefuellte: sonst kippte der
+  // Waehler beim Eintippen des ersten Feldes zurueck auf „keine".
+  function partnerVon(index: number): string {
+    const eigen = weitere[index]
+    if (!eigen || eigen.keyPairs.length === 0) return ''
+    return eigen.partnerId === '' || eigen.partnerId === eigen.quelleId ? erste : eigen.partnerId
+  }
+
+  // „keine" nimmt die Paare weg — ohne Paar gibt es nichts zu verbinden, die
+  // Angabe waere tote Einstellung. Eine Quelle waehlen legt umgekehrt die
+  // erste Paarzeile an, damit die beiden Feldwaehler ueberhaupt erscheinen.
+  function setzePartner(index: number, wert: string): void {
+    const eigen = weitere[index]
+    if (wert === '') {
+      aendere(index, { partnerId: '', keyPairs: [] })
+      return
+    }
+    aendere(index, {
+      partnerId: wert === erste ? '' : wert,
+      keyPairs: (eigen?.keyPairs.length ?? 0) === 0
+        ? [{ fromField: '', toField: '' }]
+        : (eigen?.keyPairs ?? []),
+    })
+  }
+
+  const partnerAuswahl = (index: number) => {
+    const eigen = weitere[index]
+    const eintraege = [
+      { wert: erste, name: bibliothek.find((s) => s.id === erste)?.name ?? '', kennung: 'Datenquelle 1' },
+      ...weitere
+        .map((q, at) => ({ q, at }))
+        .filter(({ q, at }) => at !== index && q.quelleId !== '' && q.quelleId !== eigen?.quelleId)
+        .map(({ q, at }) => ({
+          wert: q.quelleId,
+          name: bibliothek.find((s) => s.id === q.quelleId)?.name ?? '',
+          kennung: `Datenquelle ${at + 2}`,
+        })),
+    ]
+    return (
+      <WaehlerKnopf
+        label="Verbunden mit"
+        bezeichnung="Verbunden mit"
+        gruppen={[{ key: 'partner', eintraege }]}
+        wert={partnerVon(index)}
+        leerText="— keine —"
+        onWaehle={(v) => setzePartner(index, v)}
+      />
+    )
   }
 
   // Eine fehlende Quelle braucht keine Kunst-Option mehr: der Waehler zeigt
@@ -89,23 +153,17 @@ export function QuellenListe({ block }: QuellenListeProps) {
               <X size={13} />
             </IconButton>
           </div>
+          {partnerAuswahl(i)}
           <SchluesselPaarZeilen
-            frage="Woran erkennt man die zusammengehörige Zeile?"
+            frage="Welche Felder verbinden die beiden Datenquellen? (freiwillig)"
             paare={q.keyPairs}
-            linkeFelder={felderVon(erste)}
+            linkeFelder={felderVon(partnerVon(i))}
             rechteFelder={felderVon(q.quelleId)}
-            linkeBezeichnung={(at) => `Feld ${at + 1} der ersten Datenquelle`}
+            linkeBezeichnung={(at) => `Feld ${at + 1} der ${stelle(partnerVon(i))}`}
             rechteBezeichnung={(at) => `Feld ${at + 1} der Datenquelle ${i + 2}`}
             entfernenBezeichnung={(at) => `Zeile ${at + 1} entfernen`}
             onAendern={(keyPairs) => aendere(i, { keyPairs })}
           />
-
-          {!quelleBrauchbar(q) && (
-            <p className="text-xs text-muted-foreground">
-              Noch nicht benutzbar: es fehlt eine Datenquelle oder ein Feldpaar,
-              bei dem <em>beide</em> Seiten gefüllt sind.
-            </p>
-          )}
         </div>
       ))}
 
@@ -114,7 +172,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
           variant="outline"
           size="sm"
           className="self-start"
-          onClick={() => setzeWeitere([...weitere, { quelleId: '', keyPairs: [{ fromField: '', toField: '' }] }])}
+          onClick={() => setzeWeitere([...weitere, { quelleId: '', partnerId: '', keyPairs: [] }])}
         >
           <Plus size={13} /> Datenquelle
         </Button>

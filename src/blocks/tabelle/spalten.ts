@@ -8,6 +8,14 @@ export interface Spalte {
   zuordnung?: Zuordnung[]
 
   felder?: Record<string, string>
+
+  // Diese Spalte wird unter der Tabelle aufaddiert (nur bei summierbaren
+  // Darstellungen, s. spaltenBindung).
+  summe?: boolean
+
+  // In dieser Spalte darf der Bediener den Wert einer GEBUCHTEN Zeile
+  // aendern. Die Aenderung bleibt vorgemerkt, bis eine Kette sie schreibt.
+  aenderbar?: boolean
 }
 
 // Der Strich, den eine Zelle ohne Wert zeigt: der Editor erfindet nie Daten
@@ -66,6 +74,10 @@ function alsSpalte(x: unknown, index: number): Spalte {
       ...(zuordnung.length > 0 ? { zuordnung } : {}),
 
       ...(Object.keys(felder).length > 0 ? { felder } : {}),
+
+      ...(o.summe === true ? { summe: true } : {}),
+
+      ...(o.aenderbar === true ? { aenderbar: true } : {}),
     }
   }
 

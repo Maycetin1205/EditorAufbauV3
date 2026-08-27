@@ -1,4 +1,4 @@
-import { isRecord, messagePayload, payloadDaten } from './data'
+import { isRecord, messagePayload, payloadDaten, type UnknownRecord } from './data'
 
 import { meldeFehler } from './meldung'
 
@@ -29,6 +29,49 @@ function refreshDataBasis(): void {
 const zuhoerer = new Set<() => void>()
 const antwortZuhoerer = new Set<(raw: unknown) => void>()
 
+// Die ERP schiebt weiter, waehrend der Bediener tippt. Zeichnete die Maske
+// dabei neu, spraenge ihm die Schreibmarke aus der Zelle. Belegt an der
+// Handmaske Rahmen00001 V11: sie merkt sich den Push und wendet ihn erst an,
+// wenn kein Feld mehr den Fokus hat (dort mit 800 ms Nachlauf).
+const NACHLAUF_MS = 800
+
+let ausstehend = false
+let nachlauf: ReturnType<typeof setInterval> | null = null
+
+// Das wirklich fokussierte Element — durch die Schatten-Wurzeln hindurch,
+// denn jeder Baustein traegt seine Eingaben in seiner eigenen.
+function tiefstesAktives(): Element | null {
+  let el: Element | null = document.activeElement
+  while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement
+  return el
+}
+
+export function fokusBeiUns(): boolean {
+  const el = tiefstesAktives()
+  if (!(el instanceof HTMLElement)) return false
+  return el.isContentEditable
+    || el instanceof HTMLInputElement
+    || el instanceof HTMLTextAreaElement
+    || el instanceof HTMLSelectElement
+}
+
+function nachlaufStarten(): void {
+  if (nachlauf !== null) return
+  nachlauf = setInterval(() => {
+    if (fokusBeiUns()) return
+    nachlaufBeenden()
+    if (!ausstehend) return
+    ausstehend = false
+    zuhoerer.forEach((cb) => { cb() })
+  }, NACHLAUF_MS)
+}
+
+function nachlaufBeenden(): void {
+  if (nachlauf === null) return
+  clearInterval(nachlauf)
+  nachlauf = null
+}
+
 export function onSeDaten(cb: () => void): void {
   zuhoerer.add(cb)
 }
@@ -39,6 +82,12 @@ export function onSeAntwort(cb: (raw: unknown) => void): () => void {
 }
 
 function klingeln(): void {
+  if (fokusBeiUns()) {
+    ausstehend = true
+    nachlaufStarten()
+    return
+  }
+  ausstehend = false
   zuhoerer.forEach((cb) => cb())
 }
 
@@ -46,10 +95,38 @@ export function meldeNeueDaten(): void {
   klingeln()
 }
 
+// Nach dem Schreiben will der Bediener den neuen Stand sehen. SoftEngine
+// schiebt von sich aus — wir stossen ihre Datenbasis an und zeichnen neu.
+// ⚠ Ob der Anstoss SoftEngine wirklich zu einer neuen Lieferung bewegt, ist
+// an KEINER echten Maske belegt (die Handmaske Rahmen00001 V11 schreibt gar
+// nicht zurueck). Das gehoert in den SE-Echttest.
+export function frischeDatenAnfordern(): void {
+  refreshDataBasis()
+  klingeln()
+}
+
 function antwortKlingeln(raw: unknown): void {
   antwortZuhoerer.forEach((cb) => {
     try { cb(raw) } catch { /* ein Konsument darf den Empfang nie stoppen */ }
   })
+}
+
+// Jeder Push traegt den GANZEN Datenstand, auch wenn sich nichts geaendert
+// hat — die Handmaske vergleicht deshalb eine Signatur und zeichnet nur bei
+// echter Aenderung neu. Sehr grosse Staende werden nicht signiert (der
+// Vergleich kostete dann mehr als das Neuzeichnen): eine leere Signatur
+// heisst „unbekannt" und zeichnet immer.
+const SIGNATUR_GRENZE = 2_000_000
+
+let letzteSignatur = ''
+
+function signaturVon(daten: UnknownRecord): string {
+  try {
+    const roh = JSON.stringify(daten)
+    return roh.length > SIGNATUR_GRENZE ? '' : roh
+  } catch {
+    return ''
+  }
 }
 
 function seConsume(raw: unknown): void {
@@ -62,6 +139,10 @@ function seConsume(raw: unknown): void {
   if (!isRecord(g.SEDATA)) g.SEDATA = {}
   g.SEDATA.Daten = daten
   refreshDataBasis()
+
+  const signatur = signaturVon(daten)
+  if (signatur !== '' && signatur === letzteSignatur) return
+  letzteSignatur = signatur
   klingeln()
 }
 
@@ -86,6 +167,21 @@ function registerSe(tries = 0): void {
   }
 }
 
+// Gibt die ERP der Maske den Fokus, ruft sie basisHTML_DoSetFocusToHTML.
+// Die Bruecke weiss NICHT, welcher Baustein ihn nimmt (Regel: softengine
+// kennt keinen Baustein) — sie fragt per Ereignis. Wer ihn nimmt, ruft
+// preventDefault; nimmt ihn keiner, faellt der Fokus an die ERP zurueck.
+// Bei mehreren Bewerbern gewinnt der zuerst angemeldete.
+export const SE_FOKUS_EVENT = 'ff-se-fokus'
+
+function fokusBrueckeBauen(): void {
+  seGlobal().basisHTML_DoSetFocusToHTML = (): boolean => {
+    const frage = new CustomEvent(SE_FOKUS_EVENT, { cancelable: true })
+    document.dispatchEvent(frage)
+    return frage.defaultPrevented
+  }
+}
+
 let booted = false
 
 export function bootSe(): void {
@@ -96,6 +192,7 @@ export function bootSe(): void {
   g.Erstellen = () => { refreshDataBasis(); klingeln() }
   g.initData = g.Erstellen
   g.ReloadData = () => { klingeln() }
+  fokusBrueckeBauen()
   registerSe()
 
   window.addEventListener('message', (evt) => {

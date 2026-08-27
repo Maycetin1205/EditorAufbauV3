@@ -52,6 +52,12 @@ export function stepProblem(
     }
     return null
   }
+  if (step.type === 'BW_LINK') {
+    if (step.befehl.trim() === '') {
+      return `Schritt "${stepTypeName(step.type)}" hat keinen Befehl.`
+    }
+    return null
+  }
   if (step.type === 'START_TOOL') {
     if (step.toolNr.trim() === '') {
       return `Schritt "${stepTypeName(step.type)}" hat keine Nummer.`

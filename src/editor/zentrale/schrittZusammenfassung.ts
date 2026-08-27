@@ -110,6 +110,16 @@ function herkunftText(
       const wer = knoten ? bausteinName(knoten, quellen) : 'Erfassungszelle'
       return `Erfassungszelle · ${wer}`
     }
+    case 'aenderungszelle': {
+      const knoten = binding.blockId ? tree[binding.blockId] : undefined
+      const wer = knoten ? bausteinName(knoten, quellen) : 'Geänderte Zelle'
+      return `Geänderte Zelle · ${wer}`
+    }
+    case 'loeschzelle': {
+      const knoten = binding.blockId ? tree[binding.blockId] : undefined
+      const wer = knoten ? bausteinName(knoten, quellen) : 'Gelöschte Zeile'
+      return `Gelöschte Zeile · ${wer}`
+    }
     default:
       return ''
   }

@@ -7,6 +7,8 @@ import {
   eintragsFelderVon,
   eintragsWahlWert,
   eintragsZuordnungLesen,
+  schalterAn,
+  schalterFuer,
   listenStandardTitel,
   listeLesen,
   type BindableSpot,
@@ -50,7 +52,14 @@ function pickerGruppen(quellen: readonly QuelleInReichweite[]): PickerGruppe[] {
         quelleId: q.source.id,
         name: q.source.name,
         kennung: quellenKennung(q.source),
-        hinweis: paarKlartext(q.paare ?? [], erste),
+        // Die linke Seite eines Paares gehoert der PARTNER-Quelle. Solange
+        // alles sternfoermig an der ersten hing, war das dasselbe; haengt
+        // Quelle 3 an Quelle 2, schlug der Klartext sonst im falschen
+        // Feldbestand nach und blieb leer.
+        hinweis: paarKlartext(
+          q.paare ?? [],
+          q.partnerId ? quellen.find((x) => x.source.id === q.partnerId)?.source : erste,
+        ),
         fields: q.source.fields,
       }))
 }
@@ -261,6 +270,12 @@ export function useFeldBindung({
               aktuell: eintragsWahlWert(wahl, eintrag),
               onWaehle: (wert) => schreibeInEintrag(listenPicker, { [wahl.key]: wert }),
             }}
+            schalter={schalterFuer(listenBindung, eintrag).map((s) => ({
+              key: s.key,
+              label: s.label,
+              an: schalterAn(s, eintrag),
+              onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
+            }))}
             felder={zusatzFelder.map((zf) => ({
               key: zf.key,
               label: zf.label,

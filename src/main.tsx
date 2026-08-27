@@ -1,5 +1,4 @@
 import './index.css'
-import './design/masken-schriften.css'
 import './design/masken-tokens.css'
 import './blocks/registerEditorAngaben'
 

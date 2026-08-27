@@ -1,5 +1,9 @@
 import { ACTION_VALUE_ID_ATTR, parseBlockEvents, type RuntimeStep } from '../../core/data/aktionen'
-import type { ErfassungsTraegerElement } from '../../core/blocks/BlockDefinition'
+import type {
+  AenderungsTraegerElement,
+  ErfassungsTraegerElement,
+  LoeschTraegerElement,
+} from '../../core/blocks/BlockDefinition'
 import { auswahlFuer } from './auswahl'
 import { PopupBlock } from '../popup/PopupBlock'
 import {
@@ -7,7 +11,7 @@ import {
   resolveParams,
   type RelationContext,
 } from '../../core/data/relations'
-import { bootSe, seGlobal } from '../../softengine/bridge'
+import { bootSe, frischeDatenAnfordern, seGlobal } from '../../softengine/bridge'
 import { meldeFehler } from '../../softengine/meldung'
 import {
   executeRelation,
@@ -21,6 +25,21 @@ export function buildStartToolLink(nr: string, params: readonly string[]): strin
     link += ',' + params.map((p) => encodeURIComponent(p)).join(',')
   }
   return link
+}
+
+function seBwLink(befehl: string): void {
+  const zeile = befehl.trim()
+  if (zeile === '') return
+  const g = seGlobal()
+  try {
+    if (typeof g.sendBWLink === 'function') {
+      g.sendBWLink(zeile)
+      return
+    }
+  } catch { /* faellt auf den internen Weg zurueck */ }
+  try {
+    if (typeof g.sendBWLinkIntern === 'function') g.sendBWLinkIntern(zeile)
+  } catch { /* nicht in SE */ }
 }
 
 function seStartTool(nr: string, params: readonly string[]): void {
@@ -74,25 +93,73 @@ export function meldeKettenFehler(fehler: unknown): void {
   meldeFehler('Aktionskette fehlgeschlagen: ' + text)
 }
 
-// Die Tabellen, deren Erfassungszellen die Kette liest — ueber die Parameter
-// der Schritte, nicht ueber einen Bausteintyp (Regel 2).
-function erfassungsTraegerIds(steps: readonly RuntimeStep[]): string[] {
-  const ids = new Set<string>()
-  for (const step of steps) {
-    if (step.type !== 'RELATION') continue
-    for (const binding of [...step.params, ...step.extraParams]) {
-      if (binding.source === 'erfassungszelle' && (binding.blockId ?? '') !== '') {
-        ids.add(binding.blockId ?? '')
-      }
+type ListenArt = 'einmal' | 'erfasst' | 'geaendert' | 'geloescht'
+
+const ZELLEN_HERKUNFT: Record<string, ListenArt> = {
+  erfassungszelle: 'erfasst',
+  aenderungszelle: 'geaendert',
+  loeschzelle: 'geloescht',
+}
+
+interface Abschnitt {
+  art: ListenArt
+
+  // Der Baustein, dessen Liste den Takt gibt. Leer bei 'einmal'.
+  blockId: string
+
+  // Die Plaetze IN DER GANZEN KETTE — die Schrittzahl bleibt dadurch
+  // stabil, auch wenn nur ein Teil laeuft.
+  plaetze: Set<number>
+}
+
+// Woher DIESER Schritt seine Zellen liest. Kein Bausteintyp kommt vor: es
+// zaehlt allein, was in seinen Parametern steht (Regel 2).
+function zeilenBezug(step: RuntimeStep): { art: ListenArt; blockId: string } | null {
+  if (step.type !== 'RELATION') return null
+  let treffer: { art: ListenArt; blockId: string } | null = null
+  for (const binding of [...step.params, ...step.extraParams]) {
+    const art = ZELLEN_HERKUNFT[binding.source]
+    const blockId = binding.blockId ?? ''
+    if (art === undefined || blockId === '') continue
+    if (treffer && (treffer.art !== art || treffer.blockId !== blockId)) {
+      return { art, blockId: '' } // zwei Listen in EINEM Schritt -> unten Fehler
     }
+    treffer = { art, blockId }
   }
-  return [...ids]
+  return treffer
+}
+
+// Aufeinanderfolgende Schritte gehoeren zusammen. Ein Schritt ohne
+// Zeilen-Bezug haengt sich an den laufenden Abschnitt an — sonst risse das
+// Muster „Satz anlegen, dann seine Felder schreiben" auseinander, in dem der
+// zweite Schritt vom Ergebnis des ersten lebt.
+function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
+  const raus: Abschnitt[] = []
+  for (const [platz, step] of steps.entries()) {
+    const bezug = zeilenBezug(step)
+    const letzter = raus[raus.length - 1]
+    if (bezug === null) {
+      if (letzter) letzter.plaetze.add(platz)
+      else raus.push({ art: 'einmal', blockId: '', plaetze: new Set([platz]) })
+      continue
+    }
+    if (letzter && letzter.art === bezug.art && letzter.blockId === bezug.blockId) {
+      letzter.plaetze.add(platz)
+      continue
+    }
+    raus.push({ art: bezug.art, blockId: bezug.blockId, plaetze: new Set([platz]) })
+  }
+  return raus
 }
 
 function sucheTraeger(
   root: ParentNode,
   blockId: string,
-): (HTMLElement & Partial<ErfassungsTraegerElement>) | undefined {
+): (HTMLElement
+  & Partial<ErfassungsTraegerElement>
+  & Partial<AenderungsTraegerElement>
+  & Partial<LoeschTraegerElement>)
+  | undefined {
   return Array.from(root.querySelectorAll<HTMLElement>(`[${ACTION_VALUE_ID_ATTR}]`))
     .find((el) => el.getAttribute(ACTION_VALUE_ID_ATTR) === blockId)
 }
@@ -101,8 +168,13 @@ async function laufeSchritte(
   el: HTMLElement,
   steps: readonly RuntimeStep[],
   context: RelationContext,
-  erfassteZelle: ((blockId: string, spaltenIndex: number) => string) | undefined,
-): Promise<void> {
+  zeilenZelle: ((blockId: string, spaltenIndex: number) => string) | undefined,
+
+  // Welche Schritte in DIESEM Lauf drankommen (Platz in der Kette).
+  // undefined = alle.
+  nur?: ReadonlySet<number>,
+): Promise<boolean> {
+  let geschrieben = false
   const values: Record<string, string | undefined> = {
     ...context,
     NOW_DATE: formatNowDate(new Date()),
@@ -116,9 +188,18 @@ async function laufeSchritte(
     stepResults.push('')
     rohErgebnisse.push(undefined)
   }
-  for (const step of steps) {
+  for (const [platz, step] of steps.entries()) {
+    if (nur && !nur.has(platz)) {
+      ohneErgebnis()
+      continue
+    }
     if (step.type === 'START_TOOL') {
       seStartTool(step.toolNr, resolveParams({ params: step.toolParams }, values))
+      ohneErgebnis()
+      continue
+    }
+    if (step.type === 'BW_LINK') {
+      seBwLink(resolveParams({ params: [step.befehl] }, values)[0] ?? '')
       ohneErgebnis()
       continue
     }
@@ -139,7 +220,7 @@ async function laufeSchritte(
       stepResults,
       stepRohErgebnisse: rohErgebnisse,
       gewaehlteZeile: auswahlFuer,
-      ...(erfassteZelle ? { erfassteZelle } : {}),
+      ...(zeilenZelle ? { zeilenZelle } : {}),
     }
     const params = [...step.params, ...step.extraParams]
       .map((binding) => resolveActionParam(binding, runtimeValues))
@@ -149,8 +230,10 @@ async function laufeSchritte(
     rohErgebnisse.push(antwort.roh)
 
     if (relation.verb === 'GET_RELATION') previousResult = result
+    else geschrieben = true
     if (step.resultKey !== '') values[step.resultKey] = result
   }
+  return geschrieben
 }
 
 export async function runEvent(
@@ -170,33 +253,61 @@ export async function runEvent(
   if (locks.has(eventKey)) return
   locks.add(eventKey)
   try {
-    const traegerIds = erfassungsTraegerIds(steps)
-    if (traegerIds.length === 0) {
-      await laufeSchritte(el, steps, context, undefined)
-      return
+    const abschnitte = abschnitteVon(steps)
+    const gelaufen: { traeger: HTMLElement & Partial<ErfassungsTraegerElement>
+      & Partial<AenderungsTraegerElement> & Partial<LoeschTraegerElement>;
+      art: ListenArt }[] = []
+    let geschrieben = false
+
+    for (const abschnitt of abschnitte) {
+      if (abschnitt.art === 'einmal') {
+        if (await laufeSchritte(el, steps, context, undefined, abschnitt.plaetze)) {
+          geschrieben = true
+        }
+        continue
+      }
+      if (abschnitt.blockId === '') {
+        meldeFehler('Ein Schritt liest Zellen aus zwei verschiedenen Listen — das geht nicht.')
+        return
+      }
+      const traeger = sucheTraeger(el.ownerDocument ?? document, abschnitt.blockId)
+      const roh = abschnitt.art === 'erfasst'
+        ? traeger?.erfassteZeilen
+        : abschnitt.art === 'geaendert'
+          ? traeger?.geaenderteZeilen
+          : traeger?.geloeschteZeilen
+      if (!traeger || !Array.isArray(roh)) {
+        meldeFehler('Den Baustein, dessen Zellen die Kette liest, gibt es in dieser Maske nicht.')
+        return
+      }
+      // Beide Listen in EINER Form: Werte je Spalte, dazu die Satznummer, wo
+      // es eine gibt (geaenderte Zeile).
+      const zeilen: { satz: string; werte: readonly string[] }[] = abschnitt.art === 'erfasst'
+        ? (roh as readonly (readonly string[])[]).map((werte) => ({ satz: '', werte }))
+        : (roh as readonly { satz: string; werte: readonly string[] }[])
+          .map((z) => ({ satz: z.satz, werte: z.werte }))
+      // Keine Zeile: nichts zu schreiben, kein Lauf. Kein Fehler — der
+      // Bediener sieht in der Tabelle, dass nichts ansteht.
+      for (const zeile of zeilen) {
+        const zeilenKontext = zeile.satz === '' ? context : { ...context, PINDEX: zeile.satz }
+        if (await laufeSchritte(el, steps, zeilenKontext, (blockId, spaltenIndex) =>
+          (blockId === abschnitt.blockId ? String(zeile.werte[spaltenIndex] ?? '') : ''),
+        abschnitt.plaetze)) {
+          geschrieben = true
+        }
+      }
+      if (zeilen.length > 0) gelaufen.push({ traeger, art: abschnitt.art })
     }
-    // Liest die Kette Erfassungszellen, laeuft sie EINMAL JE ERFASSTER ZEILE
-    // (G4). Zwei Tabellen in einer Kette waeren zwei Zeilen-Listen — welche
-    // gibt den Takt? Darum eine je Kette.
-    if (traegerIds.length > 1) {
-      meldeFehler('Die Kette liest Erfassungszellen aus mehreren Tabellen — nur eine Tabelle je Kette.')
-      return
+    // Geleert wird erst, wenn ALLE Abschnitte durch sind: ein spaeterer
+    // Abschnitt kann dieselbe Liste noch einmal lesen.
+    for (const { traeger, art } of gelaufen) {
+      if (art === 'erfasst') traeger.erfassungLeeren?.()
+      else if (art === 'geaendert') traeger.aenderungenLeeren?.()
+      else traeger.loeschungenLeeren?.()
     }
-    const traeger = sucheTraeger(el.ownerDocument ?? document, traegerIds[0])
-    const zeilen = traeger?.erfassteZeilen
-    if (!traeger || !Array.isArray(zeilen)) {
-      meldeFehler('Die Tabelle der Erfassungszellen gibt es in dieser Maske nicht.')
-      return
-    }
-    // Keine erfasste Zeile: nichts zu schreiben, kein Lauf. Kein Fehler —
-    // der Bediener sieht in der Tabelle, dass nichts erfasst ist.
-    for (const zeile of zeilen) {
-      await laufeSchritte(el, steps, context, (blockId, spaltenIndex) =>
-        (blockId === traegerIds[0] ? String(zeile[spaltenIndex] ?? '') : ''))
-    }
-    // Geleert wird erst, wenn ALLE Zeilen gelaufen sind — bricht ein Schritt
-    // ab (wirft), bleiben die restlichen Zeilen stehen statt zu verschwinden.
-    if (zeilen.length > 0) traeger.erfassungLeeren?.()
+    // Geschrieben heisst: der Stand auf dem Schirm ist von gestern. Die Maske
+    // holt sich den neuen — ohne dass jemand eine Kette dafuer bauen muss.
+    if (geschrieben) frischeDatenAnfordern()
   } finally {
     locks.delete(eventKey)
   }

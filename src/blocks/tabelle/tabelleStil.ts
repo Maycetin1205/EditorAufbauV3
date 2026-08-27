@@ -12,6 +12,7 @@ export const tabelleStil = css`
         background: var(--se-panel);
         border: var(--se-border) solid var(--se-line);
         border-radius: var(--se-r-lg);
+        box-shadow: var(--se-schatten);
         overflow: hidden;
         font-family: var(--se-font);
         font-size: var(--se-fs);
@@ -73,6 +74,12 @@ export const tabelleStil = css`
 
       .koerper > .zeile { flex: none; }
 
+      .tabelle.rollt .koerper > .zeile.erfassung {
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+      }
+
       .lineal {
         flex: 1 1 auto;
         min-height: 0;
@@ -103,8 +110,16 @@ export const tabelleStil = css`
         transition: background-color var(--se-move);
       }
 
+      /* Zebra: jede zweite Datenzeile leicht getoent. Gezaehlt wird unter
+         ALLEN Kindern des Rumpfes — die Kopfzeile ist das erste, also faengt
+         die Toenung bei der ersten Datenzeile an. Erfassungs- und erfasste
+         Zeilen tragen es nicht: die haben ihre eigene Farbe. */
+      .koerper > .zeile:not(.erfassung):not(.erfasst):nth-child(even) {
+        background: var(--se-zebra);
+      }
+
       .koerper > .zeile:hover {
-        background: var(--se-bg);
+        background: var(--se-hover);
       }
 
       .koerper > .zeile.waehlbar { cursor: pointer; }
@@ -118,7 +133,7 @@ export const tabelleStil = css`
 
       .zeile.gewaehlt,
       .koerper > .zeile.gewaehlt:hover {
-        background: var(--se-amber-soft);
+        background: var(--se-auswahl);
         box-shadow: inset 3px 0 0 var(--se-accent);
       }
       .zeile.gewaehlt > div { color: var(--se-ink); }
@@ -221,6 +236,94 @@ export const tabelleStil = css`
         display: flex;
         align-items: center;
         gap: 6px;
+      }
+
+      /* Die Summen stehen rechts neben der Zaehlzeile — Titel blass, Wert
+         kraeftig, Ziffern in fester Breite, damit die Kante steht. */
+      /* Aenderbare Zelle: ruhig, bis die Zeile darunter liegt — wie in der
+         Handmaske (dort .zi.still). Vorgemerkt = bernstein, damit man auf
+         einen Blick sieht, was noch nicht geschrieben ist. */
+      /* Zum Loeschen vorgemerkt: durchgestrichen und blass — die Zeile ist
+         noch da, aber sie geht. Zurueckgenommen wird sie am selben Kreuz. */
+      .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
+      .zeile.geloescht { background: var(--se-red-shell); }
+
+      /* Das Kreuz sitzt am rechten Rand der Zeile, ueber dem letzten Feld. */
+      .zeile { position: relative; }
+      .zeile-weg {
+        position: absolute;
+        right: 2px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 0 4px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs-sm);
+        line-height: 1;
+        color: var(--se-faint);
+        background: var(--se-panel);
+        border: 0;
+        border-radius: var(--se-r-sm);
+        cursor: pointer;
+        opacity: 0;
+      }
+      .zeile:hover .zeile-weg,
+      .zeile.geloescht .zeile-weg,
+      .zeile-weg:focus { opacity: 1; }
+      .zeile-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
+
+      /* Treffer der Suchzeile: gelb hinterlegt, Schriftfarbe bleibt — wie in
+         der Handmaske (dort <mark> mit #ffedb0). */
+      mark {
+        padding: 0 1px;
+        color: inherit;
+        background: var(--se-amber-soft);
+        border-radius: 2px;
+      }
+
+      .zell-eingabe {
+        box-sizing: border-box;
+        width: 100%;
+        height: calc(var(--zeilen-hoehe) - 8px);
+        min-width: 0;
+        padding: 0 4px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs);
+        color: var(--se-ink);
+        background: transparent;
+        border: var(--se-border) solid transparent;
+        border-radius: var(--se-r-sm);
+      }
+      .zeile:hover .zell-eingabe { border-color: var(--se-line); background: var(--se-panel); }
+      .zell-eingabe:focus {
+        outline: none;
+        border-color: var(--se-accent);
+        background: var(--se-panel);
+      }
+      .zeile > div.zahl .zell-eingabe { text-align: right; }
+      .zell-eingabe.geaendert {
+        background: var(--se-amber-shell);
+        border-color: var(--se-amber-line);
+        color: var(--se-ink);
+        font-weight: 600;
+      }
+
+      .vorgemerkt {
+        color: var(--se-amber);
+        font-weight: 600;
+      }
+
+      .summen {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-left: auto;
+        padding-left: 12px;
+      }
+      .summen + .seiten-nav { padding-left: 12px; }
+      .summe-titel { color: var(--se-muted); }
+      .summen b {
+        color: var(--se-ink);
+        font-variant-numeric: tabular-nums;
       }
 
       .seiten-nav button {

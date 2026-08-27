@@ -27,6 +27,7 @@ export class ErfassungsAnschluss {
       spalten,
       quelleId,
       paareZu: (id) => verknuepfungen.find((v) => v.quelleId === id)?.keyPairs ?? [],
+      partnerVon: (id) => verknuepfungen.find((v) => v.quelleId === id)?.partnerId ?? '',
     }
   }
 
@@ -37,6 +38,15 @@ export class ErfassungsAnschluss {
     if (werte.every((w) => w === '')) return false
     this._zeilen = [...this._zeilen, werte]
     this.lauf.zuruecksetzen()
+    return true
+  }
+
+  // Eine erfasste Zeile wieder wegnehmen — vor dem Schreiben ist sie nichts
+  // als eine Vormerkung. Ohne diesen Weg bliebe ein Vertipper stehen, bis
+  // die Kette ihn in die ERP traegt.
+  entferne(index: number): boolean {
+    if (index < 0 || index >= this._zeilen.length) return false
+    this._zeilen = this._zeilen.filter((_, i) => i !== index)
     return true
   }
 

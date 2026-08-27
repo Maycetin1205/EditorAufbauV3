@@ -17,6 +17,23 @@ export const TABELLE_EIGENSCHAFTEN: PropertyDescription[] = [
   ),
 
   jaNeinProperty(
+    'loeschbar',
+    'Zeilen löschbar',
+    'Zeigt an jeder gebuchten Zeile ein Kreuz. Ein Klick merkt die Zeile zum Löschen vor — '
+    + 'sie bleibt durchgestrichen stehen, bis eine Kette sie schreibt, und ein zweiter Klick '
+    + 'nimmt die Vormerkung zurück. Geschrieben wird nichts von allein.',
+    { requiresDataSource: true },
+  ),
+
+  jaNeinProperty(
+    'blaettern',
+    'Blättern',
+    'Ja: lange Listen werden in Seiten geschnitten, unten stehen die Blätter-Knöpfe. '
+    + 'Nein: alle Treffer stehen untereinander und der Rumpf rollt — die Titelzeile '
+    + 'bleibt dabei oben stehen, die Erfassungszeile unten.',
+  ),
+
+  jaNeinProperty(
     'schlank',
     'Schlank',
     'Nimmt den Rahmen der Tafel weg und macht die Polster enger — die Tabelle liegt bündig auf der Maske. Die Fußzeile erscheint ohnehin nur noch, wenn geblättert wird oder ein Filter greift.',

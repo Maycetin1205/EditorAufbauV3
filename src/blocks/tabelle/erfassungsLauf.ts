@@ -9,6 +9,7 @@ import {
   gueltigeMarke,
   passendeVorschlaege,
   tastenFolge,
+  VORSCHLAEGE_MAX,
   type TastenFolge,
 } from '../shared/vorschlagListe'
 import {
@@ -23,7 +24,7 @@ import {
 // Der Tastenentscheid der Erfassungszeile: die geteilten Folgen der
 // Vorschlagsliste plus die zwei, die nur die Zeile kennt — weiterspringen
 // (G3b) und die zweite Escape-Stufe.
-export type ErfassungsTaste = TastenFolge | 'weiter' | 'leeren'
+export type ErfassungsTaste = TastenFolge | 'weiter' | 'leeren' | 'liste-auf'
 
 // Der Stand EINER Erfassungszeile zur Laufzeit: was in den Zellen steht,
 // welcher Satz je Quelle gewählt wurde, welche Zelle gerade tippt. Als eigene
@@ -54,6 +55,11 @@ export class ErfassungsLauf {
   private _marke = 0
 
   private _listeZu = false
+
+  // Die Spalte, deren Liste per Pfeil-runter aufgemacht wurde. Ohne das gibt
+  // es die Liste nur zum Getippten — an eine Zelle, die man erst ansieht,
+  // kaeme der Bediener nie ohne zu tippen.
+  private _listeAuf = -1
 
   private _vorschlaege: Eintrag[] = []
 
@@ -94,6 +100,7 @@ export class ErfassungsLauf {
     if (this._tippSpalte !== index) return
     this._tippSpalte = -1
     this._listeZu = false
+    this._listeAuf = -1
     this._marke = 0
   }
 
@@ -105,15 +112,28 @@ export class ErfassungsLauf {
       if (!listeOffen) return 'weiter'
       taste = 'Enter'
     }
+    // F4 (und Alt+Pfeil-runter, vom Aufrufer darauf abgebildet) macht das
+    // grosse Fenster IMMER auf. Ohne das kam man nur an ein LEERES Feld
+    // heran: stand schon etwas drin, half nur noch die Maus auf der Lupe.
+    if (taste === 'F4') {
+      if (zielIn(umfeld, index).art === 'frei') return 'nichts'
+      return this.eintraege(umfeld, index).length === 0 ? 'nichts' : 'fenster'
+    }
     const wert = this.wertVon(umfeld, index)
     // Escape-Stufe 2: keine Liste (mehr) offen → die Zelle leert sich.
     if (taste === 'Escape' && !listeOffen) return wert === '' ? 'nichts' : 'leeren'
     // Eine freie Zelle hat keine Liste und kein Fenster; Enter geht weiter.
     if (zielIn(umfeld, index).art === 'frei') return taste === 'Enter' ? 'weiter' : 'nichts'
+    // Pfeil-runter in eine geschlossene Liste macht sie auf — die Gewohnheit
+    // jedes Auswahlfeldes. Vorher passierte hier nichts. Nur dort, wo es
+    // auch etwas aufzumachen gibt: die eigene Quelle bietet nichts an.
+    if (taste === 'ArrowDown' && !listeOffen) {
+      return zielIn(umfeld, index).art === 'verknuepft' ? 'liste-auf' : 'nichts'
+    }
     const folge = tastenFolge(taste, { listeOffen, feldLeer: wert === '' })
     if (folge === 'marke-hoch') this._marke = bewegteMarke(this._marke, this._vorschlaege.length, -1)
     else if (folge === 'marke-runter') this._marke = bewegteMarke(this._marke, this._vorschlaege.length, 1)
-    else if (folge === 'liste-zu') this._listeZu = true
+    else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
     // Kein einziger möglicher Satz (kein Partner): Enter bleibt nicht hängen.
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
     // Auf einem gewählten Wert geht Enter weiter. Getipptes ohne Treffer hält
@@ -121,6 +141,15 @@ export class ErfassungsLauf {
     // wer trotzdem weiter will, nimmt Tab.
     else if (folge === 'nichts' && taste === 'Enter' && wert !== '' && this.getippt.get(index) === undefined) return 'weiter'
     return folge
+  }
+
+  // Pfeil-runter: die Zelle wird zur tippenden, und ihre Liste zeigt alles,
+  // was sie hergibt — auch ohne ein einziges getipptes Zeichen.
+  oeffneListe(index: number): void {
+    this._tippSpalte = index
+    this._listeZu = false
+    this._listeAuf = index
+    this._marke = 0
   }
 
   // Die nächste Zelle, in der noch nichts steht. Selbstgefülltes wird damit
@@ -195,11 +224,31 @@ export class ErfassungsLauf {
   // Position, bevor es die Position gibt. Selbstgefülltes liefert nichts
   // (s. vonHand), und `ausser` nimmt die fragende Quelle aus der Suche —
   // ein Satz rechtfertigt sich nicht mit den eigenen Schlüsseln.
-  private schluesselWert(umfeld: ErfassungsUmfeld, feld: string, ausser: string): string | undefined {
+  //
+  // `partnerId` sagt, WESSEN Feld gefragt ist. Leer (oder die Tabellen-Quelle)
+  // heisst Hauptquelle — das ist der Fall oben. Zeigt die Verknüpfung dagegen
+  // auf eine andere weitere Quelle (2 haengt an 3), zaehlt allein deren
+  // gewaehlter Satz: ist er noch nicht gewaehlt, ist der Schluessel UNBEKANNT,
+  // und unbekannt schraenkt nicht ein.
+  private schluesselWert(
+    umfeld: ErfassungsUmfeld,
+    partnerId: string,
+    feld: string,
+    ausser: string,
+  ): string | undefined {
+    if (partnerId !== '' && partnerId !== umfeld.quelleId) {
+      const satz = this.gewaehlt.get(partnerId)
+      return satz === undefined ? undefined : getField(satz, feld)
+    }
     const basis = this.gewaehlt.get(umfeld.quelleId)
     if (basis !== undefined) return getField(basis, feld)
     for (const quelleId of verknuepfteQuellenIn(umfeld)) {
       if (quelleId === ausser || !this.vonHand.has(quelleId)) continue
+      // Nur Quellen, die AN DER HAUPTQUELLE haengen, koennen deren Felder
+      // vertreten. Eine, die an einer anderen weiteren Quelle haengt, sagt
+      // ueber die Hauptquelle nichts aus.
+      const partner = umfeld.partnerVon(quelleId)
+      if (partner !== '' && partner !== umfeld.quelleId) continue
       const satz = this.gewaehlt.get(quelleId)
       if (satz === undefined) continue
       for (const paar of umfeld.paareZu(quelleId)) {
@@ -214,9 +263,10 @@ export class ErfassungsLauf {
   // Die möglichen Sätze einer verknüpften Quelle, eingeschränkt über die
   // bekannten Schlüsselwerte der werdenden Zeile.
   private moegliche(umfeld: ErfassungsUmfeld, quelleId: string, rows: readonly unknown[]): unknown[] {
+    const partnerId = umfeld.partnerVon(quelleId)
     return passendeSaetze(
       umfeld.paareZu(quelleId),
-      (feld) => this.schluesselWert(umfeld, feld, quelleId),
+      (feld) => this.schluesselWert(umfeld, partnerId, feld, quelleId),
       rows,
     )
   }
@@ -233,11 +283,14 @@ export class ErfassungsLauf {
       let bewegt = false
       for (const quelleId of quellen) {
         const paare = umfeld.paareZu(quelleId)
+        // Ohne Paar gibt es nichts abzugleichen: eine reine Nachschlagequelle
+        // bleibt stehen, wie der Bediener sie gewaehlt hat.
         if (paare.length === 0) continue
+        const partnerId = umfeld.partnerVon(quelleId)
         const satz = this.gewaehlt.get(quelleId)
         if (satz !== undefined) {
           const passt = paare.every((p) => {
-            const soll = this.schluesselWert(umfeld, p.fromField, quelleId)
+            const soll = this.schluesselWert(umfeld, partnerId, p.fromField, quelleId)
             return soll === undefined || (soll !== '' && soll === getField(satz, p.toField))
           })
           if (!passt) {
@@ -246,7 +299,7 @@ export class ErfassungsLauf {
           }
           continue
         }
-        if (!paare.some((p) => this.schluesselWert(umfeld, p.fromField, quelleId) !== undefined)) continue
+        if (!paare.some((p) => this.schluesselWert(umfeld, partnerId, p.fromField, quelleId) !== undefined)) continue
         const rows = quellenZeilen(quelleId)
         if (rows === null) continue
         const passend = this.moegliche(umfeld, quelleId, rows)
@@ -267,6 +320,7 @@ export class ErfassungsLauf {
     this._tippSpalte = -1
     this._marke = 0
     this._listeZu = false
+    this._listeAuf = -1
     this._vorschlaege = []
   }
 
@@ -281,21 +335,32 @@ export class ErfassungsLauf {
     const index = this._tippSpalte
     if (this._listeZu || zielIn(umfeld, index).art === 'frei') return []
     const getippt = this.getippt.get(index) ?? ''
-    if (getippt === '') return []
+    if (getippt === '') {
+      // Aufgemacht heisst: alles zeigen. Sonst bleibt die Liste dem Getippten
+      // vorbehalten, und ohne Zeichen gibt es nichts zu sehen.
+      if (this._listeAuf !== index) return []
+      return this.eintraege(umfeld, index).slice(0, VORSCHLAEGE_MAX)
+    }
     return passendeVorschlaege(this.eintraege(umfeld, index), getippt)
   }
 
   // Dieselben Einträge für die Liste UND das große Fenster: eine zweite
-  // Quelle wäre eine zweite Wahrheit. Eine verknüpfte Zelle bekommt nur die
-  // Sätze, deren Schlüssel zu den bekannten Werten der werdenden Zeile passen.
+  // Quelle wäre eine zweite Wahrheit. Sie bekommt nur die Sätze, deren
+  // Schlüssel zu den bekannten Werten der werdenden Zeile passen.
+  //
+  // Nachgeschlagen wird NUR in einer verknüpften Zelle — dort wählt der
+  // Bediener aus einem Stamm. Eine Zelle der EIGENEN Quelle böte die Zeilen
+  // an, die die Tabelle gerade selbst zeigt, und eine davon zu wählen war
+  // zerstörerisch: uebernimm setzt den Satz für die ganze Quelle, füllte
+  // die werdende Zeile also mit einer alten Position (Klon) und warf dabei
+  // jede andere schon getroffene Wahl weg. In die eigene Quelle wird
+  // getippt, nicht ausgesucht.
   eintraege(umfeld: ErfassungsUmfeld, index: number): Eintrag[] {
     const ziel = zielIn(umfeld, index)
-    if (ziel.quelleId === '' || ziel.code === '') return []
+    if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []
     const rows = quellenZeilen(ziel.quelleId)
     if (rows === null) return []
-    const saetze = ziel.art === 'verknuepft'
-      ? this.moegliche(umfeld, ziel.quelleId, rows)
-      : rows
+    const saetze = this.moegliche(umfeld, ziel.quelleId, rows)
     return nachschlagEintraege(saetze, anzeigeSpalteIn(umfeld, index)?.code ?? '', ziel.code)
   }
 }

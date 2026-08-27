@@ -63,4 +63,20 @@ export const erfassungStil = css`
         box-shadow: inset 3px 0 0 var(--se-accent);
         background: var(--se-accent-soft);
       }
+      .erfasst-weg {
+        margin-right: 6px;
+        padding: 0 3px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs-sm);
+        line-height: 1;
+        color: var(--se-muted);
+        background: none;
+        border: 0;
+        border-radius: var(--se-r-sm);
+        cursor: pointer;
+      }
+      .erfasst-weg:hover {
+        color: var(--se-red);
+        background: var(--se-red-soft);
+      }
 `

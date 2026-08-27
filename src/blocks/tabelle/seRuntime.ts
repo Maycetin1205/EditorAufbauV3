@@ -47,6 +47,17 @@ export function zeilenIndexVon(el: HTMLElement, rohzeile: unknown): string {
   return source ? satzIndexVon(source, rohzeile) : ''
 }
 
+// Traegt die Quelle dieser Tabelle eine Satznummer? Nur dann laesst sich
+// eine geaenderte Zeile spaeter wiederfinden — und nur dann bietet die
+// Tabelle das Aendern in der Zeile ueberhaupt an.
+export function hatSatzNummer(el: HTMLElement): boolean {
+  const source = findRuntimeDataSource(
+    seGlobal().FF_DATA_SOURCES,
+    el.getAttribute('source') ?? '',
+  )
+  return source !== undefined && source.indexField !== ''
+}
+
 function hydrateTable(el: RuntimeTableElement): void {
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {

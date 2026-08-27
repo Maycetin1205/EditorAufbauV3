@@ -116,6 +116,51 @@ export function erfassungsTraegerImBaum(tree: BlockTree): BlockNode[] {
   return result
 }
 
+// Bausteine, an denen der Bediener Zeilen zum Loeschen vormerken kann.
+export function loeschTraegerImBaum(tree: BlockTree): BlockNode[] {
+  const result: BlockNode[] = []
+  const visit = (node: BlockNode | undefined): void => {
+    if (!node) return
+    if (traegtLoeschungen(node)) result.push(node)
+    for (const childId of node.childIds) visit(tree[childId])
+  }
+  visit(tree[ROOT_ID])
+  return result
+}
+
+export function traegtLoeschungen(node: BlockNode): boolean {
+  const kann = getBlockDefinition(node.type)?.kannLoeschen
+  return kann !== undefined && propertySichtbar(kann.wenn, node.props)
+}
+
+// Traegt dieser Baustein mindestens einen aenderbaren Listeneintrag? Gelesen
+// wird ueber die Registry (aenderungsSchluessel) und die Liste des Bausteins —
+// kein Bausteintyp kommt hier vor.
+export function traegtAenderungen(node: BlockNode): boolean {
+  const def = getBlockDefinition(node.type)
+  const schluessel = def?.aenderungsSchluessel
+  const bindung = def?.listenBindung
+  if (schluessel === undefined || !bindung) return false
+  const roh = node.props[bindung.prop]
+  if (!Array.isArray(roh)) return false
+  return roh.some((eintrag) =>
+    Boolean(eintrag)
+    && typeof eintrag === 'object'
+    && (eintrag as Record<string, unknown>)[schluessel] === true)
+}
+
+// Bausteine, die einer Kette geaenderte Zeilen geben koennen.
+export function aenderungsTraegerImBaum(tree: BlockTree): BlockNode[] {
+  const result: BlockNode[] = []
+  const visit = (node: BlockNode | undefined): void => {
+    if (!node) return
+    if (traegtAenderungen(node)) result.push(node)
+    for (const childId of node.childIds) visit(tree[childId])
+  }
+  visit(tree[ROOT_ID])
+  return result
+}
+
 export function firstDescendantOfType(
   tree: BlockTree,
   rootId: string,

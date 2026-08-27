@@ -42,6 +42,11 @@ export interface ErfassungsUmfeld {
   // Die Schlüsselpaare zu einer verknüpften Quelle. Leer = keine Verknüpfung
   // eingestellt; dann wird nicht eingeschränkt.
   paareZu: (quelleId: string) => readonly SchluesselPaar[]
+
+  // Die Quelle, mit der die Paare dieser Quelle verbinden. Leer = die
+  // Hauptquelle der Tabelle. Damit haengt nicht mehr alles sternfoermig an
+  // der ersten Quelle: 2 darf an 3 haengen, 3 an 4.
+  partnerVon: (quelleId: string) => string
 }
 
 export function zellenzielVon(

@@ -190,6 +190,12 @@ bestehende englische bleiben; umbenannt wird nur, was ohnehin angefasst wird.
   2026-07-22), `'Z'` (Uhrzeit, z. B. `15:00` — belegt im empfang-Log
   2026-08-12). ⚠ `relId` OHNE `IDB`-Präfix (`ID0001`, nicht `IDBID0001`).
   Standard-PUT NR 174 ist nur die mitgelieferte Vorlage.
+- **`pindex` = SATZNUMMER des Zielsatzes** (live belegt 27.08.2026 in einer
+  eigenen HTML-Maske; Quelle: `PageBuilder/SOFTENGINE-FORMAT.md`, Abschnitt
+  Schreibwege): `174!343!30!L!48!ID0021!Behandlungszimmer 3` schreibt Feld
+  343_30 von Satz 48 in ID0021; derselbe Satz 48 nochmal beschrieben =
+  Status-Wechsel genau dieser Zeile. Gilt auch für die Kette
+  `GET_RELATION[640!…]` → neue Satznummer → `PUT_RELATION[174!…!<Satznr>!…]`.
 - **Anlegen (belegt im empfang-Log des Nutzers, 2026-08-12, WinUI):**
   Neuer IDB-Satz: `GET_RELATION[640!<IDBID>]` → Antwort = die NEUE
   Satznummer (z. B. `21`); danach schreiben die PUT_RELATION-174-Aufrufe

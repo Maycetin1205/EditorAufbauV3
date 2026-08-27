@@ -14,6 +14,10 @@ export interface RuntimeDataSource {
   name: string
   tableId: string
   indexField: string
+
+  // Diese Quelle ist nicht eine Liste, sondern DER Satz, der gerade offen
+  // ist. SoftEngine liefert ihn im VAR-Abschnitt statt als Zeilenschleife.
+  offenerSatz: boolean
   ladeRelation?: RuntimeLadeRelation
 }
 
@@ -37,6 +41,7 @@ export function findRuntimeDataSource(list: unknown, id: string): RuntimeDataSou
       name: entry.name,
       tableId: entry.tableId,
       indexField: typeof entry.indexField === 'string' ? entry.indexField : '',
+      offenerSatz: entry.offenerSatz === true,
       ...(ladeRelation ? { ladeRelation } : {}),
     }
   }
@@ -130,8 +135,58 @@ function sameAlias(a: unknown, alias: string): boolean {
   return asTrimmedString(a).toLowerCase() === alias.trim().toLowerCase()
 }
 
-export function rowsFor(seData: unknown, alias: string, idbId: string): unknown[] {
+function varBlockVon(daten: UnknownRecord): UnknownRecord | undefined {
+  for (const key of ['Var', 'VAR', 'var']) {
+    const block = daten[key]
+    if (isRecord(block)) return block
+  }
+  return undefined
+}
+
+// Der offene Satz liegt nicht als Zeilenliste vor, sondern im VAR-Abschnitt
+// unter der Tabellen-ID (Daten.Var.BEL). Belegt an der Handmaske Rahmen00001
+// V11: sie liest den Belegkopf genau dort und nimmt WINDOW_VARIABLE, wo der
+// eigene Eintrag leer bleibt (B.BEL_3_8 || W.BEL_3_8) — dasselbe hier. Aus
+// dem Fenster kommt nur, was zu DIESER Tabelle gehoert (Vorsatz 'BEL_'),
+// sonst zoege ein fremder Eintrag (BELERF_...) in den Satz ein.
+// Herausgereicht wird EINE Zeile, damit jede vorhandene Bindung unveraendert
+// weiterliest: gelesen wird ohnehin aus der ersten Zeile der Quelle.
+export function offenerSatzZeilen(seData: unknown, tableId: string): unknown[] {
   if (!isRecord(seData) || !isRecord(seData.Daten)) return []
+  const id = tableId.trim()
+  if (id === '') return []
+  const varBlock = varBlockVon(seData.Daten)
+  if (!varBlock) return []
+
+  const satz: UnknownRecord = {}
+  const fenster = varBlock.WINDOW_VARIABLE ?? varBlock.Window_Variable
+  if (isRecord(fenster)) {
+    const vorsatz = id.toUpperCase() + '_'
+    for (const key of Object.keys(fenster)) {
+      if (key.toUpperCase().startsWith(vorsatz)) satz[key] = fenster[key]
+    }
+  }
+  const eigen = varBlock[id] ?? varBlock[id.toUpperCase()]
+  if (isRecord(eigen)) {
+    for (const key of Object.keys(eigen)) {
+      if (asTrimmedString(eigen[key]) !== '' || !(key in satz)) satz[key] = eigen[key]
+    }
+  }
+  return Object.keys(satz).length === 0 ? [] : [satz]
+}
+
+export function rowsFor(
+  seData: unknown,
+  alias: string,
+  idbId: string,
+
+  // Der offene Satz kommt AUSSCHLIESSLICH aus dem VAR-Abschnitt. Ohne den
+  // Schalter bleibt VAR ungelesen: eine Listen-Quelle, deren Schleife gerade
+  // leer ist, soll nicht heimlich den Kopfsatz als Zeile ausgeben.
+  offenerSatz = false,
+): unknown[] {
+  if (!isRecord(seData) || !isRecord(seData.Daten)) return []
+  if (offenerSatz) return offenerSatzZeilen(seData, idbId)
   const daten = seData.Daten
 
   const sfl = daten.SEFileLoop
@@ -190,7 +245,9 @@ export function payloadDaten(raw: unknown): UnknownRecord | undefined {
   }
   if (!isRecord(data) || !isRecord(data.Daten)) return undefined
   const daten = data.Daten
-  if (!daten.SEFileLoop && !daten.Tabellen && !daten.ErpApiCall) return undefined
+  if (!daten.SEFileLoop && !daten.Tabellen && !daten.ErpApiCall && !varBlockVon(daten)) {
+    return undefined
+  }
   return daten
 }
 

@@ -50,6 +50,10 @@ export interface BlockComponentStatic {
 
   readonly kannErfassen?: ErfassungsFaehigkeit
 
+  readonly aenderungsSchluessel?: string
+
+  readonly kannLoeschen?: ErfassungsFaehigkeit
+
   readonly bindableSpots?: readonly BindableSpot[]
 
   readonly actionValueSpots?: readonly ActionValueSpot[]

@@ -8,13 +8,26 @@ import type { SchluesselPaar } from '../../core/data/sourceLinks'
 export interface PaarEintrag {
   id: string
 
+  // Nur „weitere Quellen" fuellt das: die Quelle, mit der die Paare
+  // verbinden. Leer = die Hauptquelle des Bausteins.
+  partnerId: string
+
   keyPairs: SchluesselPaar[]
+}
+
+export interface PaarListeWahl {
+  // Eintraege ohne vollstaendiges Paar behalten. Fuer „weitere Quellen":
+  // dort ist das Paar freiwillig — eine Quelle ohne Paar ist eine reine
+  // Nachschlagequelle. Fuer „Folgt der Auswahl von …" bleibt es aus: eine
+  // Auswahl-Folge ohne Paar wuesste nicht, wonach sie filtern soll.
+  ohnePaareBehalten?: boolean
 }
 
 export function paarListeAusAttribut(
   el: HTMLElement,
   attributName: string,
   idFeld: string,
+  wahl: PaarListeWahl = {},
 ): PaarEintrag[] {
   const roh = el.getAttribute(attributName) ?? ''
   if (roh === '') return []
@@ -35,8 +48,9 @@ export function paarListeAusAttribut(
         if (pp.fromField.trim() === '' || pp.toField.trim() === '') continue
         keyPairs.push({ fromField: pp.fromField, toField: pp.toField })
       }
-      if (keyPairs.length === 0) continue
-      acc.push({ id, keyPairs })
+      if (keyPairs.length === 0 && wahl.ohnePaareBehalten !== true) continue
+      const partnerId = typeof ee.partnerId === 'string' && ee.partnerId !== id ? ee.partnerId : ''
+      acc.push({ id, partnerId, keyPairs })
     }
     return acc
   } catch {

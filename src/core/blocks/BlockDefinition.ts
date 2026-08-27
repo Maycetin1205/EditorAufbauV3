@@ -36,6 +36,9 @@ export {
   listenStandardTitel,
   listeFuerExport,
   listeLesen,
+  schalterAn,
+  schalterFuer,
+  type EintragsSchalter,
   type EintragsWahl,
   type EintragsWahlOption,
   type EintragsZuordnung,
@@ -122,6 +125,22 @@ export interface ErfassungsTraegerElement {
   erfassungLeeren: () => void
 }
 
+// Und derselbe fuer Zeilen, die WEG sollen. Die Werte reisen mit, weil eine
+// Loesch-Relation mehr als die Satznummer verlangen kann (Belegart,
+// Belegnummer, Positionsnummer stehen in den Spalten).
+export interface LoeschTraegerElement {
+  geloeschteZeilen: readonly { satz: string; werte: readonly string[] }[]
+  loeschungenLeeren: () => void
+}
+
+// Derselbe Vertrag fuer GEAENDERTE Zeilen: je Zeile ihre Satznummer (damit
+// die Kette weiss, WEN sie schreibt) und die Werte aller Spalten, mit der
+// Aenderung darin. Geleert wird erst nach dem vollstaendigen Lauf.
+export interface AenderungsTraegerElement {
+  geaenderteZeilen: readonly { satz: string; werte: readonly string[] }[]
+  aenderungenLeeren: () => void
+}
+
 export interface BlockDefinition {
   type: string
   tagName: string
@@ -159,6 +178,16 @@ export interface BlockDefinition {
   kannAuswahlFolgen?: boolean
 
   kannErfassen?: ErfassungsFaehigkeit
+
+  // Wann dieser Baustein Zeilen zum Loeschen vormerken kann — dieselbe Form
+  // wie kannErfassen: eine Bedingung an einer Eigenschaft des Bausteins.
+  kannLoeschen?: ErfassungsFaehigkeit
+
+  // Der Schluessel des Eintrags-Schalters, der einen Listeneintrag (z. B.
+  // eine Spalte) als aenderbar markiert. Gesetzt heisst: dieser Baustein
+  // kann einer Kette die GEAENDERTEN Zeilen geben — welcher Baustein das
+  // ist, steht damit in der Registry und nicht im Ketten-Code (Regel 2).
+  aenderungsSchluessel?: string
 
   bindableSpots?: readonly BindableSpot[]
 

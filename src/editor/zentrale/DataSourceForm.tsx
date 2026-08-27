@@ -44,6 +44,10 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
 
   const [vorsatzEingabe, setVorsatzEingabe] = useState(source?.feldVorsatz ?? '')
 
+  const [lieferung, setLieferung] = useState<'liste' | 'offenerSatz'>(
+    source?.lieferung ?? 'liste',
+  )
+
   const lade = source?.ladeRelation
   const [zeilenWeg, setZeilenWeg] = useState<'geschoben' | 'holen'>(lade ? 'holen' : 'geschoben')
   const [relationNr, setRelationNr] = useState(lade?.nr ?? LADE_RELATION_STANDARD.nr)
@@ -81,6 +85,12 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   // Codes beim Speichern still auf die Form ohne Vorsatz zurueck.
   const vorsatzEingeben = art.feldVorsatzMoeglich || vorsatz !== ''
   const holtZeilen = holenMoeglich && zeilenWeg === 'holen'
+
+  // Der offene Satz kommt aus dem VAR-Abschnitt und ist deshalb weder eine
+  // Schleife noch etwas, das die Maske sich holt — die beiden Wege schliessen
+  // sich aus. Wo die Art keinen offenen Satz kennt, gibt es die Frage nicht.
+  const lieferungWaehlbar = art.varMoeglich && !holtZeilen
+  const offenerSatz = lieferungWaehlbar && lieferung === 'offenerSatz'
 
   const geberOptionen = store.list.filter((s) => s.id !== source?.id)
 
@@ -151,6 +161,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         : {}),
 
       ...(vorsatz !== '' ? { feldVorsatz: vorsatz } : {}),
+
+      ...(offenerSatz ? { lieferung: 'offenerSatz' as const } : {}),
 
       ...(source
         ? (source.indexField ? { indexField: source.indexField } : {})
@@ -224,7 +236,19 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
           </Field>
         )}
 
-        {holenMoeglich && (
+        {lieferungWaehlbar && (
+          <SelectControl
+            label="Was liefert die Quelle?"
+            value={lieferung}
+            options={[
+              { value: 'liste', label: 'Mehrere Sätze — eine Liste' },
+              { value: 'offenerSatz', label: 'Nur den Satz, der gerade offen ist' },
+            ]}
+            onChange={(v) => setLieferung(v as 'liste' | 'offenerSatz')}
+          />
+        )}
+
+        {holenMoeglich && !offenerSatz && (
           <SelectControl
             label="Woher kommen die Zeilen?"
             value={zeilenWeg}

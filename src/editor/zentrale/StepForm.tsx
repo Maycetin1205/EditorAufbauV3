@@ -16,7 +16,9 @@ import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import {
   actionValueTargets,
   auswahlGeberImBaum,
+  aenderungsTraegerImBaum,
   erfassungsTraegerImBaum,
+  loeschTraegerImBaum,
 } from '../../core/blocks/treeQuery'
 import { relationMatchesSearch } from '../../core/data/relations'
 import { FeldUebernahmePicker } from './FeldUebernahmePicker'
@@ -76,8 +78,15 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
   const geber = auswahlGeberOptionen(auswahlGeberImBaum(ed.tree), dataSources.list)
   const geberIds = geber.map((g) => g.blockId)
   const erfassungen = erfassungsOptionen(erfassungsTraegerImBaum(ed.tree), dataSources.list)
+
+  // Dieselbe Form wie die Erfassungen: Baustein + seine Spalten. Nur die
+  // Frage ist eine andere — wer traegt AENDERBARE Spalten?
+  const aenderungen = erfassungsOptionen(aenderungsTraegerImBaum(ed.tree), dataSources.list)
+
+  const loeschungen = erfassungsOptionen(loeschTraegerImBaum(ed.tree), dataSources.list)
   const [typ, setTyp] = useState<StepTypeKey>(step?.type ?? 'START_TOOL')
   const [toolNr, setToolNr] = useState(step?.type === 'START_TOOL' ? step.toolNr : '')
+  const [befehl, setBefehl] = useState(step?.type === 'BW_LINK' ? step.befehl : '')
   const [popupId, setPopupId] = useState(
     step?.type === 'POPUP_OPEN' || step?.type === 'POPUP_CLOSE' ? step.popupId : '',
   )
@@ -195,6 +204,14 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     if (typ === 'POPUP_OPEN' || typ === 'POPUP_CLOSE') {
       return { id, type: typ, resultKey: step?.type === typ ? step.resultKey : '', popupId }
     }
+    if (typ === 'BW_LINK') {
+      return {
+        id,
+        type: 'BW_LINK',
+        resultKey: step?.type === 'BW_LINK' ? step.resultKey : '',
+        befehl: befehl.trim(),
+      }
+    }
     if (typ === 'START_TOOL') {
       const vorher = step?.type === 'START_TOOL' ? step : undefined
       return {
@@ -280,6 +297,22 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
         </Field>
       )}
 
+      {typ === 'BW_LINK' && (
+        <Field
+          label="Befehl"
+          error={zeigeFehler ? problem ?? '' : ''}
+        >
+          {(field) => (
+            <TextInput
+              {...field}
+              value={befehl}
+              placeholder="z. B. TABELLEPOS_DETAILS,{PINDEX}"
+              onChange={(e) => setBefehl(e.target.value)}
+            />
+          )}
+        </Field>
+      )}
+
       {typ === 'RELATION' && (
         <>
           <RelationAuswahl
@@ -311,6 +344,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                       blockValues={blockValues}
                       geber={geber}
                       erfassungen={erfassungen}
+                      aenderungen={aenderungen}
+                      loeschungen={loeschungen}
                       schritte={ergebnisSchritte}
                       platzhalter={platzhalterFor(raw)}
                       entfernen={{
@@ -378,6 +413,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   blockValues={blockValues}
                   geber={geber}
                   erfassungen={erfassungen}
+                  aenderungen={aenderungen}
+                  loeschungen={loeschungen}
                   schritte={ergebnisSchritte}
                   entfernen={{
                     label: `Zusatzparameter ${index + 1} entfernen`,

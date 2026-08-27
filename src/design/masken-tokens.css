@@ -1,26 +1,41 @@
+/* Die Werte der Maske. Vorbild ist ab 2026-08-27 die Handmaske
+   Rahmen00001 V11 (Nutzer-Entscheidung "aussehen auch"): kuehl, petrol,
+   dicht — die Optik, die in BueroWARE tatsaechlich laeuft. Wo die Handmaske
+   einen Wert nicht kennt (Status-Farben), bleibt der alte stehen; geraten
+   wird keiner. */
 :root {
 
-  --se-bg:        #fbf5ea;
-  --se-panel:     #fffdf8;
-  --se-panel-2:   #f3eada;
+  --se-bg:        #eef3f6;
+  --se-panel:     #ffffff;
+  --se-panel-2:   #f6fafb;
 
-  --se-ink:       #3d2b22;
-  --se-muted:     #7a6558;
-  --se-faint:     #a99a8d;
+  --se-ink:       #243b4f;
+  --se-muted:     #69808f;
+  --se-faint:     #a8bac6;
 
-  --se-line:      #e9dec9;
-  --se-line-soft: #f1e8d6;
+  --se-line:      #d9e4ea;
+  --se-line-soft: #e9f0f4;
 
-  --se-scrim:     rgba(61, 43, 34, 0.45);
+  --se-scrim:     rgba(36, 59, 79, 0.45);
 
-  --se-accent:      #e85c3f;
-  --se-accent-dark: #c74628;
-  --se-accent-soft: #fbe5dc;
+  --se-accent:      #0e8ea2;
+  --se-accent-dark: #0b7181;
+  --se-accent-soft: #e6f4f7;
 
-  --se-red:         #c74628;
-  --se-red-soft:    #fef2ee;
-  --se-amber:       #e2a233;
-  --se-amber-soft:  #faedd0;
+  /* Die gewaehlte Zeile, das Zebra und der Zeilen-Hover der Handmaske. */
+  --se-auswahl:     #ddeef2;
+  --se-zebra:       #f8fbfc;
+  --se-hover:       #eff6f8;
+
+  --se-red:         #b3261e;
+  --se-red-soft:    #fdecea;
+
+  /* Bernstein heisst "vorgemerkt, noch nicht geschrieben" — in der Handmaske
+     die geaenderte Zelle und die neue Zeile. */
+  --se-amber:       #f0a53a;
+  --se-amber-soft:  #fff6e1;
+
+  /* Status-Farben kennt die Handmaske nicht: unveraendert stehengelassen. */
   --se-blue:        #5e93be;
   --se-blue-soft:   #e2edf5;
   --se-violet:      #9784c1;
@@ -28,29 +43,31 @@
   --se-green:       #6e9b69;
   --se-green-soft:  #e5eede;
 
-  --se-red-shell:   #fef7f4;  --se-red-line:   #f3d3c7;
-  --se-amber-shell: #fdf8ec;  --se-amber-line: #eeddb9;
+  --se-red-shell:   #fdf3f2;  --se-red-line:   #f0cdc9;
+  --se-amber-shell: #fffdf4;  --se-amber-line: #ecd9a4;
   --se-blue-shell:  #f5f9fc;  --se-blue-line:  #d2e2ee;
   --se-green-shell: #f7faf3;  --se-green-line: #d8e5cf;
 
-  --se-card-bg:     #fffdf8;
-  --se-card-line:   #e9dec9;
+  --se-card-bg:     #ffffff;
+  --se-card-line:   #d9e4ea;
 
-  --se-border: 1.5px;
+  --se-border: 1px;
 
-  --se-r-sm:   3px;
-  --se-r-md:   5px;
-  --se-r-lg:   7px;
+  --se-r-sm:   4px;
+  --se-r-md:   6px;
+  --se-r-lg:   8px;
 
-  --se-font: "Figtree", "Segoe UI", Tahoma, sans-serif;
+  --se-schatten: 0 1px 3px rgba(36, 59, 79, 0.08);
+
+  --se-font: "Segoe UI Variable Text", "Segoe UI", system-ui, Tahoma, sans-serif;
   --se-font-schmuck: Georgia, "Times New Roman", serif;
   --se-mono: "IBM Plex Mono", Consolas, monospace;
-  --se-fs:    13.5px;
+  --se-fs:    13px;
   --se-fs-sm: 12px;
   --se-fs-xs: 10.5px;
-  --se-fs-lg: 15px;
+  --se-fs-lg: 14px;
 
-  --se-lh: 1.55;
+  --se-lh: 1.4;
 
   --se-gap-sm: 6px;
   --se-gap:    10px;

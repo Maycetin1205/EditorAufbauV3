@@ -141,8 +141,13 @@ export function benutzteFelderJeQuelle(
       const erste = typeof node.props.source === 'string' ? node.props.source : ''
       for (const q of weitereQuellenAus(node.props[WEITERE_QUELLEN_PROP])) {
         if (!quelleBrauchbar(q)) continue
+        // Die linke Seite eines Paares gehoert der PARTNER-Quelle, nicht
+        // zwangslaeufig der ersten: haengt Quelle 3 an Quelle 2, muss der
+        // Export das Schluesselfeld bei Quelle 2 bestellen. Sonst kaeme es
+        // nicht mit, und die Verknuepfung liefe in SoftEngine ins Leere.
+        const partner = q.partnerId === '' ? erste : q.partnerId
         for (const paar of vollstaendigePaare(q)) {
-          merke(erste, paar.fromField)
+          merke(partner, paar.fromField)
           merke(q.quelleId, paar.toField)
         }
       }

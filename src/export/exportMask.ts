@@ -7,13 +7,16 @@ import {
   firstDescendantOfType,
   istAuswahlGeber,
   QUELLE_PROP,
+  traegtAenderungen,
   traegtEigeneQuelle,
+  traegtLoeschungen,
 } from '../core/blocks/treeQuery'
 import { ACTION_VALUE_ID_ATTR, serializeBlockEvents } from '../core/data/aktionen'
 import { propertySichtbar } from '../core/blocks/PropertyDescription'
 import { AUSWAHL_FOLGE_PROP } from '../core/data/auswahlFolge'
 import {
   felderHinterSchnitt,
+  istOffenerSatz,
   ladeRelationFor,
   tableIdFor,
   type DataSource,
@@ -31,7 +34,6 @@ import {
 } from '../core/blocks/flowLayout'
 import { randPlatzLinks } from '../core/blocks/maskenRand'
 import { rasterFlaecheCss } from '../core/blocks/rasterLayout'
-import schriftenCssRaw from '../design/masken-schriften.css?raw'
 import tokensCssRaw from '../design/masken-tokens.css?raw'
 import {
   benutzteFelderJeQuelle,
@@ -144,8 +146,12 @@ function nodeToHtml(
   // Adressierbar fuer Ketten ist, wer Werte-Stellen hat ODER wessen
   // Erfassungszeile an ist (G4: „Wert aus Erfassungszelle" findet die
   // Tabelle zur Laufzeit ueber genau dieses Attribut).
-  const kannErfassen = def.kannErfassen !== undefined
-    && propertySichtbar(def.kannErfassen.wenn, node.props)
+  const kannErfassen = (def.kannErfassen !== undefined
+    && propertySichtbar(def.kannErfassen.wenn, node.props))
+    // Auch die Traeger geaenderter und geloeschter Zeilen muessen fuer die
+    // Kette auffindbar sein.
+    || traegtAenderungen(node)
+    || traegtLoeschungen(node)
   const actionValueIdAttr = (def.actionValueSpots?.length ?? 0) > 0 || kannErfassen
     ? ` ${ACTION_VALUE_ID_ATTR}="${escapeHtmlAttr(node.id)}"`
     : ''
@@ -212,7 +218,6 @@ export function exportMask(
   const holSchluessel = holSchluesselJeGeber(used)
   const usedRelations = collectRelations(tree, relations)
 
-  const schriftenCss = stripCssComments(schriftenCssRaw)
   const tokensCss = stripCssComments(tokensCssRaw)
   const runtimeJs = guardScriptContent(escapeNonAsciiJs(runtimeJsRaw.trim()))
 
@@ -224,6 +229,7 @@ export function exportMask(
         name: s.name,
         tableId: tableIdFor(s),
         indexField: s.indexField ?? '',
+        ...(istOffenerSatz(s) ? { offenerSatz: true } : {}),
         ...(lade
           ? { ladeRelation: { ...lade, zusatzFelder: felderHinterSchnitt(benutzteFelder.get(s.id)) } }
           : {}),
@@ -255,7 +261,6 @@ export function exportMask(
     `<title>${escapeHtmlText(title)}</title>`,
     SE_INTERFACE_SCRIPT,
     '<style>',
-    schriftenCss,
     tokensCss,
     '',
     '/* Grundgeruest + Wurzel-Raster (identisch zum Editor-Canvas, rasterFlaecheStyle) */',
