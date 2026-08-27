@@ -1,16 +1,19 @@
 import { MousePointerClick } from '@/ui/zeichen'
 import type { ReactElement } from 'react'
 
+// Liegt AUF der Maskenflaeche, ist aber Editor-Hilfe: deshalb in
+// Werkbank-Farben (dunkel) und nicht in Masken-Farben — man soll sehen,
+// dass der Hinweis nicht Teil der Maske ist.
 export function LeerHinweis({ titel }: { titel: string }): ReactElement {
   return (
     <div
       data-ff-editor-helper
-      className="pointer-events-none flex flex-col items-center gap-1.5 rounded-md border border-dashed border-border bg-card/70 px-8 py-6 text-center font-sans"
+      className="pointer-events-none flex flex-col items-center gap-1.5 rounded border border-dashed border-linie bg-panel/90 px-8 py-6 text-center font-sans"
     >
-      <MousePointerClick size={18} className="text-muted-foreground/60" />
-      <p className="text-[0.8125rem] font-medium text-foreground/80">{titel}</p>
-      <p className="text-xs text-muted-foreground">
-        Zieh einen Baustein aus der Bibliothek links hierher.
+      <MousePointerClick size={18} aria-hidden className="text-matt" />
+      <p className="text-ui font-medium text-tinte">{titel}</p>
+      <p className="text-dicht text-matt">
+        Zieh einen Baustein aus der Palette links hierher.
       </p>
     </div>
   )

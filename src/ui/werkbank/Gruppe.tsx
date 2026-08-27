@@ -1,0 +1,68 @@
+import { useId, useState, type ReactNode } from 'react'
+import { ChevronDown } from '@/ui/zeichen'
+import { cn } from '@/lib/utils'
+
+export interface GruppeProps {
+  titel: ReactNode
+
+  // Rechts im Kopf, z. B. ein Zaehler oder ein Knopf. Klicks darin klappen
+  // die Gruppe nicht auf.
+  aktionen?: ReactNode
+
+  // Ohne `offen` fuehrt die Gruppe ihren Zustand selbst.
+  offen?: boolean
+  standardOffen?: boolean
+  onSchalte?: (offen: boolean) => void
+  className?: string
+  children: ReactNode
+}
+
+export function Gruppe({
+  titel,
+  aktionen,
+  offen,
+  standardOffen = true,
+  onSchalte,
+  className,
+  children,
+}: GruppeProps) {
+  const id = useId()
+  const [eigen, setEigen] = useState(standardOffen)
+  const auf = offen ?? eigen
+
+  const schalte = () => {
+    if (onSchalte) onSchalte(!auf)
+    else setEigen(!auf)
+  }
+
+  return (
+    <section className={cn('flex min-w-0 flex-col', className)}>
+      <div className="flex h-steuer items-center gap-1">
+        <button
+          type="button"
+          aria-expanded={auf}
+          aria-controls={id}
+          onClick={schalte}
+          className={cn(
+            'flex min-w-0 flex-1 items-center gap-1.5 rounded text-left',
+            'text-dicht font-semibold uppercase tracking-wide text-matt',
+            'transition-colors hover:text-tinte focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
+          )}
+        >
+          <ChevronDown
+            size={12}
+            aria-hidden
+            className={cn('shrink-0 transition-transform', !auf && '-rotate-90')}
+          />
+          <span className="min-w-0 truncate">{titel}</span>
+        </button>
+        {aktionen && <div className="flex shrink-0 items-center gap-1">{aktionen}</div>}
+      </div>
+      {auf && (
+        <div id={id} className="flex min-w-0 flex-col gap-2 pt-1">
+          {children}
+        </div>
+      )}
+    </section>
+  )
+}

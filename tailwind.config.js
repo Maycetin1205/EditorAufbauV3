@@ -1,5 +1,5 @@
-// Tailwind-Konfiguration fuer das Editor-Chrome.
-// shadcn-konformes Theme via CSS-Variablen (siehe src/index.css).
+// Tailwind-Konfiguration fuer das Editor-Chrome ("Werkbank").
+// Farben, Groessen und Abstaende stehen in src/index.css als --wb-*.
 // Scannt nur src/, nicht den HTML-Export-Output.
 
 /** @type {import('tailwindcss').Config} */
@@ -21,6 +21,19 @@ export default {
         ],
       },
       colors: {
+        // Die Werkbank-Palette. Mehr Farben gibt es im Editor nicht.
+        grund: 'hsl(var(--wb-grund))',
+        panel: 'hsl(var(--wb-panel))',
+        control: 'hsl(var(--wb-control))',
+        linie: 'hsl(var(--wb-linie))',
+        tinte: 'hsl(var(--wb-tinte))',
+        matt: 'hsl(var(--wb-matt))',
+        akzent: 'hsl(var(--wb-akzent))',
+        fehler: 'hsl(var(--wb-fehler))',
+        vormerkung: 'hsl(var(--wb-vormerkung))',
+
+        // Die shadcn-Namen der alten Atome. Sie zeigen auf dieselben Werte
+        // (index.css) und gehen mit ihren letzten Aufrufern.
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -56,48 +69,41 @@ export default {
         },
       },
       // ============================================================
-      // Die Masseinheiten des Editor-Chromes (2026-08-07)
+      // Die Masseinheiten der Werkbank. Bis 2026-08-07 hat sich jede der
+      // 30 Editor-Dateien ihre eigenen ausgedacht: fuenf Textgroessen, vier
+      // Bedienhoehen, vier Rundungen. Das ist der Grund fuer „sieht
+      // uneinheitlich aus" — kein Schlendrian, sondern eine fehlende
+      // gemeinsame Liste.
       // ============================================================
-      // Bis hierher stand in dieser Datei NUR die Farbwelt. Groessen, Abstaende
-      // und Hoehen hat sich jede der 30 Editor-Dateien selbst ausgedacht, ueber
-      // Monate, nacheinander. Gezaehlt am 2026-08-07: fuenf Textgroessen
-      // (9 / 9,9 / 10,8 / 11,7 / 12,6 px), vier Hoehen fuer Bedienelemente
-      // (21,6 / 25,2 / 28,8 / 32,4 px), vier Rundungen. Das ist der Grund fuer
-      // „sieht uneinheitlich aus" — kein Schlendrian, sondern eine fehlende
-      // gemeinsame Liste. Ab jetzt steht sie hier.
-      //
-      // Die Maskenwelt hat ihre eigene Liste (design/masken-tokens.css, --se-*)
-      // und bleibt davon unberuehrt. Die zwei Welten mischen nie.
       fontSize: {
-        // ZWEI Stufen, nicht fuenf. Bei einer Grundschrift von 90 % (index.css)
-        // liegen fuenf Groessen zwischen 9 und 12,6 px — Abstaende unter einem
-        // Pixel liest niemand als Ordnung, nur als Zufall. Rangfolge macht der
-        // Editor ueber Fettung und Farbe, nicht ueber ein Achtel Millimeter.
-        //
-        // Beide Werte sind ABSICHTLICH die von text-xs/text-sm: damit aendert
-        // das Einfuehren der Liste allein noch kein Aussehen. Sichtbar wird sie
-        // erst dort, wo eine Zwerggroesse durch `ui` ersetzt wird.
-        ui: ['0.75rem', { lineHeight: '1rem' }], // 10,8 px — der Normalfall
-        'ui-titel': ['0.875rem', { lineHeight: '1.25rem' }], // 12,6 px — Panel-Titel
+        // ZWEI Stufen. Rangfolge macht der Editor ueber Fettung und Farbe,
+        // nicht ueber ein Achtel Millimeter.
+        ui: ['0.8125rem', { lineHeight: '1.25rem' }], // 13 px — der Normalfall
+        dicht: ['0.75rem', { lineHeight: '1rem' }], // 12 px — dichte Listen
+        // Alte Namen auf dieselben zwei Stufen: `text-xs` und `text-sm`
+        // stehen 200-mal im Bestand, und sie sollen auf der Skala landen,
+        // nicht daneben. `ui-titel` traegt der Panel-Kopf — gleich gross wie
+        // `ui`, unterschieden nur durch Fettung.
+        xs: ['0.75rem', { lineHeight: '1rem' }],
+        sm: ['0.8125rem', { lineHeight: '1.25rem' }],
+        'ui-titel': ['0.8125rem', { lineHeight: '1.25rem' }],
       },
       spacing: {
         // EINE Hoehe fuer alles, was man bedient: Knopf, Eingabefeld,
-        // Auswahlfeld, Symbolknopf. Vorher standen ein Knopf (28,8) und das
-        // Feld daneben (25,2) unterschiedlich hoch in derselben Zeile.
-        // 25,2 px ist der Wert, den Felder und 23 der 31 Knoepfe schon hatten —
-        // die Mehrheit gewinnt, das aendert am wenigsten.
-        steuer: '1.75rem',
+        // Auswahlfeld, Symbolknopf, Inspector-Zeile.
+        steuer: '1.75rem', // 28 px
       },
       borderRadius: {
-        // EINE Rundung, wie in index.css entschieden („EIN kleiner Radius,
-        // 4px, fast kantig"). Diese Entscheidung kam bisher nirgends an:
-        // md rechnete radius-2px (= 2 px) und wurde 35-mal benutzt, sm
-        // rechnete radius-4px (= 0 px, also gar keine Rundung) und 14-mal.
-        // Jetzt loesen alle drei Namen auf denselben Wert auf — dann ist es
-        // egal, welchen jemand schreibt, und die Entscheidung gilt wirklich.
+        // EINE Rundung, 4px, fast kantig. Alle Namen loesen auf denselben
+        // Wert auf — dann ist es egal, welchen jemand schreibt.
+        DEFAULT: 'var(--radius)',
         lg: 'var(--radius)',
         md: 'var(--radius)',
         sm: 'var(--radius)',
+      },
+      boxShadow: {
+        // Keine Schatten ausser Overlays, und dort genau EINE Stufe.
+        overlay: '0 1.5rem 3rem -1rem rgb(0 0 0 / 0.7)',
       },
     },
   },

@@ -1,13 +1,43 @@
-import { SidePanel } from '@/ui/molecules/side-panel'
+import { ChevronDown } from '@/ui/zeichen'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { BlockPalette } from './BlockPalette'
 
-export function Sidebar() {
+interface SidebarProps {
+  offen: boolean
+  onSchalte: (offen: boolean) => void
+}
+
+export function Sidebar({ offen, onSchalte }: SidebarProps) {
+  if (!offen) {
+    return (
+      <div className="flex h-full flex-col items-center pt-1.5">
+        <Knopf
+          nurZeichen
+          aria-label="Bausteine ausklappen"
+          title="Bausteine ausklappen"
+          onClick={() => onSchalte(true)}
+        >
+          <ChevronDown size={14} className="-rotate-90" />
+        </Knopf>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1">
-        <SidePanel title="Blöcke">
-          <BlockPalette />
-        </SidePanel>
+    <div className="flex h-full flex-col gap-2 p-2">
+      <header className="flex h-steuer shrink-0 items-center gap-1">
+        <h2 className="min-w-0 flex-1 truncate text-ui font-semibold text-tinte">Bausteine</h2>
+        <Knopf
+          nurZeichen
+          aria-label="Bausteine einklappen"
+          title="Bausteine einklappen"
+          onClick={() => onSchalte(false)}
+        >
+          <ChevronDown size={14} className="rotate-90" />
+        </Knopf>
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto">
+        <BlockPalette />
       </div>
     </div>
   )

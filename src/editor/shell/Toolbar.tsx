@@ -8,7 +8,7 @@ import {
   Trash2,
   Undo2,
 } from '@/ui/zeichen'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { exportMask } from '../../export/exportMask'
 import { failedChecks, validateMaskHtml } from '../../export/validator'
 import { downloadFile } from '../../lib/dateiDownload'
@@ -19,8 +19,9 @@ import { meldungen } from '../../state/meldungen'
 import { meldeVerworfeneTypen } from '../../state/persistence'
 import { relationStore } from '../../state/RelationStore'
 import { useEditor } from '../../state/useEditor'
-import { Button } from '@/ui/atoms/button'
-import { IconButton } from '@/ui/atoms/icon-button'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Popover } from '@/ui/werkbank/Popover'
+import { Trenner } from '@/ui/werkbank/Trenner'
 
 export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const ed = useEditor()
@@ -97,33 +98,31 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
 
   return (
     <div className="flex items-center gap-1.5 justify-self-end">
-      <MoreMenu
+      <WeitereAktionen
         onClearAll={handleClear}
         clearDisabled={ed.blockCount === 0}
         onSpeichern={handleSpeichern}
         onDatei={handleDateiGewaehlt}
       />
 
-      <Divider />
+      <Trenner senkrecht className="mx-1" />
 
-      <Button
-        variant="outline"
-        size="sm"
+      <Knopf
         onClick={onDatencenter}
         title="Datencenter — Datenquellen und Relationen der Maske"
       >
         <SlidersHorizontal size={14} /> Datencenter
-      </Button>
+      </Knopf>
 
-      <Button
-        size="sm"
+      <Knopf
+        art="primaer"
         aria-label="Als SoftEngine-Maske exportieren"
         title="Export (SoftEngine-Maske)"
         onClick={handleExport}
         disabled={ed.blockCount === 0}
       >
         <Download size={14} /> Exportieren
-      </Button>
+      </Knopf>
     </div>
   )
 }
@@ -132,27 +131,33 @@ export function VerlaufKnoepfe() {
   const ed = useEditor()
   return (
     <div className="flex items-center">
-      <IconButton
+      <Knopf
+        nurZeichen
         aria-label="Rückgängig (Ctrl+Z)"
         title="Rückgängig"
         onClick={() => ed.undo()}
         disabled={!ed.canUndo}
       >
         <Undo2 size={15} />
-      </IconButton>
-      <IconButton
+      </Knopf>
+      <Knopf
+        nurZeichen
         aria-label="Wiederholen (Ctrl+Shift+Z)"
         title="Wiederholen"
         onClick={() => ed.redo()}
         disabled={!ed.canRedo}
       >
         <Redo2 size={15} />
-      </IconButton>
+      </Knopf>
     </div>
   )
 }
 
-function MoreMenu({
+const MENUEZEILE =
+  'flex h-steuer w-full items-center gap-2 rounded px-2 text-left text-ui text-tinte'
+  + ' transition-colors hover:bg-control disabled:pointer-events-none disabled:opacity-40'
+
+function WeitereAktionen({
   onClearAll,
   clearDisabled,
   onSpeichern,
@@ -163,37 +168,23 @@ function MoreMenu({
   onSpeichern: () => void
   onDatei: (datei: File) => void
 }) {
-  const [open, setOpen] = useState(false)
-  const wrap = useRef<HTMLDivElement>(null)
+  const [offen, setOffen] = useState(false)
+  const knopf = useRef<HTMLButtonElement>(null)
   const dateiRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    const onDown = (e: MouseEvent) => {
-      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
-
   return (
-    <div ref={wrap} className="relative">
-      <IconButton
+    <>
+      <Knopf
+        ref={knopf}
+        nurZeichen
         aria-label="Weitere Aktionen"
         title="Weitere Aktionen"
         aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        aria-expanded={offen}
+        onClick={() => setOffen((v) => !v)}
       >
         <MoreHorizontal size={15} />
-      </IconButton>
+      </Knopf>
 
       <input
         ref={dateiRef}
@@ -209,52 +200,53 @@ function MoreMenu({
           }
         }}
       />
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full z-50 mt-1 min-w-[11.875rem] rounded-md border border-border bg-popover p-1 shadow-md"
-        >
-          <button
-            role="menuitem"
-            type="button"
-            onClick={() => {
-              setOpen(false)
-              onSpeichern()
-            }}
-            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
-          >
-            <Save size={13} /> Maske speichern…
-          </button>
-          <button
-            role="menuitem"
-            type="button"
-            onClick={() => {
-              setOpen(false)
-              dateiRef.current?.click()
-            }}
-            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent"
-          >
-            <FolderOpen size={13} /> Maske laden…
-          </button>
-          <div className="my-1 h-px bg-border" />
-          <button
-            role="menuitem"
-            type="button"
-            disabled={clearDisabled}
-            onClick={() => {
-              setOpen(false)
-              onClearAll()
-            }}
-            className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs text-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
-          >
-            <Trash2 size={13} /> Alle Blöcke löschen…
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
 
-function Divider() {
-  return <span className="mx-1 h-4 w-px bg-border" />
+      {offen && (
+        <Popover
+          bezeichnung="Weitere Aktionen"
+          anker={knopf}
+          breite={200}
+          onClose={() => setOffen(false)}
+        >
+          <div role="menu" className="flex flex-col">
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setOffen(false)
+                onSpeichern()
+              }}
+              className={MENUEZEILE}
+            >
+              <Save size={13} /> Maske speichern…
+            </button>
+            <button
+              role="menuitem"
+              type="button"
+              onClick={() => {
+                setOffen(false)
+                dateiRef.current?.click()
+              }}
+              className={MENUEZEILE}
+            >
+              <FolderOpen size={13} /> Maske laden…
+            </button>
+            <Trenner className="my-1" />
+            <button
+              role="menuitem"
+              type="button"
+              disabled={clearDisabled}
+              onClick={() => {
+                setOffen(false)
+                onClearAll()
+              }}
+              className={`${MENUEZEILE} text-fehler hover:bg-fehler/15`}
+            >
+              <Trash2 size={13} /> Alle Bausteine löschen…
+            </button>
+          </div>
+        </Popover>
+      )}
+    </>
+  )
 }

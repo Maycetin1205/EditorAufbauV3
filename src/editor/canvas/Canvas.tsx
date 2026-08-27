@@ -48,10 +48,16 @@ export function Canvas() {
         <div
           onClick={() => ed.selectBlock(null)}
 
-          className="relative min-h-0 w-full flex-1 overflow-hidden rounded-md border border-border bg-card shadow-[0_1px_2px_rgba(40,30,20,0.10),0_6px_14px_-6px_rgba(40,30,20,0.16),0_26px_50px_-24px_rgba(40,30,20,0.38)]"
+          className="relative min-h-0 w-full flex-1 overflow-hidden rounded border border-linie"
 
           style={{
             minHeight: 400,
+            background: 'var(--se-bg)',
+            // Das Editor-Chrome laeuft auf color-scheme: dark (index.css). Ohne
+            // diese Zeile faerbt der Browser die NATIVEN Bedienelemente der
+            // Maske (Auswahlfeld, Ankreuzfeld) mit ein — im Export tut er das
+            // nicht, und die Flaeche zeigte etwas anderes als die Datei.
+            colorScheme: 'light',
             fontFamily: 'var(--se-font)',
             fontSize: 'var(--se-fs)',
             lineHeight: 'var(--se-lh)',

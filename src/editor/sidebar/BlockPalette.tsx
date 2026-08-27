@@ -1,5 +1,7 @@
 import { Component, Plus, Search, type Zeichen } from '@/ui/zeichen'
 import { createElement, useState } from 'react'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { ROOT_ID, ROOT_TYPE } from '../../core/blocks/BlockData'
 import { canContain, getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import type { BlockCategory, BlockDefinition } from '../../core/blocks/BlockDefinition'
@@ -58,60 +60,43 @@ export function BlockPalette() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <label className="relative flex items-center">
-        <Search size={14} className="absolute left-2 text-muted-foreground" />
-        <input
-          type="text"
+        <Search size={13} aria-hidden className="absolute left-2 text-matt" />
+        <Feld
           value={query}
           onChange={(e) => setQuery(e.currentTarget.value)}
-          placeholder="Blöcke suchen…"
-          className={cn(
-            'h-8 w-full rounded-md border border-input bg-background pl-7 pr-2 text-xs shadow-sm',
-            'placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-          )}
+          placeholder="Baustein suchen…"
+          aria-label="Baustein suchen"
+          className="pl-7"
         />
       </label>
 
-      {filtered.length === 0 && (
-        <p className="text-xs text-muted-foreground">Keine Treffer.</p>
-      )}
+      {filtered.length === 0 && <p className="text-ui text-matt">Keine Treffer.</p>}
 
-      <div className="flex flex-col">
-        {CATEGORY_ORDER.filter((cat) => (grouped[cat]?.length ?? 0) > 0).map((cat, i) => (
-          <section
-            key={cat}
-            className={cn(
-              'flex flex-col gap-1.5',
-              i > 0 && 'mt-4 border-t border-border pt-4',
-            )}
-          >
-            <h3 className="px-0.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              {CATEGORY_LABEL[cat]}
-            </h3>
-            <div className="flex flex-col gap-1">
-              {grouped[cat].map((def) => (
-                <PaletteCard
-                  key={def.type}
-                  def={def}
-                  onAdd={() => ed.addBlock(def.type, insertParentFor(def.type))}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      {CATEGORY_ORDER.filter((cat) => (grouped[cat]?.length ?? 0) > 0).map((cat) => (
+        <Gruppe key={cat} titel={CATEGORY_LABEL[cat]}>
+          <div className="flex flex-col gap-1">
+            {grouped[cat].map((def) => (
+              <PaletteKarte
+                key={def.type}
+                def={def}
+                onAdd={() => ed.addBlock(def.type, insertParentFor(def.type))}
+              />
+            ))}
+          </div>
+        </Gruppe>
+      ))}
     </div>
   )
 }
 
-interface PaletteCardProps {
+interface PaletteKarteProps {
   def: BlockDefinition
   onAdd: () => void
 }
 
-function PaletteCard({ def, onAdd }: PaletteCardProps) {
+function PaletteKarte({ def, onAdd }: PaletteKarteProps) {
   return (
     <button
       type="button"
@@ -122,16 +107,16 @@ function PaletteCard({ def, onAdd }: PaletteCardProps) {
         e.dataTransfer.effectAllowed = 'copy'
       }}
       className={cn(
-        'group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-md border border-border bg-card px-2 py-1.5 text-left text-xs',
-        'transition-colors hover:border-primary/40 hover:bg-accent hover:text-accent-foreground',
+        'group grid h-steuer min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2',
+        'rounded border border-linie bg-control px-2 text-left text-ui text-tinte',
+        'transition-colors hover:border-akzent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
       )}
     >
-
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-muted-foreground group-hover:text-foreground">
-        {createElement(symbolVon(def.type), { size: 16 })}
+      <span className="flex shrink-0 items-center text-matt group-hover:text-tinte">
+        {createElement(symbolVon(def.type), { size: 15 })}
       </span>
-      <span className="truncate font-medium">{def.displayName}</span>
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="truncate">{def.displayName}</span>
+      <span className="flex shrink-0 items-center text-matt opacity-0 transition-opacity group-hover:opacity-100">
         <Plus size={13} />
       </span>
     </button>

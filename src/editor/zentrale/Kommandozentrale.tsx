@@ -34,7 +34,7 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-foreground/30 p-6"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-grund/80 p-6"
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}

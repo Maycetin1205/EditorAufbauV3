@@ -1,7 +1,11 @@
 import { Trash } from '@/ui/zeichen'
 import { Fragment, useState } from 'react'
+import { Feld } from '@/ui/werkbank/Feld'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { useEditor } from '../../state/useEditor'
+import { cn } from '@/lib/utils'
+
+const REITER = 'h-6 shrink-0 whitespace-nowrap rounded px-2.5 text-ui transition-colors'
 
 export function SeitenLeiste() {
   const ed = useEditor()
@@ -20,14 +24,15 @@ export function SeitenLeiste() {
 
   return (
     <div
-      className="flex max-w-[44vw] items-center gap-0.5 overflow-x-auto rounded-md border border-border bg-muted p-0.5"
+      className="flex max-w-[44vw] items-center gap-0.5 overflow-x-auto rounded border border-linie bg-control p-0.5"
       data-ff-editor-helper
     >
       {pages.map((p) => (
         umbenennen?.id === p.id ? (
-          <input
+          <Feld
             key={p.id}
             autoFocus
+            aria-label="Seitenname"
             value={umbenennen.text}
             onChange={(e) => setUmbenennen({ id: p.id, text: e.target.value })}
             onBlur={uebernehmen}
@@ -35,23 +40,23 @@ export function SeitenLeiste() {
               if (e.key === 'Enter') uebernehmen()
               if (e.key === 'Escape') setUmbenennen(null)
             }}
-            className="h-6 w-32 shrink-0 rounded-md border border-input bg-card px-2 text-xs text-foreground outline-none"
+            className="h-6 w-32 shrink-0"
           />
         ) : (
           <Fragment key={p.id}>
             <button
               type="button"
               onClick={() => ed.setActivePage(p.id)}
-
               onDoubleClick={() => {
                 if (!p.istHauptseite) setUmbenennen({ id: p.id, text: p.name })
               }}
               title={p.istHauptseite ? undefined : 'Doppelklick: umbenennen'}
-              className={
+              className={cn(
+                REITER,
                 p.id === aktiv
-                  ? 'h-6 shrink-0 whitespace-nowrap rounded-md bg-card px-2.5 text-xs font-semibold text-foreground shadow-sm'
-                  : 'h-6 shrink-0 whitespace-nowrap rounded-md px-2.5 text-xs font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground'
-              }
+                  ? 'bg-akzent/20 font-medium text-tinte'
+                  : 'text-matt hover:text-tinte',
+              )}
             >
               {p.name}
             </button>
@@ -59,8 +64,9 @@ export function SeitenLeiste() {
               <button
                 type="button"
                 title="Seite löschen (Strg+Z stellt sie zurück)"
+                aria-label={`Seite ${p.name} löschen`}
                 onClick={() => ed.removeBlock(p.id)}
-                className="flex h-6 shrink-0 items-center rounded-md bg-card pr-1.5 text-muted-foreground shadow-sm hover:text-destructive"
+                className="flex h-6 shrink-0 items-center rounded bg-akzent/20 pr-1.5 text-matt hover:text-fehler"
               >
                 <Trash size={12} />
               </button>
@@ -74,7 +80,7 @@ export function SeitenLeiste() {
           type="button"
           onClick={() => ed.addSeite(def.type)}
           title={`Neue Seite anlegen: ${def.displayName}`}
-          className="h-6 shrink-0 whitespace-nowrap rounded-md px-2 text-xs text-muted-foreground hover:bg-card/60 hover:text-foreground"
+          className={cn(REITER, 'text-matt hover:text-tinte')}
         >
           ＋ {def.displayName}
         </button>

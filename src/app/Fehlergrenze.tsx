@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
-import { Button } from '@/ui/atoms/button'
+import { Knopf } from '@/ui/werkbank/Knopf'
 
 interface FehlergrenzeProps {
   children: ReactNode
@@ -24,19 +24,21 @@ export class Fehlergrenze extends Component<FehlergrenzeProps, FehlergrenzeState
     const { fehler } = this.state
     if (!fehler) return this.props.children
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-background p-6">
-        <div className="max-w-md space-y-4 rounded-lg border border-border bg-card p-6 shadow-sm">
-          <h1 className="text-base font-semibold text-foreground">
+      <div className="flex h-screen w-screen items-center justify-center bg-grund p-6">
+        <div className="flex max-w-md flex-col gap-3 rounded border border-linie bg-panel p-5">
+          <h1 className="text-ui font-semibold text-tinte">
             Der Editor ist auf einen Fehler gelaufen.
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-ui leading-relaxed text-matt">
             Die zuletzt gespeicherte Maske ist nicht betroffen — sie liegt im
             Browser-Speicher und wird beim Neuladen wieder geöffnet.
           </p>
-          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted p-3 text-xs text-foreground">
+          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded bg-control p-2 text-dicht text-tinte">
             {fehler.message}
           </pre>
-          <Button onClick={() => { location.reload() }}>Neu laden</Button>
+          <Knopf art="primaer" className="self-start" onClick={() => { location.reload() }}>
+            Neu laden
+          </Knopf>
         </div>
       </div>
     )

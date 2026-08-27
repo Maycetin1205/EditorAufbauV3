@@ -99,6 +99,7 @@ Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (
 ### Umbau-Reihenfolge (damit nie alles gleichzeitig kaputt ist)
 
 1. Atome bauen (`src/ui/werkbank/`), Shell + Inspector-Rahmen darauf umstellen. Der Inspector ist datengetrieben (`Inspector.tsx` + `PropControl.tsx`) — es sind ~9 Control-Arten auf Atome zu mappen.
+   — Atome (12 Stück) und **Shell** erledigt; **Inspector offen**, kommt mit Punkt 2.
 2. `PropControl.tsx`: die 4 fast identischen `WaehlerKnopf`-Aufrufe zu einer `PickerControl` zusammenziehen.
 3. **`StepForm.tsx` (442 Z., schlimmste Datei) neu schreiben:** ein `useReducer`/abgeleiteter Zustand statt 13 `useState`; `candidate` einmal per `useMemo`; `stepProblem` einmal pro Änderung statt zweimal pro Render; die sechs Optionslisten memoisiert.
 4. **`ParameterZeile.tsx` (408 Z.) neu:** statt 11 `if (binding.source === …)`-Zweigen eine Registry `Quelle → Control-Komponente` (dasselbe Muster wie PropControl). Die 12 Parameterquellen aus `ACTION_PARAM_SOURCES` bleiben fachlich unverändert.

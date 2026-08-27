@@ -1,5 +1,5 @@
 import { X } from '@/ui/zeichen'
-import { IconButton } from '@/ui/atoms/icon-button'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { useMeldungen } from '../../state/useMeldungen'
 
 export function Meldungen() {
@@ -8,27 +8,24 @@ export function Meldungen() {
   if (liste.length === 0) return null
 
   return (
-    <div
-
-      className="pointer-events-none fixed bottom-8 right-3 z-50 flex w-[22rem] max-w-[calc(100vw-1.5rem)] flex-col gap-2"
-    >
+    <div className="pointer-events-none fixed bottom-8 right-3 z-50 flex w-[22rem] max-w-[calc(100vw-1.5rem)] flex-col gap-2">
       {liste.map((m) => (
         <div
           key={m.id}
           role="alert"
-          className="pointer-events-auto flex items-start gap-1 rounded-md border border-border border-l-2 border-l-destructive bg-card p-2.5 pl-3 shadow-md"
+          className="pointer-events-auto flex items-start gap-1 rounded border border-linie border-l-2 border-l-fehler bg-panel p-2 pl-3 shadow-overlay"
         >
-
-          <p className="min-w-0 flex-1 whitespace-pre-line text-xs leading-relaxed text-foreground">
+          <p className="min-w-0 flex-1 whitespace-pre-line text-ui leading-relaxed text-tinte">
             {m.text}
           </p>
-          <IconButton
+          <Knopf
+            nurZeichen
             aria-label="Meldung schließen"
             title="Schließen"
             onClick={() => stelle.schliesse(m.id)}
           >
             <X size={13} />
-          </IconButton>
+          </Knopf>
         </div>
       ))}
     </div>
