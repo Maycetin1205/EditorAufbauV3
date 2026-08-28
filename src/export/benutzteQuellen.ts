@@ -3,6 +3,7 @@ import {
   bindingProp,
   eintragsFelderLesen,
   eintragsFelderVon,
+  feldWahlenLesen,
   listeLesen,
   zerlegeBindung,
 } from '../core/blocks/BlockDefinition'
@@ -118,6 +119,10 @@ export function benutzteFelderJeQuelle(
 
       for (const eintrag of listeLesen(node.props[b.prop], b)) {
         merkeEintragsFeld(eintrag[b.feldKey])
+        // Das Fuellfeld zeigt auf eine HILFSQUELLE. Bliebe es hier aussen
+        // vor, bestellte der Export ihre Felder nicht und die Erfassungszeile
+        // faende in SoftEngine nichts zum Vorschlagen.
+        for (const { wert } of feldWahlenLesen(b, eintrag)) merkeEintragsFeld(wert)
         if (!b.eintragsWahl) continue
         const gebunden = eintragsFelderLesen(b.eintragsWahl, eintrag)
         for (const zf of eintragsFelderVon(b.eintragsWahl, eintrag)) {

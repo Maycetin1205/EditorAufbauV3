@@ -17,6 +17,24 @@ export interface ListenBindung {
   eintragsZuordnung?: EintragsZuordnung
 
   eintragsSchalter?: readonly EintragsSchalter[]
+
+  eintragsFeldWahl?: readonly EintragsFeldWahl[]
+}
+
+// Ein ZWEITES Feld je Eintrag, unabhaengig von der gewaehlten Darstellung.
+// Die Belegerfassung braucht beides gleichzeitig: die Spalte ZEIGT und
+// SCHREIBT das Feld der Hauptquelle, das Fuellfeld holt den Wert beim
+// Erfassen aus einer Hilfsquelle. Ein Feldcode kann nicht beides sein.
+// `nurFremdeQuellen` haelt die Wahl bei den Hilfsquellen — ein Fuellfeld der
+// Hauptquelle waere dasselbe Feld ein zweites Mal.
+export interface EintragsFeldWahl {
+  key: string
+
+  label: string
+
+  hinweis?: string
+
+  nurFremdeQuellen?: boolean
 }
 
 // Ein Ja/Nein je Eintrag. Anders als die Wahl (eine aus mehreren) und die
@@ -113,6 +131,20 @@ export function schalterFuer(
   if (!wahl) return alle
   const gewaehlt = eintragsWahlWert(wahl, eintrag)
   return alle.filter((s) => s.nurBeiWahl === undefined || s.nurBeiWahl.includes(gewaehlt))
+}
+
+// Die zusaetzlichen Feldwahlen eines Eintrags mit ihrem aktuellen Wert. EINE
+// Stelle fuer beide Leser: das Kopf-Fenster zeichnet danach, und der Export
+// bestellt danach die Felder der Hilfsquelle. Liefen die auseinander, faende
+// der Bediener sein Fuellfeld im Editor, waehrend die Maske es nie bekaeme.
+export function feldWahlenLesen(
+  b: ListenBindung,
+  eintrag: Record<string, unknown>,
+): { wahl: EintragsFeldWahl; wert: string }[] {
+  return (b.eintragsFeldWahl ?? []).map((wahl) => {
+    const roh = eintrag[wahl.key]
+    return { wahl, wert: typeof roh === 'string' ? roh : '' }
+  })
 }
 
 export function eintragsFelderVon(

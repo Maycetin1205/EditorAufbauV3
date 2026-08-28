@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { ROOT_ID, type BlockNode } from './BlockData'
 import type { BlockDefinition, ListenBindung } from './BlockDefinition'
-import { listeFuerExport, schalterAn } from './listenBindung'
+import { feldWahlenLesen, listeFuerExport, schalterAn } from './listenBindung'
 import { registerBlockType } from './blockRegistry'
 import { traegtAenderungen } from './treeQuery'
 
@@ -26,6 +26,27 @@ const BINDUNG: ListenBindung = {
 
 const AUS = BINDUNG.eintragsSchalter![0]
 const AN = BINDUNG.eintragsSchalter![1]
+
+// Das zweite Feld je Eintrag. EINE Leseart fuer Formular und Export — laesen
+// die verschieden, stuende das Fuellfeld im Editor und fehlte in der Maske.
+const MIT_FELDWAHL: ListenBindung = {
+  ...BINDUNG,
+  eintragsFeldWahl: [{ key: 'fuellFeld', label: 'Füllfeld', nurFremdeQuellen: true }],
+}
+
+test('feldWahlenLesen liefert je Deklaration einen Wert, leer wo nichts steht', () => {
+  expect(feldWahlenLesen(MIT_FELDWAHL, { fuellFeld: 'q-art::bez' })
+    .map((f) => [f.wahl.key, f.wert])).toEqual([['fuellFeld', 'q-art::bez']])
+  expect(feldWahlenLesen(MIT_FELDWAHL, {}).map((f) => f.wert)).toEqual([''])
+
+  // Was keine Zeichenkette ist, ist keine Bindung — sonst reiste eine Zahl aus
+  // einer alten Maske als Feldcode weiter.
+  expect(feldWahlenLesen(MIT_FELDWAHL, { fuellFeld: 7 }).map((f) => f.wert)).toEqual([''])
+})
+
+test('ohne Deklaration gibt es keine Feldwahl', () => {
+  expect(feldWahlenLesen(BINDUNG, { fuellFeld: 'q-art::bez' })).toEqual([])
+})
 
 test('ohne Angabe gilt der Standard des Schalters', () => {
   expect(schalterAn(AUS, { art: 'text' })).toBe(false)

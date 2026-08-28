@@ -4,7 +4,7 @@ Stand: 2026-08-28. Entscheidung: **V3 weiterbauen, kein Neubau.** PageBuilder (C
 
 Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mit einem Commit. Beim Abarbeiten Haken in diese Datei setzen — sonst wird sie nicht angefasst.
 
-**Stand 2026-08-28:** Etappe 4 ist bei Punkt 5 (Datencenter) abgehakt — als Nächstes die Quellen-UI, s. Reihenfolge gleich unten. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
+**Stand 2026-08-28:** Etappe 4 ist bei Punkt 5 (Datencenter) abgehakt, und die Quellen-UI hat ihre Punkte **6 und 4** (Spaltenkopf zweigeteilt, Füllfeld) — als Nächstes Quellen-UI Punkt 5, s. Reihenfolge gleich unten. Die Quellen-UI wird in dieser Reihenfolge gebaut, nicht in ihrer Nummerierung: **6+4 → 5 → 3 → 1+2 → 7**. Grund steht in Punkt 6 („Diese Teilung ist Teil von Punkt 4") und in Punkt 4 („gespiegelt in der Hilfsquellen-Liste aus Punkt 1b") — das Modell muss vor die Liste, die es spiegelt, sonst wird die Liste zweimal gebaut. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
 
 **Reihenfolge ab hier (Nutzer-Entscheidung 2026-08-28):**
 
@@ -163,7 +163,9 @@ Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den B
 
    **Achtung, das ist kein Zeichnen:** für den gedimmten Quellnamen gibt es heute keinen Editor-Kanal an den Baustein. Listeneinträge gehen roh hinüber (`blocks/tabelle/spalten.ts:3-19`, `editor/canvas/useLitElement.ts:104-124`). Nötig ist entweder ein zusätzliches Editor-Attribut analog `data-ff-editor` oder ein Klarname-Schlüssel je Listeneintrag plus Ausschlussregel in `listeFuerExport` — beides berührt `ListenBindung`. Eigener Bauschritt, nicht nebenbei.
 
-4. **Zwei Felder je Spalte — Spaltenfeld und Füllfeld (Nutzer-Vorgabe 2026-08-28).**
+   **Auflage 2026-08-28 (Nutzer-Ansage):** „nur im Editor, nie im Export" wird als **eigener Test** festgenagelt — das exportierte HTML enthält keine Herkunfts-Angabe. Der in `CLAUDE.md` genannte Referenzabzug (`src/export/referenz/`, `referenzabzug.test.ts`) existiert in diesem Repo **nicht**; er beschreibt das frühere Repo und taugt nicht als Absicherung. Wer sich beim Bau von Punkt 3 darauf beruft, hat nichts geprüft.
+
+4. ✅ **Zwei Felder je Spalte — Spaltenfeld und Füllfeld (Nutzer-Vorgabe 2026-08-28).**
 
    Die Belegerfassung braucht beides gleichzeitig, und das Modell kann heute nur eines von beiden:
 
@@ -178,11 +180,13 @@ Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den B
 
    **Folge, die den Rest vereinfacht:** die Artikelsuche braucht damit **keine Schlüsselpaare**. Der Bediener sucht den Artikel von Hand, die gebuchte Zeile liest die Hauptquelle — es gibt nichts zu verknüpfen. Und „Hilfsquelle wird nie geschrieben" ist von selbst wahr: ein Füllfeld ist nie ein Schreibziel.
 
+   Gebaut als Registry-Eintrag, nicht als Tabellen-Sonderfall (Verbot 5): `ListenBindung.eintragsFeldWahl` deklariert zusätzliche Felder je Eintrag, `SPALTEN_BINDUNG` trägt genau einen davon (`fuellFeld`, `nurFremdeQuellen`). `feldWahlenLesen` ist die EINE Leseart — Kopf-Fenster und Export lesen dieselbe Funktion, sonst stünde das Füllfeld im Editor und fehlte in der Bestellung. Beim Erfassen führt es in `zellenzielVon` (`erfassungsZellen.ts`); alle Aufrufer dieser Funktion sind Erfassungszeile, die gebuchte Zeile liest weiter über `macheFeldLeser`. Der Export bestellt es in `benutzteQuellen.ts` bei der Hilfsquelle. **Ein leer gewähltes Feld löscht seinen Schlüssel** (`schreibeInEintrag` nimmt `undefined`), sonst reiste `fuellFeld: ''` in jede Maskendatei mit.
+
 5. **„Nie geschrieben" muss im Modell stehen, nicht nur auf dem Etikett.** Heute ist jede gebundene Spalte per Vorgabe änderbar (`blocks/tabelle/spaltenBindung.ts:37-45`, `standard: true`), unabhängig von der Herkunft ihres Feldes. Eine Spalte auf einer Hilfsquelle ist damit tippbar und erzeugt eine Vormerkung, die als Änderung der **Hauptquellen**-Zeile geführt wird (`aenderungen.ts` schlüsselt über deren Satznummer). Zu bauen: eine Spalte, deren Feld aus einer Hilfsquelle kommt, ist nie änderbar.
 
    **Und ein echter Fehler daneben:** der AUSgeschaltete Schalter „In der Zeile änderbar" wird beim Einlesen verworfen (`blocks/tabelle/spalten.ts:80`). Eine gerechnete Spalte (Gesamt, Rohertrag) bleibt in der exportierten Maske tippbar; der Bediener merkt eine Änderung vor, die keine Kette schreibt.
 
-6. **Der Spaltenkopf wird geteilt, bevor etwas dazukommt (Nutzer-Entscheidung 2026-08-28).**
+6. ✅ **Der Spaltenkopf wird geteilt, bevor etwas dazukommt (Nutzer-Entscheidung 2026-08-28).**
 
    Im Spaltenkopf stecken heute schon sechs Sachen: Feld, Darstellung, Summe in der Fußzeile, In der Zeile änderbar, Status-Zuordnung, Umbenennen (dazu +/− in der Tabelle). Mit dem Füllfeld aus Punkt 4 wären es acht. Der Nutzer hat die Fläche ausdrücklich als „extrem überfüllt" beanstandet.
 
@@ -191,6 +195,8 @@ Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den B
    - **Was die Spalte TUT** — eine zugeklappte Zeile darunter: Summe · änderbar · Füllfeld · Rechnung (Punkt 7).
 
    **Diese Teilung ist Teil von Punkt 4, kein eigener Schritt.** Wer das Füllfeld ohne sie einbaut, macht eine schon zu volle Fläche voller.
+
+   Gebaut mit zwei Abweichungen, beide begründet: (a) **Status-Zuordnung und die Detail-Felder („Bild + Name") bleiben in Ebene 1**, direkt unter der Darstellung — sie gehören zu ihr und erscheinen ohnehin nur bei einer einzigen Darstellung; „Was die Spalte tut" enthält Summe, änderbar und Füllfeld. (b) **Jede Feld-Wahl ist eine Zeile, die die EINE Liste unten auf sich zieht** — kein Fenster im Fenster. Ein `Popover` im `AuswahlFenster` schließt beide, weil das äußere jeden Zeigerdruck außerhalb seiner selbst als „woanders hin geklickt" liest; dieselbe Falle wie bei Esc im Datencenter (Punkt 4.5). Der Fenster-Rahmen bleibt deshalb `ui/molecules/auswahl-fenster` (er wird über Koordinaten aus dem Shadow-DOM gesetzt, das Werkbank-`Popover` braucht einen React-Anker), sein Inhalt läuft auf Werkbank-Atomen. `ui/molecules/waehler.tsx` ist damit aufruferlos — löschen in Punkt 6.
 
 7. **Gerechnete Spalte — Dreisatz (Nutzer-Vorgabe 2026-08-28).**
 

@@ -16,6 +16,11 @@ export interface Spalte {
   // In dieser Spalte darf der Bediener den Wert einer GEBUCHTEN Zeile
   // aendern. Die Aenderung bleibt vorgemerkt, bis eine Kette sie schreibt.
   aenderbar?: boolean
+
+  // Nur beim ERFASSEN: die Zelle holt ihren Wert aus diesem Feld einer
+  // Hilfsquelle (mit Quellen-Vorsatz), statt aus `feld`. Die gebuchte Zeile
+  // zeigt weiter `feld`, und dorthin schreibt auch die Kette.
+  fuellFeld?: string
 }
 
 // Der Strich, den eine Zelle ohne Wert zeigt: der Editor erfindet nie Daten
@@ -78,6 +83,10 @@ function alsSpalte(x: unknown, index: number): Spalte {
       ...(o.summe === true ? { summe: true } : {}),
 
       ...(o.aenderbar === true ? { aenderbar: true } : {}),
+
+      ...(typeof o.fuellFeld === 'string' && o.fuellFeld.trim() !== ''
+        ? { fuellFeld: o.fuellFeld.trim() }
+        : {}),
     }
   }
 

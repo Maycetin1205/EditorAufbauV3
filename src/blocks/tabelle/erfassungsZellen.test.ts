@@ -68,6 +68,35 @@ test('Zellenart: frei, eigen oder verknuepft', () => {
   })
 })
 
+// Der Kern des Fuellfeldes: dieselbe Spalte zeigt in der gebuchten Zeile die
+// Belegposition (`feld`) und holt sich beim ERFASSEN den Wert aus dem
+// Artikelstamm (`fuellFeld`). Vorher ging nur eines von beiden.
+test('das Fuellfeld fuehrt beim Erfassen, nicht das Spaltenfeld', () => {
+  const beide: Spalte = {
+    titel: 'Bezeichnung',
+    feld: '45_60',
+    art: ART_TEXT,
+    fuellFeld: 'q-art::bez',
+  }
+  expect(zellenzielVon(beide, 'q-pos')).toEqual({
+    art: 'verknuepft', quelleId: 'q-art', code: 'bez',
+  })
+})
+
+test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
+  const nurSpalte: Spalte = { titel: 'Menge', feld: '164_8', art: ART_TEXT, fuellFeld: '' }
+  expect(zellenzielVon(nurSpalte, 'q-pos')).toEqual({
+    art: 'eigen', quelleId: 'q-pos', code: '164_8',
+  })
+})
+
+// Eine Spalte ohne Spaltenfeld ist zulaessig: sie schreibt nichts, hilft aber
+// beim Aussuchen (die Bezeichnung, an der der Bediener den Artikel erkennt).
+test('ein Fuellfeld allein genuegt der Erfassungszeile', () => {
+  const nurFuell: Spalte = { titel: 'Suche', feld: '', art: ART_TEXT, fuellFeld: 'q-art::bez' }
+  expect(zellenzielVon(nurFuell, 'q-pos').art).toBe('verknuepft')
+})
+
 test('zielIn liest die Spalte aus dem Umfeld', () => {
   const umfeld: ErfassungsUmfeld = {
     spalten: [spalte('Artikel', 'q-art::18_25')],

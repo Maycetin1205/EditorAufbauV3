@@ -45,6 +45,16 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     },
   ],
 
+  eintragsFeldWahl: [
+    {
+      key: 'fuellFeld',
+      label: 'Füllfeld',
+      hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.'
+        + ' Die gebuchte Zeile zeigt weiter das Feld oben.',
+      nurFremdeQuellen: true,
+    },
+  ],
+
   eintragsZuordnung: {
     key: 'zuordnung',
     label: 'Status-Zuordnung',

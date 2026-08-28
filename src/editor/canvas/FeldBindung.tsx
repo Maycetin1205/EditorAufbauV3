@@ -7,6 +7,7 @@ import {
   eintragsFelderVon,
   eintragsWahlWert,
   eintragsZuordnungLesen,
+  feldWahlenLesen,
   schalterAn,
   schalterFuer,
   listenStandardTitel,
@@ -193,12 +194,18 @@ export function useFeldBindung({
   // letzten Rendervorgangs und aendert sich innerhalb desselben nicht — zwei
   // Aufrufe hintereinander laesen beide denselben alten Stand, und der zweite
   // ueberschriebe den ersten. Ein Aufruf ist zugleich EIN Undo-Schritt.
+  // `undefined` LOESCHT den Schluessel: ein leer gewaehltes Feld soll nicht
+  // als '' im Eintrag stehenbleiben — es reiste sonst in jede Maskendatei und
+  // in den Export mit.
   const schreibeInEintrag = (picker: PickerStand, teil: Record<string, unknown>): void => {
     if (!listenBindung) return
     const next = eintraegeVon(picker)
     const ziel = next[picker.index]
     if (!ziel) return
-    Object.assign(ziel, teil)
+    for (const [key, wert] of Object.entries(teil)) {
+      if (wert === undefined) delete ziel[key]
+      else ziel[key] = wert
+    }
     editor.updateProperty(block.id, listenBindung.prop, next)
   }
 
@@ -243,6 +250,7 @@ export function useFeldBindung({
             }]
           : gruppen
         const titelJetzt = String(eintrag[listenBindung.titelKey] ?? '')
+        const standardTitel = listenStandardTitel(listenBindung, listenPicker.index)
         const wahl = listenBindung.eintragsWahl
         const zuo = listenBindung.eintragsZuordnung
 
@@ -262,8 +270,28 @@ export function useFeldBindung({
         }
         return (
           <FieldPicker
-            spotLabel={titelJetzt}
+            spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
             gruppen={listenGruppen}
+            titel={{
+              wert: titelJetzt,
+              standard: standardTitel,
+              onAendern: (neu) => {
+                tippSitzung.beginnen()
+                schreibeInEintrag(listenPicker, { [listenBindung.titelKey]: neu })
+              },
+              sitzung: tippSitzung,
+            }}
+            weitereFelder={feldWahlenLesen(listenBindung, eintrag).map(({ wahl: fw, wert }) => ({
+              key: fw.key,
+              label: fw.label,
+              hinweis: fw.hinweis,
+              aktuell: wert,
+              nurFremdeQuellen: fw.nurFremdeQuellen,
+              onWaehle: (neu) => schreibeInEintrag(
+                listenPicker,
+                { [fw.key]: neu === '' ? undefined : neu },
+              ),
+            }))}
             wahl={wahl && {
               label: wahl.label,
               optionen: wahl.optionen,
@@ -314,7 +342,6 @@ export function useFeldBindung({
                 // mit dem Feldnamen — wer seine Spalte "Artikel-Nr" genannt
                 // hatte, verlor den Namen beim Binden, und beim Umbinden auf
                 // eine andere Quelle gleich noch einmal (Nutzer 2026-08-27).
-                const standardTitel = listenStandardTitel(listenBindung, listenPicker.index)
                 const bisher = String(ziel[listenBindung.titelKey] ?? '').trim()
                 if (bisher === '' || bisher === standardTitel) {
                   ziel[listenBindung.titelKey] = wert === ''

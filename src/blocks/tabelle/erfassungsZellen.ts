@@ -17,6 +17,12 @@ import type { Spalte } from './spalten'
 // Dass die Ableitung reicht, zeigt die DATENzeile: sie liest ein verknüpftes
 // Feld längst von allein (seRuntime → macheFeldLeser in shared/fremdeQuellen).
 // Nur die Erfassungszeile wusste davon nichts.
+//
+// Seit dem Füllfeld gibt es ZWEI Felder je Spalte, und hier führt das zweite:
+// `feld` ist, was die gebuchte Zeile zeigt und wohin die Kette schreibt
+// (Belegposition), `fuellFeld` ist, woher der Wert beim Erfassen kommt
+// (Artikelstamm). Beides aus einem Feldcode abzuleiten ging nicht — die
+// Spalte war entweder richtig gebucht oder richtig gefüllt, nie beides.
 export type Zellenart = 'frei' | 'eigen' | 'verknuepft'
 
 export interface Zellenziel {
@@ -53,7 +59,8 @@ export function zellenzielVon(
   spalte: Spalte | undefined,
   tabellenQuelleId: string,
 ): Zellenziel {
-  const feld = (spalte?.feld ?? '').trim()
+  const fuell = (spalte?.fuellFeld ?? '').trim()
+  const feld = fuell !== '' ? fuell : (spalte?.feld ?? '').trim()
   if (feld === '') return { art: 'frei', quelleId: '', code: '' }
   const { quelleId, code } = zerlegeBindung(feld)
   if (quelleId === '') return { art: 'eigen', quelleId: tabellenQuelleId, code }

@@ -138,6 +138,54 @@ test('schluesselWert kommt ueber die Verknuepfungskette, wenn es die Zeile noch 
   expect(lauf.eintraege(umfeld, 2).map((e) => e.wert)).toEqual(['Halle A', 'Halle B'])
 })
 
+// Der Fall, fuer den das Fuellfeld gebaut ist: die Tabelle zeigt und schreibt
+// die Belegposition, ausgesucht wird im Artikelstamm. OHNE Schluesselpaare —
+// zwischen einer noch nicht existierenden Position und dem Stamm gibt es
+// nichts zu verknuepfen, der Bediener sucht von Hand.
+describe('Belegerfassung ueber Fuellfelder', () => {
+  function belegUmfeld(): ErfassungsUmfeld {
+    const mit = (titel: string, feld: string, fuellFeld: string): Spalte =>
+      ({ titel, feld, art: ART_TEXT, fuellFeld })
+    return umfeldVon(
+      [
+        mit('Artikelnummer', '18_25', 'q-art::artnr'),
+        mit('Bezeichnung', '45_60', 'q-art::45_60'),
+        spalte('Menge', '164_8'),
+      ],
+      {},
+    )
+  }
+
+  test('ein gewaehlter Artikel fuellt alle Zellen seiner Quelle', () => {
+    const umfeld = belegUmfeld()
+    const lauf = new ErfassungsLauf()
+    lauf.uebernimm(umfeld, 0, zeilen['q-art'][1])
+    expect(lauf.wertVon(umfeld, 0)).toBe('ART2')
+    expect(lauf.wertVon(umfeld, 1)).toBe('Stecker')
+
+    // Die Menge haengt an keiner Quelle: sie bleibt dem Bediener.
+    expect(lauf.wertVon(umfeld, 2)).toBe('')
+    lauf.tippe(2, '3')
+    expect(lauf.wertVon(umfeld, 2)).toBe('3')
+  })
+
+  // Ohne Paar darf nichts eingeschraenkt werden — sonst steht der Bediener vor
+  // einer leeren Artikelliste, weil es die Position noch gar nicht gibt.
+  test('ohne Schluesselpaar steht der ganze Stamm zur Wahl', () => {
+    const umfeld = belegUmfeld()
+    expect(new ErfassungsLauf().eintraege(umfeld, 1).map((e) => e.wert))
+      .toEqual(['Kabel', 'Stecker'])
+  })
+
+  // Das Spaltenfeld zeigt auf die Hauptquelle; wuerde es beim Erfassen
+  // fuehren, boete die Zelle die schon gebuchten Positionen an — und eine
+  // davon zu waehlen klonte eine alte Zeile.
+  test('das Spaltenfeld allein boete nichts an', () => {
+    const ohne = umfeldVon([spalte('Bezeichnung', '45_60')], {})
+    expect(new ErfassungsLauf().eintraege(ohne, 0)).toEqual([])
+  })
+})
+
 describe('Tastenentscheid', () => {
   const umfeld = umfeldVon(
     [
