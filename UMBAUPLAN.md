@@ -223,6 +223,22 @@ Je Relation zusätzlich: `zweck` ("Position zu einem Beleg hinzufügen"), `rueck
 
 Spalten-Einstellungen bleiben **am Ding** (Klick auf Kopf = Feld, Doppelklick = Umbenennen, +/− in der Tabelle) — das ist gut und bleibt; der "In der Zeile änderbar"-Schalter erscheint im Spalten-Popover in Werkbank-Optik.
 
+## Zwischenschritt — drei Wächter-Nachträge (klein, ein Nachmittag)
+
+Aus einer Code-Durchsicht 2026-08-28, von zwei Seiten unabhängig am Code nachgeprüft. Verhalten ändert sich nirgends; es geht darum, stille Fehler in Compiler-Fehler zu verwandeln. Der vierte und wichtigste Punkt derselben Durchsicht — der fehlende Export-Test — steht in Etappe 5 Punkt 5.
+
+1. **`assertNever` in die fünf `switch`.** Es gibt sie im ganzen Repo kein einziges Mal. Der teuerste Fall: `editor/inspector/PropControl.tsx:243` endet auf `default: return null` — wer `PropertyKind` erweitert, bekommt keinen Fehler, die **Inspector-Zeile verschwindet einfach**. Die übrigen vier: `PropControl.tsx:92`, `blocks/formfeld/FormFeldBlock.ts:190`, `editor/zentrale/schrittZusammenfassung.ts:77`, `state/useKeyboardShortcuts.ts:32`.
+2. **`leerHinweis` als benanntes Interface + Guard** statt `(el as unknown as { leerHinweis: string })` in `blocks/kanban/seRuntime.ts:59`. Das Muster steht schon in `core/blocks/BlockDefinition.ts` (`ErfassungsTraegerElement`, `LaufBerichtElement`). Betrifft zwei Klassen (`KanbanSpalteBlock`, `KanbanZimmerBlock`). **`src/blocks/` → danach `npm run build:runtime`.**
+3. **`BlockComponentStatic` aus `BlockDefinition` ableiten.** Ein neues Baustein-Merkmal muss heute an DREI Stellen gepflegt werden: `BlockDefinition.ts`, `BlockComponent.ts` und die 36 handabgeschriebenen Zeilen in `blocks/base/BasicBlock.ts:66`. Vergisst man die dritte, ist das Merkmal in der Registry stumm nicht vorhanden.
+
+**Ausdrücklich NICHT gemacht — geprüft und verworfen, nicht wieder vorschlagen:**
+- *`Editor` in drei Klassen aufteilen.* `Historie` und `persistence` sind bereits eigene Module, der Editor IST die Fassade. Der Umbau benennt 19 Aufrufstellen um, ohne ein Verhalten zu ändern.
+- *`nodeToHtml` als Visitor.* Ein Visitor bringt Dispatch nach Bausteintyp zurück — genau das, was Verbot 5 untersagt. Was die Funktion braucht, ist ein Schnitt am Attribut-Block, kein Muster. Und vorher den Test aus Etappe 5.
+- *`BlockNode<P>` generisch / typisierte Props.* Der Store bleibt heterogen, und Canvas/Inspector/Export iterieren generisch — dort hilft es nicht. Die Baustein-Seite HAT bereits typisierte Properties (Lit `@property`). Falls die 41 verstreuten `.props[…]`-Zugriffe je stören: ein zentraler Leser über `PropertyDescription.kind`, das ist schon ein Laufzeit-Schema.
+- *Alles einheitlich benennen (deutsch oder englisch).* 266 Dateien, null Funktionsgewinn, und jede Zusammenführung wird zur Hölle. Verbot 7 bleibt wie es ist.
+
+**Beobachtet, nicht gemessen:** `state/useEditor.ts:12` abonniert EINEN `version`-Zähler für den ganzen Baum — jeder Tastendruck rendert jeden Abonnenten neu. Das ist das echte Problem hinter dem Vorwurf „God Class". Erst anfassen, wenn sich der Editor beim Tippen träge anfühlt; vorher ist es Optimieren ohne Messung.
+
 ## Etappe 5 — Durchstich: eine Position erfassen und schreiben (NEU, 2026-08-28)
 
 Der schmalste Weg durch die ganze Kette, bevor Oberfläche für ihn gezeichnet wird: **eine** Positionstabelle, **eine** erfasste Zeile, **ein** PUT, Echttest beim Nutzer. Nicht die fertige Maske — der Beweis, dass die Mechanik trägt.
