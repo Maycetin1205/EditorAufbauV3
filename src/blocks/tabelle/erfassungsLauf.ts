@@ -61,6 +61,11 @@ export class ErfassungsLauf {
   // kaeme der Bediener nie ohne zu tippen.
   private _listeAuf = -1
 
+  // Der Bediener hat selbst in der Liste ausgesucht (Pfeiltasten oder Liste
+  // aufgemacht). Dann schlaegt seine Wahl die Trefferzahl — sonst risse ihm
+  // Enter die Liste unter der Marke weg und machte das Fenster auf.
+  private _markeVonHand = false
+
   private _vorschlaege: Eintrag[] = []
 
   get tippSpalte(): number {
@@ -90,6 +95,7 @@ export class ErfassungsLauf {
     this.getippt.set(index, text)
     this._tippSpalte = index
     this._marke = 0
+    this._markeVonHand = false
     this._listeZu = false
   }
 
@@ -102,6 +108,7 @@ export class ErfassungsLauf {
     this._listeZu = false
     this._listeAuf = -1
     this._marke = 0
+    this._markeVonHand = false
   }
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
@@ -130,9 +137,17 @@ export class ErfassungsLauf {
     if (taste === 'ArrowDown' && !listeOffen) {
       return zielIn(umfeld, index).art === 'verknuepft' ? 'liste-auf' : 'nichts'
     }
-    const folge = tastenFolge(taste, { listeOffen, feldLeer: wert === '' })
-    if (folge === 'marke-hoch') this._marke = bewegteMarke(this._marke, this._vorschlaege.length, -1)
-    else if (folge === 'marke-runter') this._marke = bewegteMarke(this._marke, this._vorschlaege.length, 1)
+    const folge = tastenFolge(taste, {
+      listeOffen,
+      feldLeer: wert === '',
+      treffer: this._vorschlaege.length,
+      markeVonHand: this._markeVonHand,
+    })
+    if (folge === 'marke-hoch' || folge === 'marke-runter') {
+      const schritt = folge === 'marke-hoch' ? -1 : 1
+      this._marke = bewegteMarke(this._marke, this._vorschlaege.length, schritt)
+      this._markeVonHand = true
+    }
     else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
     // Kein einziger möglicher Satz (kein Partner): Enter bleibt nicht hängen.
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
@@ -157,6 +172,7 @@ export class ErfassungsLauf {
     this._listeZu = false
     this._listeAuf = index
     this._marke = 0
+    this._markeVonHand = true
   }
 
   // Die nächste Zelle, in der noch nichts steht. Selbstgefülltes wird damit
@@ -182,8 +198,11 @@ export class ErfassungsLauf {
     }
     this._listeZu = false
     this._marke = 0
+    this._markeVonHand = false
   }
 
+  // Die Maus faehrt ueber einen Eintrag. Das ist noch keine Wahl — wer nur
+  // hinsieht, soll mit Enter trotzdem das Fenster bekommen.
   setzeMarke(marke: number): void {
     this._marke = marke
   }
@@ -206,6 +225,7 @@ export class ErfassungsLauf {
     this.gleicheAb(umfeld)
     this._tippSpalte = -1
     this._marke = 0
+    this._markeVonHand = false
     this._listeZu = false
   }
 
@@ -339,6 +359,7 @@ export class ErfassungsLauf {
     this.vonHand.clear()
     this._tippSpalte = -1
     this._marke = 0
+    this._markeVonHand = false
     this._listeZu = false
     this._listeAuf = -1
     this._vorschlaege = []

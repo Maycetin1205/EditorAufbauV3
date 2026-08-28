@@ -140,6 +140,10 @@ export class FormFeldBlock extends BasicBlock {
   // auf den ersten Treffer zurueck.
   @state() private marke = 0
 
+  // Wie in der Erfassungszeile: nur eine SELBST getroffene Wahl schlaegt die
+  // Trefferzahl. Blosses Hinueberfahren mit der Maus tut das nicht.
+  private markeVonHand = false
+
   // Escape macht die Liste zu, ohne das Getippte anzuruehren; das naechste
   // Zeichen holt sie zurueck.
   @state() private listeZu = false
@@ -234,7 +238,7 @@ export class FormFeldBlock extends BasicBlock {
     }
   }
 
-  private onLupe(): void {
+  private onLupe(suchtext = ''): void {
     if (this.hasAttribute('data-ff-editor')) {
       // Editor-Weg: dasselbe Fenster, aber zum EINSTELLEN der Spalten.
       this.spaltenDialog = true
@@ -249,6 +253,7 @@ export class FormFeldBlock extends BasicBlock {
       titel: this.placeholder,
       breite: this.fensterBreite,
       hoehe: this.fensterHoehe,
+      suchtext,
 
       onUebernehmen: (anzeige, wert, satz) => this.uebernimmUndMelde(anzeige, wert, satz),
     })
@@ -362,6 +367,8 @@ export class FormFeldBlock extends BasicBlock {
     const folge = tastenFolge(e.key, {
       listeOffen: anzahl > 0,
       feldLeer: (this.getippt ?? this.anzeige) === '',
+      treffer: anzahl,
+      markeVonHand: this.markeVonHand,
     })
     if (folge === 'nichts') {
       // Enter darf trotzdem kein Formular abschicken.
@@ -369,11 +376,12 @@ export class FormFeldBlock extends BasicBlock {
       return
     }
     e.preventDefault()
-    if (folge === 'marke-hoch') this.marke = bewegteMarke(this.marke, anzahl, -1)
-    else if (folge === 'marke-runter') this.marke = bewegteMarke(this.marke, anzahl, 1)
-    else if (folge === 'uebernehmen') this.uebernimmVorschlag(this.marke)
+    if (folge === 'marke-hoch' || folge === 'marke-runter') {
+      this.marke = bewegteMarke(this.marke, anzahl, folge === 'marke-hoch' ? -1 : 1)
+      this.markeVonHand = true
+    } else if (folge === 'uebernehmen') this.uebernimmVorschlag(this.marke)
     else if (folge === 'liste-zu') this.listeZu = true
-    else this.onLupe()
+    else this.onLupe(this.getippt ?? '')
   }
 
   private uebernimmVorschlag(index: number): void {

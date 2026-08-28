@@ -98,6 +98,11 @@ export interface NachschlagenArgs {
   // Wohin der Fokus nach dem Schliessen zurueckgeht. Ohne Angabe die erste
   // Lupe des Bausteins; die Erfassungszeile hat mehrere und nennt ihre.
   rueckFokus?: HTMLElement | null
+
+  // Was der Bediener schon getippt hat. Es steht beim Aufmachen in der Suche
+  // des Fensters — sonst faengt er dort von vorne an, obwohl das Fenster
+  // gerade WEGEN seines Suchworts aufgegangen ist.
+  suchtext?: string
 }
 
 export interface Eintrag {
@@ -362,6 +367,9 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
   document.body.appendChild(halter)
   offen = halter
   offenFuer = args.el
+
+  const mitgebracht = args.suchtext ?? ''
+  if (tabelle && mitgebracht !== '') tabelle.setzeSuchtext(mitgebracht)
 
   if (dialog && tabelle) {
     void Promise.all([dialog.updateComplete, tabelle.updateComplete]).then(() => {

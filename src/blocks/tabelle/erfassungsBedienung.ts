@@ -59,6 +59,7 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
     hoehe: FENSTER_HOEHE,
     eintraege: wirt.lauf.eintraege(umfeld, index),
     rueckFokus: null,
+    suchtext: wirt.lauf.wertVon(umfeld, index),
     onUebernehmen: (_anzeige, _wert, satz) => {
       wirt.lauf.uebernimm(wirt.umfeld(), index, satz)
       wirt.melde()

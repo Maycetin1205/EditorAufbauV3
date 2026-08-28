@@ -67,12 +67,26 @@ export function tastenFolge(taste: string, args: {
   listeOffen: boolean
 
   feldLeer: boolean
+
+  // Wie viele Vorschlaege gerade dastehen. Die Liste zeigt hoechstens acht;
+  // bei Tausenden Saetzen ist der erste davon eine willkuerliche Wahl.
+  treffer: number
+
+  // Hat der Bediener SELBST in der Liste ausgesucht (Pfeiltasten, Liste
+  // aufgemacht)? Dann gilt seine Wahl — sonst entscheidet die Trefferzahl.
+  markeVonHand: boolean
 }): TastenFolge {
   if (taste === 'ArrowDown') return args.listeOffen ? 'marke-runter' : 'nichts'
   if (taste === 'ArrowUp') return args.listeOffen ? 'marke-hoch' : 'nichts'
   if (taste === 'Escape') return args.listeOffen ? 'liste-zu' : 'nichts'
   if (taste !== 'Enter') return 'nichts'
-  if (args.listeOffen) return 'uebernehmen'
+  // Genau ein Treffer ist keine Auswahl, sondern das Ergebnis: Enter nimmt
+  // ihn. Bei mehreren nahm Enter frueher stumm den ersten der acht — bei
+  // tausenden Saetzen war das Raten. Jetzt geht das grosse Fenster auf, das
+  // suchen, sortieren und blaettern kann (Nutzer-Entscheidung 2026-08-28).
+  if (args.listeOffen) {
+    return args.markeVonHand || args.treffer === 1 ? 'uebernehmen' : 'fenster'
+  }
   // Enter im LEEREN Feld oeffnet das grosse Fenster (Wellen-Kopf G).
   // Getippter Text ohne Treffer laesst es ZU: sonst belohnt das Fenster den
   // Tippfehler und der Bediener verliert seinen Text aus den Augen.

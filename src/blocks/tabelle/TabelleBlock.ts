@@ -303,6 +303,13 @@ export class TabelleBlock extends BasicBlock {
     return this._ansicht.fokussiereSuche()
   }
 
+  // Das Nachschlage-Fenster bringt das mit, was der Bediener schon getippt
+  // hat (nachschlagen.ts) — die Tabelle IM Fenster sucht damit sofort.
+  setzeSuchtext(text: string): void {
+    this._ansicht.setzeSuchtext(text)
+    this.requestUpdate()
+  }
+
   private get hatQuelle(): boolean {
     return this._besitz === 'provided'
       ? true

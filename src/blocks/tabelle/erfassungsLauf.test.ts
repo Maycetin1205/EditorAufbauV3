@@ -255,6 +255,56 @@ describe('Tastenentscheid', () => {
     expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('weiter')
   })
 
+  // Genau ein Treffer ist keine Auswahl mehr, sondern das Ergebnis.
+  test('Enter nimmt den einzigen Treffer', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'Kab')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.vorschlaege).toHaveLength(1)
+    expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('uebernehmen')
+  })
+
+  // Vorher nahm Enter hier stumm den ersten der acht — bei tausenden Saetzen
+  // war das Raten.
+  test('Enter macht bei mehreren Treffern das Fenster auf', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'e')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.vorschlaege.length).toBeGreaterThan(1)
+    expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('fenster')
+  })
+
+  // Wer selbst in der Liste ausgesucht hat, bekommt seine Wahl — sonst risse
+  // Enter ihm die Liste unter der Marke weg.
+  test('nach Pfeiltasten gilt die Wahl, auch bei mehreren Treffern', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'e')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.entscheideTaste(umfeld, 2, 'ArrowDown')).toBe('marke-runter')
+    expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('uebernehmen')
+  })
+
+  // Ein neuer Anschlag verwirft die alte Wahl: sonst uebernaehme Enter einen
+  // Eintrag, der zum neuen Suchwort gar nicht mehr gehoert.
+  test('neues Tippen macht die Marken-Wahl wieder ungueltig', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'e')
+    lauf.aktualisiereVorschlaege(umfeld)
+    lauf.entscheideTaste(umfeld, 2, 'ArrowDown')
+    lauf.tippe(2, 'e')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('fenster')
+  })
+
+  // Die Liste per Pfeil-runter aufzumachen IST die Absicht auszusuchen.
+  test('die aufgemachte Liste laesst Enter uebernehmen', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.oeffneListe(2)
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.vorschlaege.length).toBeGreaterThan(1)
+    expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('uebernehmen')
+  })
+
   test('naechsteLeere ueberspringt, was schon steht', () => {
     const lauf = new ErfassungsLauf()
     lauf.tippe(1, 'ART1')
