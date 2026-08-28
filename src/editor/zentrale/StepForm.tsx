@@ -43,6 +43,7 @@ import {
   vorlageVon,
 } from './schrittEntwurf'
 import { ParameterZeile } from './ParameterZeile'
+import type { ParameterWahlen } from './parameter/wahlen'
 import { RelationAuswahl } from './RelationAuswahl'
 import { useRelations } from '../../state/useRelations'
 import { useDataSources } from '../../state/useDataSources'
@@ -109,6 +110,16 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     [kette, step?.id, vorlagen],
   )
   const ergebnisIds = useMemo(() => ergebnisSchritte.map((s) => s.id), [ergebnisSchritte])
+
+  const wahlen: ParameterWahlen = useMemo(() => ({
+    dataSources: quellen,
+    blockValues: auswahlen.blockValues,
+    geber: auswahlen.geber,
+    erfassungen: auswahlen.erfassungen,
+    aenderungen: auswahlen.aenderungen,
+    loeschungen: auswahlen.loeschungen,
+    schritte: ergebnisSchritte,
+  }), [quellen, auswahlen, ergebnisSchritte])
 
   const relation = useMemo(
     () => vorlageVon(vorlagen, entwurf.relationId),
@@ -283,13 +294,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                       key={index}
                       label={`${index + 1}. ${raw === '' ? '(leer)' : raw}`}
                       binding={bindung(index)}
-                      dataSources={quellen}
-                      blockValues={auswahlen.blockValues}
-                      geber={auswahlen.geber}
-                      erfassungen={auswahlen.erfassungen}
-                      aenderungen={auswahlen.aenderungen}
-                      loeschungen={auswahlen.loeschungen}
-                      schritte={ergebnisSchritte}
+                      wahlen={wahlen}
                       platzhalter={raw === '' ? '(leer)' : raw}
                       entfernen={{
                         label: `Parameter ${index + 1} für diese Aktion weglassen`,
@@ -345,13 +350,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   key={index}
                   label={`${index + 1}.`}
                   binding={binding}
-                  dataSources={quellen}
-                  blockValues={auswahlen.blockValues}
-                  geber={auswahlen.geber}
-                  erfassungen={auswahlen.erfassungen}
-                  aenderungen={auswahlen.aenderungen}
-                  loeschungen={auswahlen.loeschungen}
-                  schritte={ergebnisSchritte}
+                  wahlen={wahlen}
                   entfernen={{
                     label: `Zusatzparameter ${index + 1} entfernen`,
                     onClick: () => dispatch({ art: 'extraWeg', index }),
