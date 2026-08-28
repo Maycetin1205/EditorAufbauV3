@@ -62,6 +62,16 @@ export function FeldUebernahmePicker({
     ? gruppen.flatMap((g) => g.eintraege).find((e) => e.kennung === current)?.wert ?? ''
     : ''
 
+  // Zwei verschiedene Gruende fuer eine leere Liste, und der Unterschied
+  // entscheidet, was der Nutzer tun muss: gar keine IDB-Quelle, oder eine
+  // ohne Felder mit Position + Laenge.
+  const leerHinweis = sources.length === 0
+    ? 'Keine Datenquelle der Art „IDB-Tabelle". Andere Arten können hier nicht übernommen werden.'
+    : ziel === 'idb'
+      ? 'Keine IDB-Quellen.'
+      : `Keine Felder mit Position + Länge in ${sources.map((s) => s.sourceName).join(', ')}.`
+      + ' Felder stehen im Datencenter an der Quelle.'
+
   return (
     <Popover
       bezeichnung={ziel === 'feld' ? 'Feld übernehmen' : 'Tabelle übernehmen'}
@@ -73,7 +83,7 @@ export function FeldUebernahmePicker({
         suchbar
         gruppen={gruppen}
         wert={gewaehlt}
-        leerHinweis={ziel === 'feld' ? 'Keine IDB-Felder.' : 'Keine IDB-Quellen.'}
+        leerHinweis={leerHinweis}
         onWaehle={(wert) => {
           const at = wert.indexOf(TRENNER)
           if (at < 0) onPick(wert, '')
