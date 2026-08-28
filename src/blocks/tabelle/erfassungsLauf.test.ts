@@ -231,6 +231,16 @@ describe('Tastenentscheid', () => {
     expect(new ErfassungsLauf().entscheideTaste(umfeld, 3, 'Enter')).toBe('weiter')
   })
 
+  // Der Fall, an dem der Fluss jedes Mal abbrach: eine Spalte auf der EIGENEN
+  // Quelle (in der Belegerfassung die Menge) hat keine Liste und keinen
+  // Treffer — dort IST das Getippte der Wert. Enter tat dort vorher nichts.
+  test('Enter auf Getipptem geht weiter, wo es gar nichts zu treffen gibt', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(1, '3')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.entscheideTaste(umfeld, 1, 'Enter')).toBe('weiter')
+  })
+
   // G1: getippter Text ohne Treffer haelt bewusst an — sonst rauscht der Fluss
   // ueber den Tippfehler hinweg.
   test('Enter auf Getipptem ohne Treffer haelt an, auf Gewaehltem geht es weiter', () => {

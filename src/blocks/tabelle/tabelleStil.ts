@@ -68,13 +68,23 @@ export const tabelleStil = css`
       .koerper {
         flex: 1 1 auto;
         overflow: auto;
+
+        /* Platz fuer die Bildlaufleiste immer freihalten. Sonst schrumpft der
+           Rumpf in dem Moment, in dem sie erscheint, und die Spalten rutschen
+           gegen die Kopfzeile — die rollt nicht mit. */
+        scrollbar-gutter: stable;
         display: flex;
         flex-direction: column;
       }
 
       .koerper > .zeile { flex: none; }
 
-      .tabelle.rollt .koerper > .zeile.erfassung {
+      /* Die Erfassungszeile klebt unten, IMMER. Vorher hing die Regel an einer
+         Klasse, die es nur bei „Blaettern = Nein" gab — bei der Voreinstellung
+         rollte die Zeile also weg, sobald mehr Zeilen da waren als in den
+         Rumpf passen, und der Bediener tippte ins Unsichtbare.
+         Die Kopfzeile klebt ohnehin schon bedingungslos (.kopf). */
+      .koerper > .zeile.erfassung {
         position: sticky;
         bottom: 0;
         z-index: 1;

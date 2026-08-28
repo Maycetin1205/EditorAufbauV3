@@ -136,10 +136,17 @@ export class ErfassungsLauf {
     else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
     // Kein einziger möglicher Satz (kein Partner): Enter bleibt nicht hängen.
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
-    // Auf einem gewählten Wert geht Enter weiter. Getipptes ohne Treffer hält
-    // dagegen bewusst an (G1: sonst rauscht der Fluss über den Tippfehler) —
-    // wer trotzdem weiter will, nimmt Tab.
-    else if (folge === 'nichts' && taste === 'Enter' && wert !== '' && this.getippt.get(index) === undefined) return 'weiter'
+    // Auf einem gewählten Wert geht Enter weiter. Getipptes hält dagegen an
+    // (G1: sonst rauscht der Fluss über den Tippfehler) — aber NUR dort, wo es
+    // überhaupt etwas zu treffen gibt, also in einer verknüpften Zelle. Eine
+    // Zelle der eigenen Quelle hat keine Liste und keinen Treffer: dort IST
+    // das Getippte der Wert. Vorher tat Enter nach dem Tippen genau dort gar
+    // nichts — in einer Belegerfassung ist das die Mengen-Spalte, und der
+    // Fluss brach an ihr jedes Mal ab.
+    else if (folge === 'nichts' && taste === 'Enter' && wert !== '') {
+      const getippt = this.getippt.get(index) !== undefined
+      if (!getippt || zielIn(umfeld, index).art !== 'verknuepft') return 'weiter'
+    }
     return folge
   }
 

@@ -29,8 +29,8 @@ export const TABELLE_EIGENSCHAFTEN: PropertyDescription[] = [
     'blaettern',
     'Blättern',
     'Ja: lange Listen werden in Seiten geschnitten, unten stehen die Blätter-Knöpfe. '
-    + 'Nein: alle Treffer stehen untereinander und der Rumpf rollt — die Titelzeile '
-    + 'bleibt dabei oben stehen, die Erfassungszeile unten.',
+    + 'Nein: alle Treffer stehen untereinander und der Rumpf rollt. '
+    + 'Titelzeile und Erfassungszeile bleiben in beiden Fällen stehen.',
   ),
 
   jaNeinProperty(

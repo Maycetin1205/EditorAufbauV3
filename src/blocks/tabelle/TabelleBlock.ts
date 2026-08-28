@@ -266,10 +266,11 @@ export class TabelleBlock extends BasicBlock {
 
   // Enter am Zeilenende (G4): die Zeile bleibt stehen, die Erfassung rueckt
   // tiefer, der Cursor auf die erste Zelle. Geschrieben wird hier NICHTS.
-  private erfasseZeile(): void {
-    if (!this._erfassung.erfasse(this.erfassungsUmfeld())) return
+  private erfasseZeile(): boolean {
+    if (!this._erfassung.erfasse(this.erfassungsUmfeld())) return false
     this.requestUpdate()
     this.fokussiereErfassungsZelle(0)
+    return true
   }
 
   // Das Nachschlage-Fenster setzt den Fokus in die Suchzeile der Tabelle,
@@ -314,7 +315,12 @@ export class TabelleBlock extends BasicBlock {
   private fokussiereErfassungsZelle(index: number): void {
     void this.updateComplete.then(() => {
       const felder = this.shadowRoot?.querySelectorAll<HTMLInputElement>('.zeile.erfassung .erf-eingabe')
-      felder?.[index]?.focus()
+      const feld = felder?.[index]
+      if (!feld) return
+      feld.focus()
+      // Dasselbe wie in der gebuchten Zeile (zeilenBearbeitung): der Cursor
+      // nuetzt nichts, wenn die Zelle ausserhalb des Blicks steht.
+      feld.scrollIntoView({ block: 'nearest' })
     })
   }
 
@@ -411,7 +417,6 @@ export class TabelleBlock extends BasicBlock {
     })
     const tafelKlassen = ['tabelle']
     if (this.schlank === 'ja') tafelKlassen.push('schlank')
-    if (this.blaettern !== 'ja') tafelKlassen.push('rollt')
     return html`<div class=${tafelKlassen.join(' ')} style=${styleMap({
       '--takt': `${ansicht.takt}px`,
       '--zeilen-hoehe': `${ansicht.zeilenHoehe}px`,

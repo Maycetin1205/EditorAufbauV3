@@ -25,8 +25,10 @@ export interface ErfassungsWirt {
   fokussiere: (index: number) => void
 
   // Enter am Zeilenende: die Zeile bleibt stehen, die Erfassung rückt eine
-  // Zeile tiefer (G4). Der Baustein hält die erfassten Zeilen.
-  erfasseZeile: () => void
+  // Zeile tiefer (G4). Der Baustein hält die erfassten Zeilen. Liefert false,
+  // wenn nichts zu erfassen war (ganz leere Zeile) — dann darf der Aufrufer
+  // die Taste nicht schlucken, sonst säße der Fokus fest.
+  erfasseZeile: () => boolean
 }
 
 function waehle(wirt: ErfassungsWirt, index: number, listenIndex: number): void {
@@ -60,6 +62,11 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
     onUebernehmen: (_anzeige, _wert, satz) => {
       wirt.lauf.uebernimm(wirt.umfeld(), index, satz)
       wirt.melde()
+      // Genau wie nach einer Uebernahme aus der Liste: der Fokus kommt zurueck
+      // in die Zeile und rueckt weiter. Ohne das stand der Bediener nach dem
+      // Fenster ohne Cursor da — `rueckFokus: null` gibt ihn nicht zurueck,
+      // und die Erfassungszeile hat keinen Ersatzweg dafuer.
+      springe(wirt, index, 'Enter')
     },
   })
 }
@@ -74,15 +81,21 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
 // ebenfalls nur auf Leeres; damit war eine einmal gefüllte Zelle vorwärts
 // nie wieder erreichbar, während Shift+Tab rückwärts an jede kam. Zwei
 // Richtungen mit zwei Regeln — genau daran lief der Bediener auf.
-// Hinter der letzten Spalte gibt Tab an den Browser ab (false): der führt
-// aus der Zeile heraus, wie überall sonst.
-function springe(wirt: ErfassungsWirt, index: number, taste: string): boolean {
+//
+// Hinter der letzten Spalte schliesst Tab die Zeile ab, genau wie Enter —
+// der Griff, den jede Tabellenkalkulation hat. Vorher gab Tab dort an den
+// Browser ab: der Fokus verliess die Tabelle, und die getippte Zeile blieb
+// UNERFASST stehen. Nur wenn es nichts zu erfassen gibt (ganz leere Zeile),
+// gehoert die Taste weiter dem Browser — sonst saesse der Fokus fest.
+export function springe(wirt: ErfassungsWirt, index: number, taste: string): boolean {
   const umfeld = wirt.umfeld()
   if (taste === 'Tab') {
     const naechste = index + 1
-    if (naechste >= umfeld.spalten.length) return false
-    wirt.fokussiere(naechste)
-    return true
+    if (naechste < umfeld.spalten.length) {
+      wirt.fokussiere(naechste)
+      return true
+    }
+    return wirt.erfasseZeile()
   }
   const ziel = wirt.lauf.naechsteLeere(umfeld, index)
   if (ziel !== -1) wirt.fokussiere(ziel)
