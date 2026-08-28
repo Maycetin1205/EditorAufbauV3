@@ -40,32 +40,8 @@ export const erfassungStil = css`
         margin: 0 0 2px;
       }
 
-      /* Eine Eingabe sieht aus wie eine Zelle, nicht wie ein Formularfeld:
-         der Editor zeigt an dieser Stelle einen schlichten Zellinhalt, und
-         was im Editor steht, IST der Export (Regel 1). Rahmen erst, wenn die
-         Zeile darunter liegt oder die Schreibmarke drin steht — dasselbe
-         Muster wie die aenderbare Zelle (tabelleStil .zell-eingabe). */
-      .erf-eingabe {
-        box-sizing: border-box;
-        width: 100%;
-        min-width: 0;
-        height: calc(var(--zeilen-hoehe) - 8px);
-        padding: 0 4px;
-        font-family: var(--se-font);
-        font-size: var(--se-fs);
-        color: var(--se-ink);
-        background: transparent;
-        border: var(--se-border) solid transparent;
-        border-radius: var(--se-r-sm);
-      }
-      .zeile:hover .erf-eingabe { border-color: var(--se-line); background: var(--se-panel); }
-      .erf-eingabe:focus {
-        outline: none;
-        border-color: var(--se-accent);
-        background: var(--se-panel);
-      }
-      .zeile > div.zahl .erf-eingabe { text-align: right; }
-      .erf-eingabe::placeholder { color: var(--se-faint); }
+      /* .erf-eingabe wird zusammen mit .zell-eingabe in tabelleStil gesetzt:
+         es ist dieselbe Sache — eine Zelle, in die getippt wird. */
 
       /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }

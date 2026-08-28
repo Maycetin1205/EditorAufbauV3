@@ -303,7 +303,22 @@ export const tabelleStil = css`
         border-radius: 2px;
       }
 
-      .zell-eingabe {
+      /* Eine tippbare Zelle ist eine ZELLE, kein Formularfeld — weder im
+         Ruhezustand noch unter der Maus noch mit der Schreibmarke darin.
+         Dass man "drin" ist, sagt allein die blinkende Marke, wie in einer
+         Tabellenkalkulation (Nutzer-Ansage 2026-08-28: "weg damit"). Vorher
+         zog Hover einen Rahmen und Fokus einen zweiten in Akzentfarbe; in
+         einer Zeile mit sechs tippbaren Spalten flackerte beim Ueberfahren
+         die halbe Zeile.
+
+         Der transparente Rahmen BLEIBT: er haelt die Hoehe. Ohne ihn springt
+         der Text um einen Pixel, sobald die Zelle den Zustand wechselt.
+
+         Gilt fuer die gebuchte Zeile (.zell-eingabe) und die Erfassungszeile
+         (.erf-eingabe) gemeinsam — es ist dieselbe Sache, und zwei Kopien
+         liefen beim ersten Aendern auseinander. */
+      .zell-eingabe,
+      .erf-eingabe {
         box-sizing: border-box;
         width: 100%;
         height: calc(var(--zeilen-hoehe) - 8px);
@@ -316,13 +331,14 @@ export const tabelleStil = css`
         border: var(--se-border) solid transparent;
         border-radius: var(--se-r-sm);
       }
-      .zeile:hover .zell-eingabe { border-color: var(--se-line); background: var(--se-panel); }
-      .zell-eingabe:focus {
-        outline: none;
-        border-color: var(--se-accent);
-        background: var(--se-panel);
-      }
-      .zeile > div.zahl .zell-eingabe { text-align: right; }
+      .zell-eingabe:focus,
+      .erf-eingabe:focus { outline: none; }
+      .zeile > div.zahl .zell-eingabe,
+      .zeile > div.zahl .erf-eingabe { text-align: right; }
+      .erf-eingabe::placeholder { color: var(--se-faint); }
+
+      /* Die Vormerkung ist etwas anderes als ein Eingabefeld: sie sagt, dass
+         hier etwas UNGESCHRIEBENES steht, und muss sichtbar bleiben. */
       .zell-eingabe.geaendert {
         background: var(--se-amber-shell);
         border-color: var(--se-amber-line);

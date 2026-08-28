@@ -42,6 +42,11 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       // vom ERP gerechnete Spalte zeigt — Gesamt, Rohertrag: dort schreibt
       // ohnehin keine Kette, und der naechste Datenschub raeumt das Getippte weg.
       standard: true,
+
+      // Das SPALTENFELD entscheidet, nicht das Fuellfeld: geschrieben wird die
+      // Hauptquelle. Eine Spalte, deren Feld selbst aus einer Hilfsquelle
+      // kommt, hat kein Schreibziel und ist darum nie aenderbar.
+      nurEigeneQuelle: true,
     },
   ],
 

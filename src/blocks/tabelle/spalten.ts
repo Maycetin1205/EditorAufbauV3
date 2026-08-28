@@ -80,9 +80,15 @@ function alsSpalte(x: unknown, index: number): Spalte {
 
       ...(Object.keys(felder).length > 0 ? { felder } : {}),
 
-      ...(o.summe === true ? { summe: true } : {}),
+      // Beide Schalter als BOOLEAN uebernehmen, nicht nur ein `true`.
+      // Gespeichert wird nur die Abweichung vom Standard (listeFuerExport) —
+      // bei „In der Zeile aenderbar" ist der Standard JA, die Abweichung also
+      // ein `false`. Wer das hier wegwirft, laesst eine gerechnete Spalte
+      // (Gesamt, Rohertrag) in der exportierten Maske tippbar: der Bediener
+      // merkt eine Aenderung vor, die keine Kette je schreibt.
+      ...(typeof o.summe === 'boolean' ? { summe: o.summe } : {}),
 
-      ...(o.aenderbar === true ? { aenderbar: true } : {}),
+      ...(typeof o.aenderbar === 'boolean' ? { aenderbar: o.aenderbar } : {}),
 
       ...(typeof o.fuellFeld === 'string' && o.fuellFeld.trim() !== ''
         ? { fuellFeld: o.fuellFeld.trim() }

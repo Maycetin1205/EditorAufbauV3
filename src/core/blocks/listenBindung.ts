@@ -1,3 +1,5 @@
+import { zerlegeBindung } from './bindung'
+
 export interface ListenBindung {
   prop: string
 
@@ -52,6 +54,12 @@ export interface EintragsSchalter {
   // aus. Gespeichert wird nur die ABWEICHUNG davon (listeFuerExport) — sonst
   // stuende in jedem Eintrag derselbe Wert.
   standard?: boolean
+
+  // Gilt nur, solange das Feld des Eintrags zur EIGENEN Quelle gehoert. Fuer
+  // „In der Zeile aenderbar" ist das Pflicht: eine Vormerkung wird ueber die
+  // Satznummer der Hauptquellen-Zeile gefuehrt (blocks/tabelle/aenderungen.ts),
+  // ein Feld einer Hilfsquelle waere also ein falsches Schreibziel.
+  nurEigeneQuelle?: boolean
 }
 
 export interface EintragsZuordnung {
@@ -122,15 +130,26 @@ export function schalterAn(
 // Welche Schalter dieser Eintrag ueberhaupt zeigt. Ohne Wahl am Bindungs-
 // Modell gibt es keine Darstellung, an der sich etwas festmachen liesse —
 // dann gelten alle.
+//
+// Die EINE Stelle dafuer: das Kopf-Fenster zeichnet danach, die Tabelle
+// entscheidet danach ueber das Tippen (spalteAenderbar), der Export danach
+// ueber die Adressierbarkeit (treeQuery/traegtAenderungen) und darueber, was
+// vom Schalterwert erhalten bleibt (listeFuerExport). Vier Leser, eine Regel.
 export function schalterFuer(
   b: ListenBindung,
   eintrag: Record<string, unknown>,
 ): readonly EintragsSchalter[] {
   const alle = b.eintragsSchalter ?? []
   const wahl = b.eintragsWahl
-  if (!wahl) return alle
-  const gewaehlt = eintragsWahlWert(wahl, eintrag)
-  return alle.filter((s) => s.nurBeiWahl === undefined || s.nurBeiWahl.includes(gewaehlt))
+  const gewaehlt = wahl ? eintragsWahlWert(wahl, eintrag) : undefined
+  const feld = eintrag[b.feldKey]
+  const ausFremderQuelle = typeof feld === 'string'
+    && zerlegeBindung(feld).quelleId !== ''
+  return alle.filter((s) => {
+    if (s.nurEigeneQuelle === true && ausFremderQuelle) return false
+    return s.nurBeiWahl === undefined || gewaehlt === undefined
+      || s.nurBeiWahl.includes(gewaehlt)
+  })
 }
 
 // Die zusaetzlichen Feldwahlen eines Eintrags mit ihrem aktuellen Wert. EINE

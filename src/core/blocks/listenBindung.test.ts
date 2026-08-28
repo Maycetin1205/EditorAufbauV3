@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
 import { ROOT_ID, type BlockNode } from './BlockData'
 import type { BlockDefinition, ListenBindung } from './BlockDefinition'
-import { feldWahlenLesen, listeFuerExport, schalterAn } from './listenBindung'
-import { registerBlockType } from './blockRegistry'
+import { feldWahlenLesen, listeFuerExport, schalterAn, schalterFuer } from './listenBindung'
+import { getBlockDefinition, registerBlockType } from './blockRegistry'
 import { traegtAenderungen } from './treeQuery'
 
 // Eine Liste mit zwei Schaltern: einer aus (Summe), einer an (aenderbar) —
@@ -100,6 +100,35 @@ function knoten(spalten: unknown[]): BlockNode {
   return { id: ROOT_ID, type: TYP, props: { spalten }, parentId: null, childIds: [] }
 }
 
+// Ein Feld aus einer HILFSQUELLE ist kein Schreibziel: die Vormerkung liefe
+// ueber die Satznummer der Hauptquellen-Zeile, die Kette schriebe also den
+// Stammtext in die Belegposition. Die Regel haengt am Spaltenfeld — dieselbe
+// Spalte mit einem Fuellfeld bleibt aenderbar, s. blocks/tabelle/spalten.test.
+const NUR_EIGEN: ListenBindung = {
+  ...BINDUNG,
+  eintragsSchalter: [BINDUNG.eintragsSchalter![0], { ...AN, nurEigeneQuelle: true }],
+}
+
+test('ein Feld aus fremder Quelle nimmt den Schalter aus der Auswahl', () => {
+  const eigen = { titel: 'A', feld: '45_60', art: 'text' }
+  const fremd = { titel: 'A', feld: 'q-art::bez', art: 'text' }
+  expect(schalterFuer(NUR_EIGEN, eigen).map((s) => s.key)).toEqual(['summe', 'aenderbar'])
+  expect(schalterFuer(NUR_EIGEN, fremd).map((s) => s.key)).toEqual(['summe'])
+})
+
+// Verborgen heisst auch: nicht im Export. Sonst stuende in der Maskendatei ein
+// Schalterwert, den niemand mehr einstellen kann.
+// Geprueft wird mit `false`: ein `true` faellt ohnehin weg, weil es dem
+// Standard entspricht — der Fall bewiese die Regel also nicht.
+test('der verborgene Schalter faellt aus dem Export', () => {
+  const roh = [{ titel: 'A', feld: 'q-art::bez', art: 'text', aenderbar: false }]
+  expect(listeFuerExport(roh, NUR_EIGEN)).toEqual([{ titel: 'A', feld: 'q-art::bez', art: 'text' }])
+
+  // Dieselbe Spalte auf der eigenen Quelle behaelt ihn.
+  const eigen = [{ titel: 'A', feld: '45_60', art: 'text', aenderbar: false }]
+  expect(listeFuerExport(eigen, NUR_EIGEN)).toEqual(eigen)
+})
+
 test('eine gebundene Spalte traegt Aenderungen, auch ohne gesetzten Schalter', () => {
   expect(traegtAenderungen(knoten([{ titel: 'A', feld: '1_1', art: 'text' }]))).toBe(true)
 })
@@ -111,4 +140,22 @@ test('ohne Feld gibt es nichts zu schreiben', () => {
 test('ausgeschaltet oder verborgen traegt die Spalte nichts', () => {
   expect(traegtAenderungen(knoten([{ feld: '1_1', art: 'text', aenderbar: false }]))).toBe(false)
   expect(traegtAenderungen(knoten([{ feld: '1_1', art: 'bild' }]))).toBe(false)
+})
+
+// Der Export darf den Baustein wegen einer Hilfsquellen-Spalte nicht
+// adressierbar machen: es gaebe nichts zu schreiben.
+const TYP_EIGEN = 'test-liste-eigen'
+registerBlockType({
+  ...(getBlockDefinition(TYP) as BlockDefinition),
+  type: TYP_EIGEN,
+  listenBindung: NUR_EIGEN,
+} as BlockDefinition)
+
+test('eine Spalte auf fremder Quelle traegt keine Aenderungen', () => {
+  const node = (feld: string): BlockNode => ({
+    id: ROOT_ID, type: TYP_EIGEN, props: { spalten: [{ feld, art: 'text' }] },
+    parentId: null, childIds: [],
+  })
+  expect(traegtAenderungen(node('45_60'))).toBe(true)
+  expect(traegtAenderungen(node('q-art::bez'))).toBe(false)
 })
