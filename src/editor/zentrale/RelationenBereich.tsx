@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Plus, Search, Share2 } from '@/ui/zeichen'
-import { Button } from '@/ui/atoms/button'
-import { TextInput } from '@/ui/atoms/text-input'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { relationIdsVon } from '../../core/blocks/treeQuery'
 import {
   formatRelationSyntax,
@@ -13,16 +14,17 @@ import {
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { useRelations } from '../../state/useRelations'
+import { useFrage } from '../shell/Frage'
 import { SegmentControl } from '../inspector/controls/SegmentControl'
-import { Gruppe } from './Gruppe'
 import { RelationForm } from './RelationForm'
 import { bausteinName } from '../../core/blocks/bausteinName'
-import { bestaetigeLoeschen, parameterBedeutung, RELATION_GRUPPEN, VERB_KURZ } from './helfer'
+import { loeschFrage, parameterBedeutung, RELATION_GRUPPEN, VERB_KURZ } from './helfer'
 
 export function RelationenBereich() {
   const store = useRelations()
   const ed = useEditor()
   const quellen = useDataSources().list
+  const [frageKnoten, frage] = useFrage()
   const [suche, setSuche] = useState('')
 
   // Start auf dem Reiter, der etwas zu zeigen hat; danach gewinnt der Klick.
@@ -55,13 +57,13 @@ export function RelationenBereich() {
       .filter((n) => relationIdsVon(n).includes(id))
       .map((n) => bausteinName(n, quellen))
 
-  function loeschen(r: RelationTemplate) {
-    const ja = bestaetigeLoeschen(
+  async function loeschen(r: RelationTemplate) {
+    const ja = await frage(loeschFrage(
       'Relation',
       r.name,
       verwendungFor(r.id).length > 0,
       'Die Bausteine bleiben stehen, ihr Schreibweg ruht.',
-    )
+    ))
     if (!ja) return
     store.remove(r.id)
     setModus('lesen')
@@ -69,18 +71,19 @@ export function RelationenBereich() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
+      {frageKnoten}
 
-      <div className="flex w-64 shrink-0 flex-col border-r border-border">
-        <div className="flex flex-col gap-2 border-b border-border p-2">
-          <Button variant="outline" size="sm" className="w-full" onClick={() => setModus('neu')}>
+      <div className="flex w-64 shrink-0 flex-col border-r border-linie">
+        <div className="flex flex-col gap-2 border-b border-linie p-2">
+          <Knopf className="w-full" onClick={() => setModus('neu')}>
             <Plus size={14} /> Neue Relation
-          </Button>
+          </Knopf>
           <div className="relative">
             <Search
               size={13}
-              className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+              className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-matt"
             />
-            <TextInput
+            <Feld
               aria-label="Relationen durchsuchen"
               value={suche}
               placeholder="Suchen"
@@ -103,14 +106,14 @@ export function RelationenBereich() {
                 key={r.id}
                 type="button"
                 onClick={() => { setAuswahlId(r.id); setModus('lesen') }}
-                className={`mb-1 w-full rounded-md border px-2.5 py-1 text-left text-xs transition-colors ${
-                  aktiv ? 'border-ring bg-secondary' : 'border-transparent hover:bg-secondary/60'
+                className={`mb-1 w-full rounded border px-2.5 py-1 text-left text-dicht transition-colors ${
+                  aktiv ? 'border-akzent/60 bg-akzent/15' : 'border-transparent hover:bg-control'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
-                  <Share2 size={12} className="shrink-0 text-muted-foreground" />
+                  <Share2 size={12} className="shrink-0 text-matt" />
                   <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
-                  <span className="shrink-0 rounded-full bg-secondary px-1.5 font-mono text-[0.625rem] text-muted-foreground">
+                  <span className="shrink-0 rounded-full bg-control px-1.5 font-mono text-dicht text-matt">
                     {VERB_KURZ[r.verb]} {r.nr}
                   </span>
                 </div>
@@ -118,12 +121,12 @@ export function RelationenBereich() {
             )
           })}
           {store.list.length === 0 && (
-            <p className="px-1 py-2 text-xs text-muted-foreground">
+            <p className="px-1 py-2 text-dicht text-matt">
               Noch keine Relationen.
             </p>
           )}
           {store.list.length > 0 && sichtbareRelationen.length === 0 && (
-            <p className="px-1 py-2 text-xs text-muted-foreground">Keine Treffer.</p>
+            <p className="px-1 py-2 text-dicht text-matt">Keine Treffer.</p>
           )}
         </div>
       </div>
@@ -134,33 +137,33 @@ export function RelationenBereich() {
           <RelationForm relation={auswahl} onClose={() => setModus('lesen')} />
         )}
         {modus === 'lesen' && !auswahl && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-dicht text-matt">
             Keine Relation gewählt.
           </p>
         )}
         {modus === 'lesen' && auswahl && (
-          <div className="flex flex-col gap-4 text-xs">
+          <div className="flex flex-col gap-4 text-ui">
             <div>
-              <h3 className="text-sm font-semibold">{auswahl.name}</h3>
+              <h3 className="text-ui font-semibold text-tinte">{auswahl.name}</h3>
             </div>
 
             <Gruppe titel="Parameter — in genau dieser Reihenfolge">
-              <div className="overflow-hidden rounded-md border border-border">
+              <div className="overflow-hidden rounded border border-linie">
                 <table className="w-full">
                   <tbody>
                     {auswahl.params.map((p, i) => (
-                      <tr key={i} className="border-b border-border last:border-b-0">
-                        <td className="w-6 px-2 py-1 text-right font-mono text-[0.6875rem] text-muted-foreground">
+                      <tr key={i} className="border-b border-linie last:border-b-0">
+                        <td className="w-6 px-2 py-1 text-right font-mono text-dicht text-matt">
                           {i + 1}
                         </td>
-                        <td className="px-2 py-1 font-mono text-[0.6875rem]">
-                          {p === '' ? <span className="text-muted-foreground">(leer)</span> : p}
+                        <td className="px-2 py-1 font-mono text-dicht">
+                          {p === '' ? <span className="text-matt">(leer)</span> : p}
                         </td>
-                        <td className="px-2 py-1 text-muted-foreground">{parameterBedeutung(p)}</td>
+                        <td className="px-2 py-1 text-matt">{parameterBedeutung(p)}</td>
                       </tr>
                     ))}
                     {auswahl.params.length === 0 && (
-                      <tr><td className="px-2.5 py-1 text-muted-foreground">Keine Parameter.</td></tr>
+                      <tr><td className="px-2.5 py-1 text-matt">Keine Parameter.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -168,18 +171,18 @@ export function RelationenBereich() {
             </Gruppe>
 
             <Gruppe titel="Gespeicherte SoftEngine-Syntax">
-              <code className="block overflow-x-auto rounded-md bg-secondary px-2.5 py-1.5 font-mono text-[0.6875rem]">
+              <code className="block overflow-x-auto rounded bg-control px-2.5 py-1.5 font-mono text-dicht">
                 {formatRelationSyntax(auswahl)}
               </code>
             </Gruppe>
 
             <Gruppe titel="Verwendung in dieser Maske">
               {verwendungFor(auswahl.id).length === 0 ? (
-                <p className="text-muted-foreground">Von keinem Baustein verwendet.</p>
+                <p className="text-matt">Von keinem Baustein verwendet.</p>
               ) : (
                 <ul className="flex flex-col gap-1">
                   {verwendungFor(auswahl.id).map((name, i) => (
-                    <li key={i} className="rounded-md border border-border bg-card px-2.5 py-1">
+                    <li key={i} className="rounded border border-linie bg-control px-2.5 py-1">
                       {name}
                     </li>
                   ))}
@@ -187,11 +190,11 @@ export function RelationenBereich() {
               )}
             </Gruppe>
 
-            <div className="flex gap-2 border-t border-border pt-3">
-              <Button size="sm" onClick={() => setModus('bearbeiten')}>Bearbeiten</Button>
-              <Button variant="outline" size="sm" onClick={() => loeschen(auswahl)}>
+            <div className="flex gap-2 border-t border-linie pt-3">
+              <Knopf art="primaer" onClick={() => setModus('bearbeiten')}>Bearbeiten</Knopf>
+              <Knopf art="gefahr" onClick={() => void loeschen(auswahl)}>
                 Löschen…
-              </Button>
+              </Knopf>
             </div>
           </div>
         )}

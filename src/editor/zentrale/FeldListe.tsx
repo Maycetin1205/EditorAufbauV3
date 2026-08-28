@@ -1,7 +1,6 @@
 import { Plus, X } from '@/ui/zeichen'
-import { Button } from '@/ui/atoms/button'
-import { IconButton } from '@/ui/atoms/icon-button'
-import { TextInput } from '@/ui/atoms/text-input'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { LEERE_ZEILE, type FeldZeile } from './feldZeile'
 
 const SPALTEN = 'grid grid-cols-[minmax(0,1fr)_72px_72px_auto] items-center gap-x-2'
@@ -29,13 +28,13 @@ export function FeldListe({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-[0.6875rem] font-medium">Felder</span>
-        <Button variant="outline" size="sm" onClick={() => setZeilen([...zeilen, { ...LEERE_ZEILE }])}>
+        <span className="text-dicht font-semibold uppercase tracking-wide text-matt">Felder</span>
+        <Knopf onClick={() => setZeilen([...zeilen, { ...LEERE_ZEILE }])}>
           <Plus size={13} /> Feld
-        </Button>
+        </Knopf>
       </div>
 
-      <div className={`${raster} text-[0.6875rem] text-muted-foreground`}>
+      <div className={`${raster} text-dicht text-matt`}>
         <span>Klarname</span>
         {spaltenNamen
           ? <span>Spalte im DataSet</span>
@@ -45,14 +44,14 @@ export function FeldListe({
       {zeilen.map((z, i) => (
         <div key={i} className="flex flex-col gap-1">
           <div className={raster}>
-            <TextInput
+            <Feld
               aria-label={`Feld ${i + 1}: Klarname`}
               value={z.label}
               placeholder="z. B. Vorname"
               onChange={(e) => setZeile(i, { label: e.target.value })}
             />
             {spaltenNamen ? (
-              <TextInput
+              <Feld
                 aria-label={`Feld ${i + 1}: Spalte im DataSet`}
                 value={z.rawCode}
                 placeholder="z. B. Chargennummer"
@@ -60,13 +59,13 @@ export function FeldListe({
               />
             ) : (
               <>
-                <TextInput
+                <Feld
                   aria-label={`Feld ${i + 1}: Position`}
                   value={z.pos}
                   placeholder={z.rawCode !== '' ? '—' : '193'}
                   onChange={(e) => setZeile(i, { pos: e.target.value })}
                 />
-                <TextInput
+                <Feld
                   aria-label={`Feld ${i + 1}: Länge`}
                   value={z.len}
                   placeholder={z.rawCode !== '' ? '—' : '30'}
@@ -74,20 +73,21 @@ export function FeldListe({
                 />
               </>
             )}
-            <IconButton
+            <Knopf
+              nurZeichen
               aria-label={`Feld ${i + 1} entfernen`}
               onClick={() => setZeilen(zeilen.filter((_, at) => at !== i))}
             >
               <X size={14} />
-            </IconButton>
+            </Knopf>
           </div>
           {zeigeFehler && zeilenFehler[i] !== '' && (
-            <p className="text-xs text-destructive">{zeilenFehler[i]}</p>
+            <p className="text-dicht text-fehler">{zeilenFehler[i]}</p>
           )}
         </div>
       ))}
       {zeigeFehler && doppeltFehler !== '' && (
-        <p className="text-xs text-destructive">{doppeltFehler}</p>
+        <p className="text-dicht text-fehler">{doppeltFehler}</p>
       )}
     </div>
   )

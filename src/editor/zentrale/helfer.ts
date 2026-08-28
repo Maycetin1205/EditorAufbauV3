@@ -6,6 +6,7 @@ import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import { auswahlQuelleIdVon } from '../../core/blocks/treeQuery'
 import type { DataSource, DataSourceField, DataSourceKind } from '../../core/data/dataSources'
 import type { RelationTemplate } from '../../core/data/relations'
+import type { Frage } from '../shell/Frage'
 
 const KIND_ICONS: Partial<Record<DataSourceKind, typeof Database>> = {
   idb: Database,
@@ -24,17 +25,20 @@ export const VERB_KURZ: Record<RelationTemplate['verb'], string> = {
   PUTADD_RELATION: 'PUTADD',
 }
 
-export function bestaetigeLoeschen(
+export function loeschFrage(
   art: string,
   name: string,
   benutzt: boolean,
   folge: string,
-): boolean {
-  return window.confirm(
-    benutzt
-      ? `„${name}“ wird in der Maske BENUTZT. Trotzdem löschen? ${folge}`
-      : `${art} „${name}“ löschen?`,
-  )
+): Frage {
+  return {
+    titel: `${art} löschen?`,
+    text: benutzt
+      ? `„${name}“ wird in der Maske BENUTZT.\n\n${folge}`
+      : `„${name}“ wird aus der Bibliothek entfernt.`,
+    jaText: 'Löschen',
+    gefahr: true,
+  }
 }
 
 export const RELATION_GRUPPEN: PropertySelectOption[] = [

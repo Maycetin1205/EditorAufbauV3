@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/ui/atoms/button'
-import { TextInput } from '@/ui/atoms/text-input'
-import { Field } from '@/ui/molecules/field'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Zeile } from '@/ui/werkbank/Zeile'
 import {
   artFuer,
   feldVorsatzFromInput,
@@ -15,8 +15,8 @@ import {
   type DataSource,
   type DataSourceKind,
 } from '../../core/data/dataSources'
-import { WaehlerKnopf } from '@/ui/molecules/waehler'
 import { useDataSources } from '../../state/useDataSources'
+import { PickerControl } from '../inspector/controls/PickerControl'
 import { SelectControl } from '../inspector/controls/SelectControl'
 import { FeldListe } from './FeldListe'
 import {
@@ -189,17 +189,17 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
 
   return (
     <FormularKarte title={source ? 'Datenquelle bearbeiten' : 'Neue Datenquelle'} onClose={onClose}>
-      <div className="flex flex-col gap-3">
-        <Field label="Anzeigename" error={zeigeFehler ? nameFehler : ''}>
+      <div className="flex flex-col gap-2">
+        <Zeile label="Anzeigename" fehler={zeigeFehler ? nameFehler : undefined}>
           {(f) => (
-            <TextInput
+            <Feld
               {...f}
               value={name}
               placeholder="z. B. Terminplaner"
               onChange={(e) => setName(e.target.value)}
             />
           )}
-        </Field>
+        </Zeile>
 
         <SelectControl
           label="Art"
@@ -209,9 +209,9 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         />
 
         {kennungEingeben && (
-          <Field label={art.kennungLabel} error={zeigeFehler ? kennungFehler : ''}>
+          <Zeile label={art.kennungLabel} fehler={zeigeFehler ? kennungFehler : undefined}>
             {(f) => (
-              <TextInput
+              <Feld
                 {...f}
                 value={kennungEingabe}
                 placeholder={`z. B. ${art.kennungBeispiel}`}
@@ -219,13 +219,13 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
                 onChange={(e) => setKennungEingabe(e.target.value)}
               />
             )}
-          </Field>
+          </Zeile>
         )}
 
         {vorsatzEingeben && (
-          <Field label="Feld-Vorsatz">
+          <Zeile label="Feld-Vorsatz">
             {(f) => (
-              <TextInput
+              <Feld
                 {...f}
                 value={vorsatzEingabe}
                 placeholder="z. B. LFA_"
@@ -233,7 +233,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
                 onChange={(e) => setVorsatzEingabe(e.target.value)}
               />
             )}
-          </Field>
+          </Zeile>
         )}
 
         {lieferungWaehlbar && (
@@ -261,24 +261,25 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         )}
         {holtZeilen && (
           <>
-            <Field
+            <Zeile
               label="Relationsnummer"
-              error={zeigeFehler ? relationNrFehler : ''}
+              fehler={zeigeFehler ? relationNrFehler : undefined}
             >
               {(f) => (
-                <TextInput
+                <Feld
                   {...f}
                   value={relationNr}
                   className="w-24"
                   onChange={(e) => setRelationNr(e.target.value)}
                 />
               )}
-            </Field>
+            </Zeile>
             {/* Keine Leer-Option: eine leere Quelle ist hier ein Fehler
                 (geberFehler), also darf sie nicht wählbar sein. */}
-            <WaehlerKnopf
+            <PickerControl
               label="Beleg kommt aus"
               bezeichnung="Beleg kommt aus"
+              fehler={zeigeFehler && geberFehler !== '' ? geberFehler : undefined}
               gruppen={[{
                 key: 'quellen',
                 eintraege: geberOptionen.map((s) => ({
@@ -291,19 +292,16 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
               platzhalter="— Quelle wählen —"
               onWaehle={setGeberQuelleId}
             />
-            {zeigeFehler && geberFehler !== '' && (
-              <p className="min-w-0 break-words text-ui text-destructive">{geberFehler}</p>
-            )}
           </>
         )}
 
         {kopfsatzEingeben && !holtZeilen && (
-          <Field
+          <Zeile
             label="Gehört zu"
-            error={zeigeFehler ? kopfsatzFehler : ''}
+            fehler={zeigeFehler ? kopfsatzFehler : undefined}
           >
             {(f) => (
-              <TextInput
+              <Feld
                 {...f}
                 value={kopfsatzEingabe}
                 placeholder="z. B. BEL_0_11"
@@ -311,7 +309,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
                 onChange={(e) => setKopfsatzEingabe(e.target.value)}
               />
             )}
-          </Field>
+          </Zeile>
         )}
 
         <FeldListe
@@ -323,9 +321,9 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
           zeigeFehler={zeigeFehler}
         />
 
-        <div className="flex justify-end gap-2 border-t border-border pt-3">
-          <Button variant="outline" size="sm" onClick={onClose}>Abbrechen</Button>
-          <Button size="sm" onClick={speichern}>Speichern</Button>
+        <div className="flex justify-end gap-2 border-t border-linie pt-3">
+          <Knopf onClick={onClose}>Abbrechen</Knopf>
+          <Knopf art="primaer" onClick={speichern}>Speichern</Knopf>
         </div>
       </div>
     </FormularKarte>

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Copy, X } from '@/ui/zeichen'
-import { IconButton } from '@/ui/atoms/icon-button'
-import { TextInput } from '@/ui/atoms/text-input'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { actionValueTargets, auswahlGeberImBaum } from '../../core/blocks/treeQuery'
 import { ergebnisSchritteVor, stepTypeName, type ActionStep } from '../../core/data/aktionen'
 import { formatRelationSyntax } from '../../core/data/relations'
@@ -79,7 +79,7 @@ export function SchrittListe({
   }
 
   return (
-    <ol className="divide-y divide-border/70">
+    <ol>
       {steps.map((s, i) => {
         const problem = stepProblem(
           s, relations.list, dataSources.list, popupSeiten.map((seite) => seite.id),
@@ -106,20 +106,20 @@ export function SchrittListe({
         const eingerueckt = anker !== '' && steps.some((x) => x.id === anker)
 
         return (
-          <li key={s.id} className="border-b border-border/70 last:border-b-0">
+          <li key={s.id} className="border-b border-linie last:border-b-0">
             <div
               className={`flex items-center gap-2 border-l-2 py-1.5 pr-1 transition-colors ${
                 eingerueckt ? 'pl-5' : 'pl-1'
               } ${
                 problem !== null
-                  ? 'border-amber-500 bg-amber-500/10'
+                  ? 'border-vormerkung bg-vormerkung/15'
                   : s.id === aktivId
-                    ? 'border-primary bg-primary/10'
-                    : 'border-transparent hover:bg-secondary/50'
+                    ? 'border-akzent bg-akzent/15'
+                    : 'border-transparent hover:bg-control'
               }`}
             >
 
-              <span className="w-6 shrink-0 text-right text-[0.6875rem] tabular-nums text-muted-foreground">
+              <span className="w-6 shrink-0 text-right text-dicht tabular-nums text-matt">
                 {i + 1}.
               </span>
               <button
@@ -129,7 +129,7 @@ export function SchrittListe({
                 title={problem ?? (relation ? formatRelationSyntax(relation) : undefined)}
                 className="min-w-0 flex-[3] text-left disabled:cursor-default"
               >
-                <span className="block truncate text-xs">
+                <span className="block truncate text-dicht">
                   {zus.was}
                   {s.type === 'START_TOOL' && s.toolNr.trim() !== '' ? ` — Nr. ${s.toolNr}` : ''}
                   {s.type === 'BW_LINK' && s.befehl.trim() !== '' ? ` — ${s.befehl}` : ''}
@@ -137,61 +137,65 @@ export function SchrittListe({
                   {problem !== null ? ' — unvollständig' : ''}
                 </span>
                 {naeher !== '' && (
-                  <span className="block truncate text-[0.6875rem] text-muted-foreground">
+                  <span className="block truncate text-dicht text-matt">
                     {naeher}
                   </span>
                 )}
               </button>
 
               {onAendern ? (
-                <TextInput
+                <Feld
                   aria-label={`Notiz zu Schritt ${i + 1}`}
                   placeholder="Notiz"
                   value={s.notiz ?? ''}
                   onChange={(e) => setzeNotiz(i, e.target.value)}
-                  className="h-7 min-w-0 flex-[2] border-transparent bg-transparent text-[0.6875rem] hover:border-input focus:border-input"
+                  className="min-w-0 flex-[2] border-transparent bg-transparent text-dicht hover:border-linie"
                 />
               ) : (
                 s.notiz !== undefined && s.notiz !== '' && (
-                  <span className="min-w-0 flex-[2] truncate text-[0.6875rem] text-muted-foreground">
+                  <span className="min-w-0 flex-[2] truncate text-dicht text-matt">
                     {s.notiz}
                   </span>
                 )
               )}
               {onAendern && (
                 <span className="flex shrink-0 items-center">
-                  <IconButton
+                  <Knopf
+                    nurZeichen
                     aria-label={`Schritt ${i + 1} nach oben`}
                     disabled={i === 0}
                     onClick={() => verschiebe(i, i - 1)}
                   >
                     <ArrowUp size={12} />
-                  </IconButton>
-                  <IconButton
+                  </Knopf>
+                  <Knopf
+                    nurZeichen
                     aria-label={`Schritt ${i + 1} nach unten`}
                     disabled={i === steps.length - 1}
                     onClick={() => verschiebe(i, i + 1)}
                   >
                     <ArrowDown size={12} />
-                  </IconButton>
-                  <IconButton
+                  </Knopf>
+                  <Knopf
+                    nurZeichen
                     aria-label={`Schritt ${i + 1} duplizieren`}
                     onClick={() => dupliziere(i)}
                   >
                     <Copy size={12} />
-                  </IconButton>
-                  <IconButton
+                  </Knopf>
+                  <Knopf
+                    nurZeichen
                     aria-label={`Schritt ${i + 1} löschen`}
                     onClick={() => onAendern(steps.filter((x) => x.id !== s.id))}
                   >
                     <X size={12} />
-                  </IconButton>
+                  </Knopf>
                 </span>
               )}
             </div>
 
             {s.id === aktivId && aufgeklappt !== undefined && (
-              <div className="border-t border-border bg-secondary/20 px-3 py-3">
+              <div className="border-t border-linie bg-panel px-3 py-3">
                 {aufgeklappt}
               </div>
             )}

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { FileUp, Plus, TriangleAlert } from '@/ui/zeichen'
-import { Button } from '@/ui/atoms/button'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import {
   artFuer,
   quellenKennung,
@@ -10,15 +11,16 @@ import { parseDtkBytes, type DtkTabelle } from '../../core/data/dtkImport'
 import { bausteineMitQuelle } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
+import { useFrage } from '../shell/Frage'
 import { DataSourceForm } from './DataSourceForm'
 import { DtkImportForm } from './DtkImportForm'
-import { Gruppe } from './Gruppe'
 import { bausteinName } from '../../core/blocks/bausteinName'
-import { bestaetigeLoeschen, ikonFuer } from './helfer'
+import { loeschFrage, ikonFuer } from './helfer'
 
 export function DatenquellenBereich() {
   const store = useDataSources()
   const ed = useEditor()
+  const [frageKnoten, frage] = useFrage()
   const [auswahlId, setAuswahlId] = useState<string | null>(store.list[0]?.id ?? null)
 
   const [modus, setModus] = useState<'lesen' | 'bearbeiten' | 'neu' | 'import'>('lesen')
@@ -53,13 +55,13 @@ export function DatenquellenBereich() {
 
   const kennung = (s: DataSource): string => quellenKennung(s)
 
-  function loeschen(s: DataSource) {
-    const ja = bestaetigeLoeschen(
+  async function loeschen(s: DataSource) {
+    const ja = await frage(loeschFrage(
       'Datenquelle',
       s.name,
       verwendungFor(s.id).length > 0,
       'Die Bausteine bleiben stehen, ihre Daten-Bindungen ruhen.',
-    )
+    ))
     if (!ja) return
     store.remove(s.id)
     setModus('lesen')
@@ -67,25 +69,16 @@ export function DatenquellenBereich() {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
+      {frageKnoten}
 
-      <div className="flex w-64 shrink-0 flex-col border-r border-border">
-        <div className="flex flex-col gap-1 border-b border-border p-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => setModus('neu')}
-          >
+      <div className="flex w-64 shrink-0 flex-col border-r border-linie">
+        <div className="flex flex-col gap-1 border-b border-linie p-2">
+          <Knopf className="w-full" onClick={() => setModus('neu')}>
             <Plus size={14} /> Neue Datenquelle
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => dateiRef.current?.click()}
-          >
+          </Knopf>
+          <Knopf className="w-full" onClick={() => dateiRef.current?.click()}>
             <FileUp size={14} /> Aus SoftEngine-Datei…
-          </Button>
+          </Knopf>
 
           <input
             ref={dateiRef}
@@ -113,21 +106,21 @@ export function DatenquellenBereich() {
                 key={s.id}
                 type="button"
                 onClick={() => { setAuswahlId(s.id); setModus('lesen') }}
-                className={`mb-1 w-full rounded-md border px-2.5 py-1 text-left text-xs transition-colors ${
-                  aktiv ? 'border-ring bg-secondary' : 'border-transparent hover:bg-secondary/60'
+                className={`mb-1 w-full rounded border px-2.5 py-1 text-left text-dicht transition-colors ${
+                  aktiv ? 'border-akzent/60 bg-akzent/15' : 'border-transparent hover:bg-control'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
-                  <Icon size={12} className="shrink-0 text-muted-foreground" />
+                  <Icon size={12} className="shrink-0 text-matt" />
                   <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
                   {unvollstaendig(s) && (
-                    <TriangleAlert size={12} className="shrink-0 text-destructive" />
+                    <TriangleAlert size={12} className="shrink-0 text-fehler" />
                   )}
-                  <span className="shrink-0 rounded-full bg-secondary px-1.5 text-[0.625rem] text-muted-foreground">
+                  <span className="shrink-0 rounded-full bg-control px-1.5 text-dicht text-matt">
                     {artFuer(s.kind).name}
                   </span>
                 </div>
-                <div className="mt-0.5 pl-[1.125rem] text-[0.625rem] text-muted-foreground">
+                <div className="mt-0.5 pl-[1.125rem] text-dicht text-matt">
 
                   {kennung(s) !== '' && (
                     <span className="font-mono">{kennung(s)} · </span>
@@ -138,7 +131,7 @@ export function DatenquellenBereich() {
             )
           })}
           {store.list.length === 0 && (
-            <p className="px-1 py-2 text-xs text-muted-foreground">
+            <p className="px-1 py-2 text-dicht text-matt">
               Noch keine Datenquellen.
             </p>
           )}
@@ -161,32 +154,32 @@ export function DatenquellenBereich() {
           <DataSourceForm source={auswahl} onClose={() => setModus('lesen')} />
         )}
         {modus === 'lesen' && !auswahl && (
-          <p className="text-xs text-muted-foreground">Keine Datenquelle gewählt.</p>
+          <p className="text-dicht text-matt">Keine Datenquelle gewählt.</p>
         )}
         {modus === 'lesen' && auswahl && (
-          <div className="flex flex-col gap-4 text-xs">
+          <div className="flex flex-col gap-4 text-ui">
             <div>
-              <h3 className="text-sm font-semibold">{auswahl.name}</h3>
-              <p className="text-muted-foreground">
+              <h3 className="text-ui font-semibold text-tinte">{auswahl.name}</h3>
+              <p className="text-matt">
                 {artFuer(auswahl.kind).name}
                 {kennung(auswahl) !== '' ? ` · ${kennung(auswahl)}` : ''}
               </p>
             </div>
 
             <Gruppe titel="Felder">
-              <div className="overflow-hidden rounded-md border border-border">
+              <div className="overflow-hidden rounded border border-linie">
                 <table className="w-full">
                   <tbody>
                     {auswahl.fields.map((f) => (
-                      <tr key={f.code} className="border-b border-border last:border-b-0">
+                      <tr key={f.code} className="border-b border-linie last:border-b-0">
                         <td className="px-2.5 py-1">{f.label}</td>
-                        <td className="px-2.5 py-1 text-right font-mono text-[0.6875rem] text-muted-foreground">
+                        <td className="px-2.5 py-1 text-right font-mono text-dicht text-matt">
                           {f.code}
                         </td>
                       </tr>
                     ))}
                     {auswahl.fields.length === 0 && (
-                      <tr><td className="px-2.5 py-1 text-muted-foreground">Keine Felder.</td></tr>
+                      <tr><td className="px-2.5 py-1 text-matt">Keine Felder.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -195,11 +188,11 @@ export function DatenquellenBereich() {
 
             <Gruppe titel="Verwendung in dieser Maske">
               {verwendungFor(auswahl.id).length === 0 ? (
-                <p className="text-muted-foreground">Von keinem Baustein verwendet.</p>
+                <p className="text-matt">Von keinem Baustein verwendet.</p>
               ) : (
                 <ul className="flex flex-col gap-1">
                   {verwendungFor(auswahl.id).map((name, i) => (
-                    <li key={i} className="rounded-md border border-border bg-card px-2.5 py-1">
+                    <li key={i} className="rounded border border-linie bg-control px-2.5 py-1">
                       {name}
                     </li>
                   ))}
@@ -207,11 +200,11 @@ export function DatenquellenBereich() {
               )}
             </Gruppe>
 
-            <div className="flex gap-2 border-t border-border pt-3">
-              <Button size="sm" onClick={() => setModus('bearbeiten')}>Bearbeiten</Button>
-              <Button variant="outline" size="sm" onClick={() => loeschen(auswahl)}>
+            <div className="flex gap-2 border-t border-linie pt-3">
+              <Knopf art="primaer" onClick={() => setModus('bearbeiten')}>Bearbeiten</Knopf>
+              <Knopf art="gefahr" onClick={() => void loeschen(auswahl)}>
                 Löschen…
-              </Button>
+              </Knopf>
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useId, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
@@ -16,6 +16,15 @@ export interface DialogProps {
   // Eine Frage („wirklich loeschen?") nimmt nicht die ganze Flaeche.
   schmal?: boolean
 
+  // Ohne Innenabstand und ohne eigenen Scroller. Fuer Fenster, die ihre
+  // Scroll-Flaechen selbst mitbringen (Liste links, Detail rechts) — zwei
+  // Scroller ineinander rollen sonst gegeneinander.
+  randlos?: boolean
+
+  // Ein Fenster UEBER einem Fenster muss Escape abfangen, sonst raeumt
+  // dieselbe Taste das darunter mit auf (gleiche Mechanik wie Popover).
+  escapeAbfangen?: boolean
+
   // Fuss mit den Antwortknoepfen.
   fuss?: ReactNode
   onClose: () => void
@@ -27,23 +36,42 @@ export function Dialog({
   nebenTitel,
   aktionen,
   schmal = false,
+  randlos = false,
+  escapeAbfangen = false,
   fuss,
   onClose,
   children,
 }: DialogProps) {
+  const titelId = useId()
+
   useEffect(() => {
-    const taste = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+    const taste = (e: Event) => {
+      if (!(e instanceof KeyboardEvent) || e.key !== 'Escape') return
+      if (escapeAbfangen) {
+        e.stopImmediatePropagation()
+        e.stopPropagation()
+      }
+      onClose()
+    }
+    // `window` in der Fangphase liegt VOR jedem Lauscher am `document` —
+    // nur so kommt das obere Fenster zuerst an die Taste.
+    if (escapeAbfangen) {
+      window.addEventListener('keydown', taste, true)
+      return () => window.removeEventListener('keydown', taste, true)
     }
     document.addEventListener('keydown', taste)
     return () => document.removeEventListener('keydown', taste)
-  }, [onClose])
+  }, [onClose, escapeAbfangen])
 
   const rumpf = (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={typeof titel === 'string' ? titel : undefined}
+
+      // Der Vorlesename haengt an der Kopfzeile, nicht an einer Kopie des
+      // Titels: so traegt er auch den Nebentitel („Klick · 3 Schritte") und
+      // funktioniert bei einem Titel, der kein reiner Text ist.
+      aria-labelledby={titelId}
       className={cn(
         'flex min-h-0 flex-col bg-grund',
         schmal
@@ -52,7 +80,7 @@ export function Dialog({
       )}
     >
       <header className="flex h-10 shrink-0 items-center gap-3 border-b border-linie px-3">
-        <h2 className="min-w-0 flex-1 truncate text-ui font-semibold text-tinte">
+        <h2 id={titelId} className="min-w-0 flex-1 truncate text-ui font-semibold text-tinte">
           {titel}
           {nebenTitel !== undefined && (
             <span className="ml-2 font-normal text-matt">{nebenTitel}</span>
@@ -64,7 +92,14 @@ export function Dialog({
         </Knopf>
       </header>
 
-      <div className={cn('min-h-0 flex-1 overflow-auto', schmal ? 'p-3' : 'p-4')}>
+      <div
+        className={cn(
+          'min-h-0 min-w-0 flex-1',
+          randlos
+            ? 'flex overflow-hidden'
+            : cn('overflow-auto', schmal ? 'p-3' : 'p-4'),
+        )}
+      >
         {children}
       </div>
 

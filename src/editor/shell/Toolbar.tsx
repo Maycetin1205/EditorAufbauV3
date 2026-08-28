@@ -22,19 +22,27 @@ import { useEditor } from '../../state/useEditor'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Popover } from '@/ui/werkbank/Popover'
 import { Trenner } from '@/ui/werkbank/Trenner'
+import { useFrage } from './Frage'
 
 export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const ed = useEditor()
+  const [frageKnoten, frage] = useFrage()
 
-  const handleClear = () => {
+  const handleClear = async () => {
     if (ed.blockCount === 0) return
     const popups = ed.pages.filter((p) => !p.istHauptseite).length
     const zusatz = popups === 0
       ? ''
       : popups === 1
-        ? ' Die Popup-Seite fällt mit.'
-        : ` Die ${popups} Popup-Seiten fallen mit.`
-    if (!window.confirm(`Alle ${ed.blockCount} Blöcke aller Seiten löschen?${zusatz}`)) return
+        ? '\n\nDie Popup-Seite fällt mit.'
+        : `\n\nDie ${popups} Popup-Seiten fallen mit.`
+    const ja = await frage({
+      titel: 'Alle Bausteine löschen?',
+      text: `${ed.blockCount} Bausteine aller Seiten werden entfernt.${zusatz}`,
+      jaText: 'Alle löschen',
+      gefahr: true,
+    })
+    if (!ja) return
     ed.clear()
   }
 
@@ -86,11 +94,15 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
       return
     }
 
-    if (!window.confirm(
-      'Haben Sie den bisherigen Stand gespeichert?\n\n'
-      + 'Mit OK wird die offene Maske unwiderruflich ersetzt — das lässt sich '
-      + 'nicht rückgängig machen.',
-    )) return
+    const ja = await frage({
+      titel: 'Offene Maske ersetzen?',
+      text: 'Haben Sie den bisherigen Stand gespeichert?\n\n'
+        + 'Die offene Maske wird unwiderruflich ersetzt — das lässt sich nicht '
+        + 'rückgängig machen.',
+      jaText: 'Ersetzen',
+      gefahr: true,
+    })
+    if (!ja) return
 
     uebernehmeMaske(ed, ergebnis.inhalt)
     meldeVerworfeneTypen(ergebnis.verworfen)
@@ -98,8 +110,9 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
 
   return (
     <div className="flex items-center gap-1.5 justify-self-end">
+      {frageKnoten}
       <WeitereAktionen
-        onClearAll={handleClear}
+        onClearAll={() => void handleClear()}
         clearDisabled={ed.blockCount === 0}
         onSpeichern={handleSpeichern}
         onDatei={handleDateiGewaehlt}

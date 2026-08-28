@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button } from '@/ui/atoms/button'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { kennungAnzeige } from '../../core/data/dataSources'
 import type { DtkTabelle } from '../../core/data/dtkImport'
 import { useDataSources } from '../../state/useDataSources'
@@ -69,47 +69,47 @@ export function DtkImportForm({ dateiName, tabellen, pannenGrund, onClose }: Dtk
 
   return (
     <FormularKarte title={`Import aus ${dateiName}`} onClose={onClose}>
-      <div className="flex flex-col gap-3 text-xs">
+      <div className="flex flex-col gap-3 text-ui">
         {tabellen.length === 0 ? (
-          <p className="rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-2 text-destructive">
+          <p className="rounded border border-fehler/40 bg-fehler/10 px-2.5 py-2 text-fehler">
             Keine IDB-Tabellen gefunden. Ist das ein SoftEngine-IDB-Export
             (in SoftEngine: „IDB exportieren“, Dateiendung .DTK)?
             {pannenGrund && <><br />Die Datei liess sich nicht lesen: {pannenGrund}</>}
           </p>
         ) : (
           <>
-            <p className="text-muted-foreground">
+            <p className="text-matt">
               {tabellen.length} Tabellen gefunden. Angehakte werden als
               IDB-Datenquellen angelegt — Felder samt Klarnamen inklusive.
             </p>
-            <div className="overflow-hidden rounded-md border border-border">
+            <div className="overflow-hidden rounded border border-linie">
               {tabellen.map((t) => {
                 const gesperrt = vorhanden.has(t.kennung)
                 const zeile = hinweis(t)
                 return (
                   <label
                     key={t.kennung}
-                    className={`flex items-start gap-2 border-b border-border px-2.5 py-1.5 last:border-b-0 ${
-                      gesperrt ? 'opacity-50' : 'cursor-pointer hover:bg-secondary/60'
+                    className={`flex items-start gap-2 border-b border-linie px-2.5 py-1.5 last:border-b-0 ${
+                      gesperrt ? 'opacity-50' : 'cursor-pointer hover:bg-control'
                     }`}
                   >
                     <input
                       type="checkbox"
-                      className="mt-0.5 accent-primary"
+                      className="mt-0.5 accent-akzent"
                       checked={!gesperrt && angehakt.has(t.kennung)}
                       disabled={gesperrt}
                       onChange={() => umschalten(t.kennung)}
                     />
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline gap-1.5">
-                        <span className="truncate font-medium">
+                        <span className="truncate font-medium text-tinte">
                           {t.name !== '' ? t.name : kennungAnzeige(t.kennung)}
                         </span>
-                        <span className="shrink-0 font-mono text-[0.625rem] text-muted-foreground">
+                        <span className="shrink-0 font-mono text-dicht text-matt">
                           {kennungAnzeige(t.kennung)}
                         </span>
                       </span>
-                      <span className="block text-[0.625rem] text-muted-foreground">
+                      <span className="block text-dicht text-matt">
                         {t.felder.length} Felder
                         {zeile !== '' ? ` · ${zeile}` : ''}
                       </span>
@@ -120,12 +120,12 @@ export function DtkImportForm({ dateiName, tabellen, pannenGrund, onClose }: Dtk
             </div>
           </>
         )}
-        <div className="flex justify-end gap-2 border-t border-border pt-3">
-          <Button variant="outline" size="sm" onClick={onClose}>Abbrechen</Button>
+        <div className="flex justify-end gap-2 border-t border-linie pt-3">
+          <Knopf onClick={onClose}>Abbrechen</Knopf>
           {tabellen.length > 0 && (
-            <Button size="sm" disabled={anzahl === 0} onClick={uebernehmen}>
+            <Knopf art="primaer" disabled={anzahl === 0} onClick={uebernehmen}>
               {anzahl === 1 ? '1 Tabelle übernehmen' : `${anzahl} Tabellen übernehmen`}
-            </Button>
+            </Knopf>
           )}
         </div>
       </div>

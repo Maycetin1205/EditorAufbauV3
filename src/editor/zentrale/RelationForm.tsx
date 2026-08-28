@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Button } from '@/ui/atoms/button'
-import { TextInput } from '@/ui/atoms/text-input'
-import { Field } from '@/ui/molecules/field'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Zeile } from '@/ui/werkbank/Zeile'
 import {
   formatRelationSyntax,
   parseRelationSyntax,
@@ -50,40 +50,43 @@ export function RelationForm({ relation, onClose }: RelationFormProps) {
 
   return (
     <FormularKarte title={relation ? 'Relation bearbeiten' : 'Neue Relation'} onClose={onClose}>
-      <div className="flex flex-col gap-3">
-        <Field label="Anzeigename" error={zeigeFehler ? nameFehler : ''}>
-          {(f) => (
-            <TextInput
-              {...f}
+      <div className="flex flex-col gap-2">
+        <Zeile label="Anzeigename" fehler={zeigeFehler ? nameFehler : undefined}>
+          {(kind) => (
+            <Feld
+              {...kind}
               value={name}
               placeholder="z. B. Termin verschieben"
               onChange={(e) => setName(e.target.value)}
             />
           )}
-        </Field>
+        </Zeile>
 
-        <Field
+        <Zeile
+          breit
           label="SoftEngine-Syntax"
-          error={zeigeFehler || (syntaxInput.trim() !== '' && !syntax) ? syntaxFehler : ''}
+          fehler={
+            zeigeFehler || (syntaxInput.trim() !== '' && !syntax) ? syntaxFehler : undefined
+          }
         >
-          {(f) => (
-            <TextInput
-              {...f}
+          {(kind) => (
+            <Feld
+              {...kind}
               value={syntaxInput}
               placeholder="z. B. GET_RELATION[640!{IDBID}!{DATUM}]"
-              className="font-mono text-[0.6875rem]"
+              className="font-mono text-dicht"
               onChange={(e) => setSyntaxInput(e.target.value)}
             />
           )}
-        </Field>
+        </Zeile>
 
         {syntax && (
-          <div className="rounded-md border border-border bg-background p-2 text-[0.6875rem]">
-            <div className="font-medium">
+          <div className="rounded border border-linie bg-control p-2 text-dicht">
+            <div className="font-medium text-tinte">
               {syntax.verb.replace('_RELATION', '')} {syntax.nr} · {syntax.params.length} Parameter
               {syntax.allowExtraParams ? ' · weitere erlaubt' : ''}
             </div>
-            <div className="mt-1 max-h-32 overflow-y-auto font-mono text-muted-foreground">
+            <div className="mt-1 max-h-32 overflow-y-auto font-mono text-matt">
               {syntax.params.map((param, i) => (
                 <div key={i} className="flex gap-2">
                   <span className="w-5 shrink-0 text-right">{i + 1}.</span>
@@ -95,9 +98,9 @@ export function RelationForm({ relation, onClose }: RelationFormProps) {
           </div>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-border pt-3">
-          <Button variant="outline" size="sm" onClick={onClose}>Abbrechen</Button>
-          <Button size="sm" onClick={speichern}>Speichern</Button>
+        <div className="flex justify-end gap-2 border-t border-linie pt-3">
+          <Knopf onClick={onClose}>Abbrechen</Knopf>
+          <Knopf art="primaer" onClick={speichern}>Speichern</Knopf>
         </div>
       </div>
     </FormularKarte>

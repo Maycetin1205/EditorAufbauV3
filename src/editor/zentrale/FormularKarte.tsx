@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { X } from '@/ui/zeichen'
-import { IconButton } from '@/ui/atoms/icon-button'
+import { Knopf } from '@/ui/werkbank/Knopf'
 
 interface FormularKarteProps {
   title: string
@@ -10,6 +10,8 @@ interface FormularKarteProps {
 
 export function FormularKarte({ title, onClose, children }: FormularKarteProps) {
   useEffect(() => {
+    // In der Fangphase und mit gestopptem Weiterlauf: Escape schliesst das
+    // Formular, nicht das Fenster dahinter.
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation()
@@ -21,14 +23,14 @@ export function FormularKarte({ title, onClose, children }: FormularKarteProps) 
   }, [onClose])
 
   return (
-    <div className="border-t border-border pt-3">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <IconButton aria-label="Abbrechen" onClick={onClose}>
-          <X size={16} />
-        </IconButton>
+    <div className="flex min-w-0 flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="min-w-0 truncate text-ui font-semibold text-tinte">{title}</h3>
+        <Knopf nurZeichen aria-label="Abbrechen" title="Abbrechen (Esc)" onClick={onClose}>
+          <X size={15} />
+        </Knopf>
       </div>
-      <div>{children}</div>
+      {children}
     </div>
   )
 }

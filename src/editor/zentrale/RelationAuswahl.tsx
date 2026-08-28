@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Search } from '@/ui/zeichen'
-import { TextInput } from '@/ui/atoms/text-input'
+import { Feld } from '@/ui/werkbank/Feld'
 import {
   formatRelationSyntax,
   relationGroup,
@@ -49,10 +49,10 @@ export function RelationAuswahl({
   }))
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[0.6875rem] font-medium">{label}</span>
+      <span className="text-dicht font-medium">{label}</span>
       <div className="relative">
-        <Search size={13} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <TextInput
+        <Search size={13} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-matt" />
+        <Feld
           aria-label={`${label} suchen`}
           value={suche}
           placeholder="Name, Nummer oder Syntax"
@@ -67,7 +67,7 @@ export function RelationAuswahl({
         onChange={(value) => setTab(value as RelationGroup)}
       />
 
-      <div className="max-h-36 divide-y divide-border overflow-y-auto border-y border-border">
+      <div className="max-h-36 divide-y divide-linie overflow-y-auto border-y border-linie">
         {sichtbar.map((entry) => {
           const ungetauft = istUngetaufteVorlage(entry)
           return (
@@ -76,13 +76,13 @@ export function RelationAuswahl({
               type="button"
               title={formatRelationSyntax(entry)}
               onClick={() => onSelect(entry.id)}
-              className={`w-full px-2 py-1.5 text-left text-xs ${
-                entry.id === relationId ? 'bg-secondary font-medium' : 'hover:bg-secondary/60'
+              className={`w-full px-2 py-1.5 text-left text-dicht ${
+                entry.id === relationId ? 'bg-akzent/15 font-medium' : 'hover:bg-control'
               }`}
             >
               <span className="block truncate">{relationAnzeige(entry)}</span>
               {!ungetauft && (
-                <span className="block truncate text-[0.625rem] text-muted-foreground">
+                <span className="block truncate text-dicht text-matt">
                   {entry.verb} · Nr. {entry.nr}
                 </span>
               )}
@@ -90,7 +90,7 @@ export function RelationAuswahl({
           )
         })}
         {sichtbar.length === 0 && (
-          <p className="px-2 py-1 text-xs text-muted-foreground">Keine Treffer.</p>
+          <p className="px-2 py-1 text-dicht text-matt">Keine Treffer.</p>
         )}
       </div>
     </div>
