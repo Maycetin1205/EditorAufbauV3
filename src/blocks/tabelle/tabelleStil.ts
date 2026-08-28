@@ -4,6 +4,11 @@ export const tabelleStil = css`
       :host { min-width: 0; height: 100%; }
 
       .tabelle {
+        /* Die zwei Zahlen, aus denen sich jedes Zell-Polster ergibt. Nur hier
+           stehen sie; „Schlank" aendert einzig --se-zell-x. */
+        --se-zell-x: 10px;
+        --se-eingabe-x: 4px;
+
         position: relative;
         box-sizing: border-box;
         display: flex;
@@ -120,15 +125,24 @@ export const tabelleStil = css`
         transition: background-color var(--se-move);
       }
 
-      /* Zebra: jede zweite Datenzeile leicht getoent. Gezaehlt wird unter
-         ALLEN Kindern des Rumpfes — die Kopfzeile ist das erste, also faengt
-         die Toenung bei der ersten Datenzeile an. Erfassungs- und erfasste
-         Zeilen tragen es nicht: die haben ihre eigene Farbe. */
-      .koerper > .zeile:not(.erfassung):not(.erfasst):nth-child(even) {
+      /* Zebra: jede zweite Datenzeile leicht getoent. Die Zeile bringt die
+         Klasse mit, gezaehlt wird nach ihrer NUMMER in der Ansicht. Vorher
+         zaehlte nth-child alle Kinder des Rumpfes mit — die Toenung kippte
+         also um eine Zeile, sobald die Kopfzeile abgeschaltet war oder die
+         Erfassungszeile (ohne Quelle) vorne stand.
+
+         Bewusst ohne den Rumpf-Vorsatz: so bleibt die Regel gleich stark wie
+         die Status-Farben weiter unten, und die stehen spaeter — eine
+         vorgemerkte Zeile behaelt damit ihre Kennfarbe. */
+      .zeile.zebra {
         background: var(--se-zebra);
       }
 
-      .koerper > .zeile:hover {
+      /* Nur eine Zeile OHNE Status faerbt sich unter der Maus. Sonst wischte
+         der Hover die Kennfarbe genau in dem Moment weg, in dem der Bediener
+         mit dem Zeiger hinfaehrt, um sie anzusehen — die Farbe IST die
+         Auskunft. Dasselbe Muster wie bei .gewaehlt weiter unten. */
+      .koerper > .zeile:not([data-status]):hover {
         background: var(--se-hover);
       }
 
@@ -147,9 +161,14 @@ export const tabelleStil = css`
         box-shadow: inset 3px 0 0 var(--se-accent);
       }
       .zeile.gewaehlt > div { color: var(--se-ink); }
+      /* Die Textkante JEDER Zelle — eine Zahl, eine Stelle. Eine Zelle mit
+         Eingabefeld gibt ihr Polster an das Feld ab (siehe .tippbar weiter
+         unten); dessen eigenes Polster plus sein Rahmen ergeben wieder
+         dieselbe Kante. Vorher stand der Text einer tippbaren Zelle 15px vom
+         Rand, der ihrer Nachbarin 10px — in derselben Zeile. */
       .kopf > div,
       .zeile > div {
-        padding: 0 10px;
+        padding: 0 var(--se-zell-x);
         line-height: calc(var(--zeilen-hoehe) - 1px);
         min-width: 0;
         white-space: nowrap;
@@ -225,12 +244,12 @@ export const tabelleStil = css`
       /* Schlank (G5, Nutzer-Entscheidung): kein Tafel-Rahmen, engere
          Polster — die Tabelle liegt buendig auf der Maske. */
       .tabelle.schlank {
+        --se-zell-x: 6px;
+
         border: 0;
         border-radius: 0;
         background: transparent;
       }
-      .tabelle.schlank .kopf > div,
-      .tabelle.schlank .zeile > div { padding: 0 6px; }
       .tabelle.schlank .suchzeile { padding: 4px 6px; }
 
       .fusszeile {
@@ -327,13 +346,22 @@ export const tabelleStil = css`
          Gilt fuer die gebuchte Zeile (.zell-eingabe) und die Erfassungszeile
          (.erf-eingabe) gemeinsam — es ist dieselbe Sache, und zwei Kopien
          liefen beim ersten Aendern auseinander. */
+      /* Die Zelle, die ein Eingabefeld traegt, gibt ihr Polster an das Feld
+         ab — zusammen ergeben sie wieder --se-zell-x. Ohne diese Regel steht
+         der Text einer tippbaren Zelle um Feld-Polster plus Rahmen weiter
+         rechts als der ihrer Nachbarin. */
+      .zeile > div.tippbar,
+      .zeile.erfassung > div {
+        padding: 0 calc(var(--se-zell-x) - var(--se-eingabe-x) - var(--se-border));
+      }
+
       .zell-eingabe,
       .erf-eingabe {
         box-sizing: border-box;
         width: 100%;
         height: calc(var(--zeilen-hoehe) - 8px);
         min-width: 0;
-        padding: 0 4px;
+        padding: 0 var(--se-eingabe-x);
         font-family: var(--se-font);
         font-size: var(--se-fs);
         color: var(--se-ink);

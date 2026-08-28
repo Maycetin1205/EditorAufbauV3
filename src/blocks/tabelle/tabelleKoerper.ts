@@ -165,7 +165,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
             ? { status: 'gebucht', titel: '' }
             : lage.zeilenStand.statusVon(rohIndex)
           return html`<div
-            class="zeile${rohIndex !== null && lage.hatQuelle ? ' waehlbar' : ''}${
+            class="zeile${ansichtIndex % 2 === 1 ? ' zebra' : ''}${
+              rohIndex !== null && lage.hatQuelle ? ' waehlbar' : ''}${
               rohIndex !== null && rohIndex === lage.auswahlIndex ? ' gewaehlt' : ''}${
               geloescht ? ' geloescht' : ''}"
             role="row"
@@ -217,7 +218,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               // Text. Es traegt den vorgemerkten Wert, solange einer da ist.
               if (lage.aendernMoeglich && rohIndex !== null && spalteAenderbar(s)) {
                 const stand = lage.zeilenStand
-                return html`<div class=${art.klasse} role="cell">
+                return html`<div class="${art.klasse} tippbar" role="cell">
                 <input
                   class=${stand.istGeaendert(rohIndex, i) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
                   type="text"

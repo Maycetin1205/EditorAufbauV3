@@ -14,18 +14,13 @@ export const erfassungStil = css`
          schnitte die Zelle sie ab. Gilt fuer jede Zelle, weil jede gebundene
          Spalte eine Liste zeigen kann.
 
-         5px + 4px Eingabe-Polster + 1px Rahmen = die 10px einer Datenzelle:
-         der Text steht auf derselben Kante wie eine Zeile darueber. Die
-         ERFASSTE Zeile traegt seit dem Zurueckholen keine Eingabefelder mehr
-         und darum auch dieses Polster nicht — sie ist eine Zeile wie jede
-         andere und nimmt das Zell-Polster der Datenzeile. */
+         Das Polster steht in tabelleStil (.tippbar) — es ist dieselbe
+         Rechnung wie fuer jede andere Zelle mit Eingabefeld. */
       .zeile.erfassung > div {
-        padding: 0 5px;
         display: flex;
         align-items: center;
         overflow: visible;
       }
-      .tabelle.schlank .zeile.erfassung > div { padding: 0 1px; }
 
       .erf-halter {
         position: relative;
