@@ -188,11 +188,36 @@ Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den B
 
    Deshalb **zwei Ebenen**, dasselbe Muster wie „Erweitert — leer = Standard" im Ketten-Editor:
    - **Was die Spalte IST** — immer sichtbar, drei Zeilen: Titel · Feld · Darstellung.
-   - **Was die Spalte TUT** — eine zugeklappte Zeile darunter: Summe · änderbar · Füllfeld · (später: Rechnung).
+   - **Was die Spalte TUT** — eine zugeklappte Zeile darunter: Summe · änderbar · Füllfeld · Rechnung (Punkt 7).
 
    **Diese Teilung ist Teil von Punkt 4, kein eigener Schritt.** Wer das Füllfeld ohne sie einbaut, macht eine schon zu volle Fläche voller.
 
-7. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für den Durchstich.
+7. **Gerechnete Spalte — Dreisatz (Nutzer-Vorgabe 2026-08-28).**
+
+   Anlass: Menge aus Dosierung. `Menge = Gewicht × Dosis ÷ Konzentration`. Der Editor kann heute nicht rechnen; die einzige Rechenfunktion ist die Spaltensumme in der Fußzeile.
+
+   **Die Form ist fest, keine Formelsprache:**
+
+   ```
+   Menge  =  [ Spalte/Zahl ]  ×  [ Spalte/Zahl ]  ÷  [ Spalte/Zahl ]
+   ```
+
+   Drei Plätze, jeder wahlweise **eine Spalte derselben Tabelle** oder **eine feste Zahl**. Der dritte darf leer bleiben (dann nur `A × B`). Keine Klammern, keine Funktionen, kein Freitext — der Bediener tippt nirgends einen Ausdruck (Regel 3).
+
+   **Verhalten:**
+   - Rechnet **live in der Erfassungszeile**, sobald alle belegten Plätze einen Wert haben. Fehlt einer, bleibt die Zelle leer — keine Meldung.
+   - **Überschreibbar.** Tippt der Bediener einen eigenen Wert (2,4 ml aufgerundet auf 2,5), gilt seiner, und die Zeile rechnet nicht dagegen an. Bei einer Tierarztmaske ist das Pflicht, keine Option.
+   - **Nachkommastellen** kommen aus der Spalten-Darstellung, die es schon gibt.
+   - **Gebuchte Zeilen rechnen nie.** Was im ERP steht, steht im ERP.
+   - **Nur eine Stufe:** eine gerechnete Spalte darf nicht aus einer anderen gerechneten Spalte rechnen — sonst laufen Ketten im Kreis und niemand sieht mehr, woher eine Zahl kommt. Dieselbe Regel gilt schon bei der Verknüpfung.
+
+   **Deutsche Zahlen einlesen gehört dazu**, sonst rechnet nichts: getipptes `0,5` muss ein halbes Stück heißen. Heute gibt es nur die Ausgabe-Seite (`blocks/tabelle/zahlFormat.ts`), keine Eingabe-Seite — ein getipptes `0,5` reist als Zeichenkette weiter. **Im Durchstich mitprüfen, in welcher Form SoftEngine die Menge erwartet** (Komma oder Punkt) — davon hängt ab, was beim Schreiben hinausgeht.
+
+   **Das ist ein Baustein-Feature, kein Editor-Feature** — es muss auch in der exportierten Maske rechnen (`src/blocks/tabelle/`, die Erfassungszeile zieht mit `gleicheAb` schon heute Abhängiges nach). Danach `npm run build:runtime`.
+
+   **Was ausdrücklich NICHT gerechnet wird:** Netto, Steuer, Brutto, Gesamt, Rohertrag. Die bestimmt das ERP (Staffelpreise, Kundenrabatt, Rundung). Rechnete die Maske mit, zeigte sie eine Zahl, die nicht die Wahrheit ist. Gerechnet wird nur, was **Eingabe** ist.
+
+8. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für den Durchstich.
 
 ### Ketten-Editor: Parameter wählbar statt rätselbar (Nutzer-Vorgabe, Pflichtteil)
 
