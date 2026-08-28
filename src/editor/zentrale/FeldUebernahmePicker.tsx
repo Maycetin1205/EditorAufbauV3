@@ -1,6 +1,6 @@
-import { useMemo, useState, type RefObject } from 'react'
-import { AuswahlFenster } from '@/ui/molecules/auswahl-fenster'
-import { TextInput } from '@/ui/atoms/text-input'
+import { useMemo, type RefObject } from 'react'
+import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
+import { Popover } from '@/ui/werkbank/Popover'
 import type {
   FeldUebernahmeZiel,
   UebernahmeFeld,
@@ -11,132 +11,75 @@ interface FeldUebernahmePickerProps {
   sources: readonly UebernahmeQuelle[]
   fields: readonly UebernahmeFeld[]
   ziel: FeldUebernahmeZiel
-  current: string
-  top: number
-  left: number
 
-  // Der Griff, aus dem die Liste aufgegangen ist — ein Druck darauf darf sie
-  // nicht hier schliessen, sonst geht sie durch den Folge-Klick sofort wieder auf.
-  anker?: RefObject<HTMLElement | null>
+  // Feldcode der bereits uebernommenen POS/LEN — nur zum Anhaken.
+  current: string
+
+  // Der Griff, aus dem die Liste aufgegangen ist: das Popover misst sich
+  // daran und laesst den Druck darauf durch, sonst ginge sie sofort wieder auf.
+  anker: RefObject<HTMLElement | null>
   onPick: (sourceId: string, code: string) => void
   onClose: () => void
 }
+
+const TRENNER = '::'
 
 export function FeldUebernahmePicker({
   sources,
   fields,
   ziel,
   current,
-  top,
-  left,
   anker,
   onPick,
   onClose,
 }: FeldUebernahmePickerProps) {
-  const [suche, setSuche] = useState('')
-  const [quelle, setQuelle] = useState<UebernahmeQuelle | null>(null)
-  const needle = suche.trim().toLocaleLowerCase('de')
+  const gruppen: ListeGruppe[] = useMemo(() => {
+    if (ziel === 'idb') {
+      return [{
+        key: 'quellen',
+        name: 'Datenquelle',
+        eintraege: sources.map((source) => ({ wert: source.sourceId, name: source.sourceName })),
+      }]
+    }
+    return sources
+      .map((source) => ({
+        key: source.sourceId,
+        name: source.sourceName,
+        eintraege: fields
+          .filter((field) => field.sourceId === source.sourceId)
+          .map((field) => ({
+            wert: `${field.sourceId}${TRENNER}${field.code}`,
+            name: field.label,
+            kennung: field.code,
+          })),
+      }))
+      .filter((gruppe) => gruppe.eintraege.length > 0)
+  }, [ziel, sources, fields])
 
-  // Das Suchfeld verspricht „Feld oder Quelle" — also zeigt die Quellenliste
-  // auch Quellen, bei denen erst ein FELD auf den Suchbegriff passt.
-  const sichtbareQuellen = useMemo(
-    () => sources.filter((source) =>
-      needle === ''
-      || source.sourceName.toLocaleLowerCase('de').includes(needle)
-      || fields.some((field) =>
-        field.sourceId === source.sourceId
-        && field.label.toLocaleLowerCase('de').includes(needle))),
-    [needle, sources, fields],
-  )
-  const sichtbareFelder = useMemo(
-    () => fields.filter((field) => field.sourceId === quelle?.sourceId && (
-      needle === ''
-      || `${field.label} ${field.sourceName}`.toLocaleLowerCase('de').includes(needle)
-    )),
-    [fields, needle, quelle?.sourceId],
-  )
+  // Uebernommen wird als POS/LEN-Wert — welche QUELLE das Feld hergab, steht
+  // nirgends. Angehakt wird darum der erste Treffer mit diesem Feldcode.
+  const gewaehlt = ziel === 'feld' && current !== ''
+    ? gruppen.flatMap((g) => g.eintraege).find((e) => e.kennung === current)?.wert ?? ''
+    : ''
 
   return (
-    <AuswahlFenster
-      bezeichnung="Feld übernehmen"
-      oben={top}
-      links={left}
+    <Popover
+      bezeichnung={ziel === 'feld' ? 'Feld übernehmen' : 'Tabelle übernehmen'}
       anker={anker}
-      onClose={onClose}
-      imBildHalten
       escapeAbfangen
-      className="max-h-72 w-64 max-w-[calc(100vw-1rem)]"
+      onClose={onClose}
     >
-      <TextInput
-        aria-label="Feld oder Quelle suchen"
-        autoFocus
-        value={suche}
-        placeholder="Feld oder Quelle suchen"
-        onChange={(e) => setSuche(e.target.value)}
-        className="mb-1"
+      <Liste
+        suchbar
+        gruppen={gruppen}
+        wert={gewaehlt}
+        leerHinweis={ziel === 'feld' ? 'Keine IDB-Felder.' : 'Keine IDB-Quellen.'}
+        onWaehle={(wert) => {
+          const at = wert.indexOf(TRENNER)
+          if (at < 0) onPick(wert, '')
+          else onPick(wert.slice(0, at), wert.slice(at + TRENNER.length))
+        }}
       />
-
-      {quelle && ziel === 'feld' ? (
-        <>
-          <button
-            type="button"
-            className="px-2 py-1 text-xs text-primary hover:underline"
-            onClick={() => {
-              setQuelle(null)
-              setSuche('')
-            }}
-          >
-            ← Quellen
-          </button>
-          <p className="px-2 pb-0.5 pt-1 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
-            {quelle.sourceName}
-          </p>
-          {sichtbareFelder.map((field) => (
-            <button
-              key={`${field.sourceId}:${field.code}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onPick(field.sourceId, field.code)
-              }}
-              className="flex w-full items-baseline gap-3 rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
-            >
-              <span>{field.label}</span>
-              {field.code === current && <span className="text-muted-foreground">✓</span>}
-            </button>
-          ))}
-          {sichtbareFelder.length === 0 && (
-            <p className="px-2 py-2 text-xs text-muted-foreground">Keine Felder.</p>
-          )}
-        </>
-      ) : (
-        <>
-          <p className="px-2 pb-0.5 pt-1.5 text-[0.625rem] font-semibold uppercase tracking-wide text-muted-foreground">
-            Datenquelle wählen
-          </p>
-          {sichtbareQuellen.map((source) => (
-            <button
-              key={source.sourceId}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                if (ziel === 'idb') {
-                  onPick(source.sourceId, '')
-                } else {
-                  setQuelle(source)
-                  setSuche('')
-                }
-              }}
-              className="flex w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
-            >
-              {source.sourceName}
-            </button>
-          ))}
-          {sichtbareQuellen.length === 0 && (
-            <p className="px-2 py-2 text-xs text-muted-foreground">Keine IDB-Quellen.</p>
-          )}
-        </>
-      )}
-    </AuswahlFenster>
+    </Popover>
   )
 }

@@ -1,13 +1,12 @@
-import { useRef, useState } from 'react'
+import { useMemo, useReducer, useRef } from 'react'
 import { Plus } from '@/ui/zeichen'
-import { Button } from '@/ui/atoms/button'
-import { TextInput } from '@/ui/atoms/text-input'
-import { Field } from '@/ui/molecules/field'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Zeile } from '@/ui/werkbank/Zeile'
 import {
   STEP_TYPES,
   defaultRelationParams,
   ergebnisSchritteVor,
-  type ActionParamBinding,
   type ActionStep,
   type StepTypeKey,
 } from '../../core/data/aktionen'
@@ -30,19 +29,27 @@ import {
   uebernahmeQuellen,
 } from './feldUebernahme'
 import { bausteinName } from '../../core/blocks/bausteinName'
-import { istFensterSeite } from '../../state/pageOps'
+import { istFensterSeite, seitenDerMaske } from '../../state/pageOps'
 import {
   auswahlGeberOptionen,
   blockValueKey,
   erfassungsOptionen,
   type BlockValueOption,
 } from './helfer'
+import {
+  bindungFuer,
+  entwurfAus,
+  kandidatAus,
+  schrittReducer,
+  uebernahmeMeldung,
+  vorlageVon,
+} from './schrittEntwurf'
 import { ParameterZeile } from './ParameterZeile'
 import { RelationAuswahl } from './RelationAuswahl'
-import { WaehlerKnopf } from '@/ui/molecules/waehler'
 import { useRelations } from '../../state/useRelations'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
+import { PickerControl } from '../inspector/controls/PickerControl'
 import { SelectControl } from '../inspector/controls/SelectControl'
 
 interface StepFormProps {
@@ -58,131 +65,91 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
   const dataSources = useDataSources()
   const ed = useEditor()
 
-  const ergebnisSchritte = ergebnisSchritteVor(kette, step?.id, relations.list)
-  const ergebnisIds = ergebnisSchritte.map((s) => s.id)
+  const vorlagen = relations.list
+  const quellen = dataSources.list
+  const baum = ed.tree
 
-  const popupSeiten = ed.pages.filter(istFensterSeite)
-  const blockValues: BlockValueOption[] = actionValueTargets(ed.tree).map(({ node, spot }) => {
-    const def = getBlockDefinition(node.type)
-    const name = bausteinName(node, dataSources.list)
-    const mehrereStellen = (def?.actionValueSpots?.length ?? 0) > 1
-    return {
-      key: blockValueKey(node.id, spot.prop),
-      blockId: node.id,
-      prop: spot.prop,
-      label: mehrereStellen ? `${name} — ${spot.label}` : name,
-    }
-  })
-  const actionValueRefs = blockValues.map(({ blockId, prop }) => ({ blockId, prop }))
-
-  const geber = auswahlGeberOptionen(auswahlGeberImBaum(ed.tree), dataSources.list)
-  const geberIds = geber.map((g) => g.blockId)
-  const erfassungen = erfassungsOptionen(erfassungsTraegerImBaum(ed.tree), dataSources.list)
-
-  // Dieselbe Form wie die Erfassungen: Baustein + seine Spalten. Nur die
-  // Frage ist eine andere — wer traegt AENDERBARE Spalten?
-  const aenderungen = erfassungsOptionen(aenderungsTraegerImBaum(ed.tree), dataSources.list)
-
-  const loeschungen = erfassungsOptionen(loeschTraegerImBaum(ed.tree), dataSources.list)
-  const [typ, setTyp] = useState<StepTypeKey>(step?.type ?? 'START_TOOL')
-  const [toolNr, setToolNr] = useState(step?.type === 'START_TOOL' ? step.toolNr : '')
-  const [befehl, setBefehl] = useState(step?.type === 'BW_LINK' ? step.befehl : '')
-  const [popupId, setPopupId] = useState(
-    step?.type === 'POPUP_OPEN' || step?.type === 'POPUP_CLOSE' ? step.popupId : '',
-  )
-  const [relationId, setRelationId] = useState(
-    step?.type === 'RELATION' ? step.relationId : '',
-  )
-  const initialRelation = step?.type === 'RELATION' ? relations.get(step.relationId) : undefined
-  const [relationParams, setRelationParams] = useState<ActionParamBinding[]>(() => {
-    if (step?.type !== 'RELATION') return []
-    if (initialRelation && step.params.length !== initialRelation.params.length) {
-      return defaultRelationParams(initialRelation)
-    }
-    return step.params.map((binding) => ({ ...binding }))
-  })
-  const [extraParams, setExtraParams] = useState<ActionParamBinding[]>(
-    step?.type === 'RELATION' ? step.extraParams.map((binding) => ({ ...binding })) : [],
-  )
-  const [suche, setSuche] = useState('')
-  const [zeigeFehler, setZeigeFehler] = useState(false)
-  const [pickerZiel, setPickerZiel] = useState<FeldUebernahmeZiel | null>(null)
-  const [pickerPosition, setPickerPosition] = useState({ top: 0, left: 0 })
+  const reducer = useMemo(() => schrittReducer(vorlagen), [vorlagen])
+  const [entwurf, dispatch] = useReducer(reducer, undefined, () => entwurfAus(step, vorlagen))
   const pickerAnker = useRef<HTMLElement | null>(null)
-  const [uebernahmeBestaetigung, setUebernahmeBestaetigung] = useState('')
 
-  const relation = relations.get(relationId)
-  const sichtbareRelationen = relations.list.filter((entry) => relationMatchesSearch(entry, suche))
-  const uebernahmeFelder = uebernahmeQuellen(dataSources.list)
-  const uebernahmeQuellenListe = uebernahmeIdbQuellen(dataSources.list)
-  const defaultParams = relation ? defaultRelationParams(relation) : []
-  const bindingFor = (index: number): ActionParamBinding =>
-    relationParams[index] ?? defaultParams[index] ?? { source: 'fixed', value: '' }
+  // Die Wahlmoeglichkeiten haengen am Baustein-Baum, nicht am Getippten:
+  // ohne Memo laeuft jeder Tastendruck durch den ganzen Baum.
+  const auswahlen = useMemo(() => {
+    const blockValues: BlockValueOption[] = actionValueTargets(baum).map(({ node, spot }) => {
+      const def = getBlockDefinition(node.type)
+      const name = bausteinName(node, quellen)
+      const mehrereStellen = (def?.actionValueSpots?.length ?? 0) > 1
+      return {
+        key: blockValueKey(node.id, spot.prop),
+        blockId: node.id,
+        prop: spot.prop,
+        label: mehrereStellen ? `${name} — ${spot.label}` : name,
+      }
+    })
+    const geber = auswahlGeberOptionen(auswahlGeberImBaum(baum), quellen)
+    const popupSeiten = seitenDerMaske(baum).filter(istFensterSeite)
+    return {
+      blockValues,
+      actionValueRefs: blockValues.map(({ blockId, prop }) => ({ blockId, prop })),
+      geber,
+      geberIds: geber.map((g) => g.blockId),
+      erfassungen: erfassungsOptionen(erfassungsTraegerImBaum(baum), quellen),
 
-  const platzhalterFor = (raw: string): string => (raw === '' ? '(leer)' : raw)
+      // Dieselbe Form wie die Erfassungen: Baustein + seine Spalten. Nur die
+      // Frage ist eine andere — wer traegt AENDERBARE Spalten?
+      aenderungen: erfassungsOptionen(aenderungsTraegerImBaum(baum), quellen),
+
+      loeschungen: erfassungsOptionen(loeschTraegerImBaum(baum), quellen),
+      popupSeiten,
+      popupIds: popupSeiten.map((seite) => seite.id),
+    }
+  }, [baum, quellen])
+
+  const ergebnisSchritte = useMemo(
+    () => ergebnisSchritteVor(kette, step?.id, vorlagen),
+    [kette, step?.id, vorlagen],
+  )
+  const ergebnisIds = useMemo(() => ergebnisSchritte.map((s) => s.id), [ergebnisSchritte])
+
+  const relation = useMemo(
+    () => vorlageVon(vorlagen, entwurf.relationId),
+    [vorlagen, entwurf.relationId],
+  )
+  const vorgaben = useMemo(
+    () => (relation ? defaultRelationParams(relation) : []),
+    [relation],
+  )
+  const sichtbareRelationen = useMemo(
+    () => vorlagen.filter((entry) => relationMatchesSearch(entry, entwurf.suche)),
+    [vorlagen, entwurf.suche],
+  )
+  const uebernahmeFelder = useMemo(() => uebernahmeQuellen(quellen), [quellen])
+  const uebernahmeQuellenListe = useMemo(() => uebernahmeIdbQuellen(quellen), [quellen])
+
+  const kandidat = useMemo(
+    () => kandidatAus(entwurf, relation, step),
+    [entwurf, relation, step],
+  )
+  const problem = useMemo(
+    () => stepProblem(
+      kandidat,
+      vorlagen,
+      quellen,
+      auswahlen.popupIds,
+      ergebnisIds,
+      auswahlen.actionValueRefs,
+      auswahlen.geberIds,
+    ),
+    [kandidat, vorlagen, quellen, auswahlen, ergebnisIds],
+  )
+
+  const bindung = (index: number) => bindungFuer(entwurf, vorgaben, index)
+  const fehlerText = entwurf.zeigeFehler ? problem ?? undefined : undefined
 
   const ausgelassen = relation
-    ? relation.params.map((_, index) => index).filter((i) => bindingFor(i).source === 'aus')
+    ? relation.params.map((_, index) => index).filter((i) => bindung(i).source === 'aus')
     : []
-  const holeAlleZurueck = () => {
-    setRelationParams((current) => current.map((binding, index) =>
-      binding.source === 'aus' ? defaultParams[index] ?? { source: 'fixed', value: '' } : binding))
-  }
-  const setBinding = (index: number, binding: ActionParamBinding) => {
-    setUebernahmeBestaetigung('')
-    setRelationParams((current) => {
-      const next = relation ? defaultRelationParams(relation) : [...current]
-      current.forEach((value, at) => { if (at < next.length) next[at] = value })
-      next[index] = binding
-      return next
-    })
-  }
-
-  function selectRelation(id: string) {
-    const selected = relations.get(id)
-    setRelationId(id)
-    setPickerZiel(null)
-    setUebernahmeBestaetigung('')
-    if (!selected) return
-    setRelationParams(defaultRelationParams(selected))
-    if (!selected.allowExtraParams) setExtraParams([])
-  }
-
-  function oeffneUebernahmePicker(ziel: FeldUebernahmeZiel, anchor: HTMLElement) {
-    // Zweiter Druck auf denselben Griff macht die Liste wieder zu.
-    if (pickerZiel === ziel && pickerAnker.current === anchor) {
-      setPickerZiel(null)
-      return
-    }
-    const rect = anchor.getBoundingClientRect()
-    pickerAnker.current = anchor
-    setPickerPosition({ top: rect.bottom + 4, left: rect.left })
-    setPickerZiel(ziel)
-  }
-
-  function uebernehmeFeld(sourceId: string, code: string) {
-    if (!relation || !pickerZiel) return
-    const source = dataSources.list.find((entry) => entry.id === sourceId)
-    if (!source) return
-    const field = pickerZiel === 'feld'
-      ? source.fields.find((entry) => entry.code === code)
-      : undefined
-    if (pickerZiel === 'feld' && !field) return
-    const aktuelleBindungen = relation.params.map((_, index) => bindingFor(index))
-    const result = feldUebernehmen(aktuelleBindungen, relation, source, code, pickerZiel)
-    const details = result.gesetzt.map((treffer) => {
-      const name = treffer.art === 'pos'
-        ? 'Position'
-        : treffer.art === 'len'
-          ? 'Länge'
-          : 'Tabelle'
-      return `${name} ${treffer.wert}`
-    })
-    setRelationParams(result.params)
-    setPickerZiel(null)
-    const suffix = details.length > 0 ? ' - ' + details.join(' - ') : ''
-    setUebernahmeBestaetigung((field?.label ?? source.name) + ' übernommen' + suffix)
-  }
 
   const feldAusloeserAktiv = relation
     ? relation.params.some((raw) => feldUebernahmeArt(raw) === 'pos')
@@ -195,8 +162,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     if (!relation) return null
     const index = relation.params.findIndex((raw) => feldUebernahmeArt(raw) === art)
     if (index < 0) return null
-    const binding = bindingFor(index)
-    return binding.source === 'fixed' && /^\d+$/.test(binding.value) ? binding.value : null
+    const b = bindung(index)
+    return b.source === 'fixed' && /^\d+$/.test(b.value) ? b.value : null
   }
   const uebernahmePos = uebernommenerWert('pos')
   const uebernahmeLen = uebernommenerWert('len')
@@ -204,60 +171,38 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     ? `${uebernahmePos}_${uebernahmeLen}`
     : ''
 
-  function candidate(): ActionStep {
-    const id = step?.id ?? crypto.randomUUID()
-    // Das Formular zeigt toolParams/resultKey nicht an (Entscheidung: nur die
-    // Nummer) — geladene Werte darf Speichern trotzdem nicht wegwerfen.
-    if (typ === 'POPUP_OPEN' || typ === 'POPUP_CLOSE') {
-      return { id, type: typ, resultKey: step?.type === typ ? step.resultKey : '', popupId }
-    }
-    if (typ === 'BW_LINK') {
-      return {
-        id,
-        type: 'BW_LINK',
-        resultKey: step?.type === 'BW_LINK' ? step.resultKey : '',
-        befehl: befehl.trim(),
-      }
-    }
-    if (typ === 'START_TOOL') {
-      const vorher = step?.type === 'START_TOOL' ? step : undefined
-      return {
-        id,
-        type: 'START_TOOL',
-        resultKey: vorher?.resultKey ?? '',
-        toolNr: toolNr.trim(),
-        toolParams: vorher ? [...vorher.toolParams] : [],
-      }
-    }
-    const normalizedParams = relation
-      ? relation.params.map((_, index) => {
-          const binding = bindingFor(index)
-          return { ...binding, value: binding.value.trim() }
-        })
-      : []
-    return {
-      id,
-      type: 'RELATION',
-      relationId,
-      params: normalizedParams,
-      extraParams: extraParams.map((binding) => ({ ...binding, value: binding.value.trim() })),
-
-      resultKey: step?.resultKey ?? '',
-    }
-  }
-
-  const popupIds = popupSeiten.map((seite) => seite.id)
-  const problem = stepProblem(
-    candidate(), relations.list, dataSources.list, popupIds, ergebnisIds, actionValueRefs, geberIds,
-  )
-
-  function speichern() {
-    const next = candidate()
-    if (stepProblem(next, relations.list, dataSources.list, popupIds, ergebnisIds, actionValueRefs, geberIds)) {
-      setZeigeFehler(true)
+  function oeffneUebernahmePicker(ziel: FeldUebernahmeZiel, anchor: HTMLElement) {
+    // Zweiter Druck auf denselben Griff macht die Liste wieder zu.
+    if (entwurf.pickerZiel === ziel && pickerAnker.current === anchor) {
+      dispatch({ art: 'picker', ziel: null })
       return
     }
-    onSave(next)
+    pickerAnker.current = anchor
+    dispatch({ art: 'picker', ziel })
+  }
+
+  function uebernehmeFeld(sourceId: string, code: string) {
+    const ziel = entwurf.pickerZiel
+    if (!relation || !ziel) return
+    const source = quellen.find((entry) => entry.id === sourceId)
+    if (!source) return
+    const field = ziel === 'feld' ? source.fields.find((entry) => entry.code === code) : undefined
+    if (ziel === 'feld' && !field) return
+    const aktuelle = relation.params.map((_, index) => bindung(index))
+    const result = feldUebernehmen(aktuelle, relation, source, code, ziel)
+    dispatch({
+      art: 'uebernahme',
+      params: result.params,
+      meldung: uebernahmeMeldung(result.gesetzt, field?.label ?? source.name),
+    })
+  }
+
+  function speichern() {
+    if (problem) {
+      dispatch({ art: 'zeigeFehler' })
+      return
+    }
+    onSave(kandidat)
     onClose()
   }
 
@@ -265,77 +210,72 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     <div className="flex flex-col gap-3">
       <SelectControl
         label="Aktion"
-        value={typ}
+        value={entwurf.typ}
         options={STEP_TYPES.map((entry) => ({ value: entry.key, label: entry.name }))}
-        onChange={(value) => {
-          setTyp(value as StepTypeKey)
-          setPickerZiel(null)
-          setUebernahmeBestaetigung('')
-        }}
+        onChange={(value) => dispatch({ art: 'typ', typ: value as StepTypeKey })}
       />
 
-      {(typ === 'POPUP_OPEN' || typ === 'POPUP_CLOSE') && (
+      {(entwurf.typ === 'POPUP_OPEN' || entwurf.typ === 'POPUP_CLOSE') && (
         /* Kein Leer-Eintrag: ohne Popup meldet stepProblem "kein Popup" —
            dieser Zustand darf also nicht waehlbar sein. */
-        <WaehlerKnopf
+        <PickerControl
           label="Popup"
-          fehler={zeigeFehler ? problem ?? '' : ''}
+          fehler={fehlerText}
           bezeichnung="Popup"
           gruppen={[{
             key: 'popups',
-            eintraege: popupSeiten.map((seite) => ({ wert: seite.id, name: seite.name })),
+            eintraege: auswahlen.popupSeiten.map((seite) => ({ wert: seite.id, name: seite.name })),
           }]}
-          wert={popupId}
-          platzhalter={popupSeiten.length === 0 ? '(keine Popup-Seite vorhanden)' : '— wählen —'}
-          onWaehle={setPopupId}
+          wert={entwurf.popupId}
+          platzhalter={auswahlen.popupSeiten.length === 0
+            ? '(keine Popup-Seite vorhanden)'
+            : '— wählen —'}
+          onWaehle={(id) => dispatch({ art: 'popup', id })}
         />
       )}
 
-      {typ === 'START_TOOL' && (
-        <Field label="Nummer" error={zeigeFehler ? problem ?? '' : ''}>
-          {(field) => (
-            <TextInput
-              {...field}
-              value={toolNr}
+      {entwurf.typ === 'START_TOOL' && (
+        <Zeile label="Nummer" fehler={fehlerText}>
+          {(kind) => (
+            <Feld
+              {...kind}
+              value={entwurf.toolNr}
               className="w-28"
-              onChange={(e) => setToolNr(e.target.value)}
+              onChange={(e) => dispatch({ art: 'toolNr', wert: e.currentTarget.value })}
             />
           )}
-        </Field>
+        </Zeile>
       )}
 
-      {typ === 'BW_LINK' && (
-        <Field
-          label="Befehl"
-          error={zeigeFehler ? problem ?? '' : ''}
-        >
-          {(field) => (
-            <TextInput
-              {...field}
-              value={befehl}
+      {entwurf.typ === 'BW_LINK' && (
+        <Zeile label="Befehl" fehler={fehlerText}>
+          {(kind) => (
+            <Feld
+              {...kind}
+              value={entwurf.befehl}
               placeholder="z. B. TABELLEPOS_DETAILS,{PINDEX}"
-              onChange={(e) => setBefehl(e.target.value)}
+              onChange={(e) => dispatch({ art: 'befehl', wert: e.currentTarget.value })}
             />
           )}
-        </Field>
+        </Zeile>
       )}
 
-      {typ === 'RELATION' && (
+      {entwurf.typ === 'RELATION' && (
         <>
           <RelationAuswahl
             label="Relation"
             eintraege={sichtbareRelationen}
-            relationId={relationId}
-            suche={suche}
-            onSuche={setSuche}
-            onSelect={selectRelation}
+            relationId={entwurf.relationId}
+            suche={entwurf.suche}
+            onSuche={(wert) => dispatch({ art: 'suche', wert })}
+            onSelect={(id) => dispatch({ art: 'relation', id, gewaehlt: vorlageVon(vorlagen, id) })}
           />
 
           {relation && (
             <>
               <div className="flex flex-col gap-2">
                 {relation.params.map((raw, index) => {
-                  if (bindingFor(index).source === 'aus') return null
+                  if (bindung(index).source === 'aus') return null
                   const parameterArt = feldUebernahmeArt(raw)
                   const ausloeser = parameterArt === 'relid'
                     ? 'idb'
@@ -346,21 +286,22 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                     <ParameterZeile
                       key={index}
                       label={`${index + 1}. ${raw === '' ? '(leer)' : raw}`}
-                      binding={bindingFor(index)}
-                      dataSources={dataSources.list}
-                      blockValues={blockValues}
-                      geber={geber}
-                      erfassungen={erfassungen}
-                      aenderungen={aenderungen}
-                      loeschungen={loeschungen}
+                      binding={bindung(index)}
+                      dataSources={quellen}
+                      blockValues={auswahlen.blockValues}
+                      geber={auswahlen.geber}
+                      erfassungen={auswahlen.erfassungen}
+                      aenderungen={auswahlen.aenderungen}
+                      loeschungen={auswahlen.loeschungen}
                       schritte={ergebnisSchritte}
-                      platzhalter={platzhalterFor(raw)}
+                      platzhalter={raw === '' ? '(leer)' : raw}
                       entfernen={{
                         label: `Parameter ${index + 1} für diese Aktion weglassen`,
-                        onClick: () => setBinding(index, { source: 'aus', value: '' }),
+                        onClick: () =>
+                          dispatch({ art: 'bindung', index, bindung: { source: 'aus', value: '' } }),
                       }}
                       ausloeser={ausloeser}
-                      onChange={(binding) => setBinding(index, binding)}
+                      onChange={(next) => dispatch({ art: 'bindung', index, bindung: next })}
                       onAusloeser={ausloeser
                         ? (anchor) => oeffneUebernahmePicker(ausloeser, anchor)
                         : undefined}
@@ -368,67 +309,59 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   )
                 })}
                 {relation.params.length === 0 && (
-                  <p className="text-xs text-muted-foreground">Keine Parameter.</p>
+                  <p className="text-ui text-matt">Keine Parameter.</p>
                 )}
                 {ausgelassen.length > 0 && (
-                  <div className="flex items-center justify-between text-[0.6875rem] text-muted-foreground">
+                  <div className="flex items-center justify-between gap-2 text-dicht text-matt">
                     <span>
                       {`Weggelassen: ${ausgelassen.map((i) => i + 1).join(', ')} — gehen leer raus`}
                     </span>
-                    <Button variant="outline" size="sm" onClick={holeAlleZurueck}>
-                      Zurückholen
-                    </Button>
+                    <Knopf onClick={() => dispatch({ art: 'zurueckholen' })}>Zurückholen</Knopf>
                   </div>
                 )}
               </div>
-              {uebernahmeBestaetigung && (
-                <p className="text-xs text-muted-foreground">{uebernahmeBestaetigung}</p>
+              {entwurf.uebernahmeBestaetigung && (
+                <p className="text-ui text-matt">{entwurf.uebernahmeBestaetigung}</p>
               )}
-              {pickerZiel && (
+              {entwurf.pickerZiel && (
                 <FeldUebernahmePicker
                   sources={uebernahmeQuellenListe}
                   fields={uebernahmeFelder}
-                  ziel={pickerZiel}
+                  ziel={entwurf.pickerZiel}
                   current={currentUebernahmeCode}
-                  top={pickerPosition.top}
-                  left={pickerPosition.left}
                   anker={pickerAnker}
                   onPick={uebernehmeFeld}
-                  onClose={() => setPickerZiel(null)}
+                  onClose={() => dispatch({ art: 'picker', ziel: null })}
                 />
               )}
             </>
           )}
 
           {relation?.allowExtraParams && (
-            <div className="flex flex-col gap-2 border-t border-border pt-3">
+            <div className="flex flex-col gap-2 border-t border-linie pt-3">
               <div className="flex items-center justify-between">
-                <span className="text-[0.6875rem] font-medium">Zusatzparameter</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setExtraParams((current) => [...current, { source: 'fixed', value: '' }])}
-                >
-                  <Plus size={14} /> Parameter
-                </Button>
+                <span className="text-dicht font-medium">Zusatzparameter</span>
+                <Knopf onClick={() => dispatch({ art: 'extraHinzu' })}>
+                  <Plus size={13} /> Parameter
+                </Knopf>
               </div>
-              {extraParams.map((binding, index) => (
+              {entwurf.extraParams.map((binding, index) => (
                 <ParameterZeile
                   key={index}
                   label={`${index + 1}.`}
                   binding={binding}
-                  dataSources={dataSources.list}
-                  blockValues={blockValues}
-                  geber={geber}
-                  erfassungen={erfassungen}
-                  aenderungen={aenderungen}
-                  loeschungen={loeschungen}
+                  dataSources={quellen}
+                  blockValues={auswahlen.blockValues}
+                  geber={auswahlen.geber}
+                  erfassungen={auswahlen.erfassungen}
+                  aenderungen={auswahlen.aenderungen}
+                  loeschungen={auswahlen.loeschungen}
                   schritte={ergebnisSchritte}
                   entfernen={{
                     label: `Zusatzparameter ${index + 1} entfernen`,
-                    onClick: () => setExtraParams((current) => current.filter((_, at) => at !== index)),
+                    onClick: () => dispatch({ art: 'extraWeg', index }),
                   }}
-                  onChange={(next) => setExtraParams((current) => current.map((value, at) => at === index ? next : value))}
+                  onChange={(next) => dispatch({ art: 'extraAendern', index, bindung: next })}
                 />
               ))}
             </div>
@@ -437,13 +370,13 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
         </>
       )}
 
-      {zeigeFehler && problem && typ === 'RELATION' && (
-        <p className="text-xs text-destructive">{problem}</p>
+      {entwurf.zeigeFehler && problem && entwurf.typ === 'RELATION' && (
+        <p className="text-ui text-fehler">{problem}</p>
       )}
 
-      <div className="flex justify-end gap-2 border-t border-border pt-3">
-        <Button variant="outline" size="sm" onClick={onClose}>Abbrechen</Button>
-        <Button size="sm" onClick={speichern}>Speichern</Button>
+      <div className="flex justify-end gap-2 border-t border-linie pt-3">
+        <Knopf onClick={onClose}>Abbrechen</Knopf>
+        <Knopf art="primaer" onClick={speichern}>Speichern</Knopf>
       </div>
     </div>
   )
