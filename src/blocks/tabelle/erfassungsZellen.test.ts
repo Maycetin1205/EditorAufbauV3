@@ -1,6 +1,12 @@
 import { expect, test } from 'vitest'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
-import { passendeSaetze, zellenzielVon, zielIn, type ErfassungsUmfeld } from './erfassungsZellen'
+import {
+  fensterSpaltenIn,
+  passendeSaetze,
+  zellenzielVon,
+  zielIn,
+  type ErfassungsUmfeld,
+} from './erfassungsZellen'
 import { ART_TEXT } from './spaltenArten'
 import type { Spalte } from './spalten'
 
@@ -106,4 +112,40 @@ test('zielIn liest die Spalte aus dem Umfeld', () => {
   }
   expect(zielIn(umfeld, 0).quelleId).toBe('q-art')
   expect(zielIn(umfeld, 9).art).toBe('frei')
+})
+
+// Wer aus einem Stamm mit tausenden Saetzen auswaehlt, braucht im Fenster
+// mehr als zwei Spalten — und zwar genau die, die in seiner Tabelle stehen.
+const FENSTER_UMFELD: ErfassungsUmfeld = {
+  spalten: [
+    spalte('Artikelnummer', 'q-art::artnr'),
+    spalte('Bezeichnung', 'q-art::name'),
+    { titel: 'Preis', feld: 'q-art::preis', art: 'zahl' },
+    spalte('Menge', '164_8'),
+    spalte('Tierart', 'q-tier::rasse'),
+  ],
+  quelleId: 'q-pos',
+  paareZu: () => [],
+  partnerVon: () => '',
+}
+
+test('das Fenster zeigt alle Spalten derselben Quelle, in Tabellenreihenfolge', () => {
+  expect(fensterSpaltenIn(FENSTER_UMFELD, 0)).toEqual([
+    { titel: 'Artikelnummer', feld: 'artnr', art: ART_TEXT },
+    { titel: 'Bezeichnung', feld: 'name', art: ART_TEXT },
+    { titel: 'Preis', feld: 'preis', art: 'zahl' },
+  ])
+})
+
+// Die Menge gehoert der eigenen Quelle, die Tierart einer anderen: beide
+// haben im Artikel-Fenster nichts verloren.
+test('fremde und eigene Spalten bleiben draussen', () => {
+  const felder = fensterSpaltenIn(FENSTER_UMFELD, 1).map((s) => s.feld)
+  expect(felder).toEqual(['artnr', 'name', 'preis'])
+  expect(fensterSpaltenIn(FENSTER_UMFELD, 4).map((s) => s.feld)).toEqual(['rasse'])
+})
+
+// In die eigene Quelle wird getippt, nicht ausgesucht.
+test('eine Spalte der eigenen Quelle hat kein Fenster', () => {
+  expect(fensterSpaltenIn(FENSTER_UMFELD, 3)).toEqual([])
 })

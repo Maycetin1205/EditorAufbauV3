@@ -1,7 +1,6 @@
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import { getField } from '../../softengine/data'
-import { ART_TEXT } from './spaltenArten'
 import type { Spalte } from './spalten'
 
 // Was eine Zelle der Erfassungszeile tut, wird ABGELEITET — eingestellt wird
@@ -103,17 +102,33 @@ export function anzeigeSpalteIn(
   return undefined
 }
 
-// Die Spalten des großen Fensters: Anzeige und Wert — genau das, was die
-// Vorschlagsliste daneben zeigt. Ohne eigene Anzeige-Spalte bleibt es bei der
-// Automatik des Fensters (eine Spalte).
+// Die Spalten des grossen Fensters: ALLE Spalten der Tabelle, die aus
+// derselben Quelle fuellen — in der Reihenfolge, in der sie in der Tabelle
+// stehen. Vorher waren es genau zwei (Anzeige und Wert); wer aus einem
+// Artikelstamm auswaehlt, sah damit Nummer und Bezeichnung, aber nicht die
+// Warengruppe oder den Preis, die in seiner Tabelle daneben stehen.
+//
+// Die Darstellung der Spalte reist mit (Zahl bleibt Zahl, Marke bleibt Marke).
+// Ihre Zusatzfelder dagegen NICHT: deren Codes gehoeren zur Tabellen-Quelle,
+// im Nachschlage-Satz zeigten sie ins Leere.
 export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalte[] {
-  const spalte = umfeld.spalten[index]
-  const anzeige = anzeigeSpalteIn(umfeld, index)
-  if (spalte === undefined || anzeige === undefined) return []
-  return [
-    { titel: anzeige.titel, feld: anzeige.code, art: ART_TEXT },
-    { titel: spalte.titel, feld: zielIn(umfeld, index).code, art: ART_TEXT },
-  ]
+  const ziel = zielIn(umfeld, index)
+  // Nachgeschlagen wird nur in einer verknuepften Zelle — in die eigene
+  // Quelle wird getippt (s. eintraege in erfassungsLauf).
+  if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []
+  const raus: Spalte[] = []
+  for (const spalte of umfeld.spalten) {
+    const anderes = zellenzielVon(spalte, umfeld.quelleId)
+    if (anderes.quelleId !== ziel.quelleId || anderes.code === '') continue
+    if (raus.some((s) => s.feld === anderes.code)) continue
+    raus.push({
+      titel: spalte.titel,
+      feld: anderes.code,
+      art: spalte.art,
+      ...(spalte.zuordnung ? { zuordnung: spalte.zuordnung } : {}),
+    })
+  }
+  return raus
 }
 
 // Eingeschränkt wird nach demselben Muster wie die Auswahl-Folge
