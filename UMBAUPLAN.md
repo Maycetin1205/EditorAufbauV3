@@ -6,6 +6,31 @@ Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mi
 
 **Stand 2026-08-28:** Etappe 4 ist bei Punkt 5 (Datencenter) abgehakt, und die Quellen-UI hat ihre Punkte **6, 4 und 5** (Spaltenkopf zweigeteilt, Füllfeld, Hilfsquellen-Spalte nie änderbar) — als Nächstes Quellen-UI Punkt 3, s. Reihenfolge gleich unten. Die Quellen-UI wird in dieser Reihenfolge gebaut, nicht in ihrer Nummerierung: **6+4 → 5 → 3 → 1+2 → 7**. Grund steht in Punkt 6 („Diese Teilung ist Teil von Punkt 4") und in Punkt 4 („gespiegelt in der Hilfsquellen-Liste aus Punkt 1b") — das Modell muss vor die Liste, die es spiegelt, sonst wird die Liste zweimal gebaut. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
 
+**Nachmittag 2026-08-28 — acht Commits AM PLAN VORBEI, auf mündliche Ansage
+des Nutzers.** Er hat an der Belegerfassung getestet und der Reihe nach
+melden lassen, was ihn aufhält; gebaut wurde jeweils sofort. Der Plan ist
+davon unberührt, die Reihenfolge unten gilt weiter. Was gebaut wurde:
+
+- `4c3e8b1` Schalter „Schlank" restlos entfernt (das war Punkt 4.7)
+- `9e2972f` Lücke neben der letzten Spalte weg (`scrollbar-gutter` raus)
+- `8e9f823` erfasste Zeile bleibt nach dem Schreiben stehen, bis SoftEngine
+  wirklich neue Daten liefert — vorher stiller Verlust der Eingabe
+- `8e848cf` Enter nimmt den einzigen Treffer, bei mehreren geht das
+  Nachschlage-Fenster auf (Suchwort reist mit)
+- `f5d0ee9` Ketten-Ergebnisse reisen über die Abschnittsgrenze
+- `9c06c56` Nachschlage-Fenster zeigt alle Spalten seiner Quelle
+- `915794d` Nachbesserung zu `8e848cf` (Marken-Wahl fiel am Feld nie weg)
+- `8dd78c3` das Fenster wächst mit seinen Spalten
+
+**Offen und NICHT gebaut** (jeweils Nutzer-Entscheidung nötig): einstellbare
+Fenster-Spalten (der Nutzer hatte sie gewünscht, gebaut ist die abgeleitete
+Fassung) · „Zeile bleibt stehen" verschwindet bei JEDER Lieferung, nicht erst
+bei einer, die sie enthält · `frischeDatenAnfordern` ist nach Aktenlage
+wirkungslos, bleibt bewusst stehen.
+
+⚠ **Zwei Agenten in einem Arbeitsbaum (Regel 8 verletzt, 2026-08-28).** Wer
+hier arbeitet: NIE `git add -A`, nur eigene Dateien namentlich stagen.
+
 **Reihenfolge ab hier (Nutzer-Entscheidung 2026-08-28):**
 
 ```
