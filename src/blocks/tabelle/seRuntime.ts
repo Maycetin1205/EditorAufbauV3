@@ -17,6 +17,8 @@ export interface RuntimeTableElement extends HTMLElement {
   auswahlIndex: number
   durchAuswahlGefiltert: boolean
   datenGeliefert: boolean
+
+  vergissGeschriebene: () => void
 }
 
 function spaltenVon(el: HTMLElement): Spalte[] {
@@ -58,7 +60,11 @@ export function hatSatzNummer(el: HTMLElement): boolean {
   return source !== undefined && source.indexField !== ''
 }
 
-function hydrateTable(el: RuntimeTableElement): void {
+function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
+  // Der Beweis, dass der neue Stand da ist. Erst jetzt duerfen die
+  // hinausgeschickten Erfassungszeilen weg — vorher waere es ein Verwerfen
+  // auf Verdacht (s. ZeilenStatus 'geschrieben').
+  if (lieferung) el.vergissGeschriebene()
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {
     el.datenzeilen = []

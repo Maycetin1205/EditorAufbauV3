@@ -281,6 +281,12 @@ export const tabelleStil = css`
         box-shadow: inset 3px 0 0 var(--se-accent);
         animation: se-schreibt 1.1s ease-in-out infinite;
       }
+      /* Hinausgeschickt: derselbe Balken wie eine Vormerkung, nur blass — die
+         Zeile ist erledigt, aber noch unbestaetigt. Kein Wort in der Zeile. */
+      .zeile[data-status="geschrieben"] {
+        box-shadow: inset 3px 0 0 var(--se-faint);
+        color: var(--se-muted);
+      }
       .zeile[data-status="fehler"] {
         box-shadow: inset 3px 0 0 var(--se-red);
         background: var(--se-red-shell);

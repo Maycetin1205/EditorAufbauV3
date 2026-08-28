@@ -10,16 +10,20 @@ export interface DatenAnschluss<T extends HTMLElement> {
 }
 
 export function macheDatenAnschluss<T extends HTMLElement>(opts: {
-  hydriere: (el: T) => void
+  // `lieferung` sagt, ob wirklich neue Daten aus SoftEngine gekommen sind.
+  // Ein Auswahlwechsel, ein Tageswechsel oder ein blosser Anstoss nach dem
+  // Schreiben sind KEINE Lieferung — wer daran etwas verwirft, verwirft es
+  // ohne Beweis.
+  hydriere: (el: T, lieferung: boolean) => void
 
   verdrahte?: (el: T) => void
 }): DatenAnschluss<T> {
   const elemente = new Set<T>()
   let angemeldet = false
 
-  const hydriereAlle = (): void => {
+  const hydriereAlle = (lieferung: boolean): void => {
     if (!hasSeData()) return
-    elemente.forEach(opts.hydriere)
+    elemente.forEach((el) => { opts.hydriere(el, lieferung) })
   }
 
   const connect = (el: T): void => {
@@ -31,15 +35,15 @@ export function macheDatenAnschluss<T extends HTMLElement>(opts: {
       angemeldet = true
       onSeDaten(hydriereAlle)
 
-      aufTagHoeren(hydriereAlle)
+      aufTagHoeren(() => { hydriereAlle(false) })
 
-      aufAuswahlHoeren(hydriereAlle)
+      aufAuswahlHoeren(() => { hydriereAlle(false) })
 
       verdrahteHolendeQuellen()
     }
     bootSe()
 
-    if (hasSeData()) opts.hydriere(el)
+    if (hasSeData()) opts.hydriere(el, false)
   }
 
   const disconnect = (el: T): void => {

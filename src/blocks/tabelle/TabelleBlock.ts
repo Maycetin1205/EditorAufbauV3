@@ -253,14 +253,25 @@ export class TabelleBlock extends BasicBlock {
   laufFertig(art: VormerkArt, geschrieben: readonly string[]): void {
     this._lauf.fertig(art, geschrieben)
     if (art === 'erfasst') {
-      if (this._erfassung.austragen(geschrieben)) this.requestUpdate()
+      const bewegt = this._erfassung.markiereGeschrieben(this.erfassungsUmfeld(), geschrieben)
+      if (bewegt) this.requestUpdate()
       return
     }
     this._zeilen.austragen(art, geschrieben)
   }
 
+  // Erst eine echte Lieferung aus SoftEngine raeumt die hinausgeschickten
+  // Zeilen weg — der Laufzeit-Anschluss reicht durch, ob es eine war.
+  vergissGeschriebene(): void {
+    if (this._erfassung.vergissGeschriebene()) this.requestUpdate()
+  }
+
   private erfasstStand(index: number): ZeilenZeichen {
-    return this._lauf.zeigt('erfasst', this._erfassung.schluessel[index] ?? '', 'erfasst')
+    return this._lauf.zeigt(
+      'erfasst',
+      this._erfassung.schluessel[index] ?? '',
+      this._erfassung.istGeschrieben(index) ? 'geschrieben' : 'erfasst',
+    )
   }
 
   // Enter am Zeilenende (G4): die Zeile bleibt stehen, die Erfassung rueckt

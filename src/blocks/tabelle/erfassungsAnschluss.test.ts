@@ -98,15 +98,70 @@ test('das Zurueckholen legt eine schon oben stehende Zeile erst ab', () => {
 
 // Bleibt sie oben stehen, tippte der Bediener an einer Zeile weiter, die es
 // im ERP schon gibt.
-test('eine geschriebene Zeile wird auch oben ausgetragen', () => {
+test('die oben stehende Zeile geht beim Schreiben markiert an ihren Platz', () => {
   const a = new ErfassungsAnschluss()
   lege(a, 'ART1', '1')
   const kennung = a.schluessel[0]
 
   a.zurueckholen(UMFELD, 0)
-  expect(a.austragen([kennung])).toBe(true)
+  expect(a.markiereGeschrieben(UMFELD, [kennung])).toBe(true)
   expect(a.vormerkungen(UMFELD)).toEqual([])
   expect(a.lauf.wertVon(UMFELD, 0)).toBe('')
+  // Und sie ist trotzdem noch zu sehen — genau darum geht es.
+  expect(werte(a)).toEqual([['ART1', '1']])
+  expect(a.istGeschrieben(0)).toBe(true)
+})
+
+// Der eigentliche Datenverlust: frueher flog die Zeile hier aus der Liste,
+// und blieb die Lieferung aus, war die Eingabe spurlos weg.
+test('eine geschriebene Zeile bleibt sichtbar und zaehlt nicht mehr mit', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  lege(a, 'ART2', '2')
+
+  expect(a.markiereGeschrieben(UMFELD, [a.schluessel[0] ?? ''])).toBe(true)
+  expect(werte(a)).toEqual([['ART1', '1'], ['ART2', '2']])
+  expect(a.vormerkungen(UMFELD).map((v) => [...v.werte])).toEqual([['ART2', '2']])
+  expect(a.istGeschrieben(0)).toBe(true)
+  expect(a.istGeschrieben(1)).toBe(false)
+})
+
+// Ein zweites Enter wuerde sie ein zweites Mal hinausschicken.
+test('eine geschriebene Zeile laesst sich nicht zurueckholen', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  a.markiereGeschrieben(UMFELD, [a.schluessel[0] ?? ''])
+
+  expect(a.zurueckholen(UMFELD, 0)).toBe(false)
+  expect(a.lauf.wertVon(UMFELD, 0)).toBe('')
+})
+
+// Erst die echte Lieferung raeumt weg; ohne sie bleibt alles stehen.
+test('vergissGeschriebene nimmt nur die geschriebenen Zeilen', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  lege(a, 'ART2', '2')
+  a.markiereGeschrieben(UMFELD, [a.schluessel[0] ?? ''])
+
+  expect(a.vergissGeschriebene()).toBe(true)
+  expect(werte(a)).toEqual([['ART2', '2']])
+  expect(a.vergissGeschriebene()).toBe(false)
+})
+
+// Die zur Korrektur oben stehende Zeile haelt ihren Platz auch dann, wenn vor
+// ihr schon geschriebene Zeilen stehen.
+test('die oben stehende Zeile behaelt ihren Platz zwischen geschriebenen', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  lege(a, 'ART2', '2')
+  lege(a, 'ART3', '3')
+  a.markiereGeschrieben(UMFELD, [a.schluessel[0] ?? ''])
+
+  a.zurueckholen(UMFELD, 1)
+  expect(a.vormerkungen(UMFELD).map((v) => [...v.werte])).toEqual([
+    ['ART2', '2'],
+    ['ART3', '3'],
+  ])
 })
 
 test('eine ganz leere Erfassungszeile wird weiterhin nicht abgelegt', () => {

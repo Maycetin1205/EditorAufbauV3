@@ -10,7 +10,11 @@ import type { Spalte } from './spalten'
 export class ErfassungsAnschluss {
   readonly lauf = new ErfassungsLauf()
 
-  private _zeilen: { kennung: string; werte: string[] }[] = []
+  // `geschrieben` heisst: die Kette hat diese Zeile hinausgeschickt. Sie ist
+  // dann keine Vormerkung mehr (zaehlt nicht, wird nicht noch einmal
+  // geschickt), bleibt aber SICHTBAR — bis SoftEngine neue Daten liefert, in
+  // denen sie steht.
+  private _zeilen: { kennung: string; werte: string[]; geschrieben?: true }[] = []
 
   private naechsteKennung = 1
 
@@ -30,16 +34,30 @@ export class ErfassungsAnschluss {
   // Zeile, die der Bediener vor Augen hat, und der Knopf zaehlte sie nicht
   // mit — ein stiller Verlust genau dort, wo er am meisten weh tut.
   vormerkungen(umfeld: ErfassungsUmfeld): { kennung: string; werte: readonly string[] }[] {
-    const alle = this._zeilen.map((z) => ({ kennung: z.kennung, werte: z.werte as readonly string[] }))
+    const alle = this._zeilen
+      .filter((z) => z.geschrieben !== true)
+      .map((z) => ({ kennung: z.kennung, werte: z.werte as readonly string[] }))
     const zurueck = this._zurueck
     if (!zurueck) return alle
     const oben = umfeld.spalten.map((_, i) => this.lauf.wertVon(umfeld, i))
     if (oben.every((w) => w === '')) return alle
+    // Ihr Platz zaehlt in der GEFILTERTEN Liste: geschriebene Zeilen stehen
+    // noch dazwischen, gehoeren aber nicht mehr dazu. Ohne das Umrechnen
+    // rutschte die Zeile mit jeder geschriebenen Zeile vor ihr nach hinten.
+    const platz = this._zeilen
+      .slice(0, zurueck.platz)
+      .filter((z) => z.geschrieben !== true).length
     return [
-      ...alle.slice(0, zurueck.platz),
+      ...alle.slice(0, platz),
       { kennung: zurueck.kennung, werte: oben },
-      ...alle.slice(zurueck.platz),
+      ...alle.slice(platz),
     ]
+  }
+
+  // Ist diese Zeile schon hinausgeschickt? Der Aufrufer zeigt sie dann anders
+  // an und laesst sie nicht mehr zur Korrektur zurueckholen.
+  istGeschrieben(index: number): boolean {
+    return this._zeilen[index]?.geschrieben === true
   }
 
   // Dieselbe Reihenfolge, aber die Kennungen: der Ketten-Bericht sagt damit,
@@ -106,7 +124,10 @@ export class ErfassungsAnschluss {
   // blieben mit den Werten des alten Artikels stehen.
   zurueckholen(umfeld: ErfassungsUmfeld, index: number): boolean {
     const zeile = this._zeilen[index]
-    if (!zeile) return false
+    // Eine hinausgeschickte Zeile kommt nicht zurueck: sie steht nur noch als
+    // Beleg da, dass geschrieben wurde. Ein zweites Enter wuerde sie ein
+    // zweites Mal schicken.
+    if (!zeile || zeile.geschrieben === true) return false
     // Was gerade oben steht, gehoert erst an seinen Platz — sonst ginge es
     // beim Klick auf die naechste Zeile verloren.
     this.erfasse(umfeld)
@@ -127,20 +148,47 @@ export class ErfassungsAnschluss {
     return true
   }
 
-  // Was die Kette geschrieben hat, ist keine Vormerkung mehr. Alles andere
-  // bleibt stehen — auch die Zeile, an der der Lauf haengengeblieben ist.
-  austragen(kennungen: readonly string[]): boolean {
+  // Was die Kette hinausgeschickt hat, ist keine Vormerkung mehr — aber es
+  // verschwindet NICHT. Frueher flog die Zeile hier aus der Liste, und die
+  // Maske wartete darauf, dass SoftEngine sie als gebuchte Zeile nachliefert.
+  // Blieb die Lieferung aus (oder hatte die ERP den PUT abgelehnt, was ein
+  // Einweg-Ruf nicht meldet), war die Eingabe des Bedieners spurlos weg.
+  markiereGeschrieben(umfeld: ErfassungsUmfeld, kennungen: readonly string[]): boolean {
     if (kennungen.length === 0) return false
-    const bleibt = this._zeilen.filter((z) => !kennungen.includes(z.kennung))
+    let geaendert = false
+    this._zeilen = this._zeilen.map((z) => {
+      if (z.geschrieben === true || !kennungen.includes(z.kennung)) return z
+      geaendert = true
+      return { ...z, geschrieben: true }
+    })
     // Auch die zur Korrektur oben stehende Zeile kann geschrieben worden sein
-    // — die Kette sieht sie (vormerkungen). Bleibt sie danach oben, tippte
-    // der Bediener an einer Zeile weiter, die es im ERP schon gibt.
-    const obenGeschrieben = this._zurueck !== null && kennungen.includes(this._zurueck.kennung)
-    if (obenGeschrieben) {
+    // — die Kette sieht sie (vormerkungen). Sie geht an ihren Platz zurueck,
+    // markiert; oben stehen bliebe sie sonst als tippbare Zeile, die es im
+    // ERP schon gibt.
+    const zurueck = this._zurueck
+    if (zurueck !== null && kennungen.includes(zurueck.kennung)) {
+      this._zeilen = [
+        ...this._zeilen.slice(0, zurueck.platz),
+        {
+          kennung: zurueck.kennung,
+          werte: umfeld.spalten.map((_, i) => this.lauf.wertVon(umfeld, i)),
+          geschrieben: true,
+        },
+        ...this._zeilen.slice(zurueck.platz),
+      ]
       this._zurueck = null
       this.lauf.zuruecksetzen()
+      geaendert = true
     }
-    if (bleibt.length === this._zeilen.length) return obenGeschrieben
+    return geaendert
+  }
+
+  // Erst eine echte Lieferung beweist, dass der neue Stand da ist. Dann sind
+  // die geschriebenen Zeilen doppelt zu sehen — als gebuchte Zeile der Quelle
+  // und als Erfassung — und die Erfassung geht.
+  vergissGeschriebene(): boolean {
+    const bleibt = this._zeilen.filter((z) => z.geschrieben !== true)
+    if (bleibt.length === this._zeilen.length) return false
     this._zeilen = bleibt
     return true
   }

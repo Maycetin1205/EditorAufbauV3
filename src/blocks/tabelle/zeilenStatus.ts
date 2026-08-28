@@ -9,6 +9,12 @@ export type ZeilenStatus =
   | 'geaendert'
   | 'loeschung'
   | 'schreibt'
+
+  // Die Kette hat sie hinausgeschickt. Stehen bleibt sie trotzdem, bis
+  // SoftEngine wirklich neue Daten liefert: ein PUT ist ein Einweg-Ruf, seine
+  // Annahme sieht die Maske nicht. Wer die Zeile vorher wegnimmt, nimmt sie
+  // auch dann weg, wenn die ERP sie abgelehnt hat.
+  | 'geschrieben'
   | 'fehler'
 
 export interface ZeilenZeichen {
@@ -24,6 +30,7 @@ const TITEL: Record<ZeilenStatus, string> = {
   geaendert: 'Geändert — noch nicht geschrieben',
   loeschung: 'Zum Löschen vorgemerkt — noch nicht geschrieben',
   schreibt: 'Wird geschrieben …',
+  geschrieben: 'Hinausgeschickt — bleibt stehen, bis neue Daten kommen',
   fehler: 'Nicht geschrieben',
 }
 

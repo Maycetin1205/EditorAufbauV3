@@ -259,13 +259,16 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
         })}
         ${lage.erfasste.map((werte, zeilenIndex) => {
           const zeichen = lage.erfasstStand(zeilenIndex)
+          // Hinausgeschickt heisst: nicht mehr anfassen. Ein Zurueckholen
+          // wuerde eine Zeile zum Tippen anbieten, die im ERP schon steht.
+          const fest = zeichen.status === 'geschrieben'
           return html`<div
           class="zeile erfasst"
           role="row"
           data-status=${zeichen.status}
-          title=${lage.imEditor ? zeichen.titel : `${zeichen.titel} — zum Korrigieren anklicken`}
+          title=${lage.imEditor || fest ? zeichen.titel : `${zeichen.titel} — zum Korrigieren anklicken`}
           style=${styleMap(lage.cols)}
-          @click=${lage.imEditor ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
+          @click=${lage.imEditor || fest ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
         >
           ${lage.spalten.map((s, i) => {
             const art = spaltenArt(s.art)
@@ -282,7 +285,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           ${lage.imEditor ? nothing : html`<button
               class="zeile-weg"
               type="button"
-              title="Diese erfasste Zeile wieder wegnehmen"
+              title=${fest
+                ? 'Aus der Ansicht nehmen — geschrieben ist sie schon'
+                : 'Diese erfasste Zeile wieder wegnehmen'}
               aria-label="Erfasste Zeile wegnehmen"
               @click=${(e: MouseEvent) => {
                 e.stopPropagation()

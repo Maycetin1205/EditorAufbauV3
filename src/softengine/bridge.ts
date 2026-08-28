@@ -26,7 +26,10 @@ function refreshDataBasis(): void {
   try { if (typeof g.InitialisiereDatenBasis === 'function') g.InitialisiereDatenBasis() } catch { /* s.o. */ }
 }
 
-const zuhoerer = new Set<() => void>()
+// Der Schalter sagt, ob wirklich NEUE Daten da sind. Nur dann darf eine
+// geschriebene Zeile aus der Maske verschwinden: ein blosser Anstoss
+// (frischeDatenAnfordern) beweist keine Lieferung.
+const zuhoerer = new Set<(lieferung: boolean) => void>()
 const antwortZuhoerer = new Set<(raw: unknown) => void>()
 
 // Die ERP schiebt weiter, waehrend der Bediener tippt. Zeichnete die Maske
@@ -36,6 +39,7 @@ const antwortZuhoerer = new Set<(raw: unknown) => void>()
 const NACHLAUF_MS = 800
 
 let ausstehend = false
+let ausstehendeLieferung = false
 let nachlauf: ReturnType<typeof setInterval> | null = null
 
 // Das wirklich fokussierte Element — durch die Schatten-Wurzeln hindurch,
@@ -62,7 +66,9 @@ function nachlaufStarten(): void {
     nachlaufBeenden()
     if (!ausstehend) return
     ausstehend = false
-    zuhoerer.forEach((cb) => { cb() })
+    const lief = ausstehendeLieferung
+    ausstehendeLieferung = false
+    zuhoerer.forEach((cb) => { cb(lief) })
   }, NACHLAUF_MS)
 }
 
@@ -72,7 +78,7 @@ function nachlaufBeenden(): void {
   nachlauf = null
 }
 
-export function onSeDaten(cb: () => void): void {
+export function onSeDaten(cb: (lieferung: boolean) => void): void {
   zuhoerer.add(cb)
 }
 
@@ -81,18 +87,21 @@ export function onSeAntwort(cb: (raw: unknown) => void): () => void {
   return () => { antwortZuhoerer.delete(cb) }
 }
 
-function klingeln(): void {
+function klingeln(lieferung: boolean): void {
+  if (lieferung) ausstehendeLieferung = true
   if (fokusBeiUns()) {
     ausstehend = true
     nachlaufStarten()
     return
   }
   ausstehend = false
-  zuhoerer.forEach((cb) => cb())
+  const lief = ausstehendeLieferung
+  ausstehendeLieferung = false
+  zuhoerer.forEach((cb) => cb(lief))
 }
 
 export function meldeNeueDaten(): void {
-  klingeln()
+  klingeln(true)
 }
 
 // Nach dem Schreiben will der Bediener den neuen Stand sehen. SoftEngine
@@ -102,7 +111,21 @@ export function meldeNeueDaten(): void {
 // nicht zurueck). Das gehoert in den SE-Echttest.
 export function frischeDatenAnfordern(): void {
   refreshDataBasis()
-  klingeln()
+  klingeln(false)
+}
+
+// „Sind das andere Daten als zuletzt?" — dieselbe Signatur wie im Push-Weg.
+// SoftEngine ruft Erstellen/ReloadData auch dann, wenn sich nichts geaendert
+// hat; daran darf keine hinausgeschickte Zeile verschwinden. Eine leere
+// Signatur heisst „zu gross zum Vergleichen" und gilt als neu.
+function datenSindNeu(): boolean {
+  const g = seGlobal()
+  const roh = isRecord(g.SEDATA) ? g.SEDATA.Daten : undefined
+  if (!isRecord(roh)) return false
+  const signatur = signaturVon(roh)
+  if (signatur !== '' && signatur === letzteSignatur) return false
+  letzteSignatur = signatur
+  return true
 }
 
 function antwortKlingeln(raw: unknown): void {
@@ -143,7 +166,7 @@ function seConsume(raw: unknown): void {
   const signatur = signaturVon(daten)
   if (signatur !== '' && signatur === letzteSignatur) return
   letzteSignatur = signatur
-  klingeln()
+  klingeln(true)
 }
 
 function registerSe(tries = 0): void {
@@ -189,9 +212,9 @@ export function bootSe(): void {
   booted = true
   tryInitSe()
   const g = seGlobal()
-  g.Erstellen = () => { refreshDataBasis(); klingeln() }
+  g.Erstellen = () => { refreshDataBasis(); klingeln(datenSindNeu()) }
   g.initData = g.Erstellen
-  g.ReloadData = () => { klingeln() }
+  g.ReloadData = () => { klingeln(datenSindNeu()) }
   fokusBrueckeBauen()
   registerSe()
 
@@ -206,7 +229,7 @@ export function bootSe(): void {
     if (hasSeData()) {
       clearInterval(poll)
       refreshDataBasis()
-      klingeln()
+      klingeln(datenSindNeu())
     } else if (tries > 100) {
       clearInterval(poll)
       meldeFehler('Keine Daten von SoftEngine empfangen — die Maske zeigt nichts an.')
