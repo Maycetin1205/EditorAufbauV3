@@ -104,8 +104,6 @@ export class TabelleBlock extends BasicBlock {
 
     loeschbar: 'nein',
 
-    schlank: 'nein',
-
     kopfzeile: 'ja',
 
     tagField: '',
@@ -134,8 +132,6 @@ export class TabelleBlock extends BasicBlock {
   @property() blaettern = 'ja'
 
   @property() loeschbar = 'nein'
-
-  @property() schlank = 'nein'
 
   @property() kopfzeile = 'ja'
 
@@ -432,9 +428,7 @@ export class TabelleBlock extends BasicBlock {
       wertVon: (zeile, spalte) => this._zeilen.zellWert(zeile, spalte),
       blaettert: this.blaettern === 'ja',
     })
-    const tafelKlassen = ['tabelle']
-    if (this.schlank === 'ja') tafelKlassen.push('schlank')
-    return html`<div class=${tafelKlassen.join(' ')} style=${styleMap({
+    return html`<div class="tabelle" style=${styleMap({
       '--takt': `${ansicht.takt}px`,
       '--zeilen-hoehe': `${ansicht.zeilenHoehe}px`,
     })}>

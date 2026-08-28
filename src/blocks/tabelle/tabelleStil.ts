@@ -4,8 +4,8 @@ export const tabelleStil = css`
       :host { min-width: 0; height: 100%; }
 
       .tabelle {
-        /* Die zwei Zahlen, aus denen sich jedes Zell-Polster ergibt. Nur hier
-           stehen sie; „Schlank" aendert einzig --se-zell-x. */
+        /* Die zwei Zahlen, aus denen sich jedes Zell-Polster ergibt. Nur
+           hier stehen sie. */
         --se-zell-x: 10px;
         --se-eingabe-x: 4px;
 
@@ -240,17 +240,6 @@ export const tabelleStil = css`
         font-size: var(--se-fs-sm);
         line-height: 1.35;
       }
-
-      /* Schlank (G5, Nutzer-Entscheidung): kein Tafel-Rahmen, engere
-         Polster — die Tabelle liegt buendig auf der Maske. */
-      .tabelle.schlank {
-        --se-zell-x: 6px;
-
-        border: 0;
-        border-radius: 0;
-        background: transparent;
-      }
-      .tabelle.schlank .suchzeile { padding: 4px 6px; }
 
       .fusszeile {
         display: flex;
