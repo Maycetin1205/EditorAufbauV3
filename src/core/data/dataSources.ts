@@ -86,24 +86,46 @@ export function felderFor(
     }
     return codes
   }
+  // Bestellt wird, was die Maske wirklich liest — nicht, was die Quelle an
+  // Feldern kennt. SoftEngine schlaegt zu JEDEM gelieferten Wert nach
+  // (GET_RELATION 1911), die Menge bestimmt allein unsere Bestellung.
+  // Reihenfolge: die Vorne-Codes, dann die Felder der Quelle in ihrer
+  // Reihenfolge, dann gebundene Codes, die (noch) nicht in der Liste stehen.
+  const nurBenutzte = (vorne: readonly string[], gelesen: ReadonlySet<string>): string[] => {
+    const codes = [...vorne]
+    for (const f of source.fields) {
+      if (gelesen.has(f.code) && !codes.includes(f.code)) codes.push(f.code)
+    }
+    for (const code of gelesen) {
+      if (!codes.includes(code)) codes.push(code)
+    }
+    return mitSchluesseln(codes)
+  }
+
+  // Aus dem indexField loest sich {PINDEX} auf. An eine Spalte gebunden ist
+  // die Satznummer fast nie, bestellt werden muss sie trotzdem: fehlt sie,
+  // liefert SoftEngine sie nicht, und Aendern wie Loeschen schreibt ins
+  // Nichts — still, denn ein PUT ist ein Einweg-Ruf.
+  const index = (source.indexField ?? '').trim()
+  const vorne = index === '' ? [] : [index]
+
   if (artFuer(source.kind).felderEinzeln) {
-    return mitSchluesseln(source.fields.map((f) => f.code)).join(',')
+    // Ohne bekannte Verwendung bleibt es bei der ganzen Liste: '*' ist bei
+    // diesen Arten nicht erlaubt, und eine leere Bestellung waere ein
+    // stiller Ausfall.
+    if (!benutzt || benutzt.size === 0) {
+      return mitSchluesseln(source.fields.map((f) => f.code)).join(',')
+    }
+    return nurBenutzte(vorne, benutzt).join(',')
   }
 
   if (!benutzt || benutzt.size === 0) return '*'
 
-  const index = (source.indexField ?? '').trim()
-  const codes = index === '' ? [] : [index]
+  const codes = nurBenutzte(vorne, benutzt)
 
-  for (const f of source.fields) {
-    if (benutzt.has(f.code) && !codes.includes(f.code)) codes.push(f.code)
-  }
-  for (const code of benutzt) {
-    if (!codes.includes(code)) codes.push(code)
-  }
-
-  mitSchluesseln(codes)
-
+  // Der Rueckfall auf '*' gehoert allein hierher: oben ist '*' nicht erlaubt,
+  // und dort sind Codes ohne pos_len normal (DataSet-Spalten, ERP-Abfragen
+  // mit Feldvorsatz) — die Pruefung wuerde jede solche Bestellung kippen.
   return codes.every((code) => POS_LEN.test(code)) ? codes.join(',') : '*'
 }
 

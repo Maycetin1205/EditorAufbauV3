@@ -5,11 +5,14 @@ import { baueSevariablen } from './sevariablen'
 interface Bestellung {
   VAR?: { ID: string; FELDER: string }[]
   SEFILELOOP: { ALIAS: string; ID: string; KOPFSATZ_INDEX?: string; FELDER: string }[]
-  ERPAPICALL: unknown[]
+  ERPAPICALL: { ALIAS: string; ID: string; FELDER: string }[]
 }
 
-function bestellung(used: readonly DataSource[]): Bestellung {
-  return JSON.parse(baueSevariablen(used, new Map(), new Map())) as Bestellung
+function bestellung(
+  used: readonly DataSource[],
+  benutzt: ReadonlyMap<string, ReadonlySet<string>> = new Map(),
+): Bestellung {
+  return JSON.parse(baueSevariablen(used, benutzt, new Map())) as Bestellung
 }
 
 function felder(codes: readonly string[]): DataSource['fields'] {
@@ -78,4 +81,62 @@ test('dasselbe Feld zweimal bestellt wird einmal geschrieben', () => {
 
 test('ohne VAR-Bedarf fehlt der VAR-Abschnitt ganz', () => {
   expect(bestellung([artikel]).VAR).toBeUndefined()
+})
+
+// SoftEngine schlaegt zu jedem gelieferten Wert nach; eine Quelle mit 34
+// Feldern, von denen die Maske drei zeigt, kostet das Elffache an Zeit.
+// Bis 2026-08-28 las felderFor die Benutzt-Liste NUR bei IDB — alle anderen
+// Arten bestellten ihre komplette Feldliste.
+const langePos: DataSource = {
+  id: 'q-pos-lang',
+  name: 'POS',
+  kind: 'belegposition',
+  fields: felder(['2_1', '3_8', '11_6', '18_25', '45_60', '164_8']),
+}
+
+test('bestellt werden nur die Felder, die die Maske liest', () => {
+  const raus = bestellung([langePos], new Map([['q-pos-lang', new Set(['18_25', '164_8'])]]))
+  expect(raus.SEFILELOOP[0]?.FELDER).toBe('18_25,164_8')
+})
+
+test('das gilt auch fuer die ERP-Abfrage', () => {
+  const abfrage: DataSource = {
+    id: 'q-api',
+    name: 'Artikelstamm',
+    kind: 'erpabfrage',
+    idbId: 'ARTIKEL.GET',
+    feldVorsatz: 'ART',
+    fields: felder(['ART_1_25', 'ART_51_60', 'ART_759_10', 'ART_2035_80']),
+  }
+  const raus = bestellung([abfrage], new Map([['q-api', new Set(['ART_51_60'])]]))
+  expect(raus.ERPAPICALL).toEqual([
+    { ID: 'ARTIKEL.GET', ALIAS: 'Artikelstamm', FELDER: 'ART_51_60' },
+  ])
+})
+
+// Der Rueckfall: '*' ist bei diesen Arten nicht erlaubt, und eine leere
+// Bestellung waere ein stiller Ausfall.
+test('liest die Maske aus der Quelle nichts, bleibt es bei der ganzen Liste', () => {
+  expect(bestellung([langePos]).SEFILELOOP[0]?.FELDER)
+    .toBe('2_1,3_8,11_6,18_25,45_60,164_8')
+})
+
+test('ein gebundener Code ausserhalb der Feldliste kommt trotzdem mit', () => {
+  const raus = bestellung([langePos], new Map([['q-pos-lang', new Set(['3_8', '940_60'])]]))
+  expect(raus.SEFILELOOP[0]?.FELDER).toBe('3_8,940_60')
+})
+
+// {PINDEX} loest sich aus dem indexField auf. Gebunden ist die Satznummer
+// fast nie — fehlt sie in der Bestellung, liefert SoftEngine sie nicht, und
+// Aendern wie Loeschen schreibt ins Nichts. Still, denn ein PUT ist ein
+// Einweg-Ruf: seine Ablehnung sieht die Maske nicht.
+test('die Satznummer kommt mit, auch wenn keine Spalte an ihr haengt', () => {
+  const mitSatznummer: DataSource = { ...langePos, indexField: '645_10' }
+  const raus = bestellung([mitSatznummer], new Map([['q-pos-lang', new Set(['18_25'])]]))
+  expect(raus.SEFILELOOP[0]?.FELDER).toBe('645_10,18_25')
+})
+
+test('der offene Satz behaelt seine benutzten Felder im VAR-Abschnitt', () => {
+  const raus = bestellung([positionen, belegkopf], new Map([['q-bel', new Set(['3_8'])]]))
+  expect(raus.VAR).toEqual([{ ID: 'BEL', FELDER: '0_11,3_8' }])
 })
