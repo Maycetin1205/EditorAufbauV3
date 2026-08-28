@@ -1,8 +1,10 @@
 # UMBAUPLAN EditorAufbauV3 — Belegerfassung fertig + Editor-UI komplett neu
 
-Stand: 2026-08-27. Entscheidung: **V3 weiterbauen, kein Neubau.** PageBuilder (C:\Users\mu.aycetin\Desktop\PageBuilder) ist eingefroren und dient nur noch als Wissensspender.
+Stand: 2026-08-28. Entscheidung: **V3 weiterbauen, kein Neubau.** PageBuilder (C:\Users\mu.aycetin\Desktop\PageBuilder) ist eingefroren und dient nur noch als Wissensspender.
 
 Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mit einem Commit. Beim Abarbeiten Haken in diese Datei setzen — sonst wird sie nicht angefasst.
+
+**Stand 2026-08-28:** Etappe 4 ist bei Punkt 3 (`StepForm`) abgehakt, es folgen 4.4–4.6 und die zwei Pflichtteile. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
 
 ---
 
@@ -11,7 +13,9 @@ Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mi
 1. **Keine neuen Markdown-Dateien.** Am Ende existieren genau zwei: `CLAUDE.md` (wiederhergestellt) und dieser Plan. Kein README-Neuschrieb, keine Konzeptpapiere, keine "NOTES".
 2. **Keine Kommentar-Erzählungen.** Ein Kommentar ist nur erlaubt, wenn er einen SoftENGINE-Kontrakt oder ein nicht-offensichtliches Warum festhält (Stil wie in `src/blocks/tabelle/erfassungsLauf.ts:349-357`). Niemals: was die nächste Zeile tut, was geändert wurde, "NEU:", "Fix:".
 3. **Keine neuen npm-Abhängigkeiten.** Auch keine UI-Bibliothek für die neue Designsprache — die Atome werden selbst gebaut.
-4. **Keine Änderung in `src/core/`, `src/softengine/`, `src/export/` ohne zugehörigen Test** (ab Etappe 1 vorhanden).
+4. **Keine Änderung in `src/core/`, `src/softengine/`, `src/export/` ohne zugehörigen Test.**
+
+   **Korrigiert 2026-08-28:** hier stand „(ab Etappe 1 vorhanden)". Für `src/export/` stimmt das nicht — `nodeToHtml` (`exportMask.ts:76-192`), der gesamte Baustein-Export, wird von keinem Test mit einem echten Baustein ausgeführt. Das Verbot gilt trotzdem: wer dort etwas ändert, schreibt den fehlenden Test zuerst (Etappe 5 Punkt 5).
 5. **Kein `if (type === 'tabelle')` in generischem Code.** Fähigkeiten laufen über `BlockDefinition`/Registry, wie bisher.
 6. **500-Zeilen-Deckel pro Datei.** Seit Etappe 2 hält ihn jede Datei ein (größte: `FormFeldBlock.ts` 498, `TabelleBlock.ts` 491).
 7. **Deutsche Benennung**, wie im Bestand.
@@ -85,7 +89,15 @@ gerechneter Spalten (Gesamt, Rohertrag). Der Standard steht am Schalter
 
 ## Etappe 4 — Editor-UI komplett neu: Designsprache "Werkbank"
 
-Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (masken-tokens.css, V11-Palette) bleibt unangetastet. Das darunterliegende Modell (`PropertyDescription`, `ListenBindung`, `BlockDefinition`, `schrittPruefung`) bleibt **exakt wie es ist** — es wird nur neu gezeichnet.
+Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (masken-tokens.css, V11-Palette) bleibt unangetastet.
+
+Das darunterliegende Modell bleibt **beim Zeichnen** unangetastet — `PropertyDescription`, `ListenBindung`, `BlockDefinition`, `schrittPruefung` werden für die Punkte 1–6 nur gelesen. **Nachgezogen 2026-08-28:** die zwei Pflichtteile unten (Quellen-UI, Ketten-Editor) sind davon ausgenommen, weil sie ohne Modell-Änderung nicht baubar sind. Ausdrücklich erlaubt sind dort genau vier Erweiterungen, jede mit Test:
+- `Spalte.fuellFeld` (Quellen-UI, Punkt 5)
+- der Relations-Katalog in `core/data/relations.ts` samt Torwächter `pruefeRelationsVorlagen` (Ketten-Editor, Punkt 1)
+- die Rückgabe von `stepProblem` um eine Parameter-Kennung (Ketten-Editor, Punkt 3 — ein Fehler „am betroffenen Parameter" ist ohne sie nicht anzeigbar)
+- `ErfassungsOption` um den Feldcode (Ketten-Editor, Punkt 3a)
+
+Alles darüber hinaus bleibt gesperrt.
 
 ### Designsprache (verbindlich, nicht verhandelbar)
 
@@ -105,24 +117,61 @@ Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (
 3. ✅ **`StepForm.tsx` (442 Z., schlimmste Datei) neu schreiben:** ein `useReducer`/abgeleiteter Zustand statt 13 `useState`; `candidate` einmal per `useMemo`; `stepProblem` einmal pro Änderung statt zweimal pro Render; die sechs Optionslisten memoisiert.
 
    Der Formular-Zustand steckt jetzt in EINEM Objekt in `schrittEntwurf.ts` (rein, ohne React: `entwurfAus` / `schrittReducer` / `kandidatAus` / `bindungFuer`); `StepForm.tsx` zeichnet nur noch (384 Z.). Die sechs Listen hängen in einem Memo am Baustein-Baum statt an jedem Tastendruck, `kandidat` und `problem` in je einem — `speichern()` liest dasselbe `problem`, das schon angezeigt wird. Dabei gefallen: `candidate()` zog pro Aufruf eine neue `crypto.randomUUID()`, bei einem neuen Schritt prüfte die Anzeige also einen anderen Schritt, als gespeichert wurde; die ID entsteht jetzt einmal beim Öffnen. Werkbank-Optik nur für das, was StepForm selbst zeichnet (`Zeile`/`Feld`/`Knopf`, Popup-Wahl über `PickerControl`) — `RelationAuswahl` und `ParameterZeile` bleiben Punkt 4/5. `FeldUebernahmePicker` komponiert `Popover` + `Liste` (142 → 85 Z.): nur so verschwinden `pickerPosition` und das `getBoundingClientRect` aus dem Formular. Die Feldwahl ist dadurch einstufig — eine nach Quellen gruppierte Liste mit Suche statt erst Quelle, dann Feld.
-4. **`ParameterZeile.tsx` (408 Z.) neu:** statt 11 `if (binding.source === …)`-Zweigen eine Registry `Quelle → Control-Komponente` (dasselbe Muster wie PropControl). Die 12 Parameterquellen aus `ACTION_PARAM_SOURCES` bleiben fachlich unverändert.
-5. Datencenter (`zentrale/`) auf Overlay + Atome umstellen; Aktionen bekommen eine Heimat: Inspector listet Ereignisse und öffnet den Ketten-Editor als Overlay — keine Doppelbearbeitung an zwei Orten mehr.
+4. **`ParameterZeile.tsx` (408 Z.) neu:** statt der `if (binding.source === …)`-Zweige eine Registry `Quelle → Control-Komponente` (dasselbe Muster wie PropControl). Die Parameterquellen bleiben fachlich unverändert.
+
+   **Zahlen am Code nachgemessen 2026-08-28** (der Plansatz nannte 11 Zweige und 12 Quellen): es sind **8** Zweige und **11** Quellen in `ACTION_PARAM_SOURCES`. Die Registry braucht **9** Einträge, nicht 11 — `erfassungszelle`/`aenderungszelle`/`loeschzelle` teilen sich EIN Control, `fixed`/`se_variable` teilen den TextInput. **Wichtig:** geschlüsselt wird über `GESPEICHERTE_PARAM_QUELLEN` (11 + `aus`), nicht über `ACTION_PARAM_SOURCES` — sonst fällt die Quelle `aus` hinten runter.
+5. Datencenter (`zentrale/`) auf Overlay + Atome umstellen: Kommandozentrale und `KettenFenster` von der alten Optik auf Werkbank-Atome und Vollflächen-Overlay (heute noch zentrierte Karte).
+
+   **Gestrichen 2026-08-28:** der zweite Halbsatz („Aktionen bekommen eine Heimat … keine Doppelbearbeitung an zwei Orten mehr") ist erledigt und wird NICHT gebaut. Der Ketten-Editor hängt schon allein am Inspector (`Inspector.tsx:178` → `AktionenSektion.tsx` → `KettenFenster.tsx:52-58`); eine Umverdrahtung wäre Risiko ohne Nutzen.
+
+   **Nachgetragen:** `window.confirm` lebt nicht nur in `zentrale/helfer.ts:27-38`, sondern auch **zweimal in `src/editor/shell/Toolbar.tsx:37` und `:89`** — darunter der gefährlichste Dialog überhaupt („Maske unwiderruflich ersetzt"). Punkt 1 ist mit ✅ abgeschlossen, also fielen die zwei sonst durchs Raster. Sie gehören hierher.
 6. Alte Atome/`tailwind-merge`/`clsx`-Reste entfernen, wenn aufruferlos. (Abhängigkeiten selbst erst entfernen, wenn wirklich nichts mehr importiert.)
 
 ### Quellen-UI: Hauptquelle vs. Hilfsquellen (Nutzer-Vorgabe, Pflichtteil)
 
 Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den Beleg schreibt, z. B. Belegposition) und beliebig viele **Hilfsquellen** (liefern nur Datensätze zum Nachschlagen und Befüllen, z. B. Artikelsuche — sie werden **nie** geschrieben). Genau diese zwei Wörter verwendet das UI — nicht "weitere Quellen".
 
-1. **QuellenListe neu, zwei beschriftete Abschnitte.** Je Hilfsquelle auf einen Blick: (a) woran sie hängt (Schlüsselpaare zur Hauptquelle oder zu einer anderen Hilfsquelle), (b) welche Spalten/Erfassungszellen sie befüllt, (c) ob die Verknüpfung vollständig ist. Unvollständig (kein Schlüsselpaar, Paar zeigt auf gelöschtes Feld, keine Zelle nutzt die Quelle) = Klartext-Hinweis direkt am Eintrag statt stillem Nichtfunktionieren.
+1. **QuellenListe neu, zwei beschriftete Abschnitte.** Je Hilfsquelle auf einen Blick: (a) woran sie hängt (Schlüsselpaare zur Hauptquelle oder zu einer anderen Hilfsquelle), (b) welche Spalten/Erfassungszellen sie befüllt, (c) ob die Verknüpfung vollständig ist.
+
+   **Präzisiert 2026-08-28 — (c) darf NICHT „kein Schlüsselpaar" heißen.** Das Fehlen eines Paares ist am 2026-08-27 ausdrücklich zum Normalfall erklärt worden (`core/data/sourceLinks.ts:31-39`: „Das Schlüsselpaar ist AUSDRÜCKLICH freiwillig … eine Quelle ohne Paar ist eine reine Nachschlagequelle"), und die Belegerfassung aus Punkt 5 ist genau dieser Fall. Ein `quellenProblem()` mit der alten Formulierung meldete ausgerechnet die Abnahme-Konfiguration dauerhaft als kaputt. Gemeldet wird nur, was nachweisbar kaputt ist: Quelle fehlt in der Bibliothek · ein Paar zeigt auf ein gelöschtes Feld · keine Zelle nutzt die Quelle.
 2. Dafür eine reine Prüf-Funktion `quellenProblem()` nach dem Vorbild `stepProblem()` (`src/core/data/schrittPruefung.ts`) — läuft live im Panel, wird wie die Etappe-1-Tests abgesichert.
-3. **FieldPicker zeigt die Herkunft:** bei jeder Feldwahl steht dran, aus welcher Quelle das Feld kommt. Eine Spalte, deren Feld aus einer Hilfsquelle kommt, trägt im Editor (nur im Editor, nie im Export) einen gedimmten Quellnamen unter dem Spaltentitel — man sieht der Tabelle sofort an, welche Spalten eigene (Belegposition) und welche nachgeschlagene sind.
-4. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für Etappe 5.
+3. **FieldPicker zeigt die Herkunft:** bei jeder Feldwahl steht dran, aus welcher Quelle das Feld kommt. Eine Spalte, deren Feld aus einer Hilfsquelle kommt, trägt im Editor (nur im Editor, nie im Export) einen gedimmten Quellnamen unter dem Spaltentitel.
+
+   **Achtung, das ist kein Zeichnen:** für den gedimmten Quellnamen gibt es heute keinen Editor-Kanal an den Baustein. Listeneinträge gehen roh hinüber (`blocks/tabelle/spalten.ts:3-19`, `editor/canvas/useLitElement.ts:104-124`). Nötig ist entweder ein zusätzliches Editor-Attribut analog `data-ff-editor` oder ein Klarname-Schlüssel je Listeneintrag plus Ausschlussregel in `listeFuerExport` — beides berührt `ListenBindung`. Eigener Bauschritt, nicht nebenbei.
+
+4. **Zwei Felder je Spalte — Spaltenfeld und Füllfeld (Nutzer-Vorgabe 2026-08-28).**
+
+   Die Belegerfassung braucht beides gleichzeitig, und das Modell kann heute nur eines von beiden:
+
+   | | Quelle | Rolle |
+   |---|---|---|
+   | **Spaltenfeld** | Hauptquelle (Belegposition) | Was die **gebuchte** Zeile zeigt und wohin die Kette schreibt |
+   | **Füllfeld** | Hilfsquelle (Artikelsuche) | Nur beim **Erfassen**: wird der Satz gewählt, fällt der Wert in die Zelle |
+
+   Heute leitet `blocks/tabelle/erfassungsZellen.ts:57` (`zellenzielVon`) aus dem EINEN Feldcode ab, was die Zelle ist — kein Quellen-Vorsatz = eigene Quelle, mit Vorsatz = verknüpfte Quelle. Entweder-oder. Praktisch heißt das: Spalte auf `POS_45_60` zeigt die gebuchte Zeile richtig und schreibt richtig, schlägt beim Erfassen aber aus den vorhandenen Positionen statt aus dem Artikelstamm vor. Spalte auf `ARTIKEL::Bezeichnung` füllt beim Erfassen, zeigt in der gebuchten Zeile aber **nichts** (`blocks/shared/fremdeQuellen.ts:38-41`) — und mit Schlüsselpaaren den heutigen Stammtext statt dem gebuchten, bei falschem Schreibziel.
+
+   **Zusatz:** `Spalte` bekommt ein optionales zweites Feld `fuellFeld` (mit Quellen-Vorsatz). Eingestellt wird es am Spaltenkopf (Regel „Bedienung am Ding") und gespiegelt in der Hilfsquellen-Liste aus Punkt 1b. Die Übernahme-Mechanik existiert bereits vollständig (`erfassungsLauf.ts` `uebernimm`/`setze`/`gleicheAb`) — sie muss nur ein Füllfeld statt des Spaltenfeldes bedienen können.
+
+   **Folge, die den Rest vereinfacht:** die Artikelsuche braucht damit **keine Schlüsselpaare**. Der Bediener sucht den Artikel von Hand, die gebuchte Zeile liest die Hauptquelle — es gibt nichts zu verknüpfen. Und „Hilfsquelle wird nie geschrieben" ist von selbst wahr: ein Füllfeld ist nie ein Schreibziel.
+
+5. **„Nie geschrieben" muss im Modell stehen, nicht nur auf dem Etikett.** Heute ist jede gebundene Spalte per Vorgabe änderbar (`blocks/tabelle/spaltenBindung.ts:37-45`, `standard: true`), unabhängig von der Herkunft ihres Feldes. Eine Spalte auf einer Hilfsquelle ist damit tippbar und erzeugt eine Vormerkung, die als Änderung der **Hauptquellen**-Zeile geführt wird (`aenderungen.ts` schlüsselt über deren Satznummer). Zu bauen: eine Spalte, deren Feld aus einer Hilfsquelle kommt, ist nie änderbar.
+
+   **Und ein echter Fehler daneben:** der AUSgeschaltete Schalter „In der Zeile änderbar" wird beim Einlesen verworfen (`blocks/tabelle/spalten.ts:80`). Eine gerechnete Spalte (Gesamt, Rohertrag) bleibt in der exportierten Maske tippbar; der Bediener merkt eine Änderung vor, die keine Kette schreibt.
+
+6. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für den Durchstich.
 
 ### Ketten-Editor: Parameter wählbar statt rätselbar (Nutzer-Vorgabe, Pflichtteil)
 
 Kernproblem: Eine echte Relation hat dutzende positionsbasierte Parameter — `PUT_RELATION[82!GJ!BELART!BELNR!STSPALTE!ARTNR!TEXT!MENGE!EPREIS!…]` (vollständige Doku im Anhang). Begriffe wie `PINDEX`, `VALUE`, `FELD_POS` versteht kein Mensch. Ziel: **an jedem Parameter ist in deutschen Worten ersichtlich, was er bedeutet und wo sein Wert herkommt** — und die richtige Wahl ist der bequemste Weg. Der Ketten-Editor wird dafür **neu gezeichnet, nicht umgestylt**.
 
-**1. Relations-Katalog als Datenmodell** (`src/core/data/relations.ts` erweitern, mit Tests, Verbot 4 beachten). Ein Parameter einer `RelationTemplate` trägt künftig optional:
+**1. Relations-Katalog als Datenmodell** (`src/core/data/relations.ts` erweitern, mit Tests, Verbot 4 beachten).
+
+**Nachgemessen 2026-08-28 — die Formänderung fasst DREI Dateien an, nicht eine, sonst scheitert sie still:**
+- `core/data/relations.ts:200-207` — `pruefeRelationsVorlagen` baut jeden Eintrag aus einer **festen Sechs-Feld-Liste** neu. Ohne Erweiterung sind `name`/`beschreibung`/`feld`/`werte`/`leerVerhalten`/`zweck`/`rueckgabe`/`wiederholGruppe` nach jedem Neuladen kommentarlos weg — genau der Handpflege-Komfort aus Punkt 2/3. Derselbe Torwächter sitzt vor beiden Speicherwegen (`state/RelationStore.ts:14` mit `VorlagenStore.ts:52` für localStorage und für die Maskendatei). Das beantwortet zugleich die Migrationsfrage: erweitern statt migrieren, alte Vorlagen bleiben ohne die neuen Felder gültig.
+- `export/exportMask.ts:245` kopiert die Parameter in `FF_RELATIONS`, `softengine/relations.ts:33-43` liest sie zurück. Passt die Form nicht, **verwirft die Laufzeit die Relation still**.
+- Deshalb VOR dem Umbau ein Round-Trip-Test: Katalog → `FF_RELATIONS` → `findRuntimeRelation`.
+
+Ein Parameter einer `RelationTemplate` trägt künftig optional:
 - `name` — der Positionsname aus der Klammer (`MENGE`, `EINFUEGE_SNR`)
 - `beschreibung` — der Doku-Text ("Satznummer nach der eingefügt wird")
 - `feld` — das dokumentierte Zielfeld, wenn die Doku eins nennt (`TEXT` → POS `45_60`), als `{datei, pos, len}`
@@ -133,6 +182,10 @@ Je Relation zusätzlich: `zweck` ("Position zu einem Beleg hinzufügen"), `rueck
 
 **2. Import aus Doku-Text — bewusst dumm gehalten.** Der SE-Doku-Text ist **freie Erklärung für Menschen, kein Format** — jede Relation ist anders beschrieben. Deshalb parst der Import ausschließlich, was wirklich maschinenlesbar ist: die **Syntaxzeile** (`PUT_RELATION[82!GJ!BELART!…]` → Verb, Nummer, Parameternamen in Reihenfolge, `...` = Zusatz-/Wiederholteil). Der gesamte restliche Text wird **unverändert** als Hilfetext angehängt (Absatz, der mit einem Parameternamen beginnt → Hilfetext dieses Parameters; Rest → Hilfetext der Relation) und im Formular angezeigt. **Aus Prosa wird nichts Semantisches geraten** — keine automatischen Wertelisten, keine automatischen Feld-Zuordnungen, keine Flag-Erkennung. Die strukturierten Extras aus Punkt 1 (feld, werte/Schalter, leerVerhalten) pflegt der Nutzer danach per Hand am Parameter, wo er den Komfort will — komplett optional, ohne sie funktioniert alles trotzdem (dann eben zweistufiger Wähler + Hilfetext). Testfälle: die drei Anhang-Dokus — erwartet werden nur Namen in richtiger Reihenfolge plus angehängte Hilfetexte.
 
+**Zwei Präzisierungen 2026-08-28, ohne die der Import still Falsches liefert** (geprüft an den Anhang-Dokus selbst):
+- Die Zuordnung „Absatz beginnt mit einem Parameternamen" muss **exakter Vergleich des ersten Wortes bis zum Leerzeichen** sein. Mit „beginnt mit" reißen die einbuchstabigen Parameter `P`/`L`/`A` die Absätze `PEH`, `PRUEFZ`, `PRUEFZ`, `LANGTEXT`, `LAGER`, `ARTNR` an sich.
+- Die Textzeile `KATALOGART/EAN` passt auf **keinen** Syntax-Parameter (die Syntaxzeile kennt nur `EAN`). Absätze ohne exakten Treffer wandern in den Hilfetext der Relation — sie dürfen nicht raten. Erwartet im Test: drei Parameter der 82er ohne eigenen Hilfetext.
+
 **3. Das Parameter-Formular.** Oberste Regel: **Leer ist der Normalfall — niemand muss Werte wählen, die er nicht kennt.** Sichtbar sind zuerst nur die Parameter, die ein Auto-Vorschlag trifft oder die für den Zweck nötig sind (bei PUT 82: BELNR, ARTNR, TEXT, MENGE, EPREIS, EINFUEGE_SNR). Alle übrigen (STSPALTE, LANGTEXT, PRUEFZ, …) liegen zugeklappt unter "Erweitert — leer = Standardverhalten", jeweils mit ihrem dokumentierten Leer-Verhalten daneben. Eine Zeile je Parameter, Links Name + Beschreibung, rechts die Wert-Bindung:
 - a) **Automatischer Vorschlag:** Nur wenn dem Parameter im Katalog **von Hand** ein Feld zugewiesen wurde (`TEXT` → POS 45_60; der Import setzt so etwas nie) und in der Maske eine Spalte/Erfassungszelle an genau diesem Feld hängt, schlägt der Editor die Bindung sichtbar vor: "aus Erfassungszelle ‚Bezeichnung' (POS_45_60)" — ein Klick übernimmt. Ohne Handzuweisung kein Vorschlag — geraten wird nie.
 - b) **Schalter statt Rätsel:** Flag-Parameter (LANGTEXT mit nur "J=…") sind ein einfacher Aus/An-Schalter mit Klartext-Beschriftung ("Langtext automatisch auflösen"), aus = Parameter bleibt leer. Echte Aufzählungen (PRUEFZ 1/2) sind eine Auswahl mit Klartext plus vorausgewählter Option "leer (Standard)". Nie Freitext, nie nackte Kürzel wie "J".
@@ -141,24 +194,53 @@ Je Relation zusätzlich: `zweck` ("Position zu einem Beleg hinzufügen"), `rueck
 - **Kein Jargon, nirgends:** interne Platzhalter erscheinen nie roh. Übersetzung an genau einer Stelle: `PINDEX` → "Satznummer der jeweiligen Zeile (automatisch aus der Vormerk-Liste)", `DROP_PINDEX` → "Satznummer der Löschzeile (automatisch)", `VALUE` → "Wert", `NOW_DATE` → "heutiges Datum", `RELID`/`ZIMMER` sinngemäß.
 - **Wiederholgruppen:** `P!L!A!W` erscheint als "+ weiteres Feld schreiben" (bis 16), jede Wiederholung als Vierergruppe mit denselben Wählern (P/L aus dem FieldPicker ableiten — Feldposition und -länge stecken in der Feldwahl, der Nutzer wählt nur das Feld und die Eingabeart L/R/D).
 - **Symbolische Vorschau** unter dem Formular: die zusammengesetzte Klammer mit Herkunfts-Etiketten statt Werten, z. B. `PUT_RELATION[82!fest:5!Belegkopf-Feld 2_1!…!Erfassungszelle Menge!…]` — Reihenfolge und Lücken auf einen Blick.
-- Fehler am betroffenen Parameter (`stepProblem()` bleibt die eine Prüfquelle); je Schritt eine Klartext-Zusammenfassungszeile (`schrittZusammenfassung.ts` weiterverwenden).
+- Fehler am betroffenen Parameter (`stepProblem()` bleibt die eine Prüfquelle); je Schritt eine Klartext-Zusammenfassungszeile (`schrittZusammenfassung.ts` weiterverwenden). **Dafür muss die Rückgabe von `stepProblem` eine Parameter-Kennung tragen** (`core/data/schrittPruefung.ts:30-42` gibt heute nur eine Meldung) — eine der vier erlaubten Modell-Erweiterungen, s. Etappenkopf.
 
-**4. Durchgedachtes Zielszenario** (Referenz für alles obige, wird in Etappe 5 real gebaut). Kette am Schreiben-Knopf der Positionstabelle:
+**Nachgetragen 2026-08-28 — Punkt 3a hat heute keine Datenbasis:** der Auto-Vorschlag braucht je Spalte den **Feldcode**, `editor/zentrale/helfer.ts:86-110` (`ErfassungsOption`/`erfassungsOptionen`) liefert aber nur Index und Titel. Der Feldcode existiert in der Listen-Bindung (`core/blocks/listenBindung.ts:6`, `feldKey`) und muss durchgereicht werden. Dazu gehört die Vergleichsregel: die Doku nennt `POS_45_60` (Datei + pos_len), die Spalte speichert den reinen Feldcode — verglichen wird nach Zerlegung, nie als Zeichenkette.
+
+**4. Durchgedachtes Zielszenario** (Referenz für alles obige, wird in Etappe 6 real gebaut). Kette am Schreiben-Knopf der Positionstabelle:
 1. Schritt "Belegkopf anlegen" — GET_RELATION[1020], Rückgabe `BEL_0_11`. (Bei Rahmen00001 existiert der Beleg schon — dann entfällt dieser Schritt und BELNR kommt aus dem offenen Satz BEL.)
 2. Abschnitt je **erfasster** Zeile: erst GET_RELATION[678] "Einfüge-Satznummer ermitteln" (läuft dank Abschnittslogik automatisch einmal je Zeile), dann PUT_RELATION[82] "Position hinzufügen" — BELNR aus offenem Satz bzw. Schritt-1-Ergebnis, ARTNR/TEXT/MENGE/EPREIS aus den Erfassungszellen (Auto-Vorschlag), EINFUEGE_SNR aus dem GET davor, LANGTEXT fest "J", Rest leer mit dokumentiertem Standardverhalten.
 3. Abschnitt je **geänderter** Zeile: Feld-Schreib-Relation (Muster 174), Satznummer automatisch.
 4. Abschnitt je **Löschvormerkung**: Lösch-Relation, Satznummer der Löschzeile automatisch.
-Die Abschnitts-Laufzeit (`seAktionen.ts`) kann das heute schon — neu ist ausschließlich, dass das UI es ohne Jargon zusammenklickbar macht.
+**Der Satz „Die Abschnitts-Laufzeit kann das heute schon" ist am 2026-08-28 am Code widerlegt worden. Sie kann es NICHT:**
+- **Schritt-Ergebnisse überqueren keine Abschnittsgrenze.** `runEvent` ruft je Abschnitt neu (`blocks/shared/seAktionen.ts:319-320`, `:342`); `laufeSchritte` (`:219-247`) sammelt Ergebnisse nur innerhalb eines Laufs. „BELNR aus Schritt-1-Ergebnis" ist im Zeilen-Abschnitt (Punkt 2) damit nicht baubar.
+- **„GET 678 läuft dank Abschnittslogik automatisch einmal je Zeile" ist unbelegt.** Ein Schritt landet nur dann im Zeilen-Abschnitt, wenn er SELBST einen zeilengebundenen Parameter trägt (`abschnitteVon`, `:138-146`) — die Signatur von 678 ist laut Lieferstand unten aber noch unbekannt.
+- **PINDEX vergiftet jede Bindung auf eine andere Quelle.** `softengine/relations.ts:347-352` sucht die Zeile in der **gebundenen** Quelle statt in der Quelle der Zeile. Steht PINDEX auf der POS-Satznummer, wird im offenen Satz BEL nach einer Zeile mit dieser Nummer gesucht — es gibt keine, der Parameter geht **leer** hinaus. Genau der Fall „BELNR aus offenem Satz" aus Punkt 2/3. Trifft auch jeden Zeilenklick (`blocks/tabelle/zeilenEreignisse.ts:21`, `:33`), nicht nur Ketten. Kein Test pinnt das Verhalten.
+
+**Folge für die Reihenfolge:** Punkt 4 ist keine Referenz für ein UI, sondern eine offene Bauaufgabe an der Laufzeit. Sie wird im Durchstich (neue Etappe 5) erledigt und BEWIESEN, bevor das Formular dafür gezeichnet wird. Ein Formular für eine Kette zu bauen, die nicht läuft, wäre die teuerste Reihenfolge von allen.
 
 **5. Abnahme:** Die Kette aus Punkt 4 ist baubar, ohne dass irgendwo ein roher Platzhalter-Begriff auftaucht und ohne Freitext (außer bewussten Fixwerten); jeder Parameter zeigt Beschreibung und Herkunftssatz; die drei Anhang-Relationen sind über den Doku-Import angelegt.
 
 Spalten-Einstellungen bleiben **am Ding** (Klick auf Kopf = Feld, Doppelklick = Umbenennen, +/− in der Tabelle) — das ist gut und bleibt; der "In der Zeile änderbar"-Schalter erscheint im Spalten-Popover in Werkbank-Optik.
 
-## Etappe 5 — Nachweis: Rahmen00001 aus dem Editor erzeugen
+## Etappe 5 — Durchstich: eine Position erfassen und schreiben (NEU, 2026-08-28)
+
+Der schmalste Weg durch die ganze Kette, bevor Oberfläche für ihn gezeichnet wird: **eine** Positionstabelle, **eine** erfasste Zeile, **ein** PUT, Echttest beim Nutzer. Nicht die fertige Maske — der Beweis, dass die Mechanik trägt.
+
+Anlass: die Prüfung vom 2026-08-28 hat vier Stellen belegt, an denen Etappe 6 heute scheitern MUSS. Keine davon ist eine Oberflächenfrage, alle vier liegen unter dem, was Etappe 4 gerade neu zeichnet. Sie hier zu finden kostet Stunden; in Etappe 6 kostet es die halbe Oberfläche noch einmal.
+
+1. **Die Satznummer muss einstellbar werden.** `editor/zentrale/DataSourceForm.tsx:167-169` setzt bei jeder im Editor angelegten Quelle fest `indexField: '0_10'`; in den 333 Zeilen des Formulars gibt es dafür kein Bedienelement. Ohne Änderung ist Etappe 6 nur erreichbar, indem jemand die Maskendatei von Hand editiert.
+
+   **Und es scheitert still:** `blocks/tabelle/seRuntime.ts:53-58` (`hatSatzNummer`) prüft nur, ob die Satznummer KONFIGURIERT ist — nicht, ob sie einen Wert LIEFERT. Die Tabelle bietet Ändern und Löschen also an (`TabelleBlock.ts:437-443`), der Bediener tippt, und `aenderungen.ts:30-31` wirft jede Vormerkung mit `return false` weg. Kein Fehler, keine Meldung. Beides gehört repariert: das Bedienelement UND die Prüfung auf den gelieferten Wert.
+
+2. **Welches Feld IST die Satznummer der Belegposition?** Drei Quellen, drei Antworten: dieser Plan sagt `888_10`, der Editor nennt `645_10` „Satznummer" und bietet genau das im Feldwähler an (`core/data/quellenArten.ts:164`), und `CLAUDE.md:265` protokolliert aus einem Echttest, dass `645_10` **leer** ist. Das ist vor allem anderen zu klären — es entscheidet, was als PINDEX in PUT 82/174 und in die Löschkette geht. Danach: `quellenArten.ts` korrigieren, damit der Klarname im Feldwähler nicht auf das falsche Feld zeigt.
+
+3. **PINDEX darf Bindungen auf andere Quellen nicht vergiften.** `softengine/relations.ts:347-352` (Beleg s. Ketten-Editor Punkt 4). Zu bauen: eine Quelle ohne Zeilenbezug — der offene Satz voran — liefert in einem Zeilen-Abschnitt weiter `rows[0]`. Der Kommentar in `softengine/data.ts:153-155` schreibt genau diese Annahme schon hin; `relations.ts` überspringt sie. Mit Test.
+
+4. **Schritt-Ergebnisse über die Abschnittsgrenze.** Ohne das ist „BELNR aus Schritt-1-Ergebnis" nicht baubar (Beleg s. Ketten-Editor Punkt 4). Kleinste Fassung: das Ergebnis der Schritte VOR dem ersten Zeilen-Abschnitt steht allen Abschnitten zur Verfügung.
+
+5. **Der Export-Test, den Verbot 4 längst verlangt.** `exportMask.ts:76-192` (`nodeToHtml`) — der gesamte Baustein-Export — wird heute von KEINEM Test mit einem echten Baustein ausgeführt: die einzige Prüfmaske in `validator.test.ts:5-8` ist ein leerer Wurzelknoten. Vor jedem weiteren Export-Umbau: ein Test mit Formfeld + Tabelle mit gebundenen Spalten + Knopf mit Kette, der das erzeugte Markup prüft. Dazu je ein Fall für `kind: 'erpabfrage'` in `sevariablen.test.ts` und für `benutzteFelderJeQuelle` (`export/benutzteQuellen.ts:67-110`, heute ohne Test — und die neue Quellen-UI soll dieselbe Frage beantworten wie der Export; geben beide verschiedene Antworten, meldet das Panel eine Hilfsquelle als vollständig, während der Export ihre Felder nie bestellt).
+
+6. **Abnahme:** In einer Wegwerf-Maske eine Position erfassen und schreiben, Echttest beim Nutzer. Erst wenn das läuft, wird das Parameter-Formular aus Etappe 4 dafür gezeichnet.
+
+## Etappe 6 — Nachweis: Rahmen00001 aus dem Editor erzeugen
 
 Ziel: die Handmaske `E:\DATA\VSES-Muhammed\Vorlagen\Belegerfassung\LAYOUTRAHMEN\00001\Rahmen00001.basis.source.html` (887 Z. Handschrift, "Buchen" ist dort nur ein console.log-Stub) durch eine **im Editor gebaute** Maske ersetzen:
 
-1. Im Editor anlegen: Belegkopf als Formfelder auf offenem Satz `BEL` (VAR: 2_1 Art, 3_8 Nr, 19_10 Datum, 11_8 + 3440_60 Kunde, 453_12 Summe); Positionstabelle auf SEFILELOOP `POS` (KOPFSATZ_INDEX `BEL_0_11`; Spalten: 18_25 ArtNr, 45_60 Bezeichnung, 164_8 Menge **änderbar**, 689_5 Einheit, 246_9 EPreis, 280_12 Gesamt, 1401_12 Rohertrag; Satznummer 888_10); Artikelsuche als ERPAPICALL `ARTIKEL.GET`, angelegt als **Hilfsquelle** über das neue Quellen-UI (Abnahme aus Etappe 4), für die Erfassungszeile; ein Schreiben-Knopf mit Ketten-Abschnitten für erfasst/geändert/gelöscht. Nur benutzte Felder deklarieren — der tote Ballast der Handmaske (BELERF_*, 9 ungenutzte POS-Felder) wird NICHT übernommen.
+1. Im Editor anlegen: Belegkopf als Formfelder auf offenem Satz `BEL` (VAR: 2_1 Art, 3_8 Nr, 19_10 Datum, 11_8 + 3440_60 Kunde, 453_12 Summe); Positionstabelle auf SEFILELOOP `POS` (KOPFSATZ_INDEX `BEL_0_11`; Spalten: 18_25 ArtNr, 45_60 Bezeichnung, 164_8 Menge **änderbar**, 689_5 Einheit, 246_9 EPreis, 280_12 Gesamt, 1401_12 Rohertrag; Satznummer **nach der Klärung aus Etappe 5 Punkt 2** — dieser Plan nannte bis 2026-08-28 `888_10`, der Editor nennt `645_10` „Satznummer", der Echttest fand `645_10` leer); Artikelsuche als ERPAPICALL `ARTIKEL.GET`, angelegt als **Hilfsquelle** über das neue Quellen-UI (Abnahme aus Etappe 4), für die Erfassungszeile; ein Schreiben-Knopf mit Ketten-Abschnitten für erfasst/geändert/gelöscht.
+
+   **Was „Artikelsuche" heute heißt — vor dem Bau zu entscheiden (2026-08-28).** Eine Datenquelle kann keinen Parameter tragen (`core/data/dataSources.ts:35-55`), und einen Laufzeit-Ruf gibt es nirgends im Code: gelesen wird ausschließlich, was SoftEngine beim Öffnen mitgeschickt hat (`softengine/data.ts:211-219`, `blocks/formfeld/nachschlagen.ts:171-174`). `ARTIKEL.GET` als Hilfsquelle bedeutet damit zwangsläufig: **der ungefilterte Gesamtbestand kommt beim Öffnen der Maske.** Zusammen mit dem protokollierten Bild-Nachschlag (`CLAUDE.md`: 5.953 Aufrufe in 9,2 s bei kleiner Feldliste) ist das ein Risiko für die Öffnungszeit, kein Detail. Entweder bewusst annehmen und im Echttest messen — oder vorher entscheiden, wie eingegrenzt wird. Ein Suchruf zur Laufzeit ist KEIN Ausweg: er ist nicht gebaut, und `CLAUDE.md` protokolliert, dass ERPAPICALL per `basisHTML_SND_MSG` die WinUI-Maske einfriert. Nur benutzte Felder deklarieren — der tote Ballast der Handmaske (BELERF_*, 9 ungenutzte POS-Felder) wird NICHT übernommen.
 2. Export, Dateien als `Rahmen00001.basis.source.html` + `.SEvariablen.json` in den Ordner legen (Original vorher als `_hand`-Kopie sichern).
 3. **Echttest in der WEBWARE macht der Nutzer.** Fehlerbilder zurück in die Tests aus Etappe 1.
 
@@ -174,7 +256,7 @@ Ziel: die Handmaske `E:\DATA\VSES-Muhammed\Vorlagen\Belegerfassung\LAYOUTRAHMEN\
 
 - Kein Neubau auf PageBuilder-Basis, keine Portierung von PageBuilder-Code.
 - Keine Änderungen an der Masken-Designsprache (V11-Palette) — nur der Editor wird neu.
-- Kein Umbau der Ketten-/Abschnittslogik in `seAktionen.ts` über Etappe 3 hinaus — sie ist die klügste Stelle des Projekts.
+- Kein Umbau der Ketten-/Abschnittslogik in `seAktionen.ts` über Etappe 3 hinaus — sie ist die klügste Stelle des Projekts. **Eine Ausnahme seit 2026-08-28:** Etappe 5 Punkt 4 (Schritt-Ergebnisse über die Abschnittsgrenze) ist zugelassen, weil das Zielszenario ohne sie nicht läuft. Kleinste Fassung, mit Test, sonst bleibt die Datei unangetastet.
 - Keine neuen Bausteintypen, keine Mehrseiten-Features, nichts, was nicht auf dem Weg zu Rahmen00001 liegt.
 
 ---

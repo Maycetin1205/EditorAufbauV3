@@ -13,6 +13,22 @@
 > wieder einführen.
 > Sachlich, direkt, kein Cheerleading.
 
+## KORREKTUR 2026-08-28 — diese Datei ist an vier Stellen veraltet
+
+Am Code nachgeprüft. Wo unten etwas anderes steht, gilt das hier:
+
+| Diese Datei sagt | Wahr ist |
+|---|---|
+| Bauauftrag in `UMBAU-PLAN-V6.md` | Die Datei heißt **`UMBAUPLAN.md`** (Repo-Stamm). |
+| Prüfbündel mit `npm run check:regeln` + `check:runtime` + `npx tsc -b` + `npx eslint src` | `package.json` kennt vier Scripts: **`npm run check`** (= tsc + eslint), **`npm test`**, `build`, `build:runtime`. **Es gibt keine Wächter-Scripts** — `check:regeln`, `check:runtime`, `check:docs` existieren nicht. |
+| Gearbeitet wird auf `main` | Der Branch heißt **`master`**. |
+| Referenzabzug-Test in `src/export/referenz/` | Gibt es nicht. `nodeToHtml` hat **keinen Test** — s. UMBAUPLAN Etappe 5 Punkt 5. |
+
+Grund: die Historie dieses Repos beginnt bei `c4bdad7` („Sicherungsstand: Editor
+wie vom alten Rechner uebernommen"). Alles davor liegt woanders — die Datei
+beschreibt teilweise jenes frühere Repo. Die **SoftEngine-Kontrakte** und die
+**Nutzer-Entscheidungen** unten sind davon nicht betroffen und gelten weiter.
+
 ## Ziel (Nordstern)
 
 Visueller Baukasten für **SoftEngine-Masken**: Bausteine auf die Fläche
@@ -173,6 +189,16 @@ bestehende englische bleiben; umbenannt wird nur, was ohnehin angefasst wird.
 
 ## SoftEngine-Kontrakte (hart erarbeitet — nie verlieren)
 
+- **Ein Skript NEBEN der Maske wird geladen** (Echttest des Nutzers 2026-08-28):
+  eine Datei im selben Ordner wie die `.basis.source.html`, eingebunden mit
+  `<script src="fftest.js"></script>`, läuft. SoftEngine löst einen relativen
+  Pfad also am Ordner der Maske auf — der Installationsordner `JS/JS/` wird
+  dafür NICHT gebraucht. **Daraus wird vorerst nichts gebaut** (Entscheidung
+  2026-08-28): die Runtime auszulagern spart keine Zeit (20 ms Skript gegen
+  9,2 s ERP-Daten), und weil jeder Maskenordner dann seine eigene Kopie trägt,
+  gibt es weder gemeinsamen Zwischenspeicher noch zentrale Reparatur. Wenn es
+  je gebaut wird, wäre der nächste Versuch ein Pfad wie `../ff-runtime-0.4.js`
+  in einen gemeinsamen Ordner oberhalb — das ist NICHT getestet.
 - **Export-Dateien:** `index.basis.source.html` + `index.basis.SEvariablen.json`
   (Namenskonvention aller 124 Referenzmasken). LF-only, reines ASCII —
   das Escaping (ö → `&#x…;` im HTML, `\uXXXX` im JS/JSON) macht der Export
