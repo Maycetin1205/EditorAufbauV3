@@ -4,7 +4,16 @@ Stand: 2026-08-28. Entscheidung: **V3 weiterbauen, kein Neubau.** PageBuilder (C
 
 Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mit einem Commit. Beim Abarbeiten Haken in diese Datei setzen — sonst wird sie nicht angefasst.
 
-**Stand 2026-08-28:** Etappe 4 ist bei Punkt 4 (`ParameterZeile`) abgehakt, es folgen 4.5–4.6 und die zwei Pflichtteile. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
+**Stand 2026-08-28:** Etappe 4 ist bei Punkt 4 (`ParameterZeile`) abgehakt, 4.5 läuft. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
+
+**Reihenfolge ab hier (Nutzer-Entscheidung 2026-08-28):**
+
+```
+4.5 Datencenter  →  Quellen-UI (Pflichtteil)  →  Etappe 5 Durchstich
+      →  Ketten-Editor (Pflichtteil)  →  Etappe 6 Rahmen00001
+```
+
+**4.6, 4.7 und der Zwischenschritt sind nach hinten gestellt** — sie kommen nach Etappe 5, in beliebiger Reihenfolge. Begründung: sie sind Hygiene (alte Atome, ein überflüssiger Schalter, drei Wächter) und bringen den Nutzer seinem Ziel „einen Beleg erfassen" nicht näher. Nach 4.5 sind es damit **zwei** Schritte bis zum ersten echten Erfassen statt vier. 4.5 bleibt vorn, weil die Quellen-UI einen Fuß im Datencenter hat (das Quellen-Formular) — davor gebaut, würde dieses Stück zweimal gebaut.
 
 ---
 
@@ -127,8 +136,8 @@ Alles darüber hinaus bleibt gesperrt.
    **Gestrichen 2026-08-28:** der zweite Halbsatz („Aktionen bekommen eine Heimat … keine Doppelbearbeitung an zwei Orten mehr") ist erledigt und wird NICHT gebaut. Der Ketten-Editor hängt schon allein am Inspector (`Inspector.tsx:178` → `AktionenSektion.tsx` → `KettenFenster.tsx:52-58`); eine Umverdrahtung wäre Risiko ohne Nutzen.
 
    **Nachgetragen:** `window.confirm` lebt nicht nur in `zentrale/helfer.ts:27-38`, sondern auch **zweimal in `src/editor/shell/Toolbar.tsx:37` und `:89`** — darunter der gefährlichste Dialog überhaupt („Maske unwiderruflich ersetzt"). Punkt 1 ist mit ✅ abgeschlossen, also fielen die zwei sonst durchs Raster. Sie gehören hierher.
-6. Alte Atome/`tailwind-merge`/`clsx`-Reste entfernen, wenn aufruferlos. (Abhängigkeiten selbst erst entfernen, wenn wirklich nichts mehr importiert.)
-7. **Der Tabellen-Schalter „Schlank" fliegt raus** (Nutzer-Ansage 2026-08-28: „hat absolut KEINEN Sinn").
+6. **[NACH ETAPPE 5]** Alte Atome/`tailwind-merge`/`clsx`-Reste entfernen, wenn aufruferlos. (Abhängigkeiten selbst erst entfernen, wenn wirklich nichts mehr importiert.)
+7. **[NACH ETAPPE 5] Der Tabellen-Schalter „Schlank" fliegt raus** (Nutzer-Ansage 2026-08-28: „hat absolut KEINEN Sinn").
 
    Er nimmt heute Rahmen, Radius und Hintergrund weg und kürzt das Zellpolster von 10 px auf 6 px — **nimmt aber den `box-shadow` nicht zurück** (`blocks/tabelle/tabelleStil.ts:217-224`). Ergebnis: ein Schatten um eine unsichtbare Kiste. Der Schalter kostet den Bediener eine Entscheidung und liefert dafür einen Darstellungsfehler.
 
@@ -167,7 +176,17 @@ Eine Tabelle hat genau eine **Hauptquelle** (deren Zeilen sie zeigt und in den B
 
    **Und ein echter Fehler daneben:** der AUSgeschaltete Schalter „In der Zeile änderbar" wird beim Einlesen verworfen (`blocks/tabelle/spalten.ts:80`). Eine gerechnete Spalte (Gesamt, Rohertrag) bleibt in der exportierten Maske tippbar; der Bediener merkt eine Änderung vor, die keine Kette schreibt.
 
-6. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für den Durchstich.
+6. **Der Spaltenkopf wird geteilt, bevor etwas dazukommt (Nutzer-Entscheidung 2026-08-28).**
+
+   Im Spaltenkopf stecken heute schon sechs Sachen: Feld, Darstellung, Summe in der Fußzeile, In der Zeile änderbar, Status-Zuordnung, Umbenennen (dazu +/− in der Tabelle). Mit dem Füllfeld aus Punkt 4 wären es acht. Der Nutzer hat die Fläche ausdrücklich als „extrem überfüllt" beanstandet.
+
+   Deshalb **zwei Ebenen**, dasselbe Muster wie „Erweitert — leer = Standard" im Ketten-Editor:
+   - **Was die Spalte IST** — immer sichtbar, drei Zeilen: Titel · Feld · Darstellung.
+   - **Was die Spalte TUT** — eine zugeklappte Zeile darunter: Summe · änderbar · Füllfeld · (später: Rechnung).
+
+   **Diese Teilung ist Teil von Punkt 4, kein eigener Schritt.** Wer das Füllfeld ohne sie einbaut, macht eine schon zu volle Fläche voller.
+
+7. **Abnahme:** Die Konfiguration "Positionstabelle auf Belegposition, Artikelsuche als Hilfsquelle, Autofill von Bezeichnung/Einheit/Preis in der Erfassungszeile" ist im neuen UI ohne Handbuch anlegbar. Das ist zugleich Voraussetzung für den Durchstich.
 
 ### Ketten-Editor: Parameter wählbar statt rätselbar (Nutzer-Vorgabe, Pflichtteil)
 
@@ -223,7 +242,7 @@ Je Relation zusätzlich: `zweck` ("Position zu einem Beleg hinzufügen"), `rueck
 
 Spalten-Einstellungen bleiben **am Ding** (Klick auf Kopf = Feld, Doppelklick = Umbenennen, +/− in der Tabelle) — das ist gut und bleibt; der "In der Zeile änderbar"-Schalter erscheint im Spalten-Popover in Werkbank-Optik.
 
-## Zwischenschritt — drei Wächter-Nachträge (klein, ein Nachmittag)
+## Zwischenschritt — drei Wächter-Nachträge (klein, ein Nachmittag) — **NACH ETAPPE 5**
 
 Aus einer Code-Durchsicht 2026-08-28, von zwei Seiten unabhängig am Code nachgeprüft. Verhalten ändert sich nirgends; es geht darum, stille Fehler in Compiler-Fehler zu verwandeln. Der vierte und wichtigste Punkt derselben Durchsicht — der fehlende Export-Test — steht in Etappe 5 Punkt 5.
 
