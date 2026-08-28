@@ -212,6 +212,7 @@ export class FormFeldBlock extends BasicBlock {
           onTippen: (wert) => {
             this.getippt = wert
             this.marke = 0
+            this.markeVonHand = false
             this.listeZu = false
           },
           onTaste: (e) => this.onNachschlagTaste(e),
@@ -404,6 +405,7 @@ export class FormFeldBlock extends BasicBlock {
     this.getippt = null
     this.listeZu = false
     this.marke = 0
+    this.markeVonHand = false
     this.uebernimmSatz(anzeige, wert, satz)
     this.dispatchEvent(new Event('change'))
   }
@@ -422,6 +424,7 @@ export class FormFeldBlock extends BasicBlock {
     this.getippt = null
     this.listeZu = false
     this.marke = 0
+    this.markeVonHand = false
     if (folge !== 'leeren') return
     this.leereNachschlagen()
     this.dispatchEvent(new Event('change'))
