@@ -24,6 +24,15 @@ import {
 export const FENSTER_BREITE = 520
 export const FENSTER_HOEHE = 380
 
+// Das Startmass war fuer ZWEI Spalten gemacht (Angezeigt + Wert). Seit die
+// Erfassungszeile alle Spalten ihrer Quelle mitgibt, koennen es sechs sein —
+// dann quetschte 520 px sie zusammen und die Tabelle rollte waagerecht. Die
+// Untergrenze bleibt das alte Mass, damit ein Zwei-Spalten-Fenster aussieht
+// wie bisher; die Obergrenze haelt es auf einem normalen Schirm.
+export function fensterBreiteFuer(spalten: number): number {
+  return Math.min(900, Math.max(FENSTER_BREITE, 160 + 180 * spalten))
+}
+
 export function nachschlagFeldTpl(args: {
   wert: string
   onTippen: (wert: string) => void

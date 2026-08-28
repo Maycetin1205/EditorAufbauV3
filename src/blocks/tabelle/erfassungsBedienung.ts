@@ -1,6 +1,6 @@
 import type { TemplateResult } from 'lit'
 import {
-  FENSTER_BREITE,
+  fensterBreiteFuer,
   FENSTER_HOEHE,
   oeffneNachschlagen,
 } from '../formfeld/nachschlagen'
@@ -47,15 +47,16 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
   const spalte = umfeld.spalten[index]
   const ziel = zielIn(umfeld, index)
   if (spalte === undefined || ziel.quelleId === '' || ziel.code === '') return
+  const spalten = fensterSpaltenIn(umfeld, index)
   oeffneNachschlagen({
     el: wirt.baustein,
     // Die Quelle DIESER Spalte: die der Tabelle oder eine verknüpfte.
     quelleId: ziel.quelleId,
     speicherFeld: ziel.code,
     speicherTitel: spalte.titel,
-    spalten: fensterSpaltenIn(umfeld, index),
+    spalten,
     titel: spalte.titel,
-    breite: FENSTER_BREITE,
+    breite: fensterBreiteFuer(spalten.length),
     hoehe: FENSTER_HOEHE,
     eintraege: wirt.lauf.eintraege(umfeld, index),
     rueckFokus: null,
