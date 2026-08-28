@@ -16,8 +16,8 @@ import type { BindungsProps } from './wahlen'
 
 const PLATZHALTER_EINTRAEGE: ListeEintrag[] = AKTIONS_PLATZHALTER.map((wert) => ({
   wert,
-  name: wert,
-  kennung: PLATZHALTER_KLARTEXT[wert] ?? '',
+  name: PLATZHALTER_KLARTEXT[wert]?.name ?? wert,
+  kennung: wert,
 }))
 
 // Vier Quellen fragen dasselbe zweimal: erst WORAUS (Datenquelle, Baustein,

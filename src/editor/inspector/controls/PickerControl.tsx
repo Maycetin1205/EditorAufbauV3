@@ -73,7 +73,9 @@ export function PickerControl({
         {unbekannt ? wert : (treffer?.name ?? leerText ?? platzhalter)}
       </span>
       {treffer?.kennung !== undefined && treffer.kennung !== '' && (
-        <span className="shrink-0 font-mono text-dicht text-matt">{treffer.kennung}</span>
+        <span className="min-w-0 max-w-[50%] truncate font-mono text-dicht text-matt">
+          {treffer.kennung}
+        </span>
       )}
       <ChevronDown size={13} aria-hidden className="shrink-0 text-matt" />
     </button>

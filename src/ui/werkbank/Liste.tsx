@@ -117,6 +117,12 @@ export function Liste({
                 key={`${g.key}::${e.wert}`}
                 type="button"
                 disabled={e.deaktiviert}
+
+                // Abgeschnittener Text ist ohne Tooltip nicht mehr lesbar —
+                // ein Feld-Klarname kann laenger sein als die Zeile.
+                title={e.kennung === undefined || e.kennung === ''
+                  ? e.name
+                  : `${e.name} — ${e.kennung}`}
                 onClick={() => onWaehle(e.wert)}
                 className={cn(
                   ZEILE,
@@ -131,7 +137,9 @@ export function Liste({
                 </span>
                 <span className="min-w-0 flex-1 truncate">{e.name}</span>
                 {e.kennung !== undefined && e.kennung !== '' && (
-                  <span className="shrink-0 font-mono text-dicht text-matt">{e.kennung}</span>
+                  <span className="min-w-0 max-w-[50%] truncate font-mono text-dicht text-matt">
+                    {e.kennung}
+                  </span>
                 )}
               </button>
             )

@@ -42,16 +42,46 @@ export const RELATION_GRUPPEN: PropertySelectOption[] = [
   { value: 'schreiben', label: 'Schreiben' },
 ]
 
-export const PLATZHALTER_KLARTEXT: Record<string, string> = {
-  FELD_POS: 'Feld-Position (aus dem gebundenen Feld)',
-  FELD_LEN: 'Feld-Länge (aus dem gebundenen Feld)',
-  PINDEX: 'Nummer des Datensatzes',
-  SELKEY: 'Schlüssel der gewählten Zeile',
-  DROP_PINDEX: 'Satznummer der Löschzeile (automatisch)',
-  RELID: 'Tabellen-ID der Datenquelle (ohne IDB-Präfix)',
-  VALUE: 'Neuer Wert (z. B. Titel der Zielspalte)',
-  ZIMMER: 'Titel des Ziel-Zimmers beim Ablegen (leer ohne Zimmer)',
-  NOW_DATE: 'Heutiges Datum',
+// Zwei Texte je Platzhalter, weil zwei Stellen ihn zeigen: `name` steht in
+// Menuezeilen (dort ist ein Satz zu lang und reisst die Zeile auf),
+// `hinweis` in der Parameter-Tabelle der Relation.
+export const PLATZHALTER_KLARTEXT: Record<string, { name: string; hinweis: string }> = {
+  FELD_POS: {
+    name: 'Feld-Position',
+    hinweis: 'Feld-Position (aus dem gebundenen Feld)',
+  },
+  FELD_LEN: {
+    name: 'Feld-Länge',
+    hinweis: 'Feld-Länge (aus dem gebundenen Feld)',
+  },
+  PINDEX: {
+    name: 'Satznummer der Zeile',
+    hinweis: 'Nummer des Datensatzes',
+  },
+  SELKEY: {
+    name: 'Schlüssel der Zeile',
+    hinweis: 'Schlüssel der gewählten Zeile',
+  },
+  DROP_PINDEX: {
+    name: 'Satznummer der Löschzeile',
+    hinweis: 'Satznummer der Löschzeile (automatisch)',
+  },
+  RELID: {
+    name: 'Tabellen-ID der Quelle',
+    hinweis: 'Tabellen-ID der Datenquelle (ohne IDB-Präfix)',
+  },
+  VALUE: {
+    name: 'Neuer Wert',
+    hinweis: 'Neuer Wert (z. B. Titel der Zielspalte)',
+  },
+  ZIMMER: {
+    name: 'Ziel-Zimmer',
+    hinweis: 'Titel des Ziel-Zimmers beim Ablegen (leer ohne Zimmer)',
+  },
+  NOW_DATE: {
+    name: 'Heutiges Datum',
+    hinweis: 'Heutiges Datum',
+  },
 }
 
 export function parameterBedeutung(param: string): string {
@@ -59,7 +89,7 @@ export function parameterBedeutung(param: string): string {
   const gefunden = [...param.matchAll(/\{([^}]+)\}/g)].map((m) => m[1])
   if (gefunden.length === 0) return 'Fester Wert'
   return gefunden
-    .map((name) => PLATZHALTER_KLARTEXT[name] ?? `Eigener Platzhalter {${name}}`)
+    .map((name) => PLATZHALTER_KLARTEXT[name]?.hinweis ?? `Eigener Platzhalter {${name}}`)
     .join(' · ')
 }
 
