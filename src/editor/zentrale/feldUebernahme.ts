@@ -12,6 +12,9 @@ export interface UebernahmeFeld {
   sourceName: string
   code: string
   label: string
+
+  // Der Code ohne Feld-Vorsatz, also die reine Form 45_60.
+  posLen: string
 }
 
 export interface UebernahmeQuelle {
@@ -41,30 +44,48 @@ export function feldUebernahmeArt(raw: string): FeldUebernahmeParameterArt | nul
   return null
 }
 
-export function uebernahmeQuellen(
+// Eine ERP-Abfrage darf ihren Feldern einen Vorsatz voranstellen
+// (feldVorsatzMoeglich); darunter steckt trotzdem Position_Laenge.
+export function feldPosLen(
+  source: DataSource,
+  code: string,
+): { pos: string; len: string } | null {
+  const vorsatz = source.feldVorsatz ?? ''
+  const ohne = vorsatz !== '' && code.startsWith(vorsatz) ? code.slice(vorsatz.length) : code
+  return splitFieldCode(ohne)
+}
+
+// Position und Laenge sind Position und Laenge — welche ART die Quelle hat,
+// spielt dafuer keine Rolle. Bis 2026-08-28 stand hier `kind !== 'idb'` und
+// sperrte jede Tabelle aus, die nicht als IDB-Tabelle angelegt war: eine
+// ERP-Abfrage IDB.GET auf dieselbe Tabelle fiel damit heraus.
+export function uebernahmeFelder(
   dataSources: readonly DataSource[],
 ): UebernahmeFeld[] {
   const felder: UebernahmeFeld[] = []
   for (const source of dataSources) {
-    if (source.kind !== 'idb') continue
     for (const field of source.fields) {
-      if (!splitFieldCode(field.code)) continue
+      const pl = feldPosLen(source, field.code)
+      if (!pl) continue
       felder.push({
         sourceId: source.id,
         sourceName: source.name,
         code: field.code,
         label: field.label,
+        posLen: `${pl.pos}_${pl.len}`,
       })
     }
   }
   return felder
 }
 
-export function uebernahmeIdbQuellen(
+// Fuer den RELID-Parameter zaehlt nur, dass die Quelle eine Tabellen-Kennung
+// hat: IDB-Kennung, ADR/ART/BEL/POS oder die eingetippte einer anderen Datei.
+export function uebernahmeTabellen(
   dataSources: readonly DataSource[],
 ): UebernahmeQuelle[] {
   return dataSources
-    .filter((source) => source.kind === 'idb')
+    .filter((source) => tableIdFor(source) !== '')
     .map((source) => ({ sourceId: source.id, sourceName: source.name }))
 }
 
@@ -90,7 +111,7 @@ export function feldUebernehmen(
       return
     }
     if (ziel !== 'feld') return
-    const posLen = splitFieldCode(code)
+    const posLen = feldPosLen(source, code)
     if (!posLen) return
     if (art === 'pos') {
       next[index] = { source: 'fixed', value: posLen.pos }

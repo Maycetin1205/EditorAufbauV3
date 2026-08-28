@@ -1,15 +1,15 @@
 import { useMemo, type RefObject } from 'react'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Popover } from '@/ui/werkbank/Popover'
-import type {
-  FeldUebernahmeZiel,
-  UebernahmeFeld,
-  UebernahmeQuelle,
+import { artFuer, type DataSource } from '../../core/data/dataSources'
+import {
+  uebernahmeFelder,
+  uebernahmeTabellen,
+  type FeldUebernahmeZiel,
 } from './feldUebernahme'
 
 interface FeldUebernahmePickerProps {
-  sources: readonly UebernahmeQuelle[]
-  fields: readonly UebernahmeFeld[]
+  quellen: readonly DataSource[]
   ziel: FeldUebernahmeZiel
 
   // Feldcode der bereits uebernommenen POS/LEN — nur zum Anhaken.
@@ -24,9 +24,23 @@ interface FeldUebernahmePickerProps {
 
 const TRENNER = '::'
 
+// Eine leere Liste darf nie ratenlassen, woran es liegt: sie zaehlt auf,
+// was sie angesehen hat.
+function leerHinweisFuer(
+  quellen: readonly DataSource[],
+  ziel: FeldUebernahmeZiel,
+): string {
+  if (quellen.length === 0) return 'Es ist keine Datenquelle angelegt.'
+  const gesehen = quellen
+    .map((q) => `${q.name} (${artFuer(q.kind).name}, ${q.fields.length} Felder)`)
+    .join(' · ')
+  return ziel === 'idb'
+    ? `Keine Quelle mit Tabellen-Kennung. Angesehen: ${gesehen}`
+    : `Kein Feld mit Position + Länge. Angesehen: ${gesehen}`
+}
+
 export function FeldUebernahmePicker({
-  sources,
-  fields,
+  quellen,
   ziel,
   current,
   anker,
@@ -38,39 +52,31 @@ export function FeldUebernahmePicker({
       return [{
         key: 'quellen',
         name: 'Datenquelle',
-        eintraege: sources.map((source) => ({ wert: source.sourceId, name: source.sourceName })),
+        eintraege: uebernahmeTabellen(quellen)
+          .map((quelle) => ({ wert: quelle.sourceId, name: quelle.sourceName })),
       }]
     }
-    return sources
-      .map((source) => ({
-        key: source.sourceId,
-        name: source.sourceName,
-        eintraege: fields
-          .filter((field) => field.sourceId === source.sourceId)
-          .map((field) => ({
-            wert: `${field.sourceId}${TRENNER}${field.code}`,
-            name: field.label,
-            kennung: field.code,
-          })),
-      }))
-      .filter((gruppe) => gruppe.eintraege.length > 0)
-  }, [ziel, sources, fields])
+    const nachQuelle = new Map<string, ListeGruppe>()
+    for (const feld of uebernahmeFelder(quellen)) {
+      let gruppe = nachQuelle.get(feld.sourceId)
+      if (!gruppe) {
+        gruppe = { key: feld.sourceId, name: feld.sourceName, eintraege: [] }
+        nachQuelle.set(feld.sourceId, gruppe)
+      }
+      ;(gruppe.eintraege as { wert: string; name: string; kennung: string }[]).push({
+        wert: `${feld.sourceId}${TRENNER}${feld.code}`,
+        name: feld.label,
+        kennung: feld.posLen,
+      })
+    }
+    return [...nachQuelle.values()]
+  }, [ziel, quellen])
 
   // Uebernommen wird als POS/LEN-Wert — welche QUELLE das Feld hergab, steht
   // nirgends. Angehakt wird darum der erste Treffer mit diesem Feldcode.
   const gewaehlt = ziel === 'feld' && current !== ''
     ? gruppen.flatMap((g) => g.eintraege).find((e) => e.kennung === current)?.wert ?? ''
     : ''
-
-  // Zwei verschiedene Gruende fuer eine leere Liste, und der Unterschied
-  // entscheidet, was der Nutzer tun muss: gar keine IDB-Quelle, oder eine
-  // ohne Felder mit Position + Laenge.
-  const leerHinweis = sources.length === 0
-    ? 'Keine Datenquelle der Art „IDB-Tabelle". Andere Arten können hier nicht übernommen werden.'
-    : ziel === 'idb'
-      ? 'Keine IDB-Quellen.'
-      : `Keine Felder mit Position + Länge in ${sources.map((s) => s.sourceName).join(', ')}.`
-      + ' Felder stehen im Datencenter an der Quelle.'
 
   return (
     <Popover
@@ -83,7 +89,7 @@ export function FeldUebernahmePicker({
         suchbar
         gruppen={gruppen}
         wert={gewaehlt}
-        leerHinweis={leerHinweis}
+        leerHinweis={leerHinweisFuer(quellen, ziel)}
         onWaehle={(wert) => {
           const at = wert.indexOf(TRENNER)
           if (at < 0) onPick(wert, '')

@@ -25,8 +25,6 @@ import {
   feldUebernahmeArt,
   feldUebernehmen,
   type FeldUebernahmeZiel,
-  uebernahmeIdbQuellen,
-  uebernahmeQuellen,
 } from './feldUebernahme'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { istFensterSeite, seitenDerMaske } from '../../state/pageOps'
@@ -124,8 +122,6 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     () => vorlagen.filter((entry) => relationMatchesSearch(entry, entwurf.suche)),
     [vorlagen, entwurf.suche],
   )
-  const uebernahmeFelder = useMemo(() => uebernahmeQuellen(quellen), [quellen])
-  const uebernahmeQuellenListe = useMemo(() => uebernahmeIdbQuellen(quellen), [quellen])
 
   const kandidat = useMemo(
     () => kandidatAus(entwurf, relation, step),
@@ -325,8 +321,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
               )}
               {entwurf.pickerZiel && (
                 <FeldUebernahmePicker
-                  sources={uebernahmeQuellenListe}
-                  fields={uebernahmeFelder}
+                  quellen={quellen}
                   ziel={entwurf.pickerZiel}
                   current={currentUebernahmeCode}
                   anker={pickerAnker}
