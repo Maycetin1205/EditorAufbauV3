@@ -15,16 +15,17 @@ export const erfassungStil = css`
          Spalte eine Liste zeigen kann.
 
          5px + 4px Eingabe-Polster + 1px Rahmen = die 10px einer Datenzelle:
-         der Text steht auf derselben Kante wie eine Zeile darueber. */
-      .zeile.erfassung > div,
-      .zeile.erfasst > div {
+         der Text steht auf derselben Kante wie eine Zeile darueber. Die
+         ERFASSTE Zeile traegt seit dem Zurueckholen keine Eingabefelder mehr
+         und darum auch dieses Polster nicht — sie ist eine Zeile wie jede
+         andere und nimmt das Zell-Polster der Datenzeile. */
+      .zeile.erfassung > div {
         padding: 0 5px;
         display: flex;
         align-items: center;
         overflow: visible;
       }
-      .tabelle.schlank .zeile.erfassung > div,
-      .tabelle.schlank .zeile.erfasst > div { padding: 0 1px; }
+      .tabelle.schlank .zeile.erfassung > div { padding: 0 1px; }
 
       .erf-halter {
         position: relative;
@@ -48,22 +49,14 @@ export const erfassungStil = css`
 
       /* Erfasste, noch nicht geschriebene Zeilen (G4): wie Datenzeilen, nur
          links markiert — erst der Knopf macht aus ihnen echte Positionen.
-         Die Markierung selbst macht der Statusbalken (tabelleStil). */
+         Die Markierung selbst macht der Statusbalken (tabelleStil).
+
+         Ein Klick holt sie zum Korrigieren zurueck in die Erfassungszeile,
+         darum der Zeigefinger. Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie
+         an der gebuchten Zeile: absolut rechts, erst bei Hover. Vorher sass
+         es mitten in der ERSTEN Zelle und schob deren Wert um rund 20px nach
+         rechts — die erfasste Zeile stand darum sichtbar versetzt unter den
+         gebuchten (Nutzer-Befund 2026-08-28). */
       .zeile.erfasst { flex: none; }
-      .erfasst-weg {
-        margin-right: 6px;
-        padding: 0 3px;
-        font-family: var(--se-font);
-        font-size: var(--se-fs-sm);
-        line-height: 1;
-        color: var(--se-muted);
-        background: none;
-        border: 0;
-        border-radius: var(--se-r-sm);
-        cursor: pointer;
-      }
-      .erfasst-weg:hover {
-        color: var(--se-red);
-        background: var(--se-red-soft);
-      }
+      :host(:not([data-ff-editor])) .zeile.erfasst { cursor: pointer; }
 `

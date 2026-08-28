@@ -320,6 +320,19 @@ export class ErfassungsLauf {
     }
   }
 
+  // Eine schon erfasste Zeile zur Korrektur zurueck in die Erfassungszeile
+  // holen: ihre Werte gelten als GETIPPT. Die gewaehlten Saetze kommen NICHT
+  // mit — sie leben nur waehrend des Erfassens, und aus einer Zeichenkette
+  // laesst sich der Satz nicht eindeutig zurueckfinden (zwei Artikel duerfen
+  // gleich heissen). Der Bediener sucht die Zelle, die er korrigieren will,
+  // ohnehin neu aus; genau dafuer steht die Zeile wieder oben.
+  uebernimmWerte(werte: readonly string[]): void {
+    this.zuruecksetzen()
+    werte.forEach((wert, index) => {
+      if (wert !== '') this.getippt.set(index, wert)
+    })
+  }
+
   zuruecksetzen(): void {
     this.getippt.clear()
     this.gewaehlt.clear()

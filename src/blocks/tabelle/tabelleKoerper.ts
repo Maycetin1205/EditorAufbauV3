@@ -104,9 +104,10 @@ export interface KoerperHandeln {
   nimmErfassteZeile: (index: number) => void
 
   // Eine erfasste Zeile ist noch nichts als eine Vormerkung: der Bediener
-  // muss in sie zurueckklicken und den Vertipper geradeziehen koennen, ohne
-  // sie wegzuwerfen und neu zu tippen.
-  tippeErfassteZelle: (zeilenIndex: number, spalte: number, text: string) => void
+  // muss den Vertipper geradeziehen koennen, ohne sie wegzuwerfen und neu zu
+  // tippen. Sie geht dafuer ZURUECK in die Erfassungszeile — dort hat sie
+  // wieder Vorschlagsliste, Fenster und Enter-Fluss.
+  holeErfassteZeile: (index: number) => void
 
   schalteLoeschung: (rohIndex: number) => void
 }
@@ -261,38 +262,32 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           class="zeile erfasst"
           role="row"
           data-status=${zeichen.status}
-          title=${zeichen.titel}
+          title=${lage.imEditor ? zeichen.titel : `${zeichen.titel} — zum Korrigieren anklicken`}
           style=${styleMap(lage.cols)}
+          @click=${lage.imEditor ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
         >
           ${lage.spalten.map((s, i) => {
             const art = spaltenArt(s.art)
-            // Das Wegnehmen sitzt in der ERSTEN Zelle, wie in der Handmaske:
-            // dort, wo das Auge die Zeile anfaengt zu lesen.
-            const weg = i === 0 && !lage.imEditor
-              ? html`<button
-                  class="erfasst-weg"
-                  type="button"
-                  title="Diese erfasste Zeile wieder wegnehmen"
-                  aria-label="Erfasste Zeile wegnehmen"
-                  @click=${() => tun.nimmErfassteZeile(zeilenIndex)}
-                >&#x2715;</button>`
-              : nothing
-            // Im Editor gibt es keine Eingaben, sondern Striche — wie in der
-            // Erfassungszeile darueber (Regel 7).
-            if (lage.imEditor) {
-              return html`<div class=${art.klasse} role="cell">${
-                art.zelle(werte[i] ?? '', s.zuordnung ?? [], {})
-              }</div>`
-            }
-            return html`<div class=${art.klasse} role="cell">${weg}<input
-              class="erf-eingabe"
-              type="text"
-              aria-label=${s.titel}
-              .value=${werte[i] ?? ''}
-              @input=${(e: Event) =>
-                tun.tippeErfassteZelle(zeilenIndex, i, (e.target as HTMLInputElement).value)}
-            /></div>`
+            // Genau wie eine gebuchte Zeile: die Darstellung der Spalte
+            // entscheidet, was in der Zelle steht — Marke bleibt Marke, Zahl
+            // bleibt formatiert. Vorher stand hier in JEDER Spalte ein rohes
+            // Eingabefeld mit dem Rohwert; deshalb sah eine erfasste Zeile
+            // nicht aus wie die Zeilen darueber. Korrigiert wird sie durch
+            // Zurueckholen in die Erfassungszeile, nicht an Ort und Stelle.
+            return html`<div class=${art.klasse} role="cell">${
+              art.zelle(werte[i] ?? '', s.zuordnung ?? [], {})
+            }</div>`
           })}
+          ${lage.imEditor ? nothing : html`<button
+              class="zeile-weg"
+              type="button"
+              title="Diese erfasste Zeile wieder wegnehmen"
+              aria-label="Erfasste Zeile wegnehmen"
+              @click=${(e: MouseEvent) => {
+                e.stopPropagation()
+                tun.nimmErfassteZeile(zeilenIndex)
+              }}
+            >&#x2715;</button>`}
         </div>`
         })}
         ${lage.hatQuelle ? lage.erfassung : nothing}

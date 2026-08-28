@@ -227,12 +227,15 @@ export class TabelleBlock extends BasicBlock {
   // LoeschTraegerElement und LaufBerichtElement (core/blocks/BlockDefinition.ts):
   // die Kette am Knopf liest sie ueber die Element-Referenz (data-ff-block-id)
   // — darum stehen sie am Baustein und delegieren nur.
+  // Die Kette sieht auch die Zeile, die gerade zur Korrektur oben steht —
+  // sonst schriebe der Knopf ausgerechnet die Zeile nicht, die der Bediener
+  // vor Augen hat.
   get erfassteZeilen(): readonly (readonly string[])[] {
-    return this._erfassung.zeilen
+    return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map((v) => v.werte)
   }
 
   get erfassteSchluessel(): readonly string[] {
-    return this._erfassung.schluessel
+    return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map((v) => v.kennung)
   }
 
   get geaenderteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
@@ -270,7 +273,21 @@ export class TabelleBlock extends BasicBlock {
     if (!this._erfassung.erfasse(this.erfassungsUmfeld())) return false
     this.requestUpdate()
     this.fokussiereErfassungsZelle(0)
+    this.zeigeLetzteErfasste()
     return true
+  }
+
+  // Nach dem Abschliessen muss die gerade erfasste Zeile zu sehen sein. Der
+  // Fokus allein holt sie nicht her: die Erfassungszeile KLEBT unten, der
+  // Browser haelt sie fuer sichtbar und rollt darum gar nicht — die neue Zeile
+  // kann oben aus dem Bild sein oder hinter der klebenden Zeile liegen
+  // (Nutzer-Ansage 2026-08-28). Ans Ende zu rollen setzt sie genau ueber die
+  // Erfassungszeile.
+  private zeigeLetzteErfasste(): void {
+    void this.updateComplete.then(() => {
+      const koerper = this.shadowRoot?.querySelector<HTMLElement>('.koerper')
+      if (koerper) koerper.scrollTop = koerper.scrollHeight
+    })
   }
 
   // Das Nachschlage-Fenster setzt den Fokus in die Suchzeile der Tabelle,
@@ -476,8 +493,10 @@ export class TabelleBlock extends BasicBlock {
         nimmErfassteZeile: (index) => {
           if (this._erfassung.entferne(index)) this.requestUpdate()
         },
-        tippeErfassteZelle: (index, spalte, text) => {
-          if (this._erfassung.setzeWert(index, spalte, text)) this.requestUpdate()
+        holeErfassteZeile: (index) => {
+          if (!this._erfassung.zurueckholen(this.erfassungsUmfeld(), index)) return
+          this.requestUpdate()
+          this.fokussiereErfassungsZelle(0)
         },
         schalteLoeschung: (rohIndex) => this._zeilen.schalteLoeschung(rohIndex),
       })}
