@@ -1050,10 +1050,11 @@
         flex: 1 1 auto;
         overflow: auto;
 
-        /* Platz fuer die Bildlaufleiste immer freihalten. Sonst schrumpft der
-           Rumpf in dem Moment, in dem sie erscheint, und die Spalten rutschen
-           gegen die Kopfzeile — die rollt nicht mit. */
-        scrollbar-gutter: stable;
+        /* Die Kopfzeile klebt IM Rumpf, teilt sich also jede Breite mit den
+           Zeilen: die Leiste kann keine Spalte gegen den Kopf verschieben.
+           Darum kein Gutter — reservierter Platz waere eine Luecke, die bei
+           kurzen Listen dauerhaft neben der letzten Spalte steht. */
+        scrollbar-width: thin;
         display: flex;
         flex-direction: column;
       }
