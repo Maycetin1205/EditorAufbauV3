@@ -128,6 +128,13 @@ Alles darüber hinaus bleibt gesperrt.
 
    **Nachgetragen:** `window.confirm` lebt nicht nur in `zentrale/helfer.ts:27-38`, sondern auch **zweimal in `src/editor/shell/Toolbar.tsx:37` und `:89`** — darunter der gefährlichste Dialog überhaupt („Maske unwiderruflich ersetzt"). Punkt 1 ist mit ✅ abgeschlossen, also fielen die zwei sonst durchs Raster. Sie gehören hierher.
 6. Alte Atome/`tailwind-merge`/`clsx`-Reste entfernen, wenn aufruferlos. (Abhängigkeiten selbst erst entfernen, wenn wirklich nichts mehr importiert.)
+7. **Der Tabellen-Schalter „Schlank" fliegt raus** (Nutzer-Ansage 2026-08-28: „hat absolut KEINEN Sinn").
+
+   Er nimmt heute Rahmen, Radius und Hintergrund weg und kürzt das Zellpolster von 10 px auf 6 px — **nimmt aber den `box-shadow` nicht zurück** (`blocks/tabelle/tabelleStil.ts:217-224`). Ergebnis: ein Schatten um eine unsichtbare Kiste. Der Schalter kostet den Bediener eine Entscheidung und liefert dafür einen Darstellungsfehler.
+
+   Zu entfernen: `TabelleBlock.ts:107` (defaultProps), `:138` (`@property`), `:413` (Klassen-Push), `tabelleEigenschaften.ts:37` (Inspector-Eintrag), `tabelleStil.ts:217-224` und `erfassungStil.ts:26-27` (CSS).
+
+   **Zwei Besonderheiten:** (a) Das ist der einzige Punkt in Etappe 4, der `src/blocks/` anfasst — danach **zwingend `npm run build:runtime`**, sonst veraltet das eingecheckte Bündel still. (b) Eine gespeicherte Maske mit `schlank='ja'` bekommt ihren Rahmen zurück; keine Migration nötig, das Attribut fällt beim Laden einfach weg.
 
 ### Quellen-UI: Hauptquelle vs. Hilfsquellen (Nutzer-Vorgabe, Pflichtteil)
 
