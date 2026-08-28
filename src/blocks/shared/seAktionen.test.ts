@@ -30,12 +30,18 @@ vi.mock('../../softengine/relations', async (echte) => {
       werte: {
         context: Record<string, string | undefined>
         zeilenZelle?: (blockId: string, spalte: number) => string
+        stepResults?: readonly string[]
+        previousResult?: string
       },
     ) => {
       if (binding.source === 'context') return werte.context[binding.value] ?? ''
       if (binding.source.endsWith('zelle')) {
         return werte.zeilenZelle?.(binding.blockId ?? '', Number(binding.value)) ?? ''
       }
+      if (binding.source === 'step_result') {
+        return werte.stepResults?.[Number(binding.value)] ?? ''
+      }
+      if (binding.source === 'previous_result') return werte.previousResult ?? ''
       return binding.value
     },
     executeRelation: async (vorlage: { id: string }, params: readonly string[]) => {
@@ -244,8 +250,8 @@ describe('laufeSchritte', () => {
   test('geschrieben meldet nur, wer wirklich schreibt', async () => {
     const gelesen = await laufeSchritte(el, [relationsSchritt('get-a')], {}, undefined)
     const geschrieben = await laufeSchritte(el, [relationsSchritt('put-a')], {}, undefined)
-    expect(gelesen).toEqual({ geschrieben: false, fehler: '' })
-    expect(geschrieben).toEqual({ geschrieben: true, fehler: '' })
+    expect(gelesen).toMatchObject({ geschrieben: false, fehler: '' })
+    expect(geschrieben).toMatchObject({ geschrieben: true, fehler: '' })
   })
 
   test('eine unbekannte Vorlage laesst den Rest der Kette laufen', async () => {
@@ -259,7 +265,7 @@ describe('laufeSchritte', () => {
   test('ein nicht durchgekommener Ruf stoppt die restlichen Schritte', async () => {
     const steps: RuntimeStep[] = [relationsSchritt('kaputt-put'), relationsSchritt('put-b')]
     expect(await laufeSchritte(el, steps, {}, undefined))
-      .toEqual({ geschrieben: true, fehler: 'Nicht durchgekommen' })
+      .toMatchObject({ geschrieben: true, fehler: 'Nicht durchgekommen' })
     expect(laeufe).toEqual(['start kaputt-put', 'ende kaputt-put'])
   })
 })
@@ -354,4 +360,97 @@ test('runEvent meldet Klartext, wenn ein Schritt zwei Listen liest', async () =>
     'Ein Schritt liest Zellen aus zwei verschiedenen Listen — das geht nicht.',
   ])
   expect(laeufe).toEqual([])
+})
+
+// Der Fall aus der Belegerfassung: einmal die Belegnummer holen, dann je
+// erfasster Zeile eine Position schreiben. Frueher baute jeder Abschnitt seine
+// Ergebnisliste neu auf — der Schreib-Schritt bekam fuer „Ergebnis von
+// Schritt 1" einen leeren String, still, mit leerem Parameter im PUT.
+describe('Ergebnisse ueber die Abschnittsgrenze', () => {
+  function ausSchritt(platz: number): ActionParamBinding {
+    return { source: 'step_result', value: String(platz) }
+  }
+
+  test('ein Einmal-GET liefert seinen Wert an die Zeilen-Schritte', async () => {
+    const t = tabelle('t1', 'erfasst', ['z1', 'z2'])
+    const kette = {
+      klick: [
+        relationsSchritt('get-nummer'),
+        relationsSchritt('put-pos', [ausSchritt(0), zelle('erfassungszelle', 't1')]),
+      ],
+    }
+    await runEvent(knopf(kette, t), 'klick', {})
+
+    expect(gerufen.map((r) => r.id)).toEqual(['get-nummer', 'put-pos', 'put-pos'])
+    expect(gerufen[1].params).toEqual(['W-get-nummer', 'z1'])
+    expect(gerufen[2].params).toEqual(['W-get-nummer', 'z2'])
+  })
+
+  test('auch der resultKey eines Einmal-Schritts gilt weiter', async () => {
+    const t = tabelle('t1', 'erfasst', ['z1'])
+    const kette = {
+      klick: [
+        { ...relationsSchritt('get-nummer'), resultKey: 'BELNR' },
+        relationsSchritt('put-pos', [ausKontext('BELNR'), zelle('erfassungszelle', 't1')]),
+      ],
+    }
+    await runEvent(knopf(kette, t), 'klick', {})
+
+    expect(gerufen[1].params).toEqual(['W-get-nummer', 'z1'])
+  })
+
+  // Innerhalb EINER Zeile darf ein GET seinen Wert an den PUT geben.
+  test('in einem Zeilen-Abschnitt gilt das Ergebnis fuer dieselbe Zeile', async () => {
+    const t = tabelle('t1', 'erfasst', ['z1', 'z2'])
+    const kette = {
+      klick: [
+        relationsSchritt('get-je-zeile', [zelle('erfassungszelle', 't1')]),
+        relationsSchritt('put-pos', [ausSchritt(0)]),
+      ],
+    }
+    await runEvent(knopf(kette, t), 'klick', {})
+
+    expect(gerufen.map((r) => r.id))
+      .toEqual(['get-je-zeile', 'put-pos', 'get-je-zeile', 'put-pos'])
+    expect(gerufen[1].params).toEqual(['W-get-je-zeile'])
+    expect(gerufen[3].params).toEqual(['W-get-je-zeile'])
+  })
+
+  // Und er bleibt DORT: ein spaeterer Abschnitt (hier die Aenderungen) darf
+  // nicht mit dem Ergebnis weiterrechnen, das eine erfasste Zeile erarbeitet
+  // hat. Sonst haengt der zweite Abschnitt an einer beliebigen Zeile des
+  // ersten — an der letzten, die zufaellig durchlief.
+  test('ein spaeterer Abschnitt erbt die Zeilen-Ergebnisse nicht', async () => {
+    const erfasst = tabelle('t1', 'erfasst', ['z1'])
+    const geaendert = tabelle('t2', 'geaendert', ['g1'])
+    const kette = {
+      klick: [
+        relationsSchritt('get-je-zeile', [zelle('erfassungszelle', 't1')]),
+        relationsSchritt('put-aend', [ausSchritt(0), zelle('aenderungszelle', 't2')]),
+      ],
+    }
+    const el2 = {
+      hasAttribute: (name: string) => name === 'data-ff-aktionen',
+      getAttribute: (name: string) => (name === 'data-ff-aktionen' ? JSON.stringify(kette) : null),
+      ownerDocument: { querySelectorAll: () => [erfasst.el, geaendert.el] },
+    } as unknown as HTMLElement
+    await runEvent(el2, 'klick', {})
+
+    const aenderung = gerufen.find((r) => r.id === 'put-aend')
+    expect(aenderung?.params).toEqual(['', 'g1'])
+  })
+
+  test('ein uebersprungener Schritt loescht das Ergebnis an seinem Platz nicht', async () => {
+    const t = tabelle('t1', 'erfasst', ['z1'])
+    const kette = {
+      klick: [
+        relationsSchritt('get-eins'),
+        relationsSchritt('get-zwei'),
+        relationsSchritt('put-pos', [ausSchritt(0), ausSchritt(1), zelle('erfassungszelle', 't1')]),
+      ],
+    }
+    await runEvent(knopf(kette, t), 'klick', {})
+
+    expect(gerufen[2].params).toEqual(['W-get-eins', 'W-get-zwei', 'z1'])
+  })
 })

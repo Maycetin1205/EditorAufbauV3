@@ -183,6 +183,29 @@ export interface LaufErgebnis {
 
   // Leer = durchgelaufen. Sonst der Klartext, an dem es haengengeblieben ist.
   fehler: string
+
+  mitschrift: Mitschrift
+}
+
+// Was ein Lauf an Ergebnissen hinterlaesst. Sie reisen von einem Abschnitt in
+// den naechsten: eine Kette „einmal die Belegnummer holen, dann je Zeile eine
+// Position schreiben" besteht aus ZWEI Abschnitten, und ohne das Weiterreichen
+// bekaeme der Schreib-Schritt fuer „Ergebnis von Schritt 1" nichts — still,
+// ohne Meldung, mit einem leeren Parameter im PUT.
+//
+// Weitergereicht wird nur, was ein EINMAL-Abschnitt hinterlaesst. Was eine
+// Zeile erarbeitet, gehoert ihr allein: sonst saehe Zeile 2 die Ergebnisse
+// von Zeile 1.
+export interface Mitschrift {
+  values: Record<string, string | undefined>
+
+  // Nach Platz IN DER GANZEN KETTE, damit „Ergebnis von Schritt N" ueber
+  // Abschnittsgrenzen hinweg dieselbe Zahl meint.
+  stepResults: readonly string[]
+
+  rohErgebnisse: readonly unknown[]
+
+  previousResult: string
 }
 
 function zeilenDerListe(traeger: ZeilenTraeger, art: VormerkArt): LaufZeile[] | undefined {
@@ -225,46 +248,43 @@ export async function laufeSchritte(
   // Welche Schritte in DIESEM Lauf drankommen (Platz in der Kette).
   // undefined = alle.
   nur?: ReadonlySet<number>,
+
+  // Was frueheren Abschnitte hinterlassen haben (s. Mitschrift).
+  start?: Mitschrift,
 ): Promise<LaufErgebnis> {
   let geschrieben = false
   const values: Record<string, string | undefined> = {
+    ...start?.values,
     ...context,
     NOW_DATE: formatNowDate(new Date()),
   }
-  let previousResult = ''
+  let previousResult = start?.previousResult ?? ''
 
-  const stepResults: string[] = []
+  // Voll besetzt statt angehaengt: ein uebersprungener Schritt darf nicht das
+  // Ergebnis ueberschreiben, das ein frueherer Abschnitt an seinem Platz
+  // hinterlassen hat.
+  const stepResults: string[] = steps.map((_, i) => start?.stepResults[i] ?? '')
 
-  const rohErgebnisse: unknown[] = []
-  const ohneErgebnis = (): void => {
-    stepResults.push('')
-    rohErgebnisse.push(undefined)
-  }
+  const rohErgebnisse: unknown[] = steps.map((_, i) => start?.rohErgebnisse[i])
+  const mitschrift = (): Mitschrift => ({
+    values, stepResults, rohErgebnisse, previousResult,
+  })
   for (const [platz, step] of steps.entries()) {
-    if (nur && !nur.has(platz)) {
-      ohneErgebnis()
-      continue
-    }
+    if (nur && !nur.has(platz)) continue
     if (step.type === 'START_TOOL') {
       seStartTool(step.toolNr, resolveParams({ params: step.toolParams }, values))
-      ohneErgebnis()
       continue
     }
     if (step.type === 'BW_LINK') {
       seBwLink(resolveParams({ params: [step.befehl] }, values)[0] ?? '')
-      ohneErgebnis()
       continue
     }
     if (step.type === 'POPUP_OPEN' || step.type === 'POPUP_CLOSE') {
       applyPopupStep(el.ownerDocument ?? document, step.popup ?? '', step.type === 'POPUP_OPEN')
-      ohneErgebnis()
       continue
     }
     const relation = findRuntimeRelation(seGlobal().FF_RELATIONS, step.relationId)
-    if (!relation) {
-      ohneErgebnis()
-      continue
-    }
+    if (!relation) continue
 
     const runtimeValues = {
       context: values,
@@ -278,19 +298,19 @@ export async function laufeSchritte(
       .map((binding) => resolveActionParam(binding, runtimeValues))
     const antwort = await executeRelation(relation, params)
     const result = antwort.wert
-    stepResults.push(result)
-    rohErgebnisse.push(antwort.roh)
+    stepResults[platz] = result
+    rohErgebnisse[platz] = antwort.roh
 
     if (relation.verb === 'GET_RELATION') previousResult = result
     else geschrieben = true
     // Der Ruf ging nicht hinaus oder blieb unbeantwortet. Weiterlaufen hiesse,
     // die naechsten Schritte auf ein Ergebnis zu setzen, das es nicht gibt.
     if (antwort.fehler !== undefined && antwort.fehler !== '') {
-      return { geschrieben, fehler: antwort.fehler }
+      return { geschrieben, fehler: antwort.fehler, mitschrift: mitschrift() }
     }
     if (step.resultKey !== '') values[step.resultKey] = result
   }
-  return { geschrieben, fehler: '' }
+  return { geschrieben, fehler: '', mitschrift: mitschrift() }
 }
 
 export async function runEvent(
@@ -315,9 +335,15 @@ export async function runEvent(
     let geschrieben = false
     let abgebrochen = false
 
+    // Was die Einmal-Abschnitte erarbeitet haben, reist mit: „Ergebnis von
+    // Schritt N" muss auch in den Zeilen-Schritten etwas liefern.
+    let mitschrift: Mitschrift | undefined
     for (const abschnitt of abschnitte) {
       if (abschnitt.art === 'einmal') {
-        const ergebnis = await laufeSchritte(el, steps, context, undefined, abschnitt.plaetze)
+        const ergebnis = await laufeSchritte(
+          el, steps, context, undefined, abschnitt.plaetze, mitschrift,
+        )
+        mitschrift = ergebnis.mitschrift
         if (ergebnis.geschrieben) geschrieben = true
         if (ergebnis.fehler !== '') { abgebrochen = true; break }
         continue
@@ -339,10 +365,12 @@ export async function runEvent(
       berichte.push(bericht)
       for (const zeile of zeilen) {
         traeger.zeileSchreibt?.(abschnitt.art, zeile.schluessel)
+        // Die Mitschrift wird hier nur GELESEN: was eine Zeile erarbeitet,
+        // gehoert ihr allein — sonst saehe Zeile 2 die Ergebnisse von Zeile 1.
         const ergebnis = await laufeSchritte(el, steps, zeilenKontext(context, abschnitt.art, zeile),
           (blockId, spaltenIndex) =>
             (blockId === abschnitt.blockId ? String(zeile.werte[spaltenIndex] ?? '') : ''),
-          abschnitt.plaetze)
+          abschnitt.plaetze, mitschrift)
         if (ergebnis.geschrieben) geschrieben = true
         // Haengengeblieben: die Zeile behaelt ihre Vormerkung und traegt die
         // Meldung. Die Zeilen dahinter bleiben unangetastet stehen — sonst
