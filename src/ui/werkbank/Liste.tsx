@@ -1,4 +1,5 @@
-import { Check } from '@/ui/zeichen'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Search } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
 
 export interface ListeEintrag {
@@ -26,17 +27,65 @@ export interface ListeProps {
   // Erste Zeile fuer „nichts gewaehlt". Fehlt sie, ist die Wahl Pflicht.
   leerText?: string
   leerHinweis?: string
+
+  // Suchfeld ueber der Liste. Eine Datenquelle kann hunderte Felder haben —
+  // ohne Suche ist die Wahl darin Rollen auf gut Glueck.
+  suchbar?: boolean
   onWaehle: (wert: string) => void
 }
 
 const ZEILE = 'flex w-full items-baseline gap-3 rounded px-2 py-1 text-left text-ui transition-colors'
 
-export function Liste({ gruppen, wert, leerText, leerHinweis, onWaehle }: ListeProps) {
-  const leer = gruppen.every((g) => g.eintraege.length === 0)
+function passt(text: string, suche: string): boolean {
+  return text.toLowerCase().includes(suche)
+}
+
+export function Liste({
+  gruppen,
+  wert,
+  leerText,
+  leerHinweis,
+  suchbar = false,
+  onWaehle,
+}: ListeProps) {
+  const [suche, setSuche] = useState('')
+  const sucheRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (suchbar) sucheRef.current?.focus()
+  }, [suchbar])
+
+  const gesucht = suche.trim().toLowerCase()
+
+  const gefiltert = useMemo(() => {
+    if (gesucht === '') return gruppen
+    return gruppen
+      .map((g) => ({
+        ...g,
+        eintraege: g.eintraege.filter((e) => passt(e.name, gesucht) || passt(e.kennung ?? '', gesucht)),
+      }))
+      .filter((g) => g.eintraege.length > 0)
+  }, [gruppen, gesucht])
+
+  const leer = gefiltert.every((g) => g.eintraege.length === 0)
 
   return (
     <div className="flex flex-col">
-      {leerText !== undefined && (
+      {suchbar && (
+        <div className="flex items-center gap-1.5 border-b border-linie px-2 py-1">
+          <Search size={13} aria-hidden className="shrink-0 text-matt" />
+          <input
+            ref={sucheRef}
+            value={suche}
+            onChange={(e) => setSuche(e.currentTarget.value)}
+            placeholder="Suchen…"
+            aria-label="Suchen"
+            className="h-steuer min-w-0 flex-1 bg-transparent text-ui text-tinte outline-none placeholder:text-matt"
+          />
+        </div>
+      )}
+
+      {leerText !== undefined && gesucht === '' && (
         <button
           type="button"
           onClick={() => onWaehle('')}
@@ -48,7 +97,7 @@ export function Liste({ gruppen, wert, leerText, leerHinweis, onWaehle }: ListeP
         </button>
       )}
 
-      {gruppen.map((g) => (
+      {gefiltert.map((g) => (
         <div key={g.key} className="flex flex-col">
           {g.name !== undefined && g.name !== '' && (
             <p className="flex items-baseline gap-2 px-2 pb-0.5 pt-1.5 text-dicht font-semibold uppercase tracking-wide text-matt">
@@ -90,8 +139,10 @@ export function Liste({ gruppen, wert, leerText, leerHinweis, onWaehle }: ListeP
         </div>
       ))}
 
-      {leer && leerText === undefined && (
-        <p className="px-2 py-2 text-ui text-matt">{leerHinweis ?? 'Nichts zur Auswahl.'}</p>
+      {leer && (leerText === undefined || gesucht !== '') && (
+        <p className="px-2 py-2 text-ui text-matt">
+          {gesucht === '' ? (leerHinweis ?? 'Nichts zur Auswahl.') : 'Kein Treffer.'}
+        </p>
       )}
     </div>
   )

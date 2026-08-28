@@ -1,9 +1,8 @@
 import { Plus, X } from '@/ui/zeichen'
-import { Button } from '@/ui/atoms/button'
-import { IconButton } from '@/ui/atoms/icon-button'
-import { WaehlerKnopf } from '@/ui/molecules/waehler'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import type { DataSourceField } from '../../core/data/dataSources'
 import { MAX_SCHLUESSELPAARE, type SchluesselPaar } from '../../core/data/sourceLinks'
+import { PickerControl } from './controls/PickerControl'
 
 interface SchluesselPaarZeilenProps {
   frage: string
@@ -39,7 +38,7 @@ export function SchluesselPaarZeilen({
     wert: string,
     onWaehle: (code: string) => void,
   ) => (
-    <WaehlerKnopf
+    <PickerControl
       className="flex-1"
       bezeichnung={bezeichnung}
       gruppen={[{
@@ -54,33 +53,32 @@ export function SchluesselPaarZeilen({
 
   return (
     <>
-      <span className="text-xs text-muted-foreground">{frage}</span>
+      <span className="text-dicht text-matt">{frage}</span>
       {paare.map((paar, at) => (
         <div key={at} className="flex items-center gap-1.5">
           {feldWaehler(linkeBezeichnung(at), linkeFelder, paar.fromField,
             (code) => setzePaar(at, { fromField: code }))}
-          <span className="shrink-0 text-xs text-muted-foreground">=</span>
+          <span className="shrink-0 text-dicht text-matt">=</span>
           {feldWaehler(rechteBezeichnung(at), rechteFelder, paar.toField,
             (code) => setzePaar(at, { toField: code }))}
           {paare.length > 1 && (
-            <IconButton
+            <Knopf
+              nurZeichen
               aria-label={entfernenBezeichnung(at)}
               onClick={() => onAendern(paare.filter((_, x) => x !== at))}
             >
               <X size={13} />
-            </IconButton>
+            </Knopf>
           )}
         </div>
       ))}
       {paare.length < MAX_SCHLUESSELPAARE && (
-        <Button
-          variant="outline"
-          size="sm"
+        <Knopf
           className="self-start"
           onClick={() => onAendern([...paare, { fromField: '', toField: '' }])}
         >
           <Plus size={13} /> Feld dazu
-        </Button>
+        </Knopf>
       )}
     </>
   )

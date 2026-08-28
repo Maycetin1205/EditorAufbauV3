@@ -17,11 +17,16 @@ export interface ZeileProps {
   // untereinander.
   hinweis?: string
   fehler?: ReactNode
+
+  // Fuer Bedienelemente, die keine 28-px-Zeile sind (Textfeld mehrzeilig,
+  // Bild, Farbkacheln): Beschriftung darueber, Element ueber die volle
+  // Breite. In 320 px Inspector blieben ihnen sonst 180 px.
+  breit?: boolean
   className?: string
   children: (kind: ZeileKind) => ReactNode
 }
 
-export function Zeile({ label, hinweis, fehler, className, children }: ZeileProps) {
+export function Zeile({ label, hinweis, fehler, breit = false, className, children }: ZeileProps) {
   const id = useId()
   const fehlerId = fehler ? `${id}-fehler` : undefined
   const kind: ZeileKind = {
@@ -30,9 +35,20 @@ export function Zeile({ label, hinweis, fehler, className, children }: ZeileProp
     'aria-invalid': fehler ? true : undefined,
   }
 
-  if (label === undefined) {
+  const beschriftung = (klasse: string) => (
+    <label
+      htmlFor={id}
+      title={hinweis}
+      className={cn(klasse, hinweis !== undefined && hinweis !== '' && 'cursor-help')}
+    >
+      {label}
+    </label>
+  )
+
+  if (label === undefined || breit) {
     return (
       <div className={cn('flex min-w-0 flex-col gap-1', className)}>
+        {label !== undefined && beschriftung('truncate text-ui text-matt')}
         {children(kind)}
         {fehler && <p id={fehlerId} className="break-words text-dicht text-fehler">{fehler}</p>}
       </div>
@@ -41,16 +57,7 @@ export function Zeile({ label, hinweis, fehler, className, children }: ZeileProp
 
   return (
     <div className={cn('grid min-w-0 grid-cols-[2fr_3fr] items-center gap-x-2 gap-y-1', className)}>
-      <label
-        htmlFor={id}
-        title={hinweis}
-        className={cn(
-          'min-h-steuer flex items-center truncate text-ui text-matt',
-          hinweis !== undefined && hinweis !== '' && 'cursor-help',
-        )}
-      >
-        {label}
-      </label>
+      {beschriftung('min-h-steuer flex items-center truncate text-ui text-matt')}
       <div className="flex min-w-0 items-center">{children(kind)}</div>
       {fehler && (
         <p id={fehlerId} className="col-span-2 break-words text-dicht text-fehler">{fehler}</p>

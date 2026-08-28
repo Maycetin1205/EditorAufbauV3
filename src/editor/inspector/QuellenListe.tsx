@@ -1,7 +1,6 @@
 import { Plus, X } from '@/ui/zeichen'
-import { Button } from '@/ui/atoms/button'
-import { IconButton } from '@/ui/atoms/icon-button'
-import { WaehlerKnopf } from '@/ui/molecules/waehler'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { quellenKennung } from '../../core/data/dataSources'
 import {
@@ -11,6 +10,7 @@ import {
 } from '../../core/data/sourceLinks'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
+import { PickerControl } from './controls/PickerControl'
 import { SchluesselPaarZeilen } from './SchluesselPaarZeilen'
 
 interface QuellenListeProps {
@@ -95,7 +95,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
         })),
     ]
     return (
-      <WaehlerKnopf
+      <PickerControl
         label="Verbunden mit"
         bezeichnung="Verbunden mit"
         gruppen={[{ key: 'partner', eintraege }]}
@@ -109,7 +109,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
   // Eine fehlende Quelle braucht keine Kunst-Option mehr: der Waehler zeigt
   // einen Wert, den er nicht kennt, von sich aus rot.
   const quellenAuswahl = (wert: string, titel: string, onWert: (v: string) => void) => (
-    <WaehlerKnopf
+    <PickerControl
       label={titel}
       bezeichnung={titel}
       gruppen={[{
@@ -127,31 +127,28 @@ export function QuellenListe({ block }: QuellenListeProps) {
   )
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
-        Datenquellen
-      </span>
-
+    <Gruppe titel="Datenquellen">
       {quellenAuswahl(erste, 'Datenquelle 1', (v) => ed.updateProperty(block.id, 'source', v))}
       {fehlt(erste) && (
-        <p className="text-xs text-destructive">
+        <p className="text-dicht text-fehler">
           Die gewählte Datenquelle fehlt in der Bibliothek. Neu wählen — oder
           unter Datencenter → Datenquellen wieder anlegen.
         </p>
       )}
 
       {weitere.map((q, i) => (
-        <div key={i} className="flex flex-col gap-1.5 rounded-md border border-border p-2">
-          <div className="flex items-end gap-2">
+        <div key={i} className="flex flex-col gap-1.5 rounded border border-linie p-2">
+          <div className="flex items-end gap-1">
             <div className="min-w-0 flex-1">
               {quellenAuswahl(q.quelleId, `Datenquelle ${i + 2}`, (v) => aendere(i, { quelleId: v }))}
             </div>
-            <IconButton
+            <Knopf
+              nurZeichen
               aria-label={`Datenquelle ${i + 2} entfernen`}
               onClick={() => setzeWeitere(weitere.filter((_, at) => at !== i))}
             >
               <X size={13} />
-            </IconButton>
+            </Knopf>
           </div>
           {partnerAuswahl(i)}
           <SchluesselPaarZeilen
@@ -168,15 +165,13 @@ export function QuellenListe({ block }: QuellenListeProps) {
       ))}
 
       {erste !== '' && (
-        <Button
-          variant="outline"
-          size="sm"
+        <Knopf
           className="self-start"
           onClick={() => setzeWeitere([...weitere, { quelleId: '', partnerId: '', keyPairs: [] }])}
         >
           <Plus size={13} /> Datenquelle
-        </Button>
+        </Knopf>
       )}
-    </div>
+    </Gruppe>
   )
 }

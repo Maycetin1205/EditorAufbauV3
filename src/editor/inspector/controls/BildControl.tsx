@@ -2,8 +2,8 @@ import { useRef, useState } from 'react'
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { meldungen } from '../../../state/meldungen'
 import { bildEinbetten } from './bildEinbetten'
-import { Button } from '@/ui/atoms/button'
-import { Field } from '@/ui/molecules/field'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Zeile } from '@/ui/werkbank/Zeile'
 
 interface BildControlProps {
   property: PropertyDescription
@@ -29,37 +29,25 @@ export function BildControl({ property, value, onChange }: BildControlProps) {
   }
 
   return (
-    <Field label={property.name} description={property.description}>
-      {(field) => (
-        <div {...field} className="flex min-w-0 flex-col gap-1.5">
+    <Zeile breit label={property.name} hinweis={property.description}>
+      {(kind) => (
+        <div {...kind} className="flex min-w-0 flex-col gap-1.5">
 
           {hatBild && (
             <img
               src={value}
               alt=""
-              className="max-h-24 w-full rounded-md border border-input object-contain"
+              className="max-h-24 w-full rounded border border-linie object-contain"
             />
           )}
           <div className="flex gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={laeuft}
-              onClick={() => dateiRef.current?.click()}
-            >
+            <Knopf disabled={laeuft} onClick={() => dateiRef.current?.click()}>
               {hatBild ? 'Anderes Bild …' : 'Bild wählen …'}
-            </Button>
+            </Knopf>
             {hatBild && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={laeuft}
-                onClick={() => onChange('')}
-              >
+              <Knopf art="gefahr" disabled={laeuft} onClick={() => onChange('')}>
                 Entfernen
-              </Button>
+              </Knopf>
             )}
           </div>
 
@@ -79,6 +67,6 @@ export function BildControl({ property, value, onChange }: BildControlProps) {
           />
         </div>
       )}
-    </Field>
+    </Zeile>
   )
 }

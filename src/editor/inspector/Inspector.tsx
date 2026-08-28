@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { Copy, MousePointer2 } from '@/ui/zeichen'
 import { bindingProp } from '../../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
@@ -7,10 +7,9 @@ import { propertySichtbar, type PropertyDescription } from '../../core/blocks/Pr
 import { darfAuswahlFolgen, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
-import { IconButton } from '@/ui/atoms/icon-button'
-import { Field } from '@/ui/molecules/field'
-import { SidePanel } from '@/ui/molecules/side-panel'
-import { cn } from '@/lib/utils'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Trenner } from '@/ui/werkbank/Trenner'
+import { Zeile } from '@/ui/werkbank/Zeile'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { AktionenSektion } from './AktionenSektion'
 import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
@@ -32,6 +31,22 @@ function inspectorZeilen(props: PropertyDescription[]): InspectorZeile[] {
   return zeilen
 }
 
+function Panel({ titel, aktionen, children }: {
+  titel: string
+  aktionen?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div className="flex h-full flex-col gap-2 p-2">
+      <header className="flex h-steuer shrink-0 items-center gap-1">
+        <h2 className="min-w-0 flex-1 truncate text-ui font-semibold text-tinte">{titel}</h2>
+        {aktionen}
+      </header>
+      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+    </div>
+  )
+}
+
 export function Inspector() {
   const ed = useEditor()
 
@@ -45,16 +60,13 @@ export function Inspector() {
 
   if (!block) {
     return (
-      <SidePanel title="Inspector">
-
-        <div className="flex flex-col items-center gap-1.5 rounded-md border border-dashed border-border bg-card/70 px-6 py-6 text-center">
-          <MousePointer2 size={18} className="text-muted-foreground/60" />
-          <p className="text-[0.8125rem] font-medium text-foreground/80">Kein Block ausgewählt.</p>
-          <p className="text-xs text-muted-foreground">
-            Wähle einen Baustein auf der Fläche.
-          </p>
+      <Panel titel="Inspector">
+        <div className="flex flex-col items-center gap-1.5 rounded border border-dashed border-linie px-6 py-6 text-center">
+          <MousePointer2 size={18} aria-hidden className="text-matt" />
+          <p className="text-ui text-tinte">Kein Baustein gewählt.</p>
+          <p className="text-dicht text-matt">Wähle einen Baustein auf der Fläche.</p>
         </div>
-      </SidePanel>
+      </Panel>
     )
   }
 
@@ -63,11 +75,11 @@ export function Inspector() {
   const hinweis = editorAngabenVon(block.type).hinweis
   if (!def) {
     return (
-      <SidePanel title="Inspector">
-        <p className="text-xs text-destructive">
+      <Panel titel="Inspector">
+        <p className="text-dicht text-fehler">
           Keine Definition für Block-Typ &quot;{block.type}&quot; gefunden.
         </p>
-      </SidePanel>
+      </Panel>
     )
   }
 
@@ -108,34 +120,34 @@ export function Inspector() {
   const showDataSection = traegtEigeneQuelle(block)
     || dataProps.some((p) => p.quelleProp !== undefined || sourceInReach !== undefined)
 
-  return (
-    <SidePanel
-      title={blockName}
+  const hatAktionen = def.blockEvents !== undefined && def.blockEvents.length > 0
 
-      actions={(
-        <IconButton
+  return (
+    <Panel
+      titel={blockName}
+      aktionen={(
+        <Knopf
+          nurZeichen
           aria-label="Duplizieren (Ctrl+D)"
-          title="Duplizieren"
+          title="Duplizieren (Ctrl+D)"
           onClick={() => ed.duplicateBlock(block.id)}
         >
           <Copy size={14} />
-        </IconButton>
+        </Knopf>
       )}
     >
-
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-3">
         {generalProps.length > 0 && (
-          <div className="flex flex-col gap-3">
-
+          <div className="flex flex-col gap-2">
             {inspectorZeilen(generalProps).map((zeile) =>
               zeile.row ? (
-                <Field key={`zeile:${zeile.row}`} label={zeile.row}>
+                <Zeile key={`zeile:${zeile.row}`} label={zeile.row}>
                   {() => (
                     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                       {zeile.props.map((p) => propControl(p, true))}
                     </div>
                   )}
-                </Field>
+                </Zeile>
               ) : (
                 propControl(zeile.props[0])
               ),
@@ -144,16 +156,13 @@ export function Inspector() {
         )}
 
         {showDataSection && (
-          <div
-            className={cn(
-              'flex flex-col gap-3',
-              generalProps.length > 0 && 'mt-4 border-t border-border pt-4',
-            )}
-          >
-
-            {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
-            {dataProps.map((p) => propControl(p))}
-          </div>
+          <>
+            {generalProps.length > 0 && <Trenner />}
+            <div className="flex flex-col gap-2">
+              {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
+              {dataProps.map((p) => propControl(p))}
+            </div>
+          </>
         )}
 
         {darfAuswahlFolgen(block) && (
@@ -163,33 +172,17 @@ export function Inspector() {
           />
         )}
 
-        {def.blockEvents && def.blockEvents.length > 0 && (
-          <div
-            className={cn(
-              'flex flex-col gap-3',
-              (generalProps.length > 0 || showDataSection) && 'mt-4 border-t border-border pt-4',
-            )}
-          >
-            <AktionenSektion
-              block={block}
-              events={def.blockEvents}
-            />
-          </div>
+        {hatAktionen && (
+          <>
+            {(generalProps.length > 0 || showDataSection) && <Trenner />}
+            <AktionenSektion block={block} events={def.blockEvents ?? []} />
+          </>
         )}
 
         {hinweis && (
-          <p
-            className={cn(
-              'text-xs leading-relaxed text-muted-foreground',
-              (generalProps.length > 0 || showDataSection
-                || (def.blockEvents && def.blockEvents.length > 0)) && 'mt-3',
-            )}
-          >
-            {hinweis}
-          </p>
+          <p className="text-dicht leading-relaxed text-matt">{hinweis}</p>
         )}
-
       </div>
-    </SidePanel>
+    </Panel>
   )
 }

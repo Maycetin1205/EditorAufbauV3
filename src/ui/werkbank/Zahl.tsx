@@ -9,7 +9,7 @@ export interface ZahlProps extends Omit<InputHTMLAttributes<HTMLInputElement>, '
 
 export const Zahl = forwardRef<HTMLInputElement, ZahlProps>(
   ({ einheit, className, ...rest }, ref) => (
-    <span className="relative inline-flex min-w-0 items-center">
+    <span className="relative inline-flex shrink-0 items-center">
       <input
         ref={ref}
         type="number"

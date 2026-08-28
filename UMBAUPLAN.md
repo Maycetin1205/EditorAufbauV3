@@ -98,9 +98,10 @@ Gilt **nur für den Editor** (`src/editor/`, `src/ui/`). Die exportierte Maske (
 
 ### Umbau-Reihenfolge (damit nie alles gleichzeitig kaputt ist)
 
-1. Atome bauen (`src/ui/werkbank/`), Shell + Inspector-Rahmen darauf umstellen. Der Inspector ist datengetrieben (`Inspector.tsx` + `PropControl.tsx`) — es sind ~9 Control-Arten auf Atome zu mappen.
-   — Atome (12 Stück) und **Shell** erledigt; **Inspector offen**, kommt mit Punkt 2.
-2. `PropControl.tsx`: die 4 fast identischen `WaehlerKnopf`-Aufrufe zu einer `PickerControl` zusammenziehen.
+1. ✅ Atome bauen (`src/ui/werkbank/`), Shell + Inspector-Rahmen darauf umstellen. Der Inspector ist datengetrieben (`Inspector.tsx` + `PropControl.tsx`) — es sind ~9 Control-Arten auf Atome zu mappen.
+2. ✅ `PropControl.tsx`: die 4 fast identischen `WaehlerKnopf`-Aufrufe zu einer `PickerControl` zusammenziehen.
+
+   Mit Punkt 2 ist der **ganze Inspector** Werkbank: die sieben Controls, Quellen, Auswahl-Folge, Schlüsselpaare, Aktionen. `PickerControl` (`inspector/controls/`) komponiert `Popover` + `Liste` und ersetzt `WaehlerKnopf` — vier Aufrufer sofort. Drei Abweichungen, weil ohne sie etwas schlechter geworden wäre: `Liste` bekam die **Suche** (eine Quelle hat hunderte Felder; kein 13. Atom) · `Zeile` bekam `breit` für Bedienelemente, die keine 28-px-Zeile sind (mehrzeiliger Text, Bild, Farbkacheln) · `Popover` verbirgt sich vor der Messung mit `opacity-0` statt `invisible`, sonst nimmt das Suchfeld beim Aufklappen keinen Fokus. Aufruferlos geworden und gelöscht: `atoms/select` (Radix), `atoms/textarea`, `molecules/side-panel` — das npm-Paket `@radix-ui/react-select` bleibt bis Punkt 6. Noch NICHT umgebaut, jeweils eigener Punkt: die Quellen-UI fachlich (Hauptquelle/Hilfsquellen) und die Heimat der Aktionen (Punkt 5).
 3. **`StepForm.tsx` (442 Z., schlimmste Datei) neu schreiben:** ein `useReducer`/abgeleiteter Zustand statt 13 `useState`; `candidate` einmal per `useMemo`; `stepProblem` einmal pro Änderung statt zweimal pro Render; die sechs Optionslisten memoisiert.
 4. **`ParameterZeile.tsx` (408 Z.) neu:** statt 11 `if (binding.source === …)`-Zweigen eine Registry `Quelle → Control-Komponente` (dasselbe Muster wie PropControl). Die 12 Parameterquellen aus `ACTION_PARAM_SOURCES` bleiben fachlich unverändert.
 5. Datencenter (`zentrale/`) auf Overlay + Atome umstellen; Aktionen bekommen eine Heimat: Inspector listet Ereignisse und öffnet den Ketten-Editor als Overlay — keine Doppelbearbeitung an zwei Orten mehr.

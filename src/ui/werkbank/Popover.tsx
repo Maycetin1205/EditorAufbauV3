@@ -114,7 +114,10 @@ export function Popover({
       }}
       className={cn(
         'overflow-y-auto rounded border border-linie bg-panel p-1 text-tinte shadow-overlay',
-        platz === null && 'invisible',
+        // Vor der Messung unsichtbar, aber NICHT `invisible`: was
+        // visibility:hidden traegt, nimmt keinen Fokus an — ein Suchfeld
+        // darin bliebe beim Aufklappen leer stehen.
+        platz === null && 'opacity-0',
       )}
     >
       {children}

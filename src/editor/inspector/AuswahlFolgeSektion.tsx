@@ -1,5 +1,6 @@
-import { cn } from '@/lib/utils'
-import { WaehlerKnopf, type WaehlerEintrag } from '@/ui/molecules/waehler'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
+import { Trenner } from '@/ui/werkbank/Trenner'
+import type { ListeEintrag } from '@/ui/werkbank/Liste'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { auswahlQuelleIdVon, istAuswahlGeber } from '../../core/blocks/treeQuery'
 import {
@@ -12,6 +13,7 @@ import { quellenKennung } from '../../core/data/dataSources'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { bausteinName } from '../../core/blocks/bausteinName'
+import { PickerControl } from './controls/PickerControl'
 import { SchluesselPaarZeilen } from './SchluesselPaarZeilen'
 
 interface AuswahlFolgeSektionProps {
@@ -38,7 +40,7 @@ export function AuswahlFolgeSektion({ block, mitTrenner }: AuswahlFolgeSektionPr
   const geberNode = folge ? ed.tree[folge.geberId] : undefined
   const geberQuelle = quelleVon(geberNode)
 
-  const eintrag = (n: BlockNode): WaehlerEintrag => {
+  const eintrag = (n: BlockNode): ListeEintrag => {
     const q = quelleVon(n)
     return q
       ? { wert: n.id, name: `${bausteinName(n, bibliothek)} (${q.name})`, kennung: quellenKennung(q) }
@@ -61,47 +63,47 @@ export function AuswahlFolgeSektion({ block, mitTrenner }: AuswahlFolgeSektionPr
     }])
   }
   return (
-    <div className={cn('flex flex-col gap-2', mitTrenner && 'mt-4 border-t border-border pt-4')}>
-      <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
-        Auswahl folgen
-      </span>
-      {/* Ein geloeschter Geber braucht keine Kunst-Option: der Waehler zeigt
-          einen Wert, den er nicht kennt, von sich aus rot. */}
-      <WaehlerKnopf
-        label="Folgt der Auswahl von"
-        bezeichnung="Folgt der Auswahl von"
-        gruppen={[{ key: 'geber', eintraege: kandidaten.map(eintrag) }]}
-        wert={folge?.geberId ?? ''}
-        leerText="— keinem —"
-        onWaehle={setzeGeber}
-      />
-      {folge && (
-        <>
-          <SchluesselPaarZeilen
-            frage="Woran erkennt man die zusammengehörigen Zeilen?"
-            paare={folge.keyPairs}
-            linkeFelder={geberQuelle?.fields ?? []}
-            rechteFelder={eigeneQuelle?.fields ?? []}
-            linkeBezeichnung={(at) => `Feld ${at + 1} beim Auswahl-Geber`}
-            rechteBezeichnung={(at) => `Feld ${at + 1} in diesem Baustein`}
-            entfernenBezeichnung={(at) => `Feldpaar ${at + 1} entfernen`}
-            onAendern={(keyPairs) => setze([{ ...folge, keyPairs }])}
-          />
+    <>
+      {mitTrenner && <Trenner />}
+      <Gruppe titel="Auswahl folgen">
+        {/* Ein geloeschter Geber braucht keine Kunst-Option: der Waehler zeigt
+            einen Wert, den er nicht kennt, von sich aus rot. */}
+        <PickerControl
+          label="Folgt der Auswahl von"
+          bezeichnung="Folgt der Auswahl von"
+          gruppen={[{ key: 'geber', eintraege: kandidaten.map(eintrag) }]}
+          wert={folge?.geberId ?? ''}
+          leerText="— keinem —"
+          onWaehle={setzeGeber}
+        />
+        {folge && (
+          <>
+            <SchluesselPaarZeilen
+              frage="Woran erkennt man die zusammengehörigen Zeilen?"
+              paare={folge.keyPairs}
+              linkeFelder={geberQuelle?.fields ?? []}
+              rechteFelder={eigeneQuelle?.fields ?? []}
+              linkeBezeichnung={(at) => `Feld ${at + 1} beim Auswahl-Geber`}
+              rechteBezeichnung={(at) => `Feld ${at + 1} in diesem Baustein`}
+              entfernenBezeichnung={(at) => `Feldpaar ${at + 1} entfernen`}
+              onAendern={(keyPairs) => setze([{ ...folge, keyPairs }])}
+            />
 
-          {(!geberQuelle || !eigeneQuelle) && (
-            <p className="text-xs text-muted-foreground">
-              Beide Bausteine brauchen zuerst eine Datenquelle — sonst gibt es
-              keine Felder, an denen man die Zeilen erkennen könnte.
-            </p>
-          )}
-          {geberQuelle && eigeneQuelle && !folgeBrauchbar(folge) && (
-            <p className="text-xs text-muted-foreground">
-              Noch nicht wirksam: es fehlt ein Feldpaar, bei dem <em>beide</em>{' '}
-              Seiten gefüllt sind.
-            </p>
-          )}
-        </>
-      )}
-    </div>
+            {(!geberQuelle || !eigeneQuelle) && (
+              <p className="text-dicht text-matt">
+                Beide Bausteine brauchen zuerst eine Datenquelle — sonst gibt es
+                keine Felder, an denen man die Zeilen erkennen könnte.
+              </p>
+            )}
+            {geberQuelle && eigeneQuelle && !folgeBrauchbar(folge) && (
+              <p className="text-dicht text-matt">
+                Noch nicht wirksam: es fehlt ein Feldpaar, bei dem <em>beide</em>{' '}
+                Seiten gefüllt sind.
+              </p>
+            )}
+          </>
+        )}
+      </Gruppe>
+    </>
   )
 }

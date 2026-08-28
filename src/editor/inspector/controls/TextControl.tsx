@@ -1,7 +1,7 @@
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { useEingabeSitzung } from './eingabeSitzung'
-import { TextInput } from '@/ui/atoms/text-input'
-import { Field } from '@/ui/molecules/field'
+import { Feld } from '@/ui/werkbank/Feld'
+import { Zeile } from '@/ui/werkbank/Zeile'
 
 interface TextControlProps {
   property: PropertyDescription
@@ -21,10 +21,10 @@ export function TextControl({
 }: TextControlProps) {
   const sitzung = useEingabeSitzung(onBeginBearbeitung, onEndeBearbeitung)
   return (
-    <Field label={property.name} description={property.description}>
-      {(field) => (
-        <TextInput
-          {...field}
+    <Zeile label={property.name} hinweis={property.description}>
+      {(kind) => (
+        <Feld
+          {...kind}
           value={value}
           maxLength={property.maxLength || undefined}
           onChange={(e) => {
@@ -34,6 +34,6 @@ export function TextControl({
           onBlur={sitzung.beenden}
         />
       )}
-    </Field>
+    </Zeile>
   )
 }

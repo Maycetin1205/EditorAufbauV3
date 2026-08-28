@@ -1,6 +1,6 @@
 import { Check } from '@/ui/zeichen'
 import type { PropertySelectOption } from '../../../core/blocks/PropertyDescription'
-import { Field } from '@/ui/molecules/field'
+import { Zeile } from '@/ui/werkbank/Zeile'
 import { cn } from '@/lib/utils'
 import { optionColor } from '../optionColors'
 
@@ -14,13 +14,9 @@ interface ColorTileControlProps {
 
 export function ColorTileControl({ label, description, value, options, onChange }: ColorTileControlProps) {
   return (
-    <Field label={label} description={description}>
-      {(field) => (
-        <div
-          id={field.id}
-          aria-describedby={field['aria-describedby']}
-          className="flex flex-wrap items-center gap-1.5"
-        >
+    <Zeile breit label={label} hinweis={description}>
+      {(kind) => (
+        <div {...kind} className="flex flex-wrap items-center gap-1.5">
           {options.map((o) => {
             const gewaehlt = o.value === value
             return (
@@ -34,18 +30,18 @@ export function ColorTileControl({ label, description, value, options, onChange 
                 onClick={() => onChange(o.value)}
 
                 className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded-md border border-black/10',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80',
-                  !gewaehlt && 'hover:ring-2 hover:ring-inset hover:ring-white/50',
+                  'flex h-6 w-6 items-center justify-center rounded border border-linie',
+                  'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent focus-visible:ring-offset-1',
+                  gewaehlt ? 'ring-1 ring-akzent ring-offset-1' : 'hover:ring-1 hover:ring-matt hover:ring-offset-1',
                 )}
                 style={{ backgroundColor: optionColor(o.value) }}
               >
-                {gewaehlt && <Check size={13} strokeWidth={3} className="text-white" />}
+                {gewaehlt && <Check size={13} strokeWidth={3} className="text-grund" />}
               </button>
             )
           })}
         </div>
       )}
-    </Field>
+    </Zeile>
   )
 }

@@ -1,7 +1,7 @@
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { useEingabeSitzung } from './eingabeSitzung'
-import { Textarea } from '@/ui/atoms/textarea'
-import { Field } from '@/ui/molecules/field'
+import { FeldMehrzeilig } from '@/ui/werkbank/Feld'
+import { Zeile } from '@/ui/werkbank/Zeile'
 
 interface TextareaControlProps {
   property: PropertyDescription
@@ -21,10 +21,10 @@ export function TextareaControl({
 }: TextareaControlProps) {
   const sitzung = useEingabeSitzung(onBeginBearbeitung, onEndeBearbeitung)
   return (
-    <Field label={property.name} description={property.description}>
-      {(field) => (
-        <Textarea
-          {...field}
+    <Zeile breit label={property.name} hinweis={property.description}>
+      {(kind) => (
+        <FeldMehrzeilig
+          {...kind}
           value={value ?? ''}
           maxLength={property.maxLength || undefined}
           onChange={(e) => {
@@ -34,6 +34,6 @@ export function TextareaControl({
           onBlur={sitzung.beenden}
         />
       )}
-    </Field>
+    </Zeile>
   )
 }

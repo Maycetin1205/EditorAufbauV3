@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { useEingabeSitzung } from './eingabeSitzung'
-import { TextInput } from '@/ui/atoms/text-input'
-import { Field } from '@/ui/molecules/field'
-import { cn } from '@/lib/utils'
+import { Zahl } from '@/ui/werkbank/Zahl'
+import { Zeile } from '@/ui/werkbank/Zeile'
 
 interface NumberControlProps {
   property: PropertyDescription
@@ -50,51 +49,39 @@ function Zahlenfeld({
   }
 
   return (
-    <span className="relative inline-flex w-16 shrink-0 items-center">
-      <TextInput
-        id={id}
-        type="number"
-        inputMode="decimal"
-        min={property.min}
-        max={property.max}
-        step={0.5}
-        aria-label={property.name}
-        title={property.description}
-        value={entwurf}
-        onChange={(e) => uebernehmen(e.currentTarget.value)}
-        onBlur={() => {
-          const n = Number.parseFloat(entwurf.replace(',', '.'))
-          if (Number.isFinite(n)) {
-            const begrenzt = eingrenzen(n, property)
-            setEntwurf(String(begrenzt))
+    <Zahl
+      id={id}
+      einheit={property.unit}
+      min={property.min}
+      max={property.max}
+      step={0.5}
+      aria-label={property.name}
+      title={property.description}
+      value={entwurf}
+      className="w-16"
+      onChange={(e) => uebernehmen(e.currentTarget.value)}
+      onBlur={() => {
+        const n = Number.parseFloat(entwurf.replace(',', '.'))
+        if (Number.isFinite(n)) {
+          const begrenzt = eingrenzen(n, property)
+          setEntwurf(String(begrenzt))
 
-            sitzung.beginnen()
-            onChange(begrenzt)
-          } else {
-            setEntwurf(aussen)
-          }
-          sitzung.beenden()
-        }}
-
-        className={cn(
-          '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-          property.unit && 'pr-6',
-        )}
-      />
-      {property.unit && (
-        <span className="pointer-events-none absolute right-1.5 text-[0.625rem] text-muted-foreground">
-          {property.unit}
-        </span>
-      )}
-    </span>
+          sitzung.beginnen()
+          onChange(begrenzt)
+        } else {
+          setEntwurf(aussen)
+        }
+        sitzung.beenden()
+      }}
+    />
   )
 }
 
 export function NumberControl({ label, ...rest }: NumberControlProps) {
   if (!label) return <Zahlenfeld {...rest} />
   return (
-    <Field label={label} description={rest.property.description}>
-      {(field) => <Zahlenfeld {...rest} id={field.id} />}
-    </Field>
+    <Zeile label={label} hinweis={rest.property.description}>
+      {(kind) => <Zahlenfeld {...rest} id={kind.id} />}
+    </Zeile>
   )
 }
