@@ -3,9 +3,71 @@ import { starteUmbenennen } from '../shared/umbenennen'
 import {
   SPALTEN_MAX,
   SPALTEN_MIN,
+  SPALTEN_MIN_BREITE,
   neueSpalte,
   type Spalte,
 } from './spalten'
+
+// Was die gezogenen Breiten zusammen belegen. Spalten ohne gezogene Breite
+// zaehlen nicht mit — die teilen sich, was uebrig bleibt.
+function belegt(spalten: readonly Spalte[]): number {
+  return spalten.reduce((summe, s) => summe + (s.breite ?? 0), 0)
+}
+
+function ohneBreite(s: Spalte): Spalte {
+  const kopie = { ...s }
+  delete kopie.breite
+  return kopie
+}
+
+// Alle gezogenen Breiten anteilig auf eine neue Gesamtbreite bringen.
+function skaliereAuf(spalten: readonly Spalte[], ziel: number): Spalte[] {
+  const gesamt = belegt(spalten)
+  if (gesamt <= 0) return [...spalten]
+  const faktor = ziel / gesamt
+  return spalten.map((s) => ({
+    ...s,
+    breite: Math.max(SPALTEN_MIN_BREITE, Math.round((s.breite ?? 0) * faktor)),
+  }))
+}
+
+// Traegt JEDE Spalte eine gezogene Breite, ist das Raster restlos verteilt.
+// Nur dann muss beim Anlegen und Streichen gerechnet werden; sonst holt sich
+// die mitwachsende Spalte ihren Platz von allein.
+function alleFest(spalten: readonly Spalte[]): boolean {
+  return spalten.length > 0 && spalten.every((s) => s.breite !== undefined)
+}
+
+// Eine Spalte hinten anfuegen.
+//
+// Der Fall, der es noetig macht (Nutzer-Befund 2026-08-31, "Spalte
+// hinzufuegen funktioniert nicht richtig"): sobald jemand jede Linie einmal
+// gezogen hat, tragen alle Spalten feste Pixel, und ihre Summe fuellt die
+// Tabelle genau aus — das ist die Regel der Nachbar-Verrechnung. Die neue
+// Spalte bekam minmax(0, 1fr), also einen Anteil an einem Rest, den es
+// nicht mehr gab: NULL Pixel. Sie war angelegt und unsichtbar, der Knopf sah
+// kaputt aus.
+//
+// Jetzt geben die bisherigen anteilig ab, und die Summe bleibt, wie sie war —
+// dieselbe Regel wie beim Ziehen einer Linie.
+export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
+  const neu = neueSpalte(spalten.length)
+  if (!alleFest(spalten)) return [...spalten, neu]
+
+  const gesamt = belegt(spalten)
+  const wunsch = Math.max(SPALTEN_MIN_BREITE, Math.round(gesamt / (spalten.length + 1)))
+  const rest = gesamt - wunsch
+
+  // Reicht der Platz nicht, um jede bisherige ueber der Mindestbreite zu
+  // halten, waere jede Rechnerei Kosmetik: dann geben alle ihre gezogene
+  // Breite ab und teilen sich die Tabelle wieder gleichmaessig. Lieber die
+  // Handarbeit verlieren als Spalten, die man nicht mehr sieht.
+  if (rest < spalten.length * SPALTEN_MIN_BREITE) {
+    return [...spalten.map(ohneBreite), neu]
+  }
+
+  return [...skaliereAuf(spalten, rest), { ...neu, breite: wunsch }]
+}
 
 // Eine Spalte streichen — von ueberall her, nicht nur hinten. EINE Stelle
 // fuer beide Wege: das Kreuz am Spaltenkopf nennt seinen Platz, der
@@ -18,8 +80,13 @@ export function entferneSpalte(
 ): void {
   const l = liste()
   if (l.length <= SPALTEN_MIN || index < 0 || index >= l.length) return
+  const gesamt = belegt(l)
   l.splice(index, 1)
-  aendere(l)
+
+  // Spiegelbild zum Anfuegen: sind alle Spalten fest, faellt der Platz der
+  // gestrichenen sonst als Luecke am rechten Rand an. Die Verbliebenen nehmen
+  // ihn anteilig auf, die Summe bleibt gleich.
+  aendere(alleFest(l) ? skaliereAuf(l, gesamt) : l)
 }
 
 // Kein Stop auf pointerdown (Zug-Regel in editor/canvas/rasterMove.ts) — der
@@ -42,10 +109,7 @@ export function spaltenSteuerung(
       @click=${(e: Event) => {
         stop(e)
         const l = liste()
-        if (l.length < SPALTEN_MAX) {
-          l.push(neueSpalte(l.length))
-          aendere(l)
-        }
+        if (l.length < SPALTEN_MAX) aendere(fuegeSpalteAn(l))
       }}
     >+</button>
   </div>`

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { entferneSpalte } from './spaltenBearbeiten'
-import { SPALTEN_MIN, type Spalte } from './spalten'
+import { entferneSpalte, fuegeSpalteAn } from './spaltenBearbeiten'
+import { SPALTEN_MIN, SPALTEN_MIN_BREITE, type Spalte } from './spalten'
 
 function drei(): Spalte[] {
   return [
@@ -49,4 +49,61 @@ test('ein Platz ausserhalb der Liste tut nichts', () => {
   entferneSpalte(7, drei, () => { gerufen = true })
   entferneSpalte(-1, drei, () => { gerufen = true })
   expect(gerufen).toBe(false)
+})
+
+function dreiFeste(): Spalte[] {
+  return [
+    { titel: 'A', feld: '1_1', breite: 120 },
+    { titel: 'B', feld: '2_1', breite: 100 },
+    { titel: 'C', feld: '3_1', breite: 80 },
+  ]
+}
+
+const summe = (l: readonly Spalte[]): number =>
+  l.reduce((s, sp) => s + (sp.breite ?? 0), 0)
+
+// Der gemeldete Fehler: sobald jede Linie einmal gezogen ist, tragen alle
+// Spalten feste Pixel und fuellen die Tabelle genau aus. Die neue bekam einen
+// Anteil an einem Rest, den es nicht gab — null Pixel breit, unsichtbar. Der
+// Plus-Knopf sah kaputt aus, obwohl er die Spalte angelegt hatte.
+test('eine neue Spalte ist sichtbar, auch wenn alle anderen fest sind', () => {
+  const raus = fuegeSpalteAn(dreiFeste())
+  expect(raus).toHaveLength(4)
+  expect(raus[3].breite).toBeGreaterThanOrEqual(SPALTEN_MIN_BREITE)
+})
+
+// Dieselbe Regel wie beim Ziehen einer Linie: was die eine bekommt, geben die
+// anderen ab. Waechst die Summe stattdessen, laeuft die Tabelle aus ihrem
+// Kasten und die hinteren Spalten werden abgeschnitten.
+test('die Gesamtbreite bleibt beim Anfuegen gleich', () => {
+  expect(summe(fuegeSpalteAn(dreiFeste()))).toBe(summe(dreiFeste()))
+})
+
+// Waechst noch irgendeine Spalte mit, holt sich die neue ihren Platz von
+// allein — dann darf nichts umgerechnet werden, sonst verloere der Bediener
+// seine Handarbeit ohne Grund.
+test('mit einer mitwachsenden Spalte bleibt alles, wie es war', () => {
+  const raus = fuegeSpalteAn(drei())
+  expect(raus.map((s) => s.breite)).toEqual([undefined, 120, undefined, undefined])
+})
+
+// Stehen alle schon auf der Mindestbreite, ist nichts mehr zu holen. Dann
+// lieber die gezogenen Breiten aufgeben als eine Spalte anlegen, die niemand
+// sieht.
+test('ohne Platz geben alle ihre gezogene Breite ab', () => {
+  const eng: Spalte[] = [
+    { titel: 'A', feld: '1_1', breite: SPALTEN_MIN_BREITE },
+    { titel: 'B', feld: '2_1', breite: SPALTEN_MIN_BREITE },
+    { titel: 'C', feld: '3_1', breite: SPALTEN_MIN_BREITE },
+  ]
+  expect(fuegeSpalteAn(eng).every((s) => s.breite === undefined)).toBe(true)
+})
+
+// Spiegelbild: sonst bliebe der Platz der gestrichenen Spalte als Luecke am
+// rechten Rand stehen.
+test('beim Streichen nehmen die Verbliebenen den Platz auf', () => {
+  let raus: Spalte[] = []
+  entferneSpalte(1, dreiFeste, (l) => { raus = l })
+  expect(raus.map((s) => s.titel)).toEqual(['A', 'C'])
+  expect(summe(raus)).toBe(summe(dreiFeste()))
 })
