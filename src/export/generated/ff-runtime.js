@@ -851,22 +851,27 @@
       /* .erf-eingabe wird zusammen mit .zell-eingabe in tabelleStil gesetzt:
          es ist dieselbe Sache — eine Zelle, in die getippt wird. */
 
-      /* Der Einheiten-Umrechner an der Abgabemenge (Rechnung). */
+      /* Der Einheiten-Umrechner an der Abgabemenge (Rechnung): kein Kasten.
+         Unsichtbar, bis die Zelle bedient wird — dann flach und grau, nur
+         Einheit und Systempfeil. */
       .erf-einheit {
+        display: none;
         flex: none;
         max-width: 56px;
-        height: calc(var(--zeilen-hoehe) - 10px);
         margin-right: 2px;
-        border: var(--se-border) solid var(--se-line);
-        border-radius: var(--se-r-sm);
-        background: var(--se-panel);
+        border: none;
+        background: transparent;
         color: var(--se-muted);
         font: inherit;
         font-size: var(--se-fs-sm);
+        cursor: pointer;
+      }
+      .erf-halter:focus-within .erf-einheit,
+      .erf-halter:hover .erf-einheit {
+        display: block;
       }
       .erf-einheit:focus-visible {
-        outline: none;
-        border-color: var(--se-accent);
+        outline: var(--se-border) solid var(--se-accent);
       }
 
       /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */
