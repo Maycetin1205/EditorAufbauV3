@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { FileUp, Plus, TriangleAlert } from '@/ui/zeichen'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Marke } from '@/ui/werkbank/Marke'
 import {
   artFuer,
   quellenKennung,
@@ -116,9 +117,7 @@ export function DatenquellenBereich() {
                   {unvollstaendig(s) && (
                     <TriangleAlert size={12} className="shrink-0 text-fehler" />
                   )}
-                  <span className="shrink-0 rounded bg-control px-1.5 text-dicht text-matt">
-                    {artFuer(s.kind).name}
-                  </span>
+                  <Marke technisch={false}>{artFuer(s.kind).name}</Marke>
                 </div>
                 <div className="mt-0.5 pl-[1.125rem] text-dicht text-matt">
 

@@ -1,6 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { AuswahlFenster } from '@/ui/molecules/auswahl-fenster'
 import { cn } from '@/lib/utils'
+import { Marke } from '@/ui/werkbank/Marke'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Schalter } from '@/ui/werkbank/Schalter'
@@ -168,9 +169,7 @@ function FeldZeile({ label, hinweis, anzeige, aktiv, onAktiv }: FeldZeileProps) 
         {anzeige.name}
       </span>
       {anzeige.kennung !== undefined && anzeige.kennung !== '' && (
-        <span className="min-w-0 max-w-[45%] truncate font-mono text-dicht text-matt">
-          {anzeige.kennung}
-        </span>
+        <Marke className="max-w-[45%]">{anzeige.kennung}</Marke>
       )}
     </button>
   )

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Copy, X } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Marke } from '@/ui/werkbank/Marke'
 import { actionValueTargets, auswahlGeberImBaum } from '../../core/blocks/treeQuery'
 import { ergebnisSchritteVor, stepTypeName, type ActionStep } from '../../core/data/aktionen'
 import { formatRelationSyntax } from '../../core/data/relations'
@@ -10,7 +11,8 @@ import { istFensterSeite } from '../../state/pageOps'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { useRelations } from '../../state/useRelations'
-import { istUngetaufteVorlage, relationAnzeige } from './relationAnzeige'
+import { VERB_KURZ } from './helfer'
+import { istUngetaufteVorlage } from './relationAnzeige'
 import { ankerSchrittId, schrittZusammenfassung } from './schrittZusammenfassung'
 
 interface SchrittListeProps {
@@ -91,8 +93,12 @@ export function SchrittListe({
         const popupName = s.type === 'POPUP_OPEN' || s.type === 'POPUP_CLOSE'
           ? popupSeiten.find((seite) => seite.id === s.popupId)?.name
           : undefined
-        const was = s.type === 'RELATION' && relation
-          ? (istUngetaufteVorlage(relation) ? relationAnzeige(relation) : relation.name)
+        // Eine Relation mit eigenem Namen nennt IHN. Eine ungetaufte Vorlage
+        // heisst schlicht „Relation" — WELCHE es ist, sagt die Marke rechts in
+        // der Zeile. Vorher stand „GET_RELATION · Nr. 640" als Name, und
+        // rechts stand nichts; die Nummer war nur im Tooltip zu finden.
+        const was = s.type === 'RELATION' && relation && !istUngetaufteVorlage(relation)
+          ? relation.name
           : stepTypeName(s.type)
         const zus = schrittZusammenfassung(
           s, was, relation, ed.tree, dataSources.list,
@@ -102,6 +108,7 @@ export function SchrittListe({
         const naeher = [zus.ziel !== '' ? zus.ziel : zus.tabelle, zus.herkunft]
           .filter((t) => t !== '')
           .join('  ←  ')
+        const notizOffen = onAendern !== undefined && s.id === aktivId
         const anker = ankerSchrittId(s)
         const eingerueckt = anker !== '' && steps.some((x) => x.id === anker)
 
@@ -126,7 +133,7 @@ export function SchrittListe({
                 type="button"
                 disabled={!onWaehle}
                 onClick={() => onWaehle?.(s)}
-                title={problem ?? (relation ? formatRelationSyntax(relation) : undefined)}
+                title={problem ?? undefined}
                 className="min-w-0 flex-[3] text-left disabled:cursor-default"
               >
                 <span className="block truncate text-dicht">
@@ -143,7 +150,22 @@ export function SchrittListe({
                 )}
               </button>
 
-              {onAendern ? (
+              {/* Welche Relation der Schritt ruft — dieselbe Marke wie in der
+                  Relationen-Liste des Datencenters (VERB + Nummer, voller
+                  Aufruf im Tooltip). Bis hierher war die Relation in der Kette
+                  nur zu sehen, wenn man den Schritt aufklappte. */}
+              {relation && (
+                <Marke hinweis={formatRelationSyntax(relation)}>
+                  {VERB_KURZ[relation.verb]} {relation.nr}
+                </Marke>
+              )}
+
+              {/* Das Notizfeld stand bisher in JEDER Zeile und nahm zwei
+                  Fuenftel der Breite — auch in den allermeisten Zeilen, die
+                  gar keine Notiz tragen. Jetzt steht die Notiz als Text da,
+                  wo es eine gibt, und das Eingabefeld erscheint an dem
+                  Schritt, den der Bediener geoeffnet hat. */}
+              {notizOffen ? (
                 <Feld
                   aria-label={`Notiz zu Schritt ${i + 1}`}
                   placeholder="Notiz"
@@ -153,7 +175,10 @@ export function SchrittListe({
                 />
               ) : (
                 s.notiz !== undefined && s.notiz !== '' && (
-                  <span className="min-w-0 flex-[2] truncate text-dicht text-matt">
+                  <span
+                    title={s.notiz}
+                    className="min-w-0 flex-[2] truncate text-dicht italic text-matt"
+                  >
                     {s.notiz}
                   </span>
                 )

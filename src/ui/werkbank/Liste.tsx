@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Search } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
+import { Marke } from './Marke'
 
 export interface ListeEintrag {
   wert: string
@@ -103,7 +104,7 @@ export function Liste({
             <p className="flex items-baseline gap-2 px-2 pb-0.5 pt-1.5 text-dicht font-semibold uppercase tracking-wide text-matt">
               <span className="min-w-0 truncate">{g.name}</span>
               {g.kennung !== undefined && g.kennung !== '' && (
-                <span className="shrink-0 font-mono normal-case tracking-normal">{g.kennung}</span>
+                <Marke className="font-normal normal-case tracking-normal">{g.kennung}</Marke>
               )}
             </p>
           )}
@@ -137,9 +138,7 @@ export function Liste({
                 </span>
                 <span className="min-w-0 flex-1 truncate">{e.name}</span>
                 {e.kennung !== undefined && e.kennung !== '' && (
-                  <span className="min-w-0 max-w-[50%] truncate font-mono text-dicht text-matt">
-                    {e.kennung}
-                  </span>
+                  <Marke className="max-w-[50%]">{e.kennung}</Marke>
                 )}
               </button>
             )

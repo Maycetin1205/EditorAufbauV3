@@ -3,6 +3,7 @@ import { Plus, Search, Share2 } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Marke } from '@/ui/werkbank/Marke'
 import { relationIdsVon } from '../../core/blocks/treeQuery'
 import {
   formatRelationSyntax,
@@ -113,9 +114,9 @@ export function RelationenBereich() {
                 <div className="flex items-center gap-1.5">
                   <Share2 size={12} className="shrink-0 text-matt" />
                   <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
-                  <span className="shrink-0 rounded bg-control px-1.5 font-mono text-dicht text-matt">
+                  <Marke hinweis={formatRelationSyntax(r)}>
                     {VERB_KURZ[r.verb]} {r.nr}
-                  </span>
+                  </Marke>
                 </div>
               </button>
             )
