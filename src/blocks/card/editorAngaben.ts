@@ -4,5 +4,4 @@ import { CardBlock } from './CardBlock'
 
 ergaenzeEditorAngaben(CardBlock.blockType, {
   symbol: ZeichenKarte,
-  hinweis: 'Alle Inhalte bearbeitest du direkt auf der Karte — Doppelklick auf die Stelle.',
 })

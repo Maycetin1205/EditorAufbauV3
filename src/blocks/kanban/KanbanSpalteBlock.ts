@@ -52,14 +52,14 @@ export class KanbanSpalteBlock extends BasicBlock {
     jaNeinProperty(
       'auffang',
       'Auffangspalte',
-      'Eintr\u00E4ge ohne passenden Spaltentitel landen hier. Ohne Auffangspalte landen sie in der ersten Spalte.',
+      'Eintr\u00E4ge ohne passenden Spaltentitel landen hier.',
       { requiresDataSource: true, exclusiveAmongSiblings: true },
     ),
 
     {
       attributeName: 'zimmerField',
       name: 'Unterteilen nach',
-      description: 'Optional: Feld der Datenquelle, dessen Inhalt bestimmt, in welches Zimmer dieser Spalte ein Eintrag kommt. Wirkt erst, wenn die Spalte Zimmer hat.',
+      description: 'Feld, das das Zimmer bestimmt. Wirkt nur mit Zimmern.',
       kind: 'field',
     },
   ]

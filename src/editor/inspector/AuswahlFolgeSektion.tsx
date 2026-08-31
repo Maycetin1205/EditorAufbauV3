@@ -79,7 +79,7 @@ export function AuswahlFolgeSektion({ block, mitTrenner }: AuswahlFolgeSektionPr
         {folge && (
           <>
             <SchluesselPaarZeilen
-              frage="Woran erkennt man die zusammengehörigen Zeilen?"
+              frage="Verbindende Felder"
               paare={folge.keyPairs}
               linkeFelder={geberQuelle?.fields ?? []}
               rechteFelder={eigeneQuelle?.fields ?? []}
@@ -90,16 +90,10 @@ export function AuswahlFolgeSektion({ block, mitTrenner }: AuswahlFolgeSektionPr
             />
 
             {(!geberQuelle || !eigeneQuelle) && (
-              <p className="text-dicht text-matt">
-                Beide Bausteine brauchen zuerst eine Datenquelle — sonst gibt es
-                keine Felder, an denen man die Zeilen erkennen könnte.
-              </p>
+              <p className="text-dicht text-matt">Beide Bausteine brauchen eine Datenquelle.</p>
             )}
             {geberQuelle && eigeneQuelle && !folgeBrauchbar(folge) && (
-              <p className="text-dicht text-matt">
-                Noch nicht wirksam: es fehlt ein Feldpaar, bei dem <em>beide</em>{' '}
-                Seiten gefüllt sind.
-              </p>
+              <p className="text-dicht text-matt">Ein Feldpaar ist noch halb leer.</p>
             )}
           </>
         )}

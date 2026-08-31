@@ -17,7 +17,7 @@ export class BildBlock extends BasicBlock {
     {
       attributeName: 'quelle',
       name: 'Bild',
-      description: 'Die Bilddatei wird in die Maske eingebettet — die Maske bleibt EINE Datei. Grosse Bilder werden dabei still verkleinert.',
+      description: 'Wird in die Maske eingebettet; grosse Bilder werden verkleinert.',
       kind: 'bild',
     },
   ]

@@ -8,7 +8,7 @@ export function leerTextProperty(): PropertyDescription {
   return {
     attributeName: 'leerText',
     name: 'Text ohne Datensätze',
-    description: 'Steht in der Maske dort, wo sonst die Zeilen stehen — wenn die Datenquelle keine liefert. Leer lassen: dann steht dort gar nichts.',
+    description: 'Text, wenn die Quelle keine Zeilen liefert. Leer: gar nichts.',
     kind: 'text',
     requiresDataSource: true,
   }

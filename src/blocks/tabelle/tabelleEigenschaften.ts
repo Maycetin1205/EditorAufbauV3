@@ -13,35 +13,31 @@ export const TABELLE_EIGENSCHAFTEN: PropertyDescription[] = [
   jaNeinProperty(
     'erfassung',
     'Erfassungszeile',
-    'Zeigt als nächste freie Zeile eine leere Zeile, in der der Bediener neue Positionen tippt. Eingestellt wird an ihr nichts: Was eine Zelle tut, ergibt sich aus der Bindung ihrer Spalte (Spaltenkopf) und der Verknüpfung des Bausteins. Enter am Zeilenende lässt die Zeile stehen; geschrieben wird über einen Knopf, dessen Kette „Wert aus Erfassungszelle“ liest — einmal je Zeile.',
+    'Eine leere Zeile zum Tippen neuer Positionen.',
   ),
 
   jaNeinProperty(
     'loeschbar',
     'Zeilen löschbar',
-    'Zeigt an jeder gebuchten Zeile ein Kreuz. Ein Klick merkt die Zeile zum Löschen vor — '
-    + 'sie bleibt durchgestrichen stehen, bis eine Kette sie schreibt, und ein zweiter Klick '
-    + 'nimmt die Vormerkung zurück. Geschrieben wird nichts von allein.',
+    'Kreuz an jeder Zeile: merkt sie zum Löschen vor.',
     { requiresDataSource: true },
   ),
 
   jaNeinProperty(
     'blaettern',
     'Blättern',
-    'Ja: lange Listen werden in Seiten geschnitten, unten stehen die Blätter-Knöpfe. '
-    + 'Nein: alle Treffer stehen untereinander und der Rumpf rollt. '
-    + 'Titelzeile und Erfassungszeile bleiben in beiden Fällen stehen.',
+    'Ja: Seiten mit Blätter-Knöpfen. Nein: alles untereinander, der Rumpf rollt.',
   ),
 
   jaNeinProperty(
     'kopfzeile',
     'Kopfzeile',
-    'Aus: Die Titelzeile fällt weg, die Spaltennamen stehen blass in den Zellen der Erfassungszeile. Gebunden wird dann per Klick auf eine Zelle; zum Umbenennen die Kopfzeile kurz einschalten. An der fertigen Maske entfällt ohne Kopf das Sortieren per Titelklick.',
+    'Aus: keine Titelzeile, kein Sortieren per Titelklick.',
   ),
   {
     attributeName: 'tagField',
     name: 'Tag filtern nach',
-    description: 'Optional: Feld der Datenquelle, in dem das Datum steht. Gesetzt zeigt die Tabelle nur Sätze des Tages, den der Tageswähler zeigt. Leer = alle Sätze.',
+    description: 'Datumsfeld. Gesetzt: nur Sätze des gewählten Tages.',
     kind: 'field',
   },
 

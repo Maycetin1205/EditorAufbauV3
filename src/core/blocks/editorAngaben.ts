@@ -7,8 +7,6 @@ export type BausteinSymbol = (eigenschaften: {
 
 export interface EditorAngaben {
   symbol?: BausteinSymbol
-
-  hinweis?: string
 }
 
 const ablage = new Map<string, EditorAngaben>()

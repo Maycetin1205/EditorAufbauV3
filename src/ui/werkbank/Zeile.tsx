@@ -22,6 +22,12 @@ export interface ZeileProps {
   // Bild, Farbkacheln): Beschriftung darueber, Element ueber die volle
   // Breite. In 320 px Inspector blieben ihnen sonst 180 px.
   breit?: boolean
+
+  // Die Beschriftung BRICHT UM statt abzuschneiden. Sie hat 40 % von 320 px,
+  // also rund 15 Zeichen — „In der Zeile aenderbar" oder „Summe in der
+  // Fusszeile" waren damit gekappt, und der Bediener las den Namen der
+  // Einstellung nie zu Ende (Nutzer-Befund 2026-08-28). Zwei Zeilen sind
+  // lesbar, eine abgeschnittene ist es nicht.
   className?: string
   children: (kind: ZeileKind) => ReactNode
 }
@@ -48,7 +54,7 @@ export function Zeile({ label, hinweis, fehler, breit = false, className, childr
   if (label === undefined || breit) {
     return (
       <div className={cn('flex min-w-0 flex-col gap-1', className)}>
-        {label !== undefined && beschriftung('truncate text-ui text-matt')}
+        {label !== undefined && beschriftung('text-ui leading-tight text-matt')}
         {children(kind)}
         {fehler && <p id={fehlerId} className="break-words text-dicht text-fehler">{fehler}</p>}
       </div>
@@ -57,7 +63,7 @@ export function Zeile({ label, hinweis, fehler, breit = false, className, childr
 
   return (
     <div className={cn('grid min-w-0 grid-cols-[2fr_3fr] items-center gap-x-2 gap-y-1', className)}>
-      {beschriftung('min-h-steuer flex items-center truncate text-ui text-matt')}
+      {beschriftung('min-h-steuer flex items-center text-ui leading-tight text-matt')}
       <div className="flex min-w-0 items-center">{children(kind)}</div>
       {fehler && (
         <p id={fehlerId} className="col-span-2 break-words text-dicht text-fehler">{fehler}</p>

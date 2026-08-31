@@ -49,12 +49,12 @@ export class KanbanBlock extends BasicBlock {
     {
       attributeName: 'statusField',
       name: 'Einsortieren nach',
-      description: 'Optional: Feld der Datenquelle, dessen Inhalt bestimmt, in welche Spalte ein Eintrag kommt. Leer = alle Einträge in der Auffang-Spalte.',      kind: 'field',
+      description: 'Feld, das die Spalte bestimmt. Leer: alle in die Auffang-Spalte.',      kind: 'field',
     },
     {
       attributeName: 'tagField',
       name: 'Tag filtern nach',
-      description: 'Optional: Feld der Datenquelle, in dem das Datum steht. Gesetzt zeigt das Board nur Einträge des Tages, den der Tageswähler zeigt. Leer = alle Einträge.',
+      description: 'Datumsfeld. Gesetzt: nur Einträge des gewählten Tages.',
       kind: 'field',
     },
 

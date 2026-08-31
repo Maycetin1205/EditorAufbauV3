@@ -24,21 +24,21 @@ export const FELD_EIGENSCHAFTEN: PropertyDescription[] = [
   {
     attributeName: 'options',
     name: 'Auswahl-Optionen',
-    description: 'Nur bei Feldtyp "Auswahl": Einträge durch Komma getrennt (z. B. "Zimmer 1, Zimmer 2") — jeder Eintrag wird eine Dropdown-Zeile.',
+    description: 'Einträge durch Komma getrennt, z. B. "Zimmer 1, Zimmer 2".',
     kind: 'text',
     visibleWhen: { attributeName: 'fieldType', equals: 'select' },
   },
   {
     attributeName: 'nachschlagQuelle',
     name: 'Quelle',
-    description: 'Nur bei Feldtyp "Nachschlagen": aus dieser Datenquelle wählt der Bediener eine Zeile.',
+    description: 'Quelle, aus der der Bediener eine Zeile wählt.',
     kind: 'quelle',
     visibleWhen: NUR_NACHSCHLAGEN,
   },
   {
     attributeName: 'speicherFeld',
     name: 'Gespeichert wird',
-    description: 'Feld der Nachschlage-Quelle, dessen Wert die Maske sich merkt und die Kette "Wert geändert" weitergibt (z. B. die Nummer). Im Feld sichtbar ist die erste Spalte des Nachschlage-Fensters — ohne eigene Spalten ist das dieser Wert selbst.',
+    description: 'Feld, dessen Wert die Maske sich merkt (z. B. die Nummer).',
     kind: 'field',
     quelleProp: 'nachschlagQuelle',
     klarnameProp: 'speicherTitel',
@@ -48,13 +48,13 @@ export const FELD_EIGENSCHAFTEN: PropertyDescription[] = [
   jaNeinProperty(
     'einzigerTreffer',
     'Einzigen Treffer übernehmen',
-    'Bleibt in der Maske genau EIN Satz übrig (weil das Feld der Auswahl eines anderen folgt), übernimmt es diesen von selbst — ohne dass der Bediener die Lupe drückt. Nur in ein leeres Feld; die Lupe bleibt daneben bedienbar.',
+    'Bleibt genau ein Satz übrig, übernimmt das Feld ihn von selbst.',
     { visibleWhen: NUR_NACHSCHLAGEN },
   ),
   {
     attributeName: 'valueField',
     name: 'Feld',
-    description: 'Feld der angeschlossenen Datenquelle, dessen Wert angezeigt und lokal aktualisiert wird.',
+    description: 'Feld, dessen Wert angezeigt wird.',
     kind: 'field',
 
     // Dieselbe Bedingung wie am bindableSpot: das Ankreuzfeld bleibt
