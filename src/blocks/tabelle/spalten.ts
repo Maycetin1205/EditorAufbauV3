@@ -1,16 +1,15 @@
-import { ART_TEXT, type Zuordnung } from './spaltenArten'
-
 export interface Spalte {
   titel: string
   feld: string
-  art: string
 
-  zuordnung?: Zuordnung[]
+  // Breite in Pixeln, von Hand am Spaltenkopf gezogen. OHNE Wert teilt sich
+  // die Spalte den freien Platz gleichmaessig mit allen anderen ohne Wert —
+  // das ist der Standard, und er ist bewusst nicht vom Inhalt abhaengig
+  // (eine inhaltsabhaengige Breite spraenge beim Blaettern, sobald die
+  // naechste Seite kuerzere Werte traegt).
+  breite?: number
 
-  felder?: Record<string, string>
-
-  // Diese Spalte wird unter der Tabelle aufaddiert (nur bei summierbaren
-  // Darstellungen, s. spaltenBindung).
+  // Diese Spalte wird unter der Tabelle aufaddiert.
   summe?: boolean
 
   // In dieser Spalte darf der Bediener den Wert einer GEBUCHTEN Zeile
@@ -39,6 +38,10 @@ export const SPALTEN_MIN = 1
 // grosszuegig genug, dass sie im Arbeitsalltag nicht mehr auffaellt.
 export const SPALTEN_MAX = 16
 
+// Schmaler laesst sich eine Spalte nicht ziehen: darunter ist der Titel weg
+// und der Greifstreifen der Nachbarin liegt auf demselben Fleck.
+export const SPALTEN_MIN_BREITE = 40
+
 export const STANDARD_TITEL = 'Spalte {n}'
 
 export function standardTitelFuer(index: number): string {
@@ -46,47 +49,33 @@ export function standardTitelFuer(index: number): string {
 }
 
 export function neueSpalte(index: number): Spalte {
-  return { titel: standardTitelFuer(index), feld: '', art: ART_TEXT }
+  return { titel: standardTitelFuer(index), feld: '' }
 }
 
 export function standardSpalten(): Spalte[] {
   return [0, 1, 2].map((i) => neueSpalte(i))
 }
 
-function alsZuordnung(v: unknown): Zuordnung[] {
-  if (!Array.isArray(v)) return []
-  return v
-    .filter((z): z is Record<string, unknown> => Boolean(z) && typeof z === 'object')
-    .map((z) => ({
-      wert: typeof z.wert === 'string' ? z.wert : '',
-      name: typeof z.name === 'string' ? z.name : '',
-      bedeutung: typeof z.bedeutung === 'string' ? z.bedeutung : '',
-    }))
-    .filter((z) => z.wert.trim() !== '')
-}
-
-function alsFelder(v: unknown): Record<string, string> {
-  if (!v || typeof v !== 'object' || Array.isArray(v)) return {}
-  const raus: Record<string, string> = {}
-  for (const [k, wert] of Object.entries(v as Record<string, unknown>)) {
-    if (typeof wert === 'string' && wert !== '') raus[k] = wert
-  }
-  return raus
+// Eine gezogene Breite kommt aus drei Richtungen: dem Zug selbst, dem
+// gespeicherten Baum und dem Attribut der exportierten Maske. Alle drei
+// laufen hier durch, damit nirgends eine halbe Zahl (0, negativ, "120px")
+// als Spur im Raster landet.
+export function alsBreite(v: unknown): number | undefined {
+  const zahl = typeof v === 'number' ? v : Number(v)
+  if (!Number.isFinite(zahl)) return undefined
+  const gerundet = Math.round(zahl)
+  return gerundet < SPALTEN_MIN_BREITE ? SPALTEN_MIN_BREITE : gerundet
 }
 
 function alsSpalte(x: unknown, index: number): Spalte {
   if (x && typeof x === 'object') {
     const o = x as Record<string, unknown>
-    const zuordnung = alsZuordnung(o.zuordnung)
-    const felder = alsFelder(o.felder)
+    const breite = o.breite === undefined ? undefined : alsBreite(o.breite)
     return {
       titel: typeof o.titel === 'string' ? o.titel : standardTitelFuer(index),
       feld: typeof o.feld === 'string' ? o.feld : '',
-      art: typeof o.art === 'string' ? o.art : ART_TEXT,
 
-      ...(zuordnung.length > 0 ? { zuordnung } : {}),
-
-      ...(Object.keys(felder).length > 0 ? { felder } : {}),
+      ...(breite === undefined ? {} : { breite }),
 
       // Beide Schalter als BOOLEAN uebernehmen, nicht nur ein `true`.
       // Gespeichert wird nur die Abweichung vom Standard (listeFuerExport) —
@@ -129,4 +118,21 @@ export function tryCoerceSpalten(v: string): Spalte[] {
   } catch {
     return standardSpalten()
   }
+}
+
+// Das Raster der Tabelle: Kopf, Zeilen und Lineal benutzen dieselbe Spur —
+// EINE Stelle, sonst stehen Kopf und Zellen versetzt. Eine gezogene Spalte
+// bekommt feste Pixel, alle uebrigen teilen sich den Rest zu gleichen
+// Teilen. `minmax(0, …)` haelt lange Werte davon ab, ihre Spalte
+// aufzublaehen.
+export function spaltenRaster(
+  spalten: readonly Spalte[],
+  breiten: (index: number) => number | undefined = () => undefined,
+): string {
+  return spalten
+    .map((s, i) => {
+      const breite = breiten(i) ?? s.breite
+      return breite === undefined ? 'minmax(0, 1fr)' : `${breite}px`
+    })
+    .join(' ')
 }

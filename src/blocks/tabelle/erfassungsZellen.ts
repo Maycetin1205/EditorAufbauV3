@@ -108,9 +108,8 @@ export function anzeigeSpalteIn(
 // Artikelstamm auswaehlt, sah damit Nummer und Bezeichnung, aber nicht die
 // Warengruppe oder den Preis, die in seiner Tabelle daneben stehen.
 //
-// Die Darstellung der Spalte reist mit (Zahl bleibt Zahl, Marke bleibt Marke).
-// Ihre Zusatzfelder dagegen NICHT: deren Codes gehoeren zur Tabellen-Quelle,
-// im Nachschlage-Satz zeigten sie ins Leere.
+// Die BREITE der Spalte reist NICHT mit: das Fenster ist schmaler als die
+// Tabelle, und eine dort gezogene Breite gehoert zur Tabelle, nicht zu ihm.
 export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalte[] {
   const ziel = zielIn(umfeld, index)
   // Nachgeschlagen wird nur in einer verknuepften Zelle — in die eigene
@@ -121,12 +120,7 @@ export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalt
     const anderes = zellenzielVon(spalte, umfeld.quelleId)
     if (anderes.quelleId !== ziel.quelleId || anderes.code === '') continue
     if (raus.some((s) => s.feld === anderes.code)) continue
-    raus.push({
-      titel: spalte.titel,
-      feld: anderes.code,
-      art: spalte.art,
-      ...(spalte.zuordnung ? { zuordnung: spalte.zuordnung } : {}),
-    })
+    raus.push({ titel: spalte.titel, feld: anderes.code })
   }
   return raus
 }

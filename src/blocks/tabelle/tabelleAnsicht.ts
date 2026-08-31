@@ -1,19 +1,24 @@
-import { spaltenArt, zeilenHoeheFuer } from './spaltenArten'
-import { summeText } from './zahlFormat'
+import { SUMME_NACHKOMMA, summeText } from './zahlFormat'
 import {
   linealTakte,
   OHNE_MESSUNG,
   platzhalterZeilen,
   rollAufteilung,
   seitenAufteilung,
+  ZEILEN_HOEHE,
   type Zeilenmass,
 } from './seitengroesse'
 import { sortiereIndizes } from './sortierung'
-import type { Spalte } from './spalten'
+import { spaltenRaster, type Spalte } from './spalten'
 import { passendeIndizes, zeigtLeerzustand } from './suche'
 
 export interface AnsichtFrage {
   spalten: readonly Spalte[]
+
+  // Die gerade GEZOGENE Breite einer Spalte — sie schlaegt die gespeicherte.
+  // Im Editor gilt sie nur waehrend des Zugs, in der exportierten Maske so
+  // lange, bis der Bediener die Seite neu laedt.
+  breiteVon?: (index: number) => number | undefined
 
   hatQuelle: boolean
   datenGeliefert: boolean
@@ -77,12 +82,11 @@ function summenVon(
 ): { titel: string; text: string }[] {
   const raus: { titel: string; text: string }[] = []
   frage.spalten.forEach((spalte, i) => {
-    const nachkomma = spaltenArt(spalte.art).summe
-    if (spalte.summe !== true || nachkomma === undefined) return
+    if (spalte.summe !== true) return
     const text = summeText(
       sichtbar.map((zeile) => frage.wertVon(zeile, i)),
-      nachkomma.min,
-      nachkomma.max,
+      SUMME_NACHKOMMA.min,
+      SUMME_NACHKOMMA.max,
     )
     if (text !== '') raus.push({ titel: spalte.titel, text })
   })
@@ -98,10 +102,10 @@ function sichtbareIndizes(frage: AnsichtFrage): number[] {
 
 export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
   const cols = {
-    gridTemplateColumns: frage.spalten.map((s) => spaltenArt(s.art).spur).join(' '),
+    gridTemplateColumns: spaltenRaster(frage.spalten, frage.breiteVon),
   }
 
-  const takt = zeilenHoeheFuer(frage.spalten)
+  const takt = ZEILEN_HOEHE
   const zeilenHoehe = frage.gemessen?.zeilenHoehe ?? takt
 
   const hatQuelle = frage.hatQuelle

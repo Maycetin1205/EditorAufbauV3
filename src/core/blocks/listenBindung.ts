@@ -14,10 +14,6 @@ export interface ListenBindung {
   // Quellen in Reichweite. Eintraege speichern den nackten Feldcode.
   quelleProp?: string
 
-  eintragsWahl?: EintragsWahl
-
-  eintragsZuordnung?: EintragsZuordnung
-
   eintragsSchalter?: readonly EintragsSchalter[]
 
   eintragsFeldWahl?: readonly EintragsFeldWahl[]
@@ -47,16 +43,11 @@ export interface EintragsFeldWahl {
   nurFremdeQuellen?: boolean
 }
 
-// Ein Ja/Nein je Eintrag. Anders als die Wahl (eine aus mehreren) und die
-// Zuordnung (eine Tabelle) ist er ein einzelner Schalter — z. B. „diese
-// Spalte summieren". 'nurBeiWahl' haelt ihn dort verborgen, wo er nichts
-// bedeutet: eine Textspalte laesst sich nicht summieren.
+// Ein Ja/Nein je Eintrag — z. B. „diese Spalte summieren".
 export interface EintragsSchalter {
   key: string
 
   label: string
-
-  nurBeiWahl?: readonly string[]
 
   // Wie der Schalter steht, solange niemand ihn angefasst hat. Ohne Angabe
   // aus. Gespeichert wird nur die ABWEICHUNG davon (listeFuerExport) — sonst
@@ -75,63 +66,6 @@ export interface EintragsSchalter {
   kurz?: string
 }
 
-export interface EintragsZuordnung {
-  key: string
-  label: string
-
-  nurBeiWahl: string
-
-  wertLabel: string
-  nameLabel: string
-  bedeutungLabel: string
-
-  bedeutungen: readonly { wert: string; name: string }[]
-}
-
-export interface EintragsWahl {
-  key: string
-
-  label: string
-
-  optionen: readonly EintragsWahlOption[]
-
-  standard: string
-
-  felderKey?: string
-}
-
-export interface EintragsWahlOption {
-  wert: string
-  name: string
-  felder?: readonly { key: string; label: string }[]
-}
-
-export interface ZuordnungZeile {
-  wert: string
-  name: string
-  bedeutung: string
-}
-
-export function eintragsWahlWert(w: EintragsWahl, eintrag: Record<string, unknown>): string {
-  const roh = eintrag[w.key]
-  return typeof roh === 'string' && w.optionen.some((o) => o.wert === roh) ? roh : w.standard
-}
-
-export function eintragsZuordnungLesen(
-  z: EintragsZuordnung,
-  eintrag: Record<string, unknown>,
-): ZuordnungZeile[] {
-  const roh = eintrag[z.key]
-  if (!Array.isArray(roh)) return []
-  return roh
-    .filter((r): r is Record<string, unknown> => Boolean(r) && typeof r === 'object')
-    .map((r) => ({
-      wert: typeof r.wert === 'string' ? r.wert : '',
-      name: typeof r.name === 'string' ? r.name : '',
-      bedeutung: typeof r.bedeutung === 'string' ? r.bedeutung : '',
-    }))
-}
-
 export function schalterAn(
   schalter: EintragsSchalter,
   eintrag: Record<string, unknown>,
@@ -140,9 +74,7 @@ export function schalterAn(
   return typeof wert === 'boolean' ? wert : schalter.standard === true
 }
 
-// Welche Schalter dieser Eintrag ueberhaupt zeigt. Ohne Wahl am Bindungs-
-// Modell gibt es keine Darstellung, an der sich etwas festmachen liesse —
-// dann gelten alle.
+// Welche Schalter dieser Eintrag ueberhaupt zeigt.
 //
 // Die EINE Stelle dafuer: das Kopf-Fenster zeichnet danach, die Tabelle
 // entscheidet danach ueber das Tippen (spalteAenderbar), der Export danach
@@ -152,17 +84,11 @@ export function schalterFuer(
   b: ListenBindung,
   eintrag: Record<string, unknown>,
 ): readonly EintragsSchalter[] {
-  const alle = b.eintragsSchalter ?? []
-  const wahl = b.eintragsWahl
-  const gewaehlt = wahl ? eintragsWahlWert(wahl, eintrag) : undefined
   const feld = eintrag[b.feldKey]
   const ausFremderQuelle = typeof feld === 'string'
     && zerlegeBindung(feld).quelleId !== ''
-  return alle.filter((s) => {
-    if (s.nurEigeneQuelle === true && ausFremderQuelle) return false
-    return s.nurBeiWahl === undefined || gewaehlt === undefined
-      || s.nurBeiWahl.includes(gewaehlt)
-  })
+  return (b.eintragsSchalter ?? [])
+    .filter((s) => !(s.nurEigeneQuelle === true && ausFremderQuelle))
 }
 
 // Die zusaetzlichen Feldwahlen eines Eintrags mit ihrem aktuellen Wert. EINE
@@ -201,27 +127,6 @@ export function fremdeQuelleVon(
   return ''
 }
 
-export function eintragsFelderVon(
-  w: EintragsWahl,
-  eintrag: Record<string, unknown>,
-): readonly { key: string; label: string }[] {
-  const wert = eintragsWahlWert(w, eintrag)
-  return w.optionen.find((o) => o.wert === wert)?.felder ?? []
-}
-
-export function eintragsFelderLesen(
-  w: EintragsWahl,
-  eintrag: Record<string, unknown>,
-): Record<string, string> {
-  const roh = w.felderKey === undefined ? undefined : eintrag[w.felderKey]
-  if (!roh || typeof roh !== 'object' || Array.isArray(roh)) return {}
-  const raus: Record<string, string> = {}
-  for (const [k, v] of Object.entries(roh as Record<string, unknown>)) {
-    if (typeof v === 'string') raus[k] = v
-  }
-  return raus
-}
-
 export function listenStandardTitel(b: ListenBindung, index: number): string {
   return b.standardTitel.replace('{n}', String(index + 1))
 }
@@ -238,10 +143,7 @@ export function listeLesen(roh: unknown, b: ListenBindung): Record<string, unkno
 }
 
 // Ein Schluessel eines Eintrags, der nur unter einer Bedingung in den Export
-// gehoert: das Detail-Buendel nur, solange die gewaehlte Darstellung ueberhaupt
-// Felder hat, die Status-Zuordnung nur bei der Status-Darstellung. Als Regeln
-// und nicht als Aufzaehlung von Sonderfaellen — eine weitere Wahl braucht dann
-// nichts Neues.
+// gehoert. Als Regeln und nicht als Aufzaehlung von Sonderfaellen.
 interface BedingterSchluessel {
   key: string
   erlaubt: (eintrag: Record<string, unknown>) => boolean
@@ -249,19 +151,6 @@ interface BedingterSchluessel {
 
 function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
   const regeln: BedingterSchluessel[] = []
-  const ausWahl = (wahl: EintragsWahl): void => {
-    const key = wahl.felderKey
-    if (key === undefined) return
-    regeln.push({ key, erlaubt: (e) => eintragsFelderVon(wahl, e).length > 0 })
-  }
-  const wahl = b.eintragsWahl
-  if (wahl) {
-    ausWahl(wahl)
-    const zuo = b.eintragsZuordnung
-    if (zuo) {
-      regeln.push({ key: zuo.key, erlaubt: (e) => eintragsWahlWert(wahl, e) === zuo.nurBeiWahl })
-    }
-  }
   for (const schalter of b.eintragsSchalter ?? []) {
     // Behalten wird ein Schalterwert nur, wenn er sichtbar ist UND vom
     // Standard abweicht. Ein ausdrueckliches „nein" bei Standard „ja" ist

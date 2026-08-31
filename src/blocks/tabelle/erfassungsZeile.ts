@@ -1,7 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { vorschlagListeTpl, type Vorschlag } from '../shared/vorschlagListe'
-import { spaltenArt } from './spaltenArten'
 import { zellenzielVon } from './erfassungsZellen'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 
@@ -92,16 +91,13 @@ export function erfassungsZeileTpl(
 ): TemplateResult {
   return html`<div class="zeile erfassung" role="row" style=${styleMap(lage.cols)}>
     ${lage.spalten.map((spalte, i) => {
-      const klasse = spaltenArt(spalte.art).klasse
       // Im Editor gibt es keine Daten und keine Eingaben, sondern Striche —
       // der Editor erfindet nie Daten (Regel 7).
       if (lage.imEditor) {
-        return html`<div class=${klasse} role="cell">${ZELLE_PLATZHALTER}</div>`
+        return html`<div role="cell">${ZELLE_PLATZHALTER}</div>`
       }
       const frei = zellenzielVon(spalte, lage.quelleId).art === 'frei'
-      return html`<div class=${klasse} role="cell">${
-        laufzeitZelle(lage, tun, i, frei)
-      }</div>`
+      return html`<div role="cell">${laufzeitZelle(lage, tun, i, frei)}</div>`
     })}
   </div>`
 }

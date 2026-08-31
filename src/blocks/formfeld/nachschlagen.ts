@@ -10,7 +10,6 @@ import {
   type DialogGroesseDetail,
   type DialogRahmen,
 } from '../shared/DialogRahmen'
-import { ART_TEXT } from '../tabelle/spaltenArten'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from '../tabelle/spalten'
 import { TabelleBlock } from '../tabelle/TabelleBlock'
 import {
@@ -259,7 +258,7 @@ type SpaltenQuelle = Pick<NachschlagenArgs, 'speicherFeld' | 'speicherTitel'>
 // ein — die erste davon ist dann, was im Feld steht.
 export function automatikSpalten(args: SpaltenQuelle): Spalte[] {
   const titel = args.speicherTitel !== '' ? args.speicherTitel : 'Wert'
-  return [{ titel, feld: args.speicherFeld, art: ART_TEXT }]
+  return [{ titel, feld: args.speicherFeld }]
 }
 
 interface FensterArgs {

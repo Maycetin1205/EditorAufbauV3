@@ -7,12 +7,10 @@ import {
 } from '../shared/auswahl'
 import { macheDatenAnschluss } from '../shared/datenAnschluss'
 import { holeDatenVorspann } from '../shared/datenVorspann'
-import { spaltenArt } from './spaltenArten'
 import { tryCoerceSpalten, type Spalte } from './spalten'
 
 export interface RuntimeTableElement extends HTMLElement {
   datenzeilen: string[][]
-  zusatzzeilen: Record<string, string>[][]
   rohzeilen: unknown[]
   auswahlIndex: number
   durchAuswahlGefiltert: boolean
@@ -23,19 +21,6 @@ export interface RuntimeTableElement extends HTMLElement {
 
 function spaltenVon(el: HTMLElement): Spalte[] {
   return tryCoerceSpalten(el.getAttribute('spalten') ?? '')
-}
-
-function zusatzWerte(
-  spalte: Spalte,
-  row: unknown,
-  lies: (row: unknown, code: string) => string,
-): Record<string, string> {
-  const werte: Record<string, string> = {}
-  for (const zf of spaltenArt(spalte.art).zusatzFelder ?? []) {
-    const code = spalte.felder?.[zf.key] ?? ''
-    if (code !== '') werte[zf.key] = lies(row, code)
-  }
-  return werte
 }
 
 // Die Satznummer der angeklickten Zeile — was die Kette als {PINDEX}
@@ -68,7 +53,6 @@ function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {
     el.datenzeilen = []
-    el.zusatzzeilen = []
     return
   }
   const spalten = spaltenVon(el)
@@ -84,8 +68,6 @@ function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
   el.auswahlIndex = auswahlIndex
   el.durchAuswahlGefiltert = gefiltert
   el.datenzeilen = rows.map((row) => spalten.map((s) => (s.feld === '' ? '' : lies(row, s.feld))))
-
-  el.zusatzzeilen = rows.map((row) => spalten.map((s) => zusatzWerte(s, row, lies)))
 }
 
 const anschluss = macheDatenAnschluss<RuntimeTableElement>({ hydriere: hydrateTable })

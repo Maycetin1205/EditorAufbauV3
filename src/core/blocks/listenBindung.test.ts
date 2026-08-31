@@ -5,22 +5,15 @@ import { feldWahlenLesen, listeFuerExport, schalterAn, schalterFuer } from './li
 import { getBlockDefinition, registerBlockType } from './blockRegistry'
 import { traegtAenderungen } from './treeQuery'
 
-// Eine Liste mit zwei Schaltern: einer aus (Summe), einer an (aenderbar) —
-// und beide gelten nur fuer bestimmte Darstellungen.
+// Eine Liste mit zwei Schaltern: einer aus (Summe), einer an (aenderbar).
 const BINDUNG: ListenBindung = {
   prop: 'spalten',
   titelKey: 'titel',
   feldKey: 'feld',
   standardTitel: 'Spalte {n}',
-  eintragsWahl: {
-    key: 'art',
-    label: 'Darstellung',
-    optionen: [{ wert: 'text', name: 'Text' }, { wert: 'bild', name: 'Bild' }],
-    standard: 'text',
-  },
   eintragsSchalter: [
-    { key: 'summe', label: 'Summe', nurBeiWahl: ['text'] },
-    { key: 'aenderbar', label: 'Änderbar', nurBeiWahl: ['text'], standard: true },
+    { key: 'summe', label: 'Summe' },
+    { key: 'aenderbar', label: 'Änderbar', standard: true },
   ],
 }
 
@@ -49,34 +42,27 @@ test('ohne Deklaration gibt es keine Feldwahl', () => {
 })
 
 test('ohne Angabe gilt der Standard des Schalters', () => {
-  expect(schalterAn(AUS, { art: 'text' })).toBe(false)
-  expect(schalterAn(AN, { art: 'text' })).toBe(true)
+  expect(schalterAn(AUS, {})).toBe(false)
+  expect(schalterAn(AN, {})).toBe(true)
 })
 
 // Sonst liesse sich ein Schalter mit Standard „ja" nie ausschalten.
 test('ein ausdrueckliches Nein schlaegt den Standard', () => {
-  expect(schalterAn(AN, { art: 'text', aenderbar: false })).toBe(false)
-  expect(schalterAn(AUS, { art: 'text', summe: true })).toBe(true)
+  expect(schalterAn(AN, { aenderbar: false })).toBe(false)
+  expect(schalterAn(AUS, { summe: true })).toBe(true)
 })
 
 // Gespeichert wird nur die Abweichung: sonst stuende in jedem Eintrag
 // derselbe Wert und jede Vorgabe-Aenderung ginge an alten Masken vorbei.
 test('der Export behaelt nur, was vom Standard abweicht', () => {
   const roh = [
-    { titel: 'A', feld: '1_1', art: 'text', summe: false, aenderbar: true },
-    { titel: 'B', feld: '2_2', art: 'text', summe: true, aenderbar: false },
+    { titel: 'A', feld: '1_1', summe: false, aenderbar: true },
+    { titel: 'B', feld: '2_2', summe: true, aenderbar: false },
   ]
   expect(listeFuerExport(roh, BINDUNG)).toEqual([
-    { titel: 'A', feld: '1_1', art: 'text' },
-    { titel: 'B', feld: '2_2', art: 'text', summe: true, aenderbar: false },
+    { titel: 'A', feld: '1_1' },
+    { titel: 'B', feld: '2_2', summe: true, aenderbar: false },
   ])
-})
-
-// Ein Schalter, den die gewaehlte Darstellung gar nicht zeigt, hat auch
-// nichts im Export zu suchen.
-test('ein verborgener Schalter faellt aus dem Export', () => {
-  const roh = [{ titel: 'A', feld: '1_1', art: 'bild', aenderbar: false, summe: true }]
-  expect(listeFuerExport(roh, BINDUNG)).toEqual([{ titel: 'A', feld: '1_1', art: 'bild' }])
 })
 
 // traegtAenderungen entscheidet, ob der Export den Baustein ueberhaupt
@@ -121,25 +107,24 @@ test('ein Feld aus fremder Quelle nimmt den Schalter aus der Auswahl', () => {
 // Geprueft wird mit `false`: ein `true` faellt ohnehin weg, weil es dem
 // Standard entspricht — der Fall bewiese die Regel also nicht.
 test('der verborgene Schalter faellt aus dem Export', () => {
-  const roh = [{ titel: 'A', feld: 'q-art::bez', art: 'text', aenderbar: false }]
-  expect(listeFuerExport(roh, NUR_EIGEN)).toEqual([{ titel: 'A', feld: 'q-art::bez', art: 'text' }])
+  const roh = [{ titel: 'A', feld: 'q-art::bez', aenderbar: false }]
+  expect(listeFuerExport(roh, NUR_EIGEN)).toEqual([{ titel: 'A', feld: 'q-art::bez' }])
 
   // Dieselbe Spalte auf der eigenen Quelle behaelt ihn.
-  const eigen = [{ titel: 'A', feld: '45_60', art: 'text', aenderbar: false }]
+  const eigen = [{ titel: 'A', feld: '45_60', aenderbar: false }]
   expect(listeFuerExport(eigen, NUR_EIGEN)).toEqual(eigen)
 })
 
 test('eine gebundene Spalte traegt Aenderungen, auch ohne gesetzten Schalter', () => {
-  expect(traegtAenderungen(knoten([{ titel: 'A', feld: '1_1', art: 'text' }]))).toBe(true)
+  expect(traegtAenderungen(knoten([{ titel: 'A', feld: '1_1' }]))).toBe(true)
 })
 
 test('ohne Feld gibt es nichts zu schreiben', () => {
-  expect(traegtAenderungen(knoten([{ titel: 'A', feld: '', art: 'text' }]))).toBe(false)
+  expect(traegtAenderungen(knoten([{ titel: 'A', feld: '' }]))).toBe(false)
 })
 
-test('ausgeschaltet oder verborgen traegt die Spalte nichts', () => {
-  expect(traegtAenderungen(knoten([{ feld: '1_1', art: 'text', aenderbar: false }]))).toBe(false)
-  expect(traegtAenderungen(knoten([{ feld: '1_1', art: 'bild' }]))).toBe(false)
+test('ausgeschaltet traegt die Spalte nichts', () => {
+  expect(traegtAenderungen(knoten([{ feld: '1_1', aenderbar: false }]))).toBe(false)
 })
 
 // Der Export darf den Baustein wegen einer Hilfsquellen-Spalte nicht
@@ -153,7 +138,7 @@ registerBlockType({
 
 test('eine Spalte auf fremder Quelle traegt keine Aenderungen', () => {
   const node = (feld: string): BlockNode => ({
-    id: ROOT_ID, type: TYP_EIGEN, props: { spalten: [{ feld, art: 'text' }] },
+    id: ROOT_ID, type: TYP_EIGEN, props: { spalten: [{ feld }] },
     parentId: null, childIds: [],
   })
   expect(traegtAenderungen(node('45_60'))).toBe(true)

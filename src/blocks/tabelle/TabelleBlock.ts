@@ -13,7 +13,6 @@ import type {
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
 import { vorschlagStil } from '../shared/vorschlagListe'
-import { chipStyles } from '../shared/statusVariant'
 import { schliesseNachschlagenFuer } from '../formfeld/nachschlagen'
 import {
   erfassungsZeileFuer,
@@ -30,17 +29,19 @@ import {
 import { connectTable, disconnectTable, hatSatzNummer } from './seRuntime'
 import { zeigtEchteDaten } from './suche'
 import {
+  entferneSpalte,
   feldPickerAbbestellen,
   kopfGriffe,
   spaltenSteuerung,
 } from './spaltenBearbeiten'
-import { zeilenHoeheFuer } from './spaltenArten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 import { meldeVormerkungen } from '../shared/vormerkStand'
 import { AnsichtsStand } from './ansichtsStand'
 import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
+import type { BreitenAenderung, BreitenWirt } from './spaltenBreite'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
+import { ZEILEN_HOEHE } from './seitengroesse'
 import { tabelleAnsicht } from './tabelleAnsicht'
 import { TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
 import { tabelleFuss } from './tabelleFuss'
@@ -149,8 +150,6 @@ export class TabelleBlock extends BasicBlock {
 
   @property({ attribute: false }) datenzeilen: string[][] = []
 
-  @property({ attribute: false }) zusatzzeilen: Record<string, string>[][] = []
-
   @property({ attribute: false }) rohzeilen: unknown[] = []
 
   @property({ attribute: false }) auswahlIndex = -1
@@ -160,6 +159,18 @@ export class TabelleBlock extends BasicBlock {
   @property({ attribute: false }) datenGeliefert = false
 
   private _besitz: Datenbesitz = 'softengine'
+
+  // Die von Hand am Spaltenkopf gezogenen Breiten. Im Editor stehen sie hier
+  // nur waehrend des Zugs — beim Loslassen wandern sie in den Baum, und das
+  // ist EIN Undo-Schritt fuer den ganzen Zug. In der exportierten Maske gibt
+  // es keinen Baum: dort bleiben sie stehen und gelten, bis der Bediener die
+  // Seite neu laedt.
+  private readonly _breiten = new Map<number, number>()
+
+  // Der Stand der gerade gezogenen Spalten, wie er VOR dem Zug war — damit
+  // Escape genau diese zwei zuruecksetzt und nicht die Breiten, die der
+  // Bediener vorher eingestellt hat.
+  private _breiteVorZug: Map<number, number | undefined> | null = null
 
   // Suchtext, Sortierung, Seite, Messung, Zeilenfokus — der Stand, in dem die
   // Tabelle dasteht. Er liegt in ansichtsStand, der Baustein delegiert nur.
@@ -210,7 +221,6 @@ export class TabelleBlock extends BasicBlock {
     const abgeleitet = leiteZeilenAb(zeilen)
     this.rohzeilen = abgeleitet.rohzeilen
     this.datenzeilen = abgeleitet.datenzeilen
-    this.zusatzzeilen = abgeleitet.zusatzzeilen
     this.datenGeliefert = true
     this.auswahlIndex = -1
     this.durchAuswahlGefiltert = false
@@ -221,7 +231,6 @@ export class TabelleBlock extends BasicBlock {
   private setzeAbgeleitetesZurueck(): void {
     this.rohzeilen = []
     this.datenzeilen = []
-    this.zusatzzeilen = []
     this.datenGeliefert = false
     this.auswahlIndex = -1
     this.durchAuswahlGefiltert = false
@@ -331,7 +340,54 @@ export class TabelleBlock extends BasicBlock {
   }
 
   private get zeilenHoehe(): number {
-    return zeilenHoeheFuer(this.spaltenListe())
+    return ZEILEN_HOEHE
+  }
+
+  // Der Zug an der Spaltenkante. Zwei Ablagen, EIN Zug: im Editor schreibt
+  // das Loslassen in den Baum, in der Maske bleibt es beim fluechtigen Stand.
+  // Ein Zug bringt IMMER beide Nachbarn der Linie mit (spaltenBreite:
+  // verteileZug) — sie wandern zusammen, sonst waere das Loslassen im Editor
+  // zwei Undo-Schritte fuer eine Handbewegung.
+  private breitenWirt(): BreitenWirt {
+    const merkeVorZug = (aenderung: readonly BreitenAenderung[]): void => {
+      if (this._breiteVorZug !== null) return
+      this._breiteVorZug = new Map(aenderung.map((a) => [a.index, this._breiten.get(a.index)]))
+    }
+    return {
+      zeige: (aenderung) => {
+        merkeVorZug(aenderung)
+        for (const a of aenderung) this._breiten.set(a.index, a.breite)
+        this.requestUpdate()
+      },
+      uebernimm: (aenderung) => {
+        this._breiteVorZug = null
+        const liste = this.spaltenListe()
+        if (!this.hasAttribute('data-ff-editor')) {
+          for (const a of aenderung) this._breiten.set(a.index, a.breite)
+          this.requestUpdate()
+          return
+        }
+        // Im Editor gilt der Baum. Der fluechtige Stand muss WEG, sonst
+        // ueberdeckte er die gespeicherte Breite und ein spaeteres Undo
+        // aenderte sichtbar nichts.
+        for (const a of aenderung) {
+          if (a.index >= liste.length) continue
+          this._breiten.delete(a.index)
+          liste[a.index] = { ...liste[a.index], breite: a.breite }
+        }
+        this.aendere(liste)
+      },
+      verwirf: () => {
+        const vorher = this._breiteVorZug
+        this._breiteVorZug = null
+        if (!vorher) return
+        for (const [index, wert] of vorher) {
+          if (wert === undefined) this._breiten.delete(index)
+          else this._breiten.set(index, wert)
+        }
+        this.requestUpdate()
+      },
+    }
   }
 
   private get erfassungAn(): boolean {
@@ -407,6 +463,12 @@ export class TabelleBlock extends BasicBlock {
   // und keine Liste (Regel 7).
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed)
+    // Die fluechtigen Breiten haengen am PLATZ der Spalte. Kommt eine Spalte
+    // dazu oder faellt eine weg, zeigen sie auf die falsche — dann lieber
+    // zurueck auf die gleichmaessige Aufteilung als auf ein verschobenes
+    // Raster. Waehrend eines Zugs passiert das nicht: dort aendert sich
+    // `spalten` erst beim Loslassen, und da sind die Eintraege schon weg.
+    if (changed.has('spalten')) this._breiten.clear()
     if (!this.erfassungAn || this.hasAttribute('data-ff-editor')) return
     this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())
   }
@@ -430,7 +492,6 @@ export class TabelleBlock extends BasicBlock {
 
   static override styles = [
     BasicBlock.styles,
-    chipStyles,
     leerStil,
     tabelleStil,
     vorschlagStil,
@@ -443,6 +504,7 @@ export class TabelleBlock extends BasicBlock {
 
     const ansicht = tabelleAnsicht({
       spalten,
+      breiteVon: (i) => this._breiten.get(i),
       hatQuelle: this.hatQuelle,
       datenGeliefert: this.datenGeliefert,
       datenzeilen: this.datenzeilen,
@@ -476,7 +538,6 @@ export class TabelleBlock extends BasicBlock {
         zeilen: ansicht.zeilen,
         linealTakte: ansicht.linealTakte,
         datenzeilen: this.datenzeilen,
-        zusatzzeilen: this.zusatzzeilen,
         hatQuelle: ansicht.hatQuelle,
         auswahlIndex: this.auswahlIndex,
         aendernMoeglich: !this.hasAttribute('data-ff-editor')
@@ -502,6 +563,13 @@ export class TabelleBlock extends BasicBlock {
           : nothing,
       }, {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
+        breiten: this.breitenWirt(),
+        loescheSpalte: (index) => {
+          // Der Klick auf das Kreuz darf nicht noch den Feld-Picker der
+          // Spalte nachziehen, die es gerade weggenommen hat.
+          feldPickerAbbestellen(this)
+          entferneSpalte(index, () => this.spaltenListe(), (l) => this.aendere(l))
+        },
         ...kopfGriffe({
           baustein: this,
           editable: () => this.editable,

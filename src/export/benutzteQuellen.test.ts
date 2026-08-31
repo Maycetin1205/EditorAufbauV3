@@ -63,15 +63,15 @@ function codesVon(tree: BlockTree, quelleId: string): string[] {
 // zwar ohne jede Fehlermeldung.
 test('Spaltenfeld und Fuellfeld werden bei ihrer je eigenen Quelle bestellt', () => {
   const tree = baum([
-    { titel: 'Bezeichnung', feld: '45_60', art: 'text', fuellFeld: 'q-art::bez' },
-    { titel: 'Artikelnummer', feld: '18_25', art: 'text', fuellFeld: 'q-art::artnr' },
+    { titel: 'Bezeichnung', feld: '45_60', fuellFeld: 'q-art::bez' },
+    { titel: 'Artikelnummer', feld: '18_25', fuellFeld: 'q-art::artnr' },
   ])
   expect(codesVon(tree, 'q-pos')).toEqual(['18_25', '45_60'])
   expect(codesVon(tree, 'q-art')).toEqual(['artnr', 'bez'])
 })
 
 test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
-  const tree = baum([{ titel: 'Menge', feld: '164_8', art: 'zahl' }])
+  const tree = baum([{ titel: 'Menge', feld: '164_8' }])
   expect(codesVon(tree, 'q-pos')).toEqual(['164_8'])
   expect(benutzteFelderJeQuelle(tree, BIBLIOTHEK).has('q-art')).toBe(false)
 })
@@ -79,7 +79,7 @@ test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
 // Eine Spalte ohne Spaltenfeld bestellt trotzdem ihr Fuellfeld: sie schreibt
 // nichts, hilft aber beim Aussuchen.
 test('ein Fuellfeld allein wird bestellt', () => {
-  const tree = baum([{ titel: 'Suche', feld: '', art: 'text', fuellFeld: 'q-art::bez' }])
+  const tree = baum([{ titel: 'Suche', feld: '', fuellFeld: 'q-art::bez' }])
   expect(codesVon(tree, 'q-art')).toEqual(['bez'])
   expect(benutzteFelderJeQuelle(tree, BIBLIOTHEK).has('q-pos')).toBe(false)
 })

@@ -1,26 +1,11 @@
 import { alsZahl } from './sortierung'
 
-// Der ERP liefert dieselbe Zahl in drei Schreibweisen ("1999.00", "1999,00",
-// "1.999,00"). Gelesen wird sie mit demselben Parser, mit dem die Tabelle
-// sortiert — eine Stelle, ein Verstaendnis. Was sich nicht als Zahl lesen
-// laesst, bleibt UNVERAENDERT stehen: der Editor erfindet nichts, und ein
-// Textwert in einer Zahlenspalte soll sichtbar bleiben, nicht zu 0 werden.
-export function zahlText(roh: string, min: number, max: number): string {
-  const zahl = alsZahl(roh)
-  if (zahl === null) return roh
-  return zahl.toLocaleString('de-DE', {
-    minimumFractionDigits: min,
-    maximumFractionDigits: max,
-  })
-}
-
-// Menge und Stueckzahl: keine erzwungene Nachkommastelle, aber bis zu drei,
-// wo der ERP sie liefert (0,25 Stunden).
-export const ZAHL_NACHKOMMA = { min: 0, max: 3 } as const
-
-// Betraege: immer zwei Stellen, damit die Spalte eine Kante hat.
-export const BETRAG_NACHKOMMA = { min: 2, max: 2 } as const
-
+// Die Summe unter der Tabelle: gezaehlt wird, was sich als Zahl lesen laesst
+// — der ERP liefert dieselbe Zahl in drei Schreibweisen ("1999.00",
+// "1999,00", "1.999,00"), gelesen wird sie mit demselben Parser, mit dem die
+// Tabelle sortiert. Werte, die keine Zahl sind, zaehlen NICHT mit: seit die
+// Spalten keine Darstellung mehr tragen, darf jede Spalte summiert werden,
+// und in einer Textspalte waere jede andere Rechnung geraten.
 export function summeText(werte: readonly string[], min: number, max: number): string {
   let summe = 0
   let gezaehlt = 0
@@ -36,3 +21,8 @@ export function summeText(werte: readonly string[], min: number, max: number): s
     maximumFractionDigits: max,
   })
 }
+
+// Keine erzwungene Nachkommastelle, aber bis zu drei, wo der ERP sie liefert
+// (0,25 Stunden). Eine Zahl fuer alle Summen — die Spalte sagt nicht mehr, ob
+// sie Menge oder Betrag ist.
+export const SUMME_NACHKOMMA = { min: 0, max: 3 } as const

@@ -4,14 +4,11 @@ import { cn } from '@/lib/utils'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Schalter } from '@/ui/werkbank/Schalter'
-import { Segment } from '@/ui/werkbank/Segment'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { bindungMitQuelle } from '../../core/blocks/BlockDefinition'
 import type { DataSourceField } from '../../core/data/dataSources'
 import type { Eingabesitzung } from '../inspector/controls/eingabeSitzung'
-import { ZuordnungZeilen, type PickerZuordnung } from './ZuordnungZeilen'
 
-export type { PickerZuordnung }
 
 export interface PickerGruppe {
   quelleId: string
@@ -33,13 +30,6 @@ export interface PickerTitel {
   onAendern: (titel: string) => void
 
   sitzung: Eingabesitzung
-}
-
-export interface PickerWahl {
-  label: string
-  optionen: readonly { wert: string; name: string }[]
-  aktuell: string
-  onWaehle: (wert: string) => void
 }
 
 export interface PickerSchalter {
@@ -72,18 +62,11 @@ interface FieldPickerProps {
 
   titel?: PickerTitel
 
-  wahl?: PickerWahl
-
-  // Felder, die zur gewaehlten Darstellung gehoeren (Bild + Name).
-  felder?: readonly PickerFeld[]
-
   schalter?: readonly PickerSchalter[]
 
   // Felder, die unabhaengig von der Darstellung sind (Fuellfeld). Sie liegen
   // in der zugeklappten Ebene, nicht im Blick.
   weitereFelder?: readonly PickerFeld[]
-
-  zuordnung?: PickerZuordnung
 
   // Erste Stufe: der Baustein hat noch keine Hauptquelle. Dann zeigt das
   // Fenster QUELLEN statt Feldern — sonst steht der Bediener vor allen Feldern
@@ -197,11 +180,8 @@ export function FieldPicker({
   spotLabel,
   gruppen,
   titel,
-  wahl,
-  felder,
   schalter,
   weitereFelder,
-  zuordnung,
   quellenWahl,
   current,
   anker,
@@ -213,11 +193,9 @@ export function FieldPicker({
   // Schließt das Fenster ohne blur (Escape, Außenklick), bliebe die offene
   // Tipp-Klammer sonst stehen — und Undo wäre für den Rest der Sitzung stumm.
   const titelSitzung = titel?.sitzung
-  const zuordnungSitzung = zuordnung?.sitzung
   useEffect(() => () => {
     titelSitzung?.beenden()
-    zuordnungSitzung?.beenden()
-  }, [titelSitzung, zuordnungSitzung])
+  }, [titelSitzung])
 
   const [zielKey, setZielKey] = useState(HAUPTFELD)
 
@@ -230,7 +208,6 @@ export function FieldPicker({
       aktuell: current ?? '',
       onWaehle: onPick,
     },
-    ...(felder ?? []),
     ...ebene2,
   ]
   const aktiv = ziele.find((z) => z.key === zielKey) ?? ziele[0]
@@ -316,31 +293,6 @@ export function FieldPicker({
             anfasst. Ohne Hilfsquelle waere es sinnlos — dann erscheint es
             nicht. */}
         {ebene2.map(feldZeile)}
-
-        {wahl && (
-          <div className="flex items-center gap-2 px-1.5">
-            <span className="w-20 shrink-0 truncate text-ui text-matt">{wahl.label}</span>
-            <div className="min-w-0 flex-1 overflow-x-auto">
-              <Segment
-                bezeichnung={wahl.label}
-                optionen={wahl.optionen.map((o) => ({ wert: o.wert, name: o.name }))}
-                wert={wahl.aktuell}
-                onWaehle={wahl.onWaehle}
-              />
-            </div>
-          </div>
-        )}
-
-        {(felder ?? []).map(feldZeile)}
-
-        {zuordnung && (
-          <div className="flex flex-col gap-1 px-1.5">
-            <span className="text-dicht font-semibold uppercase tracking-wide text-matt">
-              {zuordnung.label}
-            </span>
-            <ZuordnungZeilen zuordnung={zuordnung} />
-          </div>
-        )}
 
         {/* Zugeklappt heisst nicht versteckt: die Kopfzeile sagt, WAS darin
             vom Standard abweicht. Sonst merkt niemand, dass „In der Zeile

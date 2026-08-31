@@ -2,7 +2,6 @@ import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 import { AenderungsSpeicher } from './aenderungen'
 import { zeilenIndexVon } from './seRuntime'
 import type { Spalte } from './spalten'
-import { spaltenArt, zellText } from './spaltenArten'
 import type { LaufStand, ZeilenZeichen } from './zeilenStatus'
 
 // Was an einer GEBUCHTEN Zeile passiert: die Vormerkungen (geaendert, weg)
@@ -142,11 +141,6 @@ export class ZeilenBearbeitung {
     return rohzeile === undefined ? '' : zeilenIndexVon(this.wirt.baustein, rohzeile)
   }
 
-  private zellAnzeige(spaltenIndex: number, roh: string): string {
-    const spalte = this.wirt.spalten()[spaltenIndex]
-    return spalte === undefined ? roh : zellText(spaltenArt(spalte.art), roh)
-  }
-
   // Eine Zeile, die weg soll, braucht keine Zell-Aenderung mehr: was an ihr
   // vorgemerkt war, faellt mit. Sonst schriebe derselbe Klick erst einen
   // neuen Wert und loeschte die Zeile gleich danach.
@@ -171,34 +165,28 @@ export class ZeilenBearbeitung {
   zellWert(rohIndex: number, spaltenIndex: number): string {
     const vorgemerkt = this.aenderungen.wert(this.satzVon(rohIndex), spaltenIndex)
     if (vorgemerkt !== undefined) return vorgemerkt
-    return this.zellAnzeige(spaltenIndex, this.wirt.datenzeilen()[rohIndex]?.[spaltenIndex] ?? '')
+    return this.wirt.datenzeilen()[rohIndex]?.[spaltenIndex] ?? ''
   }
 
   istGeaendert(rohIndex: number, spaltenIndex: number): boolean {
     return this.aenderungen.wert(this.satzVon(rohIndex), spaltenIndex) !== undefined
   }
 
-  // Waehrend des Tippens bleibt stehen, was getippt ist — nicht formatiert,
-  // sonst spraenge die Schreibmarke. Geformt wird beim Verlassen.
   tippeZelle(rohIndex: number, spaltenIndex: number, text: string): void {
     if (this.aenderungen.setze(this.satzVon(rohIndex), spaltenIndex, text)) {
       this.wirt.melde()
     }
   }
 
-  // Beim Verlassen wird der getippte Wert in die Form der Spalte gebracht.
-  // Steht danach wieder der urspruengliche Wert da, ist es keine Aenderung
-  // mehr — die Vormerkung faellt weg, samt Marke.
+  // Steht beim Verlassen wieder der urspruengliche Wert da, ist es keine
+  // Aenderung mehr — die Vormerkung faellt weg, samt Marke. Verglichen wird
+  // roh gegen roh: die Zelle zeigt den ERP-Wert, wie er kommt.
   verlasseZelle(rohIndex: number, spaltenIndex: number, text: string): void {
     const satz = this.satzVon(rohIndex)
-    const geformt = this.zellAnzeige(spaltenIndex, text)
-    const urspruenglich = this.zellAnzeige(
-      spaltenIndex,
-      this.wirt.datenzeilen()[rohIndex]?.[spaltenIndex] ?? '',
-    )
-    const geaendert = geformt === urspruenglich
+    const urspruenglich = this.wirt.datenzeilen()[rohIndex]?.[spaltenIndex] ?? ''
+    const geaendert = text === urspruenglich
       ? this.aenderungen.nimmZurueck(satz, spaltenIndex)
-      : this.aenderungen.setze(satz, spaltenIndex, geformt)
+      : this.aenderungen.setze(satz, spaltenIndex, text)
     if (geaendert) this.wirt.melde()
   }
 

@@ -29,10 +29,6 @@ export interface ActionValueSpot {
 }
 
 export {
-  eintragsFelderLesen,
-  eintragsFelderVon,
-  eintragsWahlWert,
-  eintragsZuordnungLesen,
   feldWahlenLesen,
   fremdeQuelleVon,
   listenStandardTitel,
@@ -42,11 +38,7 @@ export {
   schalterFuer,
   type EintragsFeldWahl,
   type EintragsSchalter,
-  type EintragsWahl,
-  type EintragsWahlOption,
-  type EintragsZuordnung,
   type ListenBindung,
-  type ZuordnungZeile,
 } from './listenBindung'
 import type { ListenBindung } from './listenBindung'
 

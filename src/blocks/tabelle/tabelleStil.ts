@@ -213,66 +213,60 @@ export const tabelleStil = css`
       }
       .kopf > div:last-child,
       .zeile > div:last-child { border-right: none; }
-      .kopf > div { cursor: pointer; user-select: none; }
+      .kopf > div {
+        cursor: pointer;
+        user-select: none;
+
+        /* Traeger des Greifstreifens (unten). */
+        position: relative;
+      }
+
+      /* Der Greifstreifen an der rechten Kante einer Kopfzelle: hier wird die
+         Spaltenbreite gezogen. Er ist mit Absicht breiter als der Strich, den
+         er verschiebt — eine 1px-Linie trifft man mit der Maus nicht. Er
+         liegt INNEN, weil die Kopfzelle ihren Ueberhang abschneidet
+         (overflow: hidden); ein Streifen, der ueber die Kante ragt, waere zur
+         Haelfte weggeschnitten. */
+      .breite-griff {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 8px;
+        height: 100%;
+        cursor: col-resize;
+
+        /* Sonst rollt der Finger die Tabelle, statt zu ziehen. */
+        touch-action: none;
+      }
+      .breite-griff:hover { box-shadow: inset -2px 0 0 var(--se-accent); }
+
+      /* Das Kreuz am Spaltenkopf — nur im Editor, und nur unter der Maus.
+         Es sitzt LINKS vom Greifstreifen, sonst laegen Streichen und Ziehen
+         auf demselben Fleck. Dieselbe Machart wie das Kreuz an der Zeile
+         (.zeile-weg weiter unten): unsichtbar, bis jemand hinfaehrt. */
+      .kopf-weg {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 0 3px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs-sm);
+        line-height: 1;
+        color: var(--se-faint);
+        background: var(--se-panel-2);
+        border: 0;
+        border-radius: var(--se-r-sm);
+        cursor: pointer;
+        opacity: 0;
+      }
+      .kopf > div:hover .kopf-weg,
+      .kopf-weg:focus { opacity: 1; }
+      .kopf-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
       .zeile > div { color: var(--se-ink); }
 
-      .kopf > div.zahl,
-      .zeile > div.zahl {
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .zeile > div.status {
-        display: flex;
-        align-items: center;
-      }
-
-      .zeile > div.bild {
-        display: flex;
-        align-items: center;
-      }
-      .bild-name {
-        display: flex;
-        align-items: center;
-
-        gap: var(--se-gap);
-        min-width: 0;
-      }
-
-      .bild-zeichen {
-        display: grid;
-        place-items: center;
-        width: 26px;
-        height: 26px;
-        flex: none;
-      }
-      .bild-zeichen img {
-        width: 100%;
-        height: 100%;
-        display: block;
-
-        object-fit: contain;
-      }
-      .bild-text { min-width: 0; }
-
-      .bild-titel,
-      .bild-unter {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .bild-titel {
-        font-size: var(--se-fs-lg);
-        font-weight: 600;
-        line-height: 1.25;
-      }
-      .bild-unter {
-        color: var(--se-muted);
-        font-size: var(--se-fs-sm);
-        line-height: 1.35;
-      }
 
       .fusszeile {
         display: flex;
@@ -399,8 +393,6 @@ export const tabelleStil = css`
       }
       .zell-eingabe:focus,
       .erf-eingabe:focus { outline: none; }
-      .zeile > div.zahl .zell-eingabe,
-      .zeile > div.zahl .erf-eingabe { text-align: right; }
       .erf-eingabe::placeholder { color: var(--se-faint); }
 
       /* Die Vormerkung ist etwas anderes als ein Eingabefeld: sie sagt, dass

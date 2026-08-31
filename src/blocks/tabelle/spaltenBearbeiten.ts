@@ -7,6 +7,21 @@ import {
   type Spalte,
 } from './spalten'
 
+// Eine Spalte streichen — von ueberall her, nicht nur hinten. EINE Stelle
+// fuer beide Wege: das Kreuz am Spaltenkopf nennt seinen Platz, der
+// Minus-Knopf meint immer den letzten. Die letzte verbliebene Spalte bleibt
+// stehen: eine Tabelle ohne Spalte waere ein leerer Kasten ohne Weg zurueck.
+export function entferneSpalte(
+  index: number,
+  liste: () => Spalte[],
+  aendere: (spalten: Spalte[]) => void,
+): void {
+  const l = liste()
+  if (l.length <= SPALTEN_MIN || index < 0 || index >= l.length) return
+  l.splice(index, 1)
+  aendere(l)
+}
+
 // Kein Stop auf pointerdown (Zug-Regel in editor/canvas/rasterMove.ts) — der
 // Stop auf CLICK bleibt, sonst waehlte jeder Knopfdruck die Tabelle mit aus.
 export function spaltenSteuerung(
@@ -19,11 +34,7 @@ export function spaltenSteuerung(
       title="Letzte Spalte entfernen"
       @click=${(e: Event) => {
         stop(e)
-        const l = liste()
-        if (l.length > SPALTEN_MIN) {
-          l.pop()
-          aendere(l)
-        }
+        entferneSpalte(liste().length - 1, liste, aendere)
       }}
     >−</button>
     <button
@@ -90,6 +101,25 @@ export interface FeldPickerRuf {
   // Rückfallebene, wenn die Eigenschaft selbst noch leer ist (Automatik-
   // Spalten des Nachschlagens) — sonst zeigt der Index ins Leere.
   liste?: () => Spalte[]
+}
+
+// Das Kreuz am Spaltenkopf: streicht GENAU diese Spalte. Es faengt seinen
+// Klick ab, sonst oeffnete derselbe Druck noch den Feld-Picker der Spalte,
+// die es gerade weggenommen hat.
+export function spaltenKreuz(
+  titel: string,
+  index: number,
+  tun: (index: number) => void,
+): TemplateResult {
+  return html`<button
+    class="kopf-weg"
+    type="button"
+    title=${`Spalte „${titel}" entfernen`}
+    aria-label=${`Spalte „${titel}" entfernen`}
+    @pointerdown=${(e: PointerEvent) => e.stopPropagation()}
+    @click=${(e: MouseEvent) => { e.stopPropagation(); tun(index) }}
+    @dblclick=${(e: MouseEvent) => e.stopPropagation()}
+  >&#x2715;</button>`
 }
 
 export interface KopfGriffWirt {

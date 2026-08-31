@@ -3,10 +3,6 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import {
   bindingProp,
-  eintragsFelderLesen,
-  eintragsFelderVon,
-  eintragsWahlWert,
-  eintragsZuordnungLesen,
   feldWahlenLesen,
   schalterAn,
   schalterFuer,
@@ -127,7 +123,7 @@ export function useFeldBindung({
     : bibliothek.find((s) => s.id === String(block.props[listenBindung.quelleProp ?? ''] ?? ''))
   const listenPickerHatFelder = listenBindung?.quelleProp !== undefined
     ? quelleAusProp !== undefined
-    : hatAngebot || listenBindung?.eintragsWahl !== undefined
+    : hatAngebot
 
   useEffect(() => {
     const el = containerRef.current
@@ -240,23 +236,6 @@ export function useFeldBindung({
           : gruppen
         const titelJetzt = String(eintrag[listenBindung.titelKey] ?? '')
         const standardTitel = listenStandardTitel(listenBindung, listenPicker.index)
-        const wahl = listenBindung.eintragsWahl
-        const zuo = listenBindung.eintragsZuordnung
-
-        const zeigeZuordnung = zuo !== undefined
-          && wahl !== undefined
-          && eintragsWahlWert(wahl, eintrag) === zuo.nurBeiWahl
-
-        const zusatzFelder = wahl ? eintragsFelderVon(wahl, eintrag) : []
-        const gebundeneFelder = wahl ? eintragsFelderLesen(wahl, eintrag) : {}
-
-        const schreibeFeld = (key: string, wert: string): void => {
-          if (!wahl?.felderKey) return
-          const next = { ...gebundeneFelder }
-          if (wert === '') delete next[key]
-          else next[key] = wert
-          schreibeInEintrag(listenPicker, { [wahl.felderKey]: next })
-        }
         return (
           <FieldPicker
             spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
@@ -281,12 +260,6 @@ export function useFeldBindung({
                 { [fw.key]: neu === '' ? undefined : neu },
               ),
             }))}
-            wahl={wahl && {
-              label: wahl.label,
-              optionen: wahl.optionen,
-              aktuell: eintragsWahlWert(wahl, eintrag),
-              onWaehle: (wert) => schreibeInEintrag(listenPicker, { [wahl.key]: wert }),
-            }}
             schalter={schalterFuer(listenBindung, eintrag).map((s) => ({
               key: s.key,
               label: s.label,
@@ -295,22 +268,6 @@ export function useFeldBindung({
               an: schalterAn(s, eintrag),
               onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
             }))}
-            felder={zusatzFelder.map((zf) => ({
-              key: zf.key,
-              label: zf.label,
-              aktuell: gebundeneFelder[zf.key] ?? '',
-              onWaehle: (wert) => schreibeFeld(zf.key, wert),
-            }))}
-            zuordnung={zeigeZuordnung && zuo ? {
-              label: zuo.label,
-              wertLabel: zuo.wertLabel,
-              nameLabel: zuo.nameLabel,
-              bedeutungLabel: zuo.bedeutungLabel,
-              bedeutungen: zuo.bedeutungen,
-              zeilen: eintragsZuordnungLesen(zuo, eintrag),
-              onAendern: (zeilen) => schreibeInEintrag(listenPicker, { [zuo.key]: zeilen }),
-              sitzung: tippSitzung,
-            } : undefined}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
             quellenWahl={proQuelle ? undefined : quellenWahl}
             anker={containerRef}

@@ -1,8 +1,6 @@
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import {
   bindingProp,
-  eintragsFelderLesen,
-  eintragsFelderVon,
   feldWahlenLesen,
   listeLesen,
   zerlegeBindung,
@@ -123,11 +121,6 @@ export function benutzteFelderJeQuelle(
         // vor, bestellte der Export ihre Felder nicht und die Erfassungszeile
         // faende in SoftEngine nichts zum Vorschlagen.
         for (const { wert } of feldWahlenLesen(b, eintrag)) merkeEintragsFeld(wert)
-        if (!b.eintragsWahl) continue
-        const gebunden = eintragsFelderLesen(b.eintragsWahl, eintrag)
-        for (const zf of eintragsFelderVon(b.eintragsWahl, eintrag)) {
-          merkeEintragsFeld(gebunden[zf.key])
-        }
       }
     }
 

@@ -1,11 +1,10 @@
 import { expect, test } from 'vitest'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
 import type { ErfassungsUmfeld } from './erfassungsZellen'
-import { ART_TEXT } from './spaltenArten'
 import type { Spalte } from './spalten'
 
 function spalte(titel: string, feld: string): Spalte {
-  return { titel, feld, art: ART_TEXT }
+  return { titel, feld }
 }
 
 const UMFELD: ErfassungsUmfeld = {

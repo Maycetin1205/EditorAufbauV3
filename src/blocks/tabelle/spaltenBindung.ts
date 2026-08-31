@@ -1,16 +1,7 @@
 import type { ListenBindung } from '../../core/blocks/BlockDefinition'
 import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
 import type { Spalte } from './spalten'
-import { STATUS_BEDEUTUNGEN } from '../shared/statusVariant'
 import { STANDARD_TITEL } from './spalten'
-import {
-  AENDERBARE_ARTEN,
-  ART_STATUS,
-  ART_TEXT,
-  FELDER_KEY,
-  SPALTEN_ART_OPTIONEN,
-  SUMMIERBARE_ARTEN,
-} from './spaltenArten'
 
 export const SPALTEN_BINDUNG: ListenBindung = {
   prop: 'spalten',
@@ -18,26 +9,16 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   feldKey: 'feld',
   standardTitel: STANDARD_TITEL,
 
-  eintragsWahl: {
-    key: 'art',
-    label: 'Darstellung',
-    optionen: SPALTEN_ART_OPTIONEN,
-    standard: ART_TEXT,
-    felderKey: FELDER_KEY,
-  },
-
   eintragsSchalter: [
     {
       key: 'summe',
       label: 'Summe in der Fußzeile',
       kurz: 'Summe',
-      nurBeiWahl: SUMMIERBARE_ARTEN,
     },
     {
       key: 'aenderbar',
       label: 'In der Zeile änderbar',
       kurz: 'änderbar',
-      nurBeiWahl: AENDERBARE_ARTEN,
 
       // An, solange niemand ihn ausschaltet: der Bediener erwartet, in jeder
       // Zeile tippen zu koennen (Nutzer-Ansage). Ausschalten braucht, wer eine
@@ -68,16 +49,6 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       nurFremdeQuellen: true,
     },
   ],
-
-  eintragsZuordnung: {
-    key: 'zuordnung',
-    label: 'Status-Zuordnung',
-    nurBeiWahl: ART_STATUS,
-    wertLabel: 'Datenwert',
-    nameLabel: 'Klarname',
-    bedeutungLabel: 'Bedeutung',
-    bedeutungen: STATUS_BEDEUTUNGEN,
-  },
 }
 
 // Darf der Bediener in dieser Spalte einer GEBUCHTEN Zeile tippen? Dieselbe

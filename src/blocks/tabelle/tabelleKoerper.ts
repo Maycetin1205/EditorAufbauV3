@@ -3,7 +3,8 @@ import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
-import { spaltenArt } from './spaltenArten'
+import { spaltenKreuz } from './spaltenBearbeiten'
+import { breitenGriff, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './spaltenBindung'
 import {
   bewegeZeilenFokus,
@@ -61,8 +62,6 @@ export interface KoerperLage {
   zeilen: readonly (number | null)[]
   datenzeilen: readonly string[][]
 
-  zusatzzeilen: readonly Record<string, string>[][]
-
   linealTakte: number | null
 
   hatQuelle: boolean
@@ -97,6 +96,15 @@ export interface KoerperLage {
 
 export interface KoerperHandeln {
   setzeSuchtext: (text: string) => void
+
+  // Der Zug an der Spaltenkante. Er liegt hier und nicht am Kopf-Griff,
+  // weil er auch in der exportierten Maske gilt — dort gibt es weder
+  // Feld-Picker noch Umbenennen.
+  breiten: BreitenWirt
+
+  // Diese eine Spalte streichen — von jedem Platz aus, nicht nur vom
+  // letzten. Nur im Editor.
+  loescheSpalte: (index: number) => void
 
   dblklickKopf: (e: MouseEvent, index: number) => void
   klickKopf: (e: MouseEvent, index: number) => void
@@ -149,8 +157,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
       ${lage.zeigeKopf ? html`<div class="kopf" role="row" style=${styleMap(lage.cols)}>
         ${lage.spalten.map(
           (s, i) => html`<div
-            class="${spaltenArt(s.art).klasse}${
-              lage.imEditor && (lage.herkunft[i] ?? '') !== '' ? ' mit-herkunft' : ''}"
+            class=${
+              lage.imEditor && (lage.herkunft[i] ?? '') !== '' ? 'mit-herkunft' : nothing}
             role="columnheader"
             data-ff-editable
             @dblclick=${(e: MouseEvent) => tun.dblklickKopf(e, i)}
@@ -169,7 +177,11 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               : s.titel
           }${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
-            : ''}</div>`,
+            : ''}${lage.imEditor && lage.editable && lage.spalten.length > 1
+            ? spaltenKreuz(s.titel, i, tun.loescheSpalte)
+            : nothing}${i < lage.spalten.length - 1
+            ? breitenGriff(i, tun.breiten)
+            : nothing}</div>`,
         )}
       </div>` : nothing}
         ${ ''}
@@ -218,14 +230,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           >
             ${ ''}
             ${lage.spalten.map((s, i) => {
-              const art = spaltenArt(s.art)
               const wert = rohIndex !== null
                 ? (lage.datenzeilen[rohIndex]?.[i] ?? '')
                 : ZELLE_PLATZHALTER
-
-              const zusatz = rohIndex !== null
-                ? (lage.zusatzzeilen[rohIndex]?.[i] ?? {})
-                : {}
               // Ohne Kopfzeile uebernimmt die Zelle im Editor den Kopf-Griff:
               // Klick oeffnet den Feld-Picker der Spalte. Umbenennen laeuft
               // ueber das kurze Einschalten der Kopfzeile (Inspector).
@@ -235,7 +242,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               // Text. Es traegt den vorgemerkten Wert, solange einer da ist.
               if (lage.aendernMoeglich && rohIndex !== null && spalteAenderbar(s)) {
                 const stand = lage.zeilenStand
-                return html`<div class="${art.klasse} tippbar" role="cell">
+                return html`<div class="tippbar" role="cell">
                 <input
                   class=${stand.istGeaendert(rohIndex, i) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
                   type="text"
@@ -250,18 +257,12 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 />
               </div>`
               }
-              // Was die Suche gefunden hat, soll man auch SEHEN. Nur wo die
-              // Darstellung reinen Text liefert — eine Marke oder ein Bild
-              // traegt keinen Treffer.
-              const gezeigt = art.zelle(wert, s.zuordnung ?? [], zusatz)
+              // Was die Suche gefunden hat, soll man auch SEHEN.
               return html`<div
-                class=${art.klasse}
                 role="cell"
                 data-ff-editable=${kopfGriff ? '' : nothing}
                 @click=${kopfGriff ? (e: MouseEvent) => tun.klickKopf(e, i) : nothing}
-              >${
-                typeof gezeigt === 'string' ? markiereTreffer(gezeigt, lage.suchtext) : gezeigt
-              }</div>`
+              >${markiereTreffer(wert, lage.suchtext)}</div>`
             })}
             ${lage.loeschbar && rohIndex !== null && !lage.imEditor
               ? html`<button
@@ -287,18 +288,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           style=${styleMap(lage.cols)}
           @click=${lage.imEditor || fest ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
         >
-          ${lage.spalten.map((s, i) => {
-            const art = spaltenArt(s.art)
-            // Genau wie eine gebuchte Zeile: die Darstellung der Spalte
-            // entscheidet, was in der Zelle steht — Marke bleibt Marke, Zahl
-            // bleibt formatiert. Vorher stand hier in JEDER Spalte ein rohes
-            // Eingabefeld mit dem Rohwert; deshalb sah eine erfasste Zeile
-            // nicht aus wie die Zeilen darueber. Korrigiert wird sie durch
-            // Zurueckholen in die Erfassungszeile, nicht an Ort und Stelle.
-            return html`<div class=${art.klasse} role="cell">${
-              art.zelle(werte[i] ?? '', s.zuordnung ?? [], {})
-            }</div>`
-          })}
+          ${lage.spalten.map((_s, i) => html`<div role="cell">${werte[i] ?? ''}</div>`)}
           ${lage.imEditor ? nothing : html`<button
               class="zeile-weg"
               type="button"

@@ -7,11 +7,10 @@ import {
   zielIn,
   type ErfassungsUmfeld,
 } from './erfassungsZellen'
-import { ART_TEXT } from './spaltenArten'
 import type { Spalte } from './spalten'
 
 function spalte(titel: string, feld: string): Spalte {
-  return { titel, feld, art: ART_TEXT }
+  return { titel, feld }
 }
 
 const paare: readonly SchluesselPaar[] = [{ fromField: '18_25', toField: 'artnr' }]
@@ -81,7 +80,6 @@ test('das Fuellfeld fuehrt beim Erfassen, nicht das Spaltenfeld', () => {
   const beide: Spalte = {
     titel: 'Bezeichnung',
     feld: '45_60',
-    art: ART_TEXT,
     fuellFeld: 'q-art::bez',
   }
   expect(zellenzielVon(beide, 'q-pos')).toEqual({
@@ -90,7 +88,7 @@ test('das Fuellfeld fuehrt beim Erfassen, nicht das Spaltenfeld', () => {
 })
 
 test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
-  const nurSpalte: Spalte = { titel: 'Menge', feld: '164_8', art: ART_TEXT, fuellFeld: '' }
+  const nurSpalte: Spalte = { titel: 'Menge', feld: '164_8', fuellFeld: '' }
   expect(zellenzielVon(nurSpalte, 'q-pos')).toEqual({
     art: 'eigen', quelleId: 'q-pos', code: '164_8',
   })
@@ -99,7 +97,7 @@ test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
 // Eine Spalte ohne Spaltenfeld ist zulaessig: sie schreibt nichts, hilft aber
 // beim Aussuchen (die Bezeichnung, an der der Bediener den Artikel erkennt).
 test('ein Fuellfeld allein genuegt der Erfassungszeile', () => {
-  const nurFuell: Spalte = { titel: 'Suche', feld: '', art: ART_TEXT, fuellFeld: 'q-art::bez' }
+  const nurFuell: Spalte = { titel: 'Suche', feld: '', fuellFeld: 'q-art::bez' }
   expect(zellenzielVon(nurFuell, 'q-pos').art).toBe('verknuepft')
 })
 
@@ -120,7 +118,7 @@ const FENSTER_UMFELD: ErfassungsUmfeld = {
   spalten: [
     spalte('Artikelnummer', 'q-art::artnr'),
     spalte('Bezeichnung', 'q-art::name'),
-    { titel: 'Preis', feld: 'q-art::preis', art: 'zahl' },
+    { titel: 'Preis', feld: 'q-art::preis' },
     spalte('Menge', '164_8'),
     spalte('Tierart', 'q-tier::rasse'),
   ],
@@ -131,9 +129,9 @@ const FENSTER_UMFELD: ErfassungsUmfeld = {
 
 test('das Fenster zeigt alle Spalten derselben Quelle, in Tabellenreihenfolge', () => {
   expect(fensterSpaltenIn(FENSTER_UMFELD, 0)).toEqual([
-    { titel: 'Artikelnummer', feld: 'artnr', art: ART_TEXT },
-    { titel: 'Bezeichnung', feld: 'name', art: ART_TEXT },
-    { titel: 'Preis', feld: 'preis', art: 'zahl' },
+    { titel: 'Artikelnummer', feld: 'artnr' },
+    { titel: 'Bezeichnung', feld: 'name' },
+    { titel: 'Preis', feld: 'preis' },
   ])
 })
 

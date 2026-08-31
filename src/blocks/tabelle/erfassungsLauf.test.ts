@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import type { ErfassungsUmfeld } from './erfassungsZellen'
-import { ART_TEXT } from './spaltenArten'
 import type { Spalte } from './spalten'
 
 // Die Zeilen der Nachschlage-Quellen kommen im Produkt aus dem SEDATA-Paket
@@ -19,7 +18,7 @@ const { ErfassungsLauf } = await import('./erfassungsLauf')
 const HAUPT = 'q-pos'
 
 function spalte(titel: string, feld: string): Spalte {
-  return { titel, feld, art: ART_TEXT }
+  return { titel, feld }
 }
 
 function umfeldVon(
@@ -145,7 +144,7 @@ test('schluesselWert kommt ueber die Verknuepfungskette, wenn es die Zeile noch 
 describe('Belegerfassung ueber Fuellfelder', () => {
   function belegUmfeld(): ErfassungsUmfeld {
     const mit = (titel: string, feld: string, fuellFeld: string): Spalte =>
-      ({ titel, feld, art: ART_TEXT, fuellFeld })
+      ({ titel, feld, fuellFeld })
     return umfeldVon(
       [
         mit('Artikelnummer', '18_25', 'q-art::artnr'),
