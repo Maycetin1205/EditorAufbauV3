@@ -82,6 +82,16 @@ interface FieldPickerProps {
 
   zuordnung?: PickerZuordnung
 
+  // Erste Stufe: der Baustein hat noch keine Hauptquelle. Dann zeigt das
+  // Fenster QUELLEN statt Feldern — sonst steht der Bediener vor allen Feldern
+  // aller Quellen der Bibliothek, und ein Klick darin bestimmt nebenbei still
+  // die Hauptquelle des Bausteins. Erst waehlen, dann binden.
+  quellenWahl?: {
+    hinweis: string
+    eintraege: readonly { wert: string; name: string; kennung?: string }[]
+    onWaehle: (quelleId: string) => void
+  }
+
   current?: string
 
   top: number
@@ -183,6 +193,7 @@ export function FieldPicker({
   schalter,
   weitereFelder,
   zuordnung,
+  quellenWahl,
   current,
   top,
   left,
@@ -241,6 +252,20 @@ export function FieldPicker({
           {spotLabel}
         </p>
 
+        {quellenWahl ? (
+          <>
+            <p className="px-1.5 text-ui text-matt">{quellenWahl.hinweis}</p>
+            <Trenner />
+            <Liste
+              suchbar={quellenWahl.eintraege.length > 8}
+              gruppen={[{ key: 'quellen', eintraege: quellenWahl.eintraege }]}
+              wert=""
+              leerHinweis="Keine Datenquelle in der Bibliothek."
+              onWaehle={quellenWahl.onWaehle}
+            />
+          </>
+        ) : (
+          <>
         {titel && (
           <label className="flex h-steuer items-center gap-2 px-1.5">
             <span className="w-20 shrink-0 truncate text-ui text-matt">Titel</span>
@@ -337,11 +362,13 @@ export function FieldPicker({
           leerText={NICHT_GEBUNDEN}
           leerHinweis={
             aktiv.nurFremdeQuellen === true
-              ? 'Keine Hilfsquelle am Baustein. Erst im Inspector eine hinzufügen.'
+              ? 'Keine Hilfsquelle am Baustein.'
               : undefined
           }
           onWaehle={aktiv.onWaehle}
         />
+          </>
+        )}
       </div>
     </AuswahlFenster>
   )

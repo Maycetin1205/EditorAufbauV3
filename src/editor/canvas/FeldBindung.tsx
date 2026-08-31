@@ -153,30 +153,20 @@ export function useFeldBindung({
     return () => el.removeEventListener('ff-listen-bind', handler)
   }, [containerRef, listenBindung])
 
-  const gruppen = bibliotheksAngebot
-    ? bibliothek.map((s) => ({
-        quelleId: s.id,
-        name: s.name,
-        kennung: quellenKennung(s),
-        fields: s.fields,
-      }))
-    : pickerGruppen(quellen)
+  const gruppen = pickerGruppen(quellen)
 
-  function quelleSetzen(wert: string, blockId: string): string {
-    const ziel = zerlegeBindung(wert)
-    const traeger = quellenTraeger(editor.tree, blockId)
-    if (ziel.code === '' || ziel.quelleId === '' || !traeger) return ''
-    editor.updateProperty(traeger.id, 'source', ziel.quelleId)
-    return ziel.code
-  }
-
-  function klarnameAusBibliothek(roh: string): string {
-    const { quelleId, code } = zerlegeBindung(roh)
-    return (
-      bibliothek
-        .find((s) => s.id === quelleId)
-        ?.fields.find((f) => f.code === code)?.label ?? ''
-    )
+  // Erste Stufe, solange der Baustein keine Hauptquelle hat: die Quellen der
+  // Bibliothek. Vorher standen hier ALLE Felder ALLER Quellen, und die Wahl
+  // eines Feldes bestimmte nebenbei still die Hauptquelle — der Bediener sah
+  // eine Wand aus Feldern und traf eine Entscheidung, die ihm keiner ansagte.
+  const quellenWahl = !bibliotheksAngebot ? undefined : {
+    hinweis: 'Erst die Hauptquelle wählen.',
+    eintraege: bibliothek.map((s) => ({ wert: s.id, name: s.name, kennung: quellenKennung(s) })),
+    onWaehle: (quelleId: string) => {
+      const traeger = quellenTraeger(editor.tree, blockRef.current.id)
+      if (quelleId === '' || !traeger) return
+      editor.updateProperty(traeger.id, 'source', quelleId)
+    },
   }
 
   // Solange die Eigenschaft leer ist (Automatik), gilt die vom Baustein
@@ -218,16 +208,9 @@ export function useFeldBindung({
           current={bindingCode(block.props, picker.spot)}
           top={picker.top}
           left={picker.left}
+          quellenWahl={quellenWahl}
           onPick={(wert) => {
-            const prop = bindingProp(picker.spot.prop)
-            if (bibliotheksAngebot) {
-              editor.transaktion(() => {
-                const code = quelleSetzen(wert, blockRef.current.id)
-                if (code !== '') editor.updateProperty(blockRef.current.id, prop, code)
-              })
-            } else {
-              editor.updateProperty(blockRef.current.id, prop, wert)
-            }
+            editor.updateProperty(blockRef.current.id, bindingProp(picker.spot.prop), wert)
             closePicker()
           }}
           onClose={closePicker}
@@ -321,17 +304,12 @@ export function useFeldBindung({
               sitzung: tippSitzung,
             } : undefined}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
+            quellenWahl={proQuelle ? undefined : quellenWahl}
             top={listenPicker.top}
             left={listenPicker.left}
             onPick={(roh) => {
               editor.transaktion(() => {
-                // Im quelleProp-Modus ist roh schon der nackte Feldcode —
-                // NIE die Quelle des Traegers umstellen.
-                const wert = !proQuelle && bibliotheksAngebot
-                  ? quelleSetzen(roh, block.id)
-                  : roh
-
-                if (!proQuelle && bibliotheksAngebot && wert === '') return
+                const wert = roh
                 const next = listeJetzt()
                 const ziel = next[listenPicker.index]
                 if (!ziel) return
@@ -348,9 +326,7 @@ export function useFeldBindung({
                     ? standardTitel
                     : (proQuelle
                         ? (quelleAusProp.fields.find((f) => f.code === wert)?.label ?? '')
-                        : bibliotheksAngebot
-                          ? klarnameAusBibliothek(roh)
-                          : klarnameVon(wert, quellen)) || wert
+                        : klarnameVon(wert, quellen)) || wert
                 }
                 ziel[listenBindung.feldKey] = wert
                 editor.updateProperty(block.id, listenBindung.prop, next)

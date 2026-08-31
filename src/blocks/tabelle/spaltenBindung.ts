@@ -50,12 +50,14 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     },
   ],
 
+  // Der gedimmte Quellname unter dem Spaltentitel — nur im Editor.
+  herkunftProp: 'spaltenHerkunft',
+
   eintragsFeldWahl: [
     {
       key: 'fuellFeld',
       label: 'Füllfeld',
-      hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.'
-        + ' Die gebuchte Zeile zeigt weiter das Feld oben.',
+      hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.',
       nurFremdeQuellen: true,
     },
   ],

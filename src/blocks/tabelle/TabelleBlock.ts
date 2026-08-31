@@ -123,6 +123,16 @@ export class TabelleBlock extends BasicBlock {
   })
   spalten: Spalte[] = standardSpalten()
 
+  // Je Spalte der Klarname ihrer fremden Quelle, vom Editor gesetzt (leer, wo
+  // alles aus der Hauptquelle kommt). Sie darf in der exportierten Maske nicht
+  // auftauchen. Der Riegel dafuer ist, dass sie NICHT in defaultProps steht:
+  // der Export schreibt Attribute nur fuer Schluessel von dort
+  // (exportMask.ts, `Object.keys(def.defaultProps)`). `attribute: false` haelt
+  // sie zusaetzlich aus dem DOM des Bausteins heraus. Nachgeprueft, nicht
+  // angenommen: mit `type: Array` statt `attribute: false` bleibt der Export
+  // ebenfalls sauber — der Riegel ist wirklich defaultProps.
+  @property({ attribute: false }) spaltenHerkunft: string[] = []
+
   @property() source = ''
 
   @property() suche = 'ja'
@@ -457,6 +467,7 @@ export class TabelleBlock extends BasicBlock {
         editable: this.editable,
         imEditor: this.hasAttribute('data-ff-editor'),
         zeigeKopf: this.kopfzeile === 'ja',
+        herkunft: this.spaltenHerkunft,
         auswahlSemantik: geberIdVon(this) !== '',
         zeigeSuche: this.suche === 'ja',
         suchtext: this._ansicht.suchtext,

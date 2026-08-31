@@ -179,6 +179,38 @@ export const tabelleStil = css`
       }
 
       .kopf > div { line-height: calc(var(--takt) - 1px); }
+
+      /* Die Herkunfts-Zeile unter dem Spaltentitel — NUR im Editor.
+         Die Kopfzeile traegt oben eine FESTE Hoehe (var(--takt)); ohne das hier
+         schneidet sie die zweite Zeile schlicht ab. Der Kopf darf darum im
+         Editor wachsen; die Zeilenrechnung traegt das, weil sie die Kopfhoehe
+         misst (rumpfMessung liest offsetHeight). In der exportierten Maske
+         bleibt alles, wie es war — dort gibt es die Zeile gar nicht. */
+      :host([data-ff-editor]) .kopf {
+        height: auto;
+        min-height: var(--takt);
+      }
+      .kopf > div.mit-herkunft {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.3;
+        padding-top: 4px;
+        padding-bottom: 4px;
+      }
+      /* Beide Zeilen kuerzen sich selbst. Als Flex-Kinder greift das
+         text-overflow der Zelle nicht mehr auf sie durch. */
+      .kopf-titel,
+      .kopf-herkunft {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .kopf-herkunft {
+        font-size: var(--se-fs-sm);
+        font-weight: 400;
+        color: var(--se-faint);
+      }
       .kopf > div:last-child,
       .zeile > div:last-child { border-right: none; }
       .kopf > div { cursor: pointer; user-select: none; }

@@ -34,6 +34,7 @@ export {
   eintragsWahlWert,
   eintragsZuordnungLesen,
   feldWahlenLesen,
+  fremdeQuelleVon,
   listenStandardTitel,
   listeFuerExport,
   listeLesen,

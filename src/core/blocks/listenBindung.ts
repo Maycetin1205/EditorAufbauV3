@@ -21,6 +21,14 @@ export interface ListenBindung {
   eintragsSchalter?: readonly EintragsSchalter[]
 
   eintragsFeldWahl?: readonly EintragsFeldWahl[]
+
+  // Element-Eigenschaft, in die der EDITOR je Eintrag den Klarnamen seiner
+  // fremden Quelle schreibt (leer, wo alles aus der eigenen kommt). Sie steht
+  // bewusst NICHT in defaultProps des Bausteins — daran haengt, dass der
+  // Export sie nicht mitschreibt (exportMask liest `Object.keys(def.
+  // defaultProps)`). Die Angabe gehoert in den Editor und nie in die Maske;
+  // ein Test haelt das fest (export/herkunft.test.ts).
+  herkunftProp?: string
 }
 
 // Ein ZWEITES Feld je Eintrag, unabhaengig von der gewaehlten Darstellung.
@@ -164,6 +172,28 @@ export function feldWahlenLesen(
     const roh = eintrag[wahl.key]
     return { wahl, wert: typeof roh === 'string' ? roh : '' }
   })
+}
+
+// Aus welcher FREMDEN Quelle ein Eintrag seinen Wert nimmt — leer, wenn alles
+// aus der eigenen kommt. Genau eine Frage, genau eine Antwort: die
+// zusaetzliche Feldwahl (das Fuellfeld) fuehrt, weil sie beim Erfassen zieht
+// und man sie dem Eintrag sonst nicht ansieht; erst danach zaehlt das
+// Hauptfeld. Steht nichts Fremdes drin, gibt es auch nichts anzuzeigen — eine
+// Spalte auf der Hauptquelle ist der Normalfall und braucht keine Fussnote.
+export function fremdeQuelleVon(
+  b: ListenBindung,
+  eintrag: Record<string, unknown>,
+): string {
+  const haupt = eintrag[b.feldKey]
+  const kandidaten = [
+    ...feldWahlenLesen(b, eintrag).map((f) => f.wert),
+    typeof haupt === 'string' ? haupt : '',
+  ]
+  for (const wert of kandidaten) {
+    const { quelleId } = zerlegeBindung(wert)
+    if (quelleId !== '') return quelleId
+  }
+  return ''
 }
 
 export function eintragsFelderVon(
