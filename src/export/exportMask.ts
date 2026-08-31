@@ -18,6 +18,7 @@ import {
   felderHinterSchnitt,
   istOffenerSatz,
   ladeRelationFor,
+  satzNummerVon,
   tableIdFor,
   type DataSource,
 } from '../core/data/dataSources'
@@ -228,7 +229,7 @@ export function exportMask(
         id: s.id,
         name: s.name,
         tableId: tableIdFor(s),
-        indexField: s.indexField ?? '',
+        indexField: satzNummerVon(s),
         ...(istOffenerSatz(s) ? { offenerSatz: true } : {}),
         ...(lade
           ? { ladeRelation: { ...lade, zusatzFelder: felderHinterSchnitt(benutzteFelder.get(s.id)) } }

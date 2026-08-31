@@ -140,3 +140,20 @@ test('der offene Satz behaelt seine benutzten Felder im VAR-Abschnitt', () => {
   const raus = bestellung([positionen, belegkopf], new Map([['q-bel', new Set(['3_8'])]]))
   expect(raus.VAR).toEqual([{ ID: 'BEL', FELDER: '0_11,3_8' }])
 })
+
+// Eine ERP-Abfrage ist eine reine Lesequelle. Sie hat keine Satznummer — der
+// Feldcode aus dem Formular gehoert nicht in ihre Bestellung: ihre Felder
+// heissen mit Vorsatz, ein nacktes 0_10 kennt sie gar nicht.
+test('eine Lesequelle bestellt keine Satznummer', () => {
+  const lesequelle: DataSource = {
+    id: 'q-lese',
+    name: 'Artikelstamm',
+    kind: 'erpabfrage',
+    idbId: 'ARTIKEL.GET',
+    feldVorsatz: 'ART',
+    indexField: '0_10',
+    fields: felder(['ART_1_25', 'ART_51_60']),
+  }
+  const raus = bestellung([lesequelle], new Map([['q-lese', new Set(['ART_51_60'])]]))
+  expect(raus.ERPAPICALL[0]?.FELDER).toBe('ART_51_60')
+})

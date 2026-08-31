@@ -70,6 +70,14 @@ export function istOffenerSatz(source: DataSource): boolean {
   return artFuer(source.kind).varMoeglich && source.lieferung === 'offenerSatz'
 }
 
+// Die EINE Frage "welches Feld traegt die Satznummer dieser Zeile?". Arten
+// ohne Satznummer geben '' — sonst bestellte der Export einen Feldcode, den
+// ihre Quelle nicht kennt, und die Tabelle boete Aendern und Loeschen an.
+export function satzNummerVon(source: DataSource): string {
+  if (!artFuer(source.kind).satzNummerMoeglich) return ''
+  return (source.indexField ?? '').trim()
+}
+
 export function tableIdFor(source: DataSource): string {
   const feste = artFuer(source.kind).tabellenId
   return feste === '' ? (source.idbId ?? '') : feste
@@ -106,7 +114,7 @@ export function felderFor(
   // die Satznummer fast nie, bestellt werden muss sie trotzdem: fehlt sie,
   // liefert SoftEngine sie nicht, und Aendern wie Loeschen schreibt ins
   // Nichts — still, denn ein PUT ist ein Einweg-Ruf.
-  const index = (source.indexField ?? '').trim()
+  const index = satzNummerVon(source)
   const vorne = index === '' ? [] : [index]
 
   if (artFuer(source.kind).felderEinzeln) {

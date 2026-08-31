@@ -32,6 +32,12 @@ export interface QuellenArt {
 
   relationLadenMoeglich: boolean
 
+  // Zeilen dieser Art tragen eine Satznummer: die Kennung, mit der eine
+  // EINZELNE Zeile zurueckgeschrieben wird ({PINDEX}). Reine Lesequellen
+  // (ERP-Abfrage, DataSet) haben keine — dort waere sie eine Bestellung
+  // ins Leere und macht in der Tabelle Aendern/Loeschen scheinbar moeglich.
+  satzNummerMoeglich: boolean
+
   varMoeglich: boolean
 
   bestellBlock: 'sefileloop' | 'erpapicall' | 'dataset'
@@ -60,6 +66,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: false,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: true,
     varMoeglich: false,
     bestellBlock: 'sefileloop',
     spaltenNamen: false,
@@ -77,6 +84,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: false,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: true,
     varMoeglich: true,
     bestellBlock: 'sefileloop',
     spaltenNamen: false,
@@ -94,6 +102,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: false,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: true,
     varMoeglich: false,
     bestellBlock: 'sefileloop',
     spaltenNamen: false,
@@ -111,6 +120,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: false,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: true,
     varMoeglich: true,
 
     bestellBlock: 'sefileloop',
@@ -140,6 +150,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: true,
     kopfsatzStandard: 'BEL_0_11',
     relationLadenMoeglich: true,
+    satzNummerMoeglich: true,
 
     varMoeglich: true,
 
@@ -180,6 +191,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: true,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: true,
     varMoeglich: false,
     bestellBlock: 'sefileloop',
     spaltenNamen: false,
@@ -198,6 +210,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: false,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: false,
     varMoeglich: false,
     bestellBlock: 'erpapicall',
     spaltenNamen: false,
@@ -216,6 +229,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
     kopfsatzMoeglich: false,
     kopfsatzStandard: '',
     relationLadenMoeglich: false,
+    satzNummerMoeglich: false,
     varMoeglich: false,
     bestellBlock: 'dataset',
     spaltenNamen: true,

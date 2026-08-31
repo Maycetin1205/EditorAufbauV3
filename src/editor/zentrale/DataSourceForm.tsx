@@ -68,6 +68,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
       : [{ ...LEERE_ZEILE }],
   )
 
+  const [satzNummer, setSatzNummer] = useState(source?.indexField ?? '')
+
   const [zeigeFehler, setZeigeFehler] = useState(false)
 
   const art = artFuer(kind)
@@ -134,6 +136,23 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         : 'Zwei Felder haben dieselbe Position + Länge.')
     : ''
 
+  // Gewaehlt wird ein FELD der Quelle, nicht ein getippter Code (Regel 3):
+  // der Klarname steht vorn, der Feldcode daneben.
+  const satzNummerOptionen = [
+    { value: '', label: '— keine —' },
+    ...zeilen
+      .map((z, i) => ({ code: codes[i] ?? '', label: z.label.trim() }))
+      .filter((e) => e.code !== '' && e.label !== '')
+      .map((e) => ({ value: e.code, label: e.label, detail: e.code })),
+  ]
+  // Ein Wert, der zu keinem Feld gehoert, bleibt sichtbar statt still zu
+  // verschwinden — sonst aendert das blosse Oeffnen des Formulars die Quelle.
+  if (satzNummer !== '' && !satzNummerOptionen.some((o) => o.value === satzNummer)) {
+    satzNummerOptionen.push({
+      value: satzNummer, label: satzNummer, detail: 'kein Feld dieser Quelle',
+    })
+  }
+
   const relationNrFehler = holtZeilen && relationNrFromInput(relationNr) === ''
     ? 'Relationsnummer fehlt — nur Ziffern.'
     : ''
@@ -164,9 +183,9 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
 
       ...(offenerSatz ? { lieferung: 'offenerSatz' as const } : {}),
 
-      ...(source
-        ? (source.indexField ? { indexField: source.indexField } : {})
-        : { indexField: '0_10' }),
+      ...(art.satzNummerMoeglich && satzNummer !== ''
+        ? { indexField: satzNummer }
+        : {}),
 
       ...(holtZeilen
         ? {
@@ -320,6 +339,16 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
           doppeltFehler={doppeltFehler}
           zeigeFehler={zeigeFehler}
         />
+
+        {art.satzNummerMoeglich && (
+          <SelectControl
+            label="Satznummer"
+            description="Macht eine Zeile eindeutig. Ohne sie kann die Maske neue Zeilen anlegen, aber keine bestehende ändern oder löschen."
+            value={satzNummer}
+            options={satzNummerOptionen}
+            onChange={setSatzNummer}
+          />
+        )}
 
         <div className="flex justify-end gap-2 border-t border-linie pt-3">
           <Knopf onClick={onClose}>Abbrechen</Knopf>
