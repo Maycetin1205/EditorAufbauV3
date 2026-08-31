@@ -2,6 +2,7 @@ import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
 import { SE_FOKUS_EVENT } from '../../softengine/bridge'
+import { rechnungVonAttribut } from '../../core/data/rechnung'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type {
@@ -109,6 +110,8 @@ export class TabelleBlock extends BasicBlock {
 
     tagField: '',
 
+    rechnung: '',
+
     leerText: LEER_TEXT_STANDARD,
   }
   static override readonly customProperties = TABELLE_EIGENSCHAFTEN
@@ -147,6 +150,8 @@ export class TabelleBlock extends BasicBlock {
   @property() kopfzeile = 'ja'
 
   @property() leerText = LEER_TEXT_STANDARD
+
+  @property() rechnung = ''
 
   @property({ attribute: false }) datenzeilen: string[][] = []
 
@@ -422,7 +427,12 @@ export class TabelleBlock extends BasicBlock {
   }
 
   private erfassungsUmfeld(): ErfassungsUmfeld {
-    return this._erfassung.umfeld(this, this.spaltenListe(), this.source)
+    return this._erfassung.umfeld(
+      this,
+      this.spaltenListe(),
+      this.source,
+      rechnungVonAttribut(this.rechnung),
+    )
   }
 
   private aendere(spalten: Spalte[]): void {

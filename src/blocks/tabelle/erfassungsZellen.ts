@@ -1,4 +1,5 @@
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
+import type { Rechnung } from '../../core/data/rechnung'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import { getField } from '../../softengine/data'
 import type { Spalte } from './spalten'
@@ -52,6 +53,18 @@ export interface ErfassungsUmfeld {
   // Hauptquelle der Tabelle. Damit haengt nicht mehr alles sternfoermig an
   // der ersten Quelle: 2 darf an 3 haengen, 3 an 4.
   partnerVon: (quelleId: string) => string
+
+  // Die Rechnung der Erfassungszeile (Attribut `rechnung` der Tabelle).
+  // Optional, damit Tests ohne sie auskommen — fehlend heisst: keine.
+  rechnung?: Rechnung | null
+}
+
+// Welche Spalte ein Rechnungs-Platz meint: die Referenz ist deren `feld` —
+// der stabile Technikwert; Titel sind frei umbenennbar, Plaetze verschieben sich.
+export function platzSpalteIn(spalten: readonly Spalte[], feld: string): number {
+  const t = feld.trim()
+  if (t === '') return -1
+  return spalten.findIndex((s) => s.feld === t)
 }
 
 export function zellenzielVon(

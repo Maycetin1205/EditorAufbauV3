@@ -33,6 +33,15 @@ export interface ErfassungsLage {
   // Ist unter ihr noch Platz (leere Tabelle → Zeile 1 ganz oben), klappt sie
   // nach unten — dorthin wächst auch der Rollbereich des Rumpfes mit.
   listeNachOben: boolean
+
+  // Der Einheiten-Umrechner an der Abgabemenge-Zelle (Rechnung): wandelt den
+  // getippten Wert einmalig in die Ziel-Einheit um — 5 + „Liter" wird 5000.
+  einheitWahl?: {
+    index: number
+    ziel: string
+    optionen: readonly { kennung: string; klarname: string }[]
+    umrechnen: (kennung: string) => void
+  }
 }
 
 export interface ErfassungsHandeln {
@@ -62,6 +71,27 @@ function eingabe(
   />`
 }
 
+// Der Umrechner ist ein Einmal-Griff, kein Zustand: wählen rechnet den
+// Zellwert um und die Auswahl springt auf die Kopfzeile (Ziel) zurück.
+function einheitenWahl(lage: ErfassungsLage, index: number): TemplateResult | typeof nothing {
+  const wahl = lage.einheitWahl
+  if (!wahl || wahl.index !== index) return nothing
+  return html`<select
+    class="erf-einheit"
+    title=${`Wert umrechnen — Ziel-Einheit: ${wahl.ziel}`}
+    @click=${(e: Event) => e.stopPropagation()}
+    @change=${(e: Event) => {
+      const select = e.target as HTMLSelectElement
+      const kennung = select.value
+      select.value = ''
+      if (kennung !== '') wahl.umrechnen(kennung)
+    }}
+  >
+    <option value="">${wahl.ziel}</option>
+    ${wahl.optionen.map((o) => html`<option value=${o.kennung}>${o.klarname}</option>`)}
+  </select>`
+}
+
 // Eine gebundene Zelle kann eine Vorschlagsliste zeigen und braucht dafür
 // einen Halter; eine freie Zelle ist nur ein Eingabefeld. Eine Lupe hat hier
 // keine mehr: Enter in der leeren Zelle öffnet das große Fenster
@@ -72,10 +102,16 @@ function laufzeitZelle(
   index: number,
   frei: boolean,
 ): TemplateResult {
-  if (frei) return eingabe(lage, tun, index)
+  if (frei) {
+    return html`<div class="erf-halter">
+      ${eingabe(lage, tun, index)}
+      ${einheitenWahl(lage, index)}
+    </div>`
+  }
   const liste = lage.tippSpalte === index && lage.vorschlaege.length > 0
   return html`<div class=${lage.listeNachOben ? 'erf-halter nach-oben' : 'erf-halter'}>
     ${eingabe(lage, tun, index)}
+    ${einheitenWahl(lage, index)}
     ${liste ? vorschlagListeTpl({
       eintraege: lage.vorschlaege,
       marke: lage.marke,

@@ -1,26 +1,35 @@
 import { useState } from 'react'
-import { Database, Link2 } from '@/ui/zeichen'
+import { Component, Database, Link2 } from '@/ui/zeichen'
 import { Dialog } from '@/ui/werkbank/Dialog'
 import { useDataSources } from '../../state/useDataSources'
+import { useEditor } from '../../state/useEditor'
 import { useRelations } from '../../state/useRelations'
 import { DatenquellenBereich } from './DatenquellenBereich'
+import { RechnungenBereich } from './RechnungenBereich'
 import { RelationenBereich } from './RelationenBereich'
 
-type Bereich = 'datenquellen' | 'relationen'
+type Bereich = 'datenquellen' | 'relationen' | 'rechnungen'
 
 const BEREICHE: ReadonlyArray<{ key: Bereich; name: string; icon: typeof Database }> = [
   { key: 'datenquellen', name: 'Datenquellen', icon: Database },
   { key: 'relationen', name: 'Relationen', icon: Link2 },
+  { key: 'rechnungen', name: 'Rechnungen', icon: Component },
 ]
 
 export function Kommandozentrale({ onClose }: { onClose: () => void }) {
   const [bereich, setBereich] = useState<Bereich>('datenquellen')
   const sources = useDataSources()
   const relations = useRelations()
+  const ed = useEditor()
+
+  const rechnungen = Object.values(ed.tree)
+    .filter((n) => typeof n.props.rechnung === 'string' && n.props.rechnung.trim() !== '')
+    .length
 
   const navZahl: Record<Bereich, string> = {
     datenquellen: String(sources.list.length),
     relationen: String(relations.list.length),
+    rechnungen: String(rechnungen),
   }
 
   return (
@@ -45,6 +54,7 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
       </nav>
       {bereich === 'datenquellen' && <DatenquellenBereich />}
       {bereich === 'relationen' && <RelationenBereich />}
+      {bereich === 'rechnungen' && <RechnungenBereich />}
     </Dialog>
   )
 }

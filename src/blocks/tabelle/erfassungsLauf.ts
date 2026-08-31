@@ -13,8 +13,19 @@ import {
   type TastenFolge,
 } from '../shared/vorschlagListe'
 import {
+  loeseRechnung,
+  platzText,
+  umgerechnet,
+  zahlStreng,
+  PLATZ_KEYS,
+  type PlatzKey,
+  type PlatzWert,
+} from '../../core/data/rechnung'
+import { alsZahl } from './sortierung'
+import {
   anzeigeSpalteIn,
   passendeSaetze,
+  platzSpalteIn,
   verknuepfteQuellenIn,
   zellenzielVon,
   zielIn,
@@ -66,6 +77,11 @@ export class ErfassungsLauf {
   // Enter die Liste unter der Marke weg und machte das Fenster auf.
   private _markeVonHand = false
 
+  // Der EINE gerechnete Platz der Rechnung (RECHNUNG-BELEGERFASSUNG.md).
+  // Getrennt vom Getippten: er rechnet sich neu, sobald ein gegebener Wert
+  // sich aendert — Getipptes tut das nie.
+  private _gerechnet: { index: number; wert: string } | null = null
+
   private _vorschlaege: Eintrag[] = []
 
   get tippSpalte(): number {
@@ -82,13 +98,90 @@ export class ErfassungsLauf {
 
   // Was in der Zelle steht: das Getippte, solange es da ist — sonst der Wert
   // aus dem gewählten Satz ihrer Quelle. Eine freie Zelle hat nur Getipptes.
+  // Der gerechnete Platz zeigt sein Ergebnis; leert der Bediener ihn, ist er
+  // wieder Lücke und zeigt das nächste Ergebnis (Getipptes schlägt Gerechnetes).
   wertVon(umfeld: ErfassungsUmfeld, index: number): string {
     const getippt = this.getippt.get(index)
+    if (getippt !== undefined && getippt !== '') return getippt
+    if (this._gerechnet?.index === index) return this._gerechnet.wert
     if (getippt !== undefined) return getippt
     const ziel = zielIn(umfeld, index)
     if (ziel.quelleId === '' || ziel.code === '') return ''
     const satz = this.gewaehlt.get(ziel.quelleId)
     return satz === undefined ? '' : getField(satz, ziel.code)
+  }
+
+  // Der GEGEBENE Zahlwert eines Platzes — ohne das Gerechnete, sonst bliebe
+  // die Lücke nach dem ersten Ergebnis für immer gefüllt. Getipptes wird
+  // STRENG gelesen (raten wäre Faktor 1000), Quellen-Werte tolerant.
+  private gegebeneZahl(umfeld: ErfassungsUmfeld, index: number): PlatzWert {
+    const getippt = this.getippt.get(index)
+    if (getippt !== undefined) {
+      if (getippt.trim() === '') return null
+      const zahl = zahlStreng(getippt)
+      return zahl === null ? 'fehler' : zahl
+    }
+    const ziel = zielIn(umfeld, index)
+    if (ziel.quelleId === '' || ziel.code === '') return null
+    const satz = this.gewaehlt.get(ziel.quelleId)
+    if (satz === undefined) return null
+    const wert = getField(satz, ziel.code).trim()
+    if (wert === '') return null
+    const zahl = alsZahl(wert)
+    return zahl === null ? 'fehler' : zahl
+  }
+
+  // Rechnet den einen leeren Platz — oder nichts. Läuft vor jedem Zeichnen
+  // (aktualisiereVorschlaege) und vor jedem Einfrieren der Zeile.
+  rechne(umfeld: ErfassungsUmfeld): void {
+    this._gerechnet = null
+    const r = umfeld.rechnung
+    if (!r) return
+    const werte = {} as Record<PlatzKey, PlatzWert>
+    const indizes = {} as Record<PlatzKey, number>
+    const konfiguriert = new Set<PlatzKey>()
+    for (const key of PLATZ_KEYS) {
+      const index = platzSpalteIn(umfeld.spalten, r[key].feld)
+      indizes[key] = index
+      werte[key] = index === -1 ? null : this.gegebeneZahl(umfeld, index)
+      if (index !== -1) konfiguriert.add(key)
+    }
+    const geloest = loeseRechnung(r, werte, konfiguriert)
+    if (!geloest) return
+    this._gerechnet = {
+      index: indizes[geloest.platz],
+      wert: platzText(geloest.wert, r[geloest.platz].runden.stellen),
+    }
+  }
+
+  // Die Ziel-Einheit der Abgabemenge: der Wert der eingestellten
+  // Einheiten-Spalte in der werdenden Zeile (z. B. 'ml' aus der Dosier-IDB).
+  zielEinheit(umfeld: ErfassungsUmfeld): string {
+    const r = umfeld.rechnung
+    if (!r || r.einheitFeld.trim() === '') return ''
+    const index = platzSpalteIn(umfeld.spalten, r.einheitFeld)
+    if (index === -1) return ''
+    return this.wertVon(umfeld, index).trim()
+  }
+
+  // Der Einheiten-Umrechner an der Abgabemenge: der aktuelle Zellwert wird
+  // als Wert IN der gewählten Einheit gelesen und einmalig in die
+  // Ziel-Einheit umgerechnet — sichtbar in der Zelle, nichts bleibt versteckt
+  // ('5' + Liter -> '5000' bei Ziel ml). Unpassende Arten: nichts passiert.
+  rechneUm(umfeld: ErfassungsUmfeld, vonKennung: string): void {
+    const r = umfeld.rechnung
+    if (!r) return
+    const index = platzSpalteIn(umfeld.spalten, r.menge.feld)
+    if (index === -1) return
+    const roh = this.wertVon(umfeld, index).trim()
+    if (roh === '') return
+    const wert = zahlStreng(roh) ?? alsZahl(roh)
+    if (wert === null) return
+    const ziel = this.zielEinheit(umfeld)
+    const neu = umgerechnet(wert, vonKennung, ziel, r.einheiten)
+    if (neu === null) return
+    this.getippt.set(index, platzText(neu, r.menge.runden.stellen))
+    this.rechne(umfeld)
   }
 
   tippe(index: number, text: string): void {
@@ -357,6 +450,7 @@ export class ErfassungsLauf {
     this.getippt.clear()
     this.gewaehlt.clear()
     this.vonHand.clear()
+    this._gerechnet = null
     this._tippSpalte = -1
     this._marke = 0
     this._markeVonHand = false
@@ -368,6 +462,7 @@ export class ErfassungsLauf {
   // Wie in G1 einmal je Darstellung berechnet: Tastatur und Anzeige müssen
   // DENSELBEN Stand sehen, zwei Berechnungen liefen auseinander.
   aktualisiereVorschlaege(umfeld: ErfassungsUmfeld): void {
+    this.rechne(umfeld)
     this._vorschlaege = this.berechne(umfeld)
     this._marke = gueltigeMarke(this._marke, this._vorschlaege.length)
   }

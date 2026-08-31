@@ -1,3 +1,4 @@
+import type { Rechnung } from '../../core/data/rechnung'
 import { verknuepfungenVon } from '../shared/fremdeQuellen'
 import { ErfassungsLauf } from './erfassungsLauf'
 import type { ErfassungsUmfeld } from './erfassungsZellen'
@@ -70,13 +71,19 @@ export class ErfassungsAnschluss {
   // Die Erfassungszeile leitet alles aus zwei vorhandenen Angaben ab: der
   // Bindung jeder Spalte und der Verknuepfung des Bausteins (Attribut am
   // Element) — sie braucht keine eigene Einstellung.
-  umfeld(el: HTMLElement, spalten: readonly Spalte[], quelleId: string): ErfassungsUmfeld {
+  umfeld(
+    el: HTMLElement,
+    spalten: readonly Spalte[],
+    quelleId: string,
+    rechnung: Rechnung | null = null,
+  ): ErfassungsUmfeld {
     const verknuepfungen = verknuepfungenVon(el)
     return {
       spalten,
       quelleId,
       paareZu: (id) => verknuepfungen.find((v) => v.quelleId === id)?.keyPairs ?? [],
       partnerVon: (id) => verknuepfungen.find((v) => v.quelleId === id)?.partnerId ?? '',
+      rechnung,
     }
   }
 
@@ -87,6 +94,9 @@ export class ErfassungsAnschluss {
   // behaelt ihre Kennung — sonst spraenge eine korrigierte Zeile ans Ende der
   // Liste, und der Ketten-Bericht koennte sie nicht mehr wiedererkennen.
   erfasse(umfeld: ErfassungsUmfeld): boolean {
+    // Der gerechnete Platz muss den letzten Stand tragen, BEVOR die Zeile
+    // eingefroren wird — nicht erst beim nächsten Zeichnen.
+    this.lauf.rechne(umfeld)
     const werte = umfeld.spalten.map((_, i) => this.lauf.wertVon(umfeld, i))
     const zurueck = this._zurueck
     if (werte.every((w) => w === '')) {

@@ -1,6 +1,8 @@
 const LEER_ZULETZT = 1
 
-const ZAHL = /^-?\d{1,3}(\.\d{3})*(,\d+)?$|^-?\d+(,\d+)?$|^-?\d+(\.\d+)?$/
+// Eine Tausendergruppe folgt nie auf eine alleinstehende Null: '0.750' ist
+// 0,75 (englisches Dezimal), nicht 750 — der Unterschied ist Faktor 1000.
+const ZAHL = /^-?[1-9]\d{0,2}(\.\d{3})+(,\d+)?$|^-?\d+(,\d+)?$|^-?\d+(\.\d+)?$/
 
 const DATUM_DE = /^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/
 const DATUM_ISO = /^(\d{4})-(\d{2})-(\d{2})$/
@@ -11,7 +13,7 @@ export function alsZahl(wert: string): number | null {
 
   const norm = t.includes(',')
     ? t.replace(/\./g, '').replace(',', '.')
-    : /^-?\d{1,3}(\.\d{3})+$/.test(t) ? t.replace(/\./g, '') : t
+    : /^-?[1-9]\d{0,2}(\.\d{3})+$/.test(t) ? t.replace(/\./g, '') : t
   const n = Number(norm)
   return Number.isFinite(n) ? n : null
 }

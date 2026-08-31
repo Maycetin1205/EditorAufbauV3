@@ -39,6 +39,24 @@ export const erfassungStil = css`
       /* .erf-eingabe wird zusammen mit .zell-eingabe in tabelleStil gesetzt:
          es ist dieselbe Sache — eine Zelle, in die getippt wird. */
 
+      /* Der Einheiten-Umrechner an der Abgabemenge (Rechnung). */
+      .erf-einheit {
+        flex: none;
+        max-width: 56px;
+        height: calc(var(--zeilen-hoehe) - 10px);
+        margin-right: 2px;
+        border: var(--se-border) solid var(--se-line);
+        border-radius: var(--se-r-sm);
+        background: var(--se-panel);
+        color: var(--se-muted);
+        font: inherit;
+        font-size: var(--se-fs-sm);
+      }
+      .erf-einheit:focus-visible {
+        outline: none;
+        border-color: var(--se-accent);
+      }
+
       /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }
 
