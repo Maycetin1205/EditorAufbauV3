@@ -1,5 +1,6 @@
 import { Link2, X } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Marke } from '@/ui/werkbank/Marke'
 import { PickerControl } from '../inspector/controls/PickerControl'
 import type { ActionParamBinding, ActionParamSource } from '../../core/data/aktionen'
 import type { FeldUebernahmeZiel } from './feldUebernahme'
@@ -7,7 +8,8 @@ import { PARAM_QUELLEN, herkunftsEintraege, neueBindung } from './parameter/bind
 import type { ParameterWahlen } from './parameter/wahlen'
 
 export function ParameterZeile({
-  label,
+  nummer,
+  kennung = '',
   binding,
   wahlen,
   platzhalter,
@@ -16,7 +18,17 @@ export function ParameterZeile({
   onChange,
   onAusloeser,
 }: {
-  label: string
+  // Der wievielte Parameter. Steht wie die Schrittnummer in der Kette links
+  // und grau — dieselbe Zaehlung, dieselbe Form.
+  nummer: number
+
+  // Was die Relationsvorlage an dieser Stelle vorsieht ({PINDEX}, 253_30).
+  // Das ist eine KENNUNG und keine Beschriftung (Regel 3), darum steht es in
+  // derselben Marke wie jede andere Kennung im Editor — vorher war es nackter
+  // Schreibmaschinentext auf 47 px, also fast immer abgeschnitten.
+  // Zusatzparameter haben keine Vorlage; dort bleibt der Platz leer, damit
+  // die Bedienelemente beider Abschnitte an derselben Kante beginnen.
+  kennung?: string
   binding: ActionParamBinding
   wahlen: ParameterWahlen
 
@@ -28,10 +40,16 @@ export function ParameterZeile({
   onAusloeser?: (anchor: HTMLElement) => void
 }) {
   const { Control } = PARAM_QUELLEN[binding.source]
+  const label = kennung === '' ? `${nummer}.` : `${nummer}. ${kennung}`
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="w-14 shrink-0 truncate font-mono text-dicht" title={label}>{label}</span>
+      <span className="w-5 shrink-0 text-right text-dicht tabular-nums text-matt">
+        {nummer}.
+      </span>
+      {kennung === ''
+        ? <span className="w-20 shrink-0" aria-hidden />
+        : <Marke className="w-20" hinweis={kennung}>{kennung}</Marke>}
 
       <div className="min-w-0 flex-1">
         <PickerControl

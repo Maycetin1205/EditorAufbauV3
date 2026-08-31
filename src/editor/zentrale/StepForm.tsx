@@ -1,6 +1,7 @@
 import { useMemo, useReducer, useRef } from 'react'
 import { Plus } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Zeile } from '@/ui/werkbank/Zeile'
 import {
@@ -280,7 +281,13 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
 
           {relation && (
             <>
-              <div className="flex flex-col gap-2">
+              {/* Ueberschrift wie ueberall sonst (werkbank/Gruppe): normale
+                  Groesse, halbfett, Strich DARUNTER. Der Abschnitt hatte
+                  bisher gar keine — die Parameter standen einfach unter der
+                  Relationswahl, und "Zusatzparameter" darunter trug seine
+                  eigene Machart mit Strich darueber. Zwei Ueberschriften-
+                  Systeme in einem Formular. */}
+              <Gruppe titel="Parameter">
                 {relation.params.map((raw, index) => {
                   if (bindung(index).source === 'aus') return null
                   const parameterArt = feldUebernahmeArt(raw)
@@ -292,7 +299,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   return (
                     <ParameterZeile
                       key={index}
-                      label={`${index + 1}. ${raw === '' ? '(leer)' : raw}`}
+                      nummer={index + 1}
+                      kennung={raw === '' ? '(leer)' : raw}
                       binding={bindung(index)}
                       wahlen={wahlen}
                       platzhalter={raw === '' ? '(leer)' : raw}
@@ -320,7 +328,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                     <Knopf onClick={() => dispatch({ art: 'zurueckholen' })}>Zurückholen</Knopf>
                   </div>
                 )}
-              </div>
+              </Gruppe>
               {entwurf.uebernahmeBestaetigung && (
                 <p className="text-ui text-matt">{entwurf.uebernahmeBestaetigung}</p>
               )}
@@ -338,17 +346,18 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
           )}
 
           {relation?.allowExtraParams && (
-            <div className="flex flex-col gap-2 border-t border-linie pt-3">
-              <div className="flex items-center justify-between">
-                <span className="text-dicht font-medium">Zusatzparameter</span>
+            <Gruppe
+              titel="Zusatzparameter"
+              aktionen={(
                 <Knopf onClick={() => dispatch({ art: 'extraHinzu' })}>
                   <Plus size={13} /> Parameter
                 </Knopf>
-              </div>
+              )}
+            >
               {entwurf.extraParams.map((binding, index) => (
                 <ParameterZeile
                   key={index}
-                  label={`${index + 1}.`}
+                  nummer={index + 1}
                   binding={binding}
                   wahlen={wahlen}
                   entfernen={{
@@ -358,7 +367,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   onChange={(next) => dispatch({ art: 'extraAendern', index, bindung: next })}
                 />
               ))}
-            </div>
+            </Gruppe>
           )}
 
         </>
