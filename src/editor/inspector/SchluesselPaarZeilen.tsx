@@ -54,22 +54,33 @@ export function SchluesselPaarZeilen({
   return (
     <>
       <span className="text-dicht text-matt">{frage}</span>
+      {/* Die beiden Waehler stehen UNTEREINANDER. Nebeneinander teilten sie
+          sich eine ohnehin eingerueckte Spalte und trugen jeder die vollen
+          Fixkosten (Rahmen, Polster, Pfeil): vom Feldnamen blieben drei bis
+          sechs Zeichen — man sah nicht mehr, was man gewaehlt hatte
+          (Nutzer-Befund 2026-08-28). Untereinander hat jeder die volle
+          Breite; es kostet eine Zeilenhoehe je Paar. */}
       {paare.map((paar, at) => (
-        <div key={at} className="flex items-center gap-1.5">
+        <div key={at} className="flex flex-col gap-1 rounded border border-linie p-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="min-w-0 flex-1 truncate text-dicht text-matt">
+              {linkeBezeichnung(at)}
+            </span>
+            {paare.length > 1 && (
+              <Knopf
+                nurZeichen
+                aria-label={entfernenBezeichnung(at)}
+                onClick={() => onAendern(paare.filter((_, x) => x !== at))}
+              >
+                <X size={13} />
+              </Knopf>
+            )}
+          </div>
           {feldWaehler(linkeBezeichnung(at), linkeFelder, paar.fromField,
             (code) => setzePaar(at, { fromField: code }))}
-          <span className="shrink-0 text-dicht text-matt">=</span>
+          <span className="text-dicht text-matt">{rechteBezeichnung(at)}</span>
           {feldWaehler(rechteBezeichnung(at), rechteFelder, paar.toField,
             (code) => setzePaar(at, { toField: code }))}
-          {paare.length > 1 && (
-            <Knopf
-              nurZeichen
-              aria-label={entfernenBezeichnung(at)}
-              onClick={() => onAendern(paare.filter((_, x) => x !== at))}
-            >
-              <X size={13} />
-            </Knopf>
-          )}
         </div>
       ))}
       {paare.length < MAX_SCHLUESSELPAARE && (

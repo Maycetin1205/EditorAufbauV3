@@ -130,10 +130,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
     <Gruppe titel="Datenquellen">
       {quellenAuswahl(erste, 'Datenquelle 1', (v) => ed.updateProperty(block.id, 'source', v))}
       {fehlt(erste) && (
-        <p className="text-dicht text-fehler">
-          Die gewählte Datenquelle fehlt in der Bibliothek. Neu wählen — oder
-          unter Datencenter → Datenquellen wieder anlegen.
-        </p>
+        <p className="text-dicht text-fehler">Diese Datenquelle fehlt in der Bibliothek.</p>
       )}
 
       {weitere.map((q, i) => (
@@ -151,16 +148,22 @@ export function QuellenListe({ block }: QuellenListeProps) {
             </Knopf>
           </div>
           {partnerAuswahl(i)}
-          <SchluesselPaarZeilen
-            frage="Welche Felder verbinden die beiden Datenquellen? (freiwillig)"
-            paare={q.keyPairs}
-            linkeFelder={felderVon(partnerVon(i))}
-            rechteFelder={felderVon(q.quelleId)}
-            linkeBezeichnung={(at) => `Feld ${at + 1} der ${stelle(partnerVon(i))}`}
-            rechteBezeichnung={(at) => `Feld ${at + 1} der Datenquelle ${i + 2}`}
-            entfernenBezeichnung={(at) => `Zeile ${at + 1} entfernen`}
-            onAendern={(keyPairs) => aendere(i, { keyPairs })}
-          />
+          {/* Ohne Partner gibt es nichts zu verbinden — dann bleiben auch die
+              Feldpaare weg. Vorher stand hier ein „+ Feld dazu", und ein Klick
+              darauf liess „Verbunden mit" von selbst auf die Hauptquelle
+              zurueckspringen (partnerVon zaehlt die Paarzeilen). */}
+          {partnerVon(i) !== '' && (
+            <SchluesselPaarZeilen
+              frage="Verbindende Felder (freiwillig)"
+              paare={q.keyPairs}
+              linkeFelder={felderVon(partnerVon(i))}
+              rechteFelder={felderVon(q.quelleId)}
+              linkeBezeichnung={(at) => `Feld ${at + 1} der ${stelle(partnerVon(i))}`}
+              rechteBezeichnung={(at) => `Feld ${at + 1} der Datenquelle ${i + 2}`}
+              entfernenBezeichnung={(at) => `Zeile ${at + 1} entfernen`}
+              onAendern={(keyPairs) => aendere(i, { keyPairs })}
+            />
+          )}
         </div>
       ))}
 

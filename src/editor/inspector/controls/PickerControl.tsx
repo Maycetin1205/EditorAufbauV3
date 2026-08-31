@@ -49,6 +49,18 @@ export function PickerControl({
   // faellt rot auf statt lautlos als „nichts gewaehlt" zu erscheinen.
   const unbekannt = wert !== '' && treffer === undefined
 
+  // Der geschlossene Knopf zeigt NUR den Klarnamen. Die Kennung stand hier bis
+  // 2026-08-28 daneben und nahm sich bis zur halben Breite — in der 3/5-Spalte
+  // des Inspectors blieben dem Namen dann rund 80 px, waehrend er in der
+  // offenen Liste 166 hat. Dieselbe Quelle sah aufgeklappt gut aus und
+  // zugeklappt abgehackt (Nutzer-Befund). Die Kennung steht weiter in der
+  // Liste und jetzt zusaetzlich im Tooltip — Regel 3 bleibt gewahrt, der
+  // Klarname fuehrt.
+  const gezeigt = unbekannt ? 'fehlt' : (treffer?.name ?? leerText ?? platzhalter)
+  const tooltip = unbekannt
+    ? `Nicht mehr vorhanden: ${wert}`
+    : [treffer?.name, treffer?.kennung].filter((t) => t !== undefined && t !== '').join(' — ')
+
   const knopf = (kind?: ZeileKind) => (
     <button
       ref={knopfRef}
@@ -58,8 +70,8 @@ export function PickerControl({
       aria-invalid={kind?.['aria-invalid']}
       aria-haspopup="dialog"
       aria-expanded={offen}
-      aria-label={label === undefined ? bezeichnung : undefined}
-      title={label === undefined ? bezeichnung : undefined}
+      aria-label={label === undefined ? `${bezeichnung}: ${gezeigt}` : undefined}
+      title={tooltip === '' ? (label === undefined ? bezeichnung : undefined) : tooltip}
       onClick={() => setOffen(!offen)}
       className={cn(EINGABE_KANTE, 'flex h-steuer items-center gap-2 px-2 text-left', className)}
     >
@@ -67,16 +79,11 @@ export function PickerControl({
         className={cn(
           'min-w-0 flex-1 truncate',
           wert === '' && 'text-matt',
-          unbekannt && 'text-fehler',
+          unbekannt ? 'text-fehler' : wert !== '' && 'font-medium',
         )}
       >
-        {unbekannt ? wert : (treffer?.name ?? leerText ?? platzhalter)}
+        {gezeigt}
       </span>
-      {treffer?.kennung !== undefined && treffer.kennung !== '' && (
-        <span className="min-w-0 max-w-[50%] truncate font-mono text-dicht text-matt">
-          {treffer.kennung}
-        </span>
-      )}
       <ChevronDown size={13} aria-hidden className="shrink-0 text-matt" />
     </button>
   )

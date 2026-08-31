@@ -2,11 +2,11 @@ import { useMemo, type ReactNode } from 'react'
 import { Copy, MousePointer2 } from '@/ui/zeichen'
 import { bindingProp } from '../../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
-import { editorAngabenVon } from '../../core/blocks/editorAngaben'
 import { propertySichtbar, type PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { darfAuswahlFolgen, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { Zeile } from '@/ui/werkbank/Zeile'
@@ -72,7 +72,6 @@ export function Inspector() {
 
   const def = getBlockDefinition(block.type)
 
-  const hinweis = editorAngabenVon(block.type).hinweis
   if (!def) {
     return (
       <Panel titel="Inspector">
@@ -112,8 +111,14 @@ export function Inspector() {
     return propertySichtbar(p.visibleWhen, block.props)
   })
 
+  // Nach unten wandert nur, was WIRKLICH auf ein Feld, eine Quelle oder eine
+  // Relation zeigt. `requiresDataSource` gehoerte nicht dazu: es sagt bloss
+  // „ohne Quelle sinnlos" und steckt auch an gewoehnlichen Ja/Nein-Schaltern.
+  // Bei der Tabelle lagen deshalb fuenf gleichartige Schalter auf zwei Seiten
+  // des Trennstrichs, und vier von sieben Einstellungen standen woanders, als
+  // der Baustein sie aufschreibt (Nutzer-Befund 2026-08-28).
   const dataProps = visibleProps.filter(
-    (p) => p.requiresDataSource || p.kind === 'field' || p.kind === 'quelle' || p.kind === 'relation',
+    (p) => p.kind === 'field' || p.kind === 'quelle' || p.kind === 'relation',
   )
   const generalProps = visibleProps.filter((p) => !dataProps.includes(p))
 
@@ -160,7 +165,15 @@ export function Inspector() {
             {generalProps.length > 0 && <Trenner />}
             <div className="flex flex-col gap-2">
               {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
-              {dataProps.map((p) => propControl(p))}
+              {/* Eigene Ueberschrift: ohne sie standen die Datenfelder
+                  optisch INNERHALB der Gruppe „Datenquellen" und lasen sich
+                  wie deren Einstellungen — beim Kanban sah der ganze
+                  Inspector nach Datenquelle aus. */}
+              {dataProps.length > 0 && (
+                <Gruppe titel="Felder">
+                  {dataProps.map((p) => propControl(p))}
+                </Gruppe>
+              )}
             </div>
           </>
         )}
@@ -175,13 +188,20 @@ export function Inspector() {
         {hatAktionen && (
           <>
             {(generalProps.length > 0 || showDataSection) && <Trenner />}
-            <AktionenSektion block={block} events={def.blockEvents ?? []} />
+            <Gruppe titel="Aktionen">
+              <AktionenSektion block={block} events={def.blockEvents ?? []} />
+            </Gruppe>
           </>
         )}
 
-        {hinweis && (
-          <p className="text-dicht leading-relaxed text-matt">{hinweis}</p>
+        {generalProps.length === 0 && !showDataSection && !hatAktionen
+          && !darfAuswahlFolgen(block) && (
+          // Sonst steht der Bediener vor einer leeren Flaeche und weiss nicht,
+          // ob der Baustein nichts kann oder der Editor kaputt ist. Zwei
+          // Woerter, kein Erzieh-Text.
+          <p className="text-ui text-matt">Keine Einstellungen.</p>
         )}
+
       </div>
     </Panel>
   )
