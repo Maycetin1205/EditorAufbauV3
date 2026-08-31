@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { entferneSpalte, fuegeSpalteAn } from './spaltenBearbeiten'
-import { SPALTEN_MIN, SPALTEN_MIN_BREITE, type Spalte } from './spalten'
+import { SPALTEN_MAX, SPALTEN_MIN, SPALTEN_MIN_BREITE, type Spalte } from './spalten'
 
 function drei(): Spalte[] {
   return [
@@ -106,4 +106,60 @@ test('beim Streichen nehmen die Verbliebenen den Platz auf', () => {
   entferneSpalte(1, dreiFeste, (l) => { raus = l })
   expect(raus.map((s) => s.titel)).toEqual(['A', 'C'])
   expect(summe(raus)).toBe(summe(dreiFeste()))
+})
+
+function feste(...breiten: number[]): Spalte[] {
+  return breiten.map((breite, i) => ({ titel: `S${i}`, feld: `${i}_1`, breite }))
+}
+
+// Die Faelle, die 7f92603 durchgelassen hat: mindestens eine Spalte klebt an
+// der Mindestbreite und kann nichts abgeben. Die alte Rechnung liess deren
+// Anteil hinten herausfallen — die Summe wuchs um 13 bis 27 px, bei jedem
+// Klick erneut, und die hinterste Spalte lief aus der Tabelle.
+test('die Gesamtbreite bleibt gleich, auch wenn Spalten an der Mindestbreite kleben', () => {
+  const faelle = [
+    feste(40, 400),
+    feste(40, 40, 520),
+    feste(41, 41, 41, 477),
+    feste(40, 40, 40, 40, 440),
+    feste(SPALTEN_MIN_BREITE, SPALTEN_MIN_BREITE, 1000),
+  ]
+  for (const vor of faelle) {
+    expect(summe(fuegeSpalteAn(vor))).toBe(summe(vor))
+  }
+})
+
+// Genauso wichtig wie die Summe: keine Spalte darf dabei unsichtbar werden.
+test('keine Spalte faellt unter die Mindestbreite', () => {
+  for (const vor of [feste(40, 400), feste(41, 41, 41, 477), feste(40, 40, 40, 40, 440)]) {
+    for (const s of fuegeSpalteAn(vor)) {
+      expect(s.breite).toBeGreaterThanOrEqual(SPALTEN_MIN_BREITE)
+    }
+  }
+})
+
+// Es addiert sich: der gemeldete Fehler fiel nicht beim ersten Klick auf,
+// sondern nach mehreren. Darum wird hier bis zur Obergrenze geklickt.
+//
+// Die Tabelle ist absichtlich breit (1600 px): waere sie schmal, griffe
+// unterwegs der Rueckfall „alle geben ihre gezogene Breite ab" — 16 Spalten
+// mal 40 px passen in 600 px nicht hinein. Der Rueckfall hat seinen eigenen
+// Test; hier soll die Rechnung selbst laufen.
+test('auch nach vielen Klicks bleibt die Gesamtbreite stehen', () => {
+  let spalten = feste(40, 40, 1520)
+  const soll = summe(spalten)
+  while (spalten.length < SPALTEN_MAX) {
+    spalten = fuegeSpalteAn(spalten)
+    expect(summe(spalten)).toBe(soll)
+    for (const s of spalten) expect(s.breite).toBeGreaterThanOrEqual(SPALTEN_MIN_BREITE)
+  }
+})
+
+// Streichen skaliert HOCH, dort klemmt die Mindestbreite nicht — aber die
+// Summe muss trotzdem auf das Pixel stimmen, sonst bleibt rechts eine Luecke.
+test('beim Streichen stimmt die Summe auch bei schiefen Zahlen', () => {
+  const vor = feste(43, 97, 61, 399)
+  let raus: Spalte[] = []
+  entferneSpalte(2, () => [...vor], (l) => { raus = l })
+  expect(summe(raus)).toBe(summe(vor))
 })

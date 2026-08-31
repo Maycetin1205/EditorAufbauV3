@@ -20,15 +20,81 @@ function ohneBreite(s: Spalte): Spalte {
   return kopie
 }
 
-// Alle gezogenen Breiten anteilig auf eine neue Gesamtbreite bringen.
+// Wer den Rundungsrest tragen kann: die breiteste Spalte, die dabei nicht
+// unter die Mindestbreite faellt.
+function traegtRest(breiten: readonly number[], schritt: number): number {
+  let beste = -1
+  for (let i = 0; i < breiten.length; i++) {
+    if (schritt < 0 && breiten[i] + schritt < SPALTEN_MIN_BREITE) continue
+    if (beste < 0 || breiten[i] > breiten[beste]) beste = i
+  }
+  return beste
+}
+
+// Alle gezogenen Breiten auf eine neue Gesamtbreite bringen — und zwar
+// EXAKT, nicht ungefaehr.
+//
+// Eine einzige anteilige Runde mit Math.max am Ende reicht dafuer NICHT: eine
+// Spalte, die schon auf der Mindestbreite steht, kann nichts mehr abgeben,
+// ihr Anteil faellt aus der Rechnung heraus, und die Summe waechst. Gemessen
+// 13 bis 27 px je Klick auf „+", und es addierte sich Klick um Klick — die
+// Spalten liefen aus der Tabelle heraus, die hinterste wurde angeschnitten.
+// Das war der Fehler in 7f92603: der Test dort nahm 120/100/80, der einzige
+// Fall, in dem nichts klemmen kann.
+//
+// Jetzt ein Wasserfall: anteilig verteilen; wer dabei unter die Mindestbreite
+// faellt, wird dort festgenagelt, und die Uebrigen teilen den Rest neu auf.
+// Danach geht der Rundungsrest auf die breiteste Spalte, die ihn tragen kann.
+// Damit stimmt die Summe auf das Pixel.
 function skaliereAuf(spalten: readonly Spalte[], ziel: number): Spalte[] {
-  const gesamt = belegt(spalten)
-  if (gesamt <= 0) return [...spalten]
-  const faktor = ziel / gesamt
-  return spalten.map((s) => ({
-    ...s,
-    breite: Math.max(SPALTEN_MIN_BREITE, Math.round((s.breite ?? 0) * faktor)),
-  }))
+  const anzahl = spalten.length
+  if (anzahl === 0) return []
+  if (belegt(spalten) <= 0) return [...spalten]
+
+  // Unter der Summe aller Mindestbreiten geht nichts mehr auf.
+  if (ziel <= anzahl * SPALTEN_MIN_BREITE) {
+    return spalten.map((s) => ({ ...s, breite: SPALTEN_MIN_BREITE }))
+  }
+
+  const festgenagelt = new Array<boolean>(anzahl).fill(false)
+  const roh = new Array<number>(anzahl).fill(0)
+  for (;;) {
+    let festSumme = 0
+    let freiSumme = 0
+    for (let i = 0; i < anzahl; i++) {
+      if (festgenagelt[i]) festSumme += SPALTEN_MIN_BREITE
+      else freiSumme += spalten[i].breite ?? 0
+    }
+    if (freiSumme <= 0) break
+
+    const faktor = (ziel - festSumme) / freiSumme
+    let neuFestgenagelt = false
+    for (let i = 0; i < anzahl; i++) {
+      if (festgenagelt[i]) {
+        roh[i] = SPALTEN_MIN_BREITE
+        continue
+      }
+      roh[i] = (spalten[i].breite ?? 0) * faktor
+      if (roh[i] < SPALTEN_MIN_BREITE) {
+        festgenagelt[i] = true
+        roh[i] = SPALTEN_MIN_BREITE
+        neuFestgenagelt = true
+      }
+    }
+    if (!neuFestgenagelt) break
+  }
+
+  const breiten = roh.map((w) => Math.round(w))
+  let rest = ziel - breiten.reduce((s, b) => s + b, 0)
+  while (rest !== 0) {
+    const schritt = rest > 0 ? 1 : -1
+    const i = traegtRest(breiten, schritt)
+    if (i < 0) break
+    breiten[i] += schritt
+    rest -= schritt
+  }
+
+  return spalten.map((s, i) => ({ ...s, breite: breiten[i] }))
 }
 
 // Traegt JEDE Spalte eine gezogene Breite, ist das Raster restlos verteilt.
