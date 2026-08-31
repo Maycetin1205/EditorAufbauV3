@@ -41,9 +41,7 @@ function Panel({ titel, aktionen, children }: {
         <h2 className="min-w-0 flex-1 truncate text-ui font-semibold text-tinte">{titel}</h2>
         {aktionen}
       </header>
-      {/* inspektor-rumpf misst sich selbst (index.css): davon haengt ab,
-          ob die Wertezeilen ein- oder zweispaltig stehen. */}
-      <div className="inspektor-rumpf min-h-0 flex-1 overflow-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
     </div>
   )
 }

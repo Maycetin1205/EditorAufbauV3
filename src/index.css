@@ -97,33 +97,32 @@
 }
 
 @layer components {
-  /* Zwei Wertezeilen nebeneinander, sobald das Panel breit genug ist — und
-     untereinander, wenn der Bediener es schmal zieht.
+  /* Zwei Wertezeilen nebeneinander — aber nur, wenn das Panel es HERGIBT.
 
-     Als CONTAINER-Anfrage und nicht ueber die Fensterbreite: gemeint ist die
-     Breite des PANELS, und die zieht der Bediener selbst (shell/
-     inspectorBreite.ts). Eine Fensteranfrage wuesste davon nichts.
+     Die Untergrenze ist der Punkt der Sache: 240 PIXEL je Bedienelement. Der
+     Grund fuer den ganzen Inspector-Umbau war, dass ein Waehler nur 178 px
+     bekam und Klarnamen darin abgeschnitten standen. Der erste Versuch
+     (Container-Anfrage ab 26rem, zwei feste Spalten) hat genau das
+     wiederhergestellt: bei Panelbreite 400 waren die zwei Spalten 182 px
+     breit — vier Pixel mehr als der Fehler, den sie beheben sollten, und um
+     eine volle Zeile zu bekommen, haette der Bediener das Panel SCHMALER
+     ziehen muessen als die Vorgabe.
 
-     Die Schwelle 26rem sind bei Grundgroesse 13.5px rund 351 px Inhalt, also
-     ein Panel ab etwa 365 px. Darunter waeren zwei Spalten schmaler als die
-     Waehler, die darin stehen.
+     `auto-fit` mit `minmax` dreht das um: das Raster nimmt so viele Spalten,
+     wie bei 240 px hineinpassen, sonst eine. Bei Panelbreite 400 ist das eine
+     ueber die volle Breite, ab etwa 515 px sind es zwei — und kein
+     Bedienelement wird je enger als 240 px.
 
-     Popover und Dialog haengen per Portal an body und liegen damit AUSSERHALB
-     dieses Containers — die Einschliessung, die container-type mit sich
-     bringt, kann sie also nicht verschieben. */
-  .inspektor-rumpf {
-    container-type: inline-size;
-  }
+     PIXEL, kein rem: in rem haenge die Schwelle an der Grundgroesse und
+     wanderte mit, sobald jemand an der Schrift dreht (dieselbe Falle wie bei
+     --radius, ein paar Zeilen weiter oben).
 
+     Damit ist auch `container-type` wieder weg. Es wurde nur fuer die
+     Schwelle gebraucht, brachte aber Layout-Einschliessung mit — und die
+     macht das Panel zum Bezugsrahmen fuer alles absolut Positionierte darin. */
   .inspektor-werte {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 0.5rem;
-  }
-
-  @container (min-width: 26rem) {
-    .inspektor-werte {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
   }
 }

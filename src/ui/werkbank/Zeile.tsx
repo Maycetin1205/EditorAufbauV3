@@ -19,8 +19,8 @@ export interface ZeileProps {
   fehler?: ReactNode
 
   // Nimmt die GANZE Reihe, auch dort, wo zwei Zeilen nebeneinander stehen
-  // (Inspector ab 26rem Panelbreite). Fuer Bedienelemente, die von Natur aus
-  // breit sind: mehrzeiliger Text, Bild, Farbkacheln.
+  // (Inspector, sobald das Panel zweimal 240 px hergibt). Fuer Bedienelemente,
+  // die von Natur aus breit sind: mehrzeiliger Text, Bild, Farbkacheln.
   breit?: boolean
   className?: string
   children: (kind: ZeileKind) => ReactNode
