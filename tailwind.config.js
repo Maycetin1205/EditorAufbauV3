@@ -94,8 +94,9 @@ export default {
         steuer: '1.75rem', // 28 px
       },
       borderRadius: {
-        // EINE Rundung, 4px, fast kantig. Alle Namen loesen auf denselben
-        // Wert auf — dann ist es egal, welchen jemand schreibt.
+        // EINE Rundung, 2px, fast kantig. Alle Namen loesen auf denselben
+        // Wert auf — dann ist es egal, welchen jemand schreibt. Der Wert
+        // steht in index.css; die Maske hat ihre eigenen (--se-r-*).
         DEFAULT: 'var(--radius)',
         lg: 'var(--radius)',
         md: 'var(--radius)',

@@ -56,7 +56,14 @@
     --border: 38 14% 82%;
     --input: 38 14% 79%;
 
-    --radius: 0.25rem;
+    /* Fast kantig — 2 PIXEL, kein rem. Nutzer-Ansage 2026-08-31: die
+       Rundungen sollen runter, "ganz leicht ist ok". In rem haette die Ecke
+       an der Grundgroesse gehangen und waere mit der Schrift mitgewachsen.
+       Die BAUSTEINE haengen NICHT hier dran — die Maskenwelt hat ihre eigenen
+       Werte (--se-r-sm/md/lg in design/masken-tokens.css) und bleibt genau so,
+       wie sie ist: im Editor wie im Export (Nutzer-Ansage: "bausteine bleiben
+       unangetastet auch im editor"). */
+    --radius: 2px;
 
     --canvas-bg: 36 20% 82%;
   }

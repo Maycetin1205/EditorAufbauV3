@@ -116,7 +116,7 @@ export function DatenquellenBereich() {
                   {unvollstaendig(s) && (
                     <TriangleAlert size={12} className="shrink-0 text-fehler" />
                   )}
-                  <span className="shrink-0 rounded-full bg-control px-1.5 text-dicht text-matt">
+                  <span className="shrink-0 rounded bg-control px-1.5 text-dicht text-matt">
                     {artFuer(s.kind).name}
                   </span>
                 </div>

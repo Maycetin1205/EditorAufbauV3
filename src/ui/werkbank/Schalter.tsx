@@ -34,7 +34,7 @@ export function Schalter({
         disabled={deaktiviert}
         onClick={() => onSchalte(!an)}
         className={cn(
-          'relative h-4 w-7 shrink-0 rounded-full border transition-colors',
+          'relative h-4 w-7 shrink-0 rounded border transition-colors',
           'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
           'disabled:pointer-events-none disabled:opacity-40',
           an ? 'border-akzent bg-akzent' : 'border-linie bg-control',
@@ -43,7 +43,7 @@ export function Schalter({
         <span
           aria-hidden
           className={cn(
-            'absolute top-0.5 h-2.5 w-2.5 rounded-full transition-all',
+            'absolute top-0.5 h-2.5 w-2.5 rounded-[1px] transition-all',
             an ? 'left-3.5 bg-grund' : 'left-0.5 bg-matt',
           )}
         />

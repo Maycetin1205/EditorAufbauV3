@@ -113,7 +113,7 @@ export function RelationenBereich() {
                 <div className="flex items-center gap-1.5">
                   <Share2 size={12} className="shrink-0 text-matt" />
                   <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
-                  <span className="shrink-0 rounded-full bg-control px-1.5 font-mono text-dicht text-matt">
+                  <span className="shrink-0 rounded bg-control px-1.5 font-mono text-dicht text-matt">
                     {VERB_KURZ[r.verb]} {r.nr}
                   </span>
                 </div>
