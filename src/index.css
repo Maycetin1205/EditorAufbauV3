@@ -65,8 +65,22 @@
     border-color: hsl(var(--border));
   }
 
+  /* Die Grundgroesse des ganzen Editors — ein PIXELWERT, kein Prozent.
+     Prozent hiesse „soundsoviel von dem, was der Browser gerade als
+     Grundgroesse hat", und das ist eine Einstellung des jeweiligen Rechners:
+     man dreht an einer Zahl, deren Bezugspunkt man nicht kennt, und dieselbe
+     Angabe sieht auf zwei Maschinen verschieden aus (Nutzer-Ansage
+     2026-08-28). Hier steht, was herauskommt.
+
+     Alles in rem haengt daran. Bei 13.5px: Inspector 270, Zeilenhoehe 23,6,
+     Text 11,0, Kennungen 10,1. Bei 16px waeren es die Werte der
+     Designsprache: 320 / 28 / 13 / 12.
+
+     Die exportierte Maske haengt NICHT daran, die hat ihre eigenen Groessen
+     in design/masken-tokens.css. */
+
   html {
-    font-size: 90%;
+    font-size: 13.5px;
   }
 
   body {
