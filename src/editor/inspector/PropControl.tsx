@@ -7,6 +7,7 @@ import { useRelations } from '../../state/useRelations'
 import { useEditor } from '../../state/useEditor'
 import type { ListeGruppe } from '@/ui/werkbank/Liste'
 import { BildControl } from './controls/BildControl'
+import { KachelControl } from './controls/KachelControl'
 import { ColorTileControl } from './controls/ColorTileControl'
 import { NumberControl } from './controls/NumberControl'
 import { PickerControl } from './controls/PickerControl'
@@ -87,6 +88,13 @@ export function PropControl({
 
   if (property.requiresDataSource && !sourceInReach) return null
   if (kind === 'field' && !feldQuelle) return null
+
+  // Erst NACH den Sperren oben: "Suchzeile" und "Zeilen loeschbar" tragen
+  // requiresDataSource, und eine Kachel ohne Datenquelle waere ein Schalter
+  // fuer etwas, das es nicht gibt.
+  if (kind === 'jaNein') {
+    return <KachelControl property={property} value={value} onChange={set} />
+  }
 
   const waehlerFall = (): WaehlerFall | undefined => {
     switch (kind) {

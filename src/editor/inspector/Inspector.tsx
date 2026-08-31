@@ -8,7 +8,6 @@ import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
-import { Trenner } from '@/ui/werkbank/Trenner'
 import { Zeile } from '@/ui/werkbank/Zeile'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { AktionenSektion } from './AktionenSektion'
@@ -42,7 +41,9 @@ function Panel({ titel, aktionen, children }: {
         <h2 className="min-w-0 flex-1 truncate text-ui font-semibold text-tinte">{titel}</h2>
         {aktionen}
       </header>
-      <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+      {/* inspektor-rumpf misst sich selbst (index.css): davon haengt ab,
+          ob die Wertezeilen ein- oder zweispaltig stehen. */}
+      <div className="inspektor-rumpf min-h-0 flex-1 overflow-auto">{children}</div>
     </div>
   )
 }
@@ -122,6 +123,14 @@ export function Inspector() {
   )
   const generalProps = visibleProps.filter((p) => !dataProps.includes(p))
 
+  // Getrennt nach FORM, nicht nach Thema: ein Ja/Nein ist eine Kachel und
+  // steht neben seinesgleichen in einer Wand, ein Wert ist eine Zeile mit
+  // Beschriftung darueber. Vorher trugen beide dieselbe Zeilenform — bei der
+  // Tabelle fuenf gleich aussehende Pillen untereinander, in denen man erst
+  // lesen musste, welche Haelfte dunkel ist.
+  const kachelProps = generalProps.filter((p) => p.kind === 'jaNein')
+  const wertProps = generalProps.filter((p) => p.kind !== 'jaNein')
+
   const showDataSection = traegtEigeneQuelle(block)
     || dataProps.some((p) => p.quelleProp !== undefined || sourceInReach !== undefined)
 
@@ -141,10 +150,16 @@ export function Inspector() {
         </Knopf>
       )}
     >
-      <div className="flex flex-col gap-3">
-        {generalProps.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {inspectorZeilen(generalProps).map((zeile) =>
+      <div className="flex flex-col gap-4">
+        {kachelProps.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {kachelProps.map((p) => propControl(p))}
+          </div>
+        )}
+
+        {wertProps.length > 0 && (
+          <div className="inspektor-werte">
+            {inspectorZeilen(wertProps).map((zeile) =>
               zeile.row ? (
                 <Zeile key={`zeile:${zeile.row}`} label={zeile.row}>
                   {() => (
@@ -161,37 +176,28 @@ export function Inspector() {
         )}
 
         {showDataSection && (
-          <>
-            {generalProps.length > 0 && <Trenner />}
-            <div className="flex flex-col gap-2">
-              {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
-              {/* Eigene Ueberschrift: ohne sie standen die Datenfelder
-                  optisch INNERHALB der Gruppe „Datenquellen" und lasen sich
-                  wie deren Einstellungen — beim Kanban sah der ganze
-                  Inspector nach Datenquelle aus. */}
-              {dataProps.length > 0 && (
-                <Gruppe titel="Felder">
+          <div className="flex flex-col gap-4">
+            {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
+            {/* Eigene Ueberschrift: ohne sie standen die Datenfelder optisch
+                INNERHALB der Gruppe „Datenquellen" und lasen sich wie deren
+                Einstellungen — beim Kanban sah der ganze Inspector nach
+                Datenquelle aus. */}
+            {dataProps.length > 0 && (
+              <Gruppe titel="Felder">
+                <div className="inspektor-werte">
                   {dataProps.map((p) => propControl(p))}
-                </Gruppe>
-              )}
-            </div>
-          </>
+                </div>
+              </Gruppe>
+            )}
+          </div>
         )}
 
-        {darfAuswahlFolgen(block) && (
-          <AuswahlFolgeSektion
-            block={block}
-            mitTrenner={generalProps.length > 0 || showDataSection}
-          />
-        )}
+        {darfAuswahlFolgen(block) && <AuswahlFolgeSektion block={block} />}
 
         {hatAktionen && (
-          <>
-            {(generalProps.length > 0 || showDataSection) && <Trenner />}
-            <Gruppe titel="Aktionen">
-              <AktionenSektion block={block} events={def.blockEvents ?? []} />
-            </Gruppe>
-          </>
+          <Gruppe titel="Aktionen">
+            <AktionenSektion block={block} events={def.blockEvents ?? []} />
+          </Gruppe>
         )}
 
         {generalProps.length === 0 && !showDataSection && !hatAktionen

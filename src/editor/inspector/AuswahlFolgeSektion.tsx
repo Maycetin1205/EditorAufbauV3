@@ -1,5 +1,4 @@
 import { Gruppe } from '@/ui/werkbank/Gruppe'
-import { Trenner } from '@/ui/werkbank/Trenner'
 import type { ListeEintrag } from '@/ui/werkbank/Liste'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { auswahlQuelleIdVon, istAuswahlGeber } from '../../core/blocks/treeQuery'
@@ -18,11 +17,9 @@ import { SchluesselPaarZeilen } from './SchluesselPaarZeilen'
 
 interface AuswahlFolgeSektionProps {
   block: BlockNode
-
-  mitTrenner: boolean
 }
 
-export function AuswahlFolgeSektion({ block, mitTrenner }: AuswahlFolgeSektionProps) {
+export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
   const ed = useEditor()
   const bibliothek = useDataSources().list
 
@@ -63,41 +60,38 @@ export function AuswahlFolgeSektion({ block, mitTrenner }: AuswahlFolgeSektionPr
     }])
   }
   return (
-    <>
-      {mitTrenner && <Trenner />}
-      <Gruppe titel="Auswahl folgen">
-        {/* Ein geloeschter Geber braucht keine Kunst-Option: der Waehler zeigt
-            einen Wert, den er nicht kennt, von sich aus rot. */}
-        <PickerControl
-          label="Folgt der Auswahl von"
-          bezeichnung="Folgt der Auswahl von"
-          gruppen={[{ key: 'geber', eintraege: kandidaten.map(eintrag) }]}
-          wert={folge?.geberId ?? ''}
-          leerText="— keinem —"
-          onWaehle={setzeGeber}
-        />
-        {folge && (
-          <>
-            <SchluesselPaarZeilen
-              frage="Verbindende Felder"
-              paare={folge.keyPairs}
-              linkeFelder={geberQuelle?.fields ?? []}
-              rechteFelder={eigeneQuelle?.fields ?? []}
-              linkeBezeichnung={(at) => `Feld ${at + 1} beim Auswahl-Geber`}
-              rechteBezeichnung={(at) => `Feld ${at + 1} in diesem Baustein`}
-              entfernenBezeichnung={(at) => `Feldpaar ${at + 1} entfernen`}
-              onAendern={(keyPairs) => setze([{ ...folge, keyPairs }])}
-            />
+    <Gruppe titel="Auswahl folgen">
+      {/* Ein geloeschter Geber braucht keine Kunst-Option: der Waehler zeigt
+          einen Wert, den er nicht kennt, von sich aus rot. */}
+      <PickerControl
+        label="Folgt der Auswahl von"
+        bezeichnung="Folgt der Auswahl von"
+        gruppen={[{ key: 'geber', eintraege: kandidaten.map(eintrag) }]}
+        wert={folge?.geberId ?? ''}
+        leerText="— keinem —"
+        onWaehle={setzeGeber}
+      />
+      {folge && (
+        <>
+          <SchluesselPaarZeilen
+            frage="Verbindende Felder"
+            paare={folge.keyPairs}
+            linkeFelder={geberQuelle?.fields ?? []}
+            rechteFelder={eigeneQuelle?.fields ?? []}
+            linkeBezeichnung={(at) => `Feld ${at + 1} beim Auswahl-Geber`}
+            rechteBezeichnung={(at) => `Feld ${at + 1} in diesem Baustein`}
+            entfernenBezeichnung={(at) => `Feldpaar ${at + 1} entfernen`}
+            onAendern={(keyPairs) => setze([{ ...folge, keyPairs }])}
+          />
 
-            {(!geberQuelle || !eigeneQuelle) && (
-              <p className="text-dicht text-matt">Beide Bausteine brauchen eine Datenquelle.</p>
-            )}
-            {geberQuelle && eigeneQuelle && !folgeBrauchbar(folge) && (
-              <p className="text-dicht text-matt">Ein Feldpaar ist noch halb leer.</p>
-            )}
-          </>
-        )}
-      </Gruppe>
-    </>
+          {(!geberQuelle || !eigeneQuelle) && (
+            <p className="text-dicht text-matt">Beide Bausteine brauchen eine Datenquelle.</p>
+          )}
+          {geberQuelle && eigeneQuelle && !folgeBrauchbar(folge) && (
+            <p className="text-dicht text-matt">Ein Feldpaar ist noch halb leer.</p>
+          )}
+        </>
+      )}
+    </Gruppe>
   )
 }

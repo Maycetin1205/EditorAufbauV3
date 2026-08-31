@@ -4,6 +4,12 @@ export type PropertyKind =
   | 'select'
   | 'number'
   | 'segment'
+  // jaNein ist eine EIGENE Art und kein segment mit zwei Optionen: der
+  // Inspector zeichnet es als Kachel statt als Zeile, und das ist eine
+  // Entscheidung ueber die FORM, keine ueber die Werte. Gespeichert werden
+  // weiter die zwei Zeichenketten aus blocks/shared/jaNeinProperty, damit
+  // exportierte Masken unveraendert bleiben.
+  | 'jaNein'
   | 'field'
   // quelle speichert die id einer DATENQUELLE — eine ZWEITE Quelle am
   // Baustein, fuer einen eigenen Zweck neben der Quelle, aus der er seinen

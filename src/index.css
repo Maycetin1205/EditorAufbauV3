@@ -95,3 +95,35 @@
     color: hsl(var(--foreground));
   }
 }
+
+@layer components {
+  /* Zwei Wertezeilen nebeneinander, sobald das Panel breit genug ist — und
+     untereinander, wenn der Bediener es schmal zieht.
+
+     Als CONTAINER-Anfrage und nicht ueber die Fensterbreite: gemeint ist die
+     Breite des PANELS, und die zieht der Bediener selbst (shell/
+     inspectorBreite.ts). Eine Fensteranfrage wuesste davon nichts.
+
+     Die Schwelle 26rem sind bei Grundgroesse 13.5px rund 351 px Inhalt, also
+     ein Panel ab etwa 365 px. Darunter waeren zwei Spalten schmaler als die
+     Waehler, die darin stehen.
+
+     Popover und Dialog haengen per Portal an body und liegen damit AUSSERHALB
+     dieses Containers — die Einschliessung, die container-type mit sich
+     bringt, kann sie also nicht verschieben. */
+  .inspektor-rumpf {
+    container-type: inline-size;
+  }
+
+  .inspektor-werte {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  @container (min-width: 26rem) {
+    .inspektor-werte {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

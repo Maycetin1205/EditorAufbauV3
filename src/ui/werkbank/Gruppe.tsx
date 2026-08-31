@@ -37,7 +37,13 @@ export function Gruppe({
 
   return (
     <section className={cn('flex min-w-0 flex-col', className)}>
-      <div className="flex h-steuer items-center gap-1">
+      {/* Die Ueberschrift traegt die Trennlinie selbst. Vorher stand sie
+          klein, grau und in Grossbuchstaben ueber Inhalt, der GROESSER war
+          als sie — die Rangfolge stand auf dem Kopf —, und die Abschnitte
+          wurden zusaetzlich von einem eigenen Trenner-Strich getrennt: zwei
+          Trennsysteme nebeneinander, mit unterschiedlichen Abstaenden je
+          nachdem, welche Kombination gerade zutraf. */}
+      <div className="flex h-steuer items-center gap-1 border-b border-linie">
         <button
           type="button"
           aria-expanded={auf}
@@ -45,21 +51,21 @@ export function Gruppe({
           onClick={schalte}
           className={cn(
             'flex min-w-0 flex-1 items-center gap-1.5 rounded text-left',
-            'text-dicht font-semibold uppercase tracking-wide text-matt',
-            'transition-colors hover:text-tinte focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
+            'text-ui font-semibold text-tinte',
+            'transition-colors hover:text-akzent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
           )}
         >
+          <span className="min-w-0 flex-1 truncate">{titel}</span>
           <ChevronDown
             size={12}
             aria-hidden
-            className={cn('shrink-0 transition-transform', !auf && '-rotate-90')}
+            className={cn('shrink-0 text-matt transition-transform', !auf && '-rotate-90')}
           />
-          <span className="min-w-0 truncate">{titel}</span>
         </button>
         {aktionen && <div className="flex shrink-0 items-center gap-1">{aktionen}</div>}
       </div>
       {auf && (
-        <div id={id} className="flex min-w-0 flex-col gap-2 pt-1">
+        <div id={id} className="flex min-w-0 flex-col gap-2 pt-2">
           {children}
         </div>
       )}
