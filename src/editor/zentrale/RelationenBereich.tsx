@@ -3,6 +3,7 @@ import { Plus, Search, Share2 } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Eintrag } from '@/ui/werkbank/Eintrag'
 import { Marke } from '@/ui/werkbank/Marke'
 import { relationIdsVon } from '../../core/blocks/treeQuery'
 import {
@@ -103,22 +104,18 @@ export function RelationenBereich() {
           {sichtbareRelationen.map((r) => {
             const aktiv = modus !== 'neu' && auswahl?.id === r.id
             return (
-              <button
+              <Eintrag
                 key={r.id}
-                type="button"
+                icon={Share2}
+                name={r.name}
+                aktiv={aktiv}
                 onClick={() => { setAuswahlId(r.id); setModus('lesen') }}
-                className={`mb-1 w-full rounded border px-2.5 py-1 text-left text-dicht transition-colors ${
-                  aktiv ? 'border-akzent/60 bg-akzent/15' : 'border-transparent hover:bg-control'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Share2 size={12} className="shrink-0 text-matt" />
-                  <span className="min-w-0 flex-1 truncate font-medium">{r.name}</span>
+                rechts={(
                   <Marke hinweis={formatRelationSyntax(r)}>
                     {VERB_KURZ[r.verb]} {r.nr}
                   </Marke>
-                </div>
-              </button>
+                )}
+              />
             )
           })}
           {store.list.length === 0 && (

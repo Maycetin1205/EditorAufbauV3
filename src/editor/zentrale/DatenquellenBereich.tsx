@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { FileUp, Plus, TriangleAlert } from '@/ui/zeichen'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Eintrag } from '@/ui/werkbank/Eintrag'
 import { Marke } from '@/ui/werkbank/Marke'
 import {
   artFuer,
@@ -103,30 +104,29 @@ export function DatenquellenBereich() {
               (modus === 'lesen' || modus === 'bearbeiten') && auswahl?.id === s.id
             const Icon = ikonFuer(s.kind)
             return (
-              <button
+              <Eintrag
                 key={s.id}
-                type="button"
+                icon={Icon}
+                name={s.name}
+                aktiv={aktiv}
                 onClick={() => { setAuswahlId(s.id); setModus('lesen') }}
-                className={`mb-1 w-full rounded border px-2.5 py-1 text-left text-dicht transition-colors ${
-                  aktiv ? 'border-akzent/60 bg-akzent/15' : 'border-transparent hover:bg-control'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <Icon size={12} className="shrink-0 text-matt" />
-                  <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
-                  {unvollstaendig(s) && (
-                    <TriangleAlert size={12} className="shrink-0 text-fehler" />
-                  )}
-                  <Marke technisch={false}>{artFuer(s.kind).name}</Marke>
-                </div>
-                <div className="mt-0.5 pl-[1.125rem] text-dicht text-matt">
-
-                  {kennung(s) !== '' && (
-                    <span className="font-mono">{kennung(s)} · </span>
-                  )}
-                  {s.fields.length} Felder · {verwendet > 0 ? `verwendet von ${verwendet}` : 'nicht verwendet'}
-                </div>
-              </button>
+                rechts={(
+                  <>
+                    {unvollstaendig(s) && (
+                      <TriangleAlert size={12} className="shrink-0 text-fehler" />
+                    )}
+                    <Marke technisch={false}>{artFuer(s.kind).name}</Marke>
+                  </>
+                )}
+                unten={(
+                  <>
+                    {kennung(s) !== '' && (
+                      <span className="font-mono">{kennung(s)} · </span>
+                    )}
+                    {s.fields.length} Felder · {verwendet > 0 ? `verwendet von ${verwendet}` : 'nicht verwendet'}
+                  </>
+                )}
+              />
             )
           })}
           {store.list.length === 0 && (
