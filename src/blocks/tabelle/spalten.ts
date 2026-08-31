@@ -29,7 +29,15 @@ export interface Spalte {
 export const ZELLE_PLATZHALTER = '—'
 
 export const SPALTEN_MIN = 1
-export const SPALTEN_MAX = 8
+
+// Die Obergrenze stand bis 2026-08-28 auf 8, ohne Grund: sie stammt aus dem
+// uebernommenen Altstand (c4bdad7), und nichts haengt an der Zahl — das
+// Spaltenraster entsteht dynamisch aus den Spalten (tabelleAnsicht: cols).
+// Eine Belegposition braucht allein sieben (ArtNr, Bezeichnung, Menge,
+// Einheit, EPreis, Gesamt, Rohertrag), da war bei acht sofort Schluss.
+// Die Grenze bleibt, damit der Plus-Knopf irgendwo aufhoert; 16 ist
+// grosszuegig genug, dass sie im Arbeitsalltag nicht mehr auffaellt.
+export const SPALTEN_MAX = 16
 
 export const STANDARD_TITEL = 'Spalte {n}'
 

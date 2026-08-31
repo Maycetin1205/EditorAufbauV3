@@ -68,6 +68,11 @@ export interface EintragsSchalter {
   // Satznummer der Hauptquellen-Zeile gefuehrt (blocks/tabelle/aenderungen.ts),
   // ein Feld einer Hilfsquelle waere also ein falsches Schreibziel.
   nurEigeneQuelle?: boolean
+
+  // Ein Wort fuer die zugeklappte Kopfzeile („Mehr · Summe, nicht
+  // aenderbar"). Das volle Label waere dort zu lang, und ohne den Hinweis
+  // merkt niemand, dass hinter dem Pfeil etwas vom Standard abweicht.
+  kurz?: string
 }
 
 export interface EintragsZuordnung {

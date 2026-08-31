@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import { AuswahlFenster } from '@/ui/molecules/auswahl-fenster'
 import { cn } from '@/lib/utils'
 import { Feld } from '@/ui/werkbank/Feld'
-import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Schalter } from '@/ui/werkbank/Schalter'
 import { Segment } from '@/ui/werkbank/Segment'
@@ -46,6 +45,10 @@ export interface PickerWahl {
 export interface PickerSchalter {
   key: string
   label: string
+
+  // Kurzwort und Standard fuer die zugeklappte Kopfzeile.
+  kurz?: string
+  standard?: boolean
   an: boolean
   onSchalte: (an: boolean) => void
 }
@@ -93,6 +96,12 @@ interface FieldPickerProps {
   }
 
   current?: string
+
+  // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
+  // schliesst nicht — sonst raeumt dieser Druck das Fenster ab und der Klick
+  // unmittelbar danach oeffnet es wieder: es liesse sich mit seinem eigenen
+  // Griff nicht zumachen.
+  anker?: RefObject<HTMLElement | null>
 
   top: number
   left: number
@@ -195,6 +204,7 @@ export function FieldPicker({
   zuordnung,
   quellenWahl,
   current,
+  anker,
   top,
   left,
   onPick,
@@ -210,21 +220,33 @@ export function FieldPicker({
   }, [titelSitzung, zuordnungSitzung])
 
   const [zielKey, setZielKey] = useState(HAUPTFELD)
-  const [tutOffen, setTutOffen] = useState(false)
 
   const ebene2 = weitereFelder ?? []
+
   const ziele: readonly PickerFeld[] = [
-    { key: HAUPTFELD, label: 'Feld', aktuell: current ?? '', onWaehle: onPick },
+    {
+      key: HAUPTFELD,
+      label: 'Feld',
+      aktuell: current ?? '',
+      onWaehle: onPick,
+    },
     ...(felder ?? []),
     ...ebene2,
   ]
   const aktiv = ziele.find((z) => z.key === zielKey) ?? ziele[0]
 
+  // ALLE Hilfsquellen auf einmal, nach Quelle gruppiert — die Liste kann das
+  // und hat eine Suche. Eine Stufe „erst Quelle, dann Feld" war hier kurz
+  // eingebaut und ist wieder raus: nach der Wahl einer Quelle sah der Bediener
+  // die anderen nicht mehr und hielt sie fuer nicht angeboten
+  // (Nutzer-Befund 2026-08-28). Die Stufe bleibt nur dort, wo sie etwas
+  // verhindert: solange der Baustein gar keine Hauptquelle hat (quellenWahl).
   const sichtbareGruppen = aktiv.nurFremdeQuellen === true
     ? gruppen.filter((g) => g.quelleId !== '')
     : gruppen
 
-  const hatTut = (schalter?.length ?? 0) > 0 || ebene2.length > 0
+  const hatTut = (schalter?.length ?? 0) > 0
+
 
   const feldZeile = (ziel: PickerFeld) => (
     <FeldZeile
@@ -242,10 +264,11 @@ export function FieldPicker({
       bezeichnung={`Feld für ${spotLabel}`}
       oben={top}
       links={left}
+      anker={anker}
       onClose={onClose}
       imBildHalten
       escapeAbfangen
-      className="max-h-[30rem] w-80 border-linie bg-panel p-1.5 text-tinte shadow-overlay"
+      className="max-h-[30rem] w-[380px] border-linie bg-panel p-1.5 text-tinte shadow-overlay"
     >
       <div className="flex flex-col gap-1.5">
         <p className="truncate px-1.5 pt-0.5 text-dicht font-semibold uppercase tracking-wide text-matt">
@@ -266,26 +289,33 @@ export function FieldPicker({
           </>
         ) : (
           <>
+        {/* Der Titel ist der NAME des Dings, keine Einstellung unter anderen —
+            darum steht er oben und nicht als Zeile mittendrin. */}
         {titel && (
-          <label className="flex h-steuer items-center gap-2 px-1.5">
-            <span className="w-20 shrink-0 truncate text-ui text-matt">Titel</span>
-            <Feld
-              value={titel.wert}
-              placeholder={titel.standard}
-              onChange={(e) => {
-                titel.sitzung.beginnen()
-                titel.onAendern(e.currentTarget.value)
-              }}
-              onBlur={() => {
-                titel.sitzung.beenden()
-                if (titel.wert.trim() === '') titel.onAendern(titel.standard)
-              }}
-              className="min-w-0 flex-1"
-            />
-          </label>
+          <Feld
+            value={titel.wert}
+            placeholder={titel.standard}
+            aria-label="Spaltenname"
+            onChange={(e) => {
+              titel.sitzung.beginnen()
+              titel.onAendern(e.currentTarget.value)
+            }}
+            onBlur={() => {
+              titel.sitzung.beenden()
+              if (titel.wert.trim() === '') titel.onAendern(titel.standard)
+            }}
+            className="font-medium"
+          />
         )}
 
         {feldZeile(ziele[0])}
+
+        {/* Das Fuellfeld steht OFFEN und gleichrangig neben dem Hauptfeld: es
+            ist der halbe Sinn der Spalte, nicht eine seltene Zusatzeinstellung
+            (Nutzer-Befund 2026-08-28). Zugeklappt bleibt nur, was man selten
+            anfasst. Ohne Hilfsquelle waere es sinnlos — dann erscheint es
+            nicht. */}
+        {ebene2.map(feldZeile)}
 
         {wahl && (
           <div className="flex items-center gap-2 px-1.5">
@@ -312,37 +342,36 @@ export function FieldPicker({
           </div>
         )}
 
+        {/* Zugeklappt heisst nicht versteckt: die Kopfzeile sagt, WAS darin
+            vom Standard abweicht. Sonst merkt niemand, dass „In der Zeile
+            aenderbar" ueberhaupt existiert — der Schalter steht auf JA, ohne
+            dass ihn je jemand angefasst hat, und bei einer gerechneten Spalte
+            gehoert er aus. */}
+        {/* Die Schalter stehen OFFEN, nebeneinander in einer Zeile
+            (Nutzer-Ansage 2026-08-28: „‚Mehr' nicht zuklappen"). Zugeklappt
+            merkte niemand, dass es sie gibt — und „In der Zeile aenderbar"
+            steht auf JA, ohne dass es je jemand eingestellt hat. Eine Zeile
+            kostet weniger als eine Klappe und verbirgt nichts. */}
         {hatTut && (
-          <>
-            <Trenner />
-            <Gruppe
-              titel="Was die Spalte tut"
-              offen={tutOffen}
-              onSchalte={(auf) => {
-                setTutOffen(auf)
-                // Zugeklappt darf die Liste nicht weiter an einem Feld
-                // haengen, das niemand mehr sieht.
-                if (!auf && ebene2.some((z) => z.key === zielKey)) setZielKey(HAUPTFELD)
-              }}
-              className="px-1.5"
-            >
-              {(schalter ?? []).map((s) => (
-                <Schalter
-                  key={s.key}
-                  an={s.an}
-                  beschriftung={s.label}
-                  onSchalte={s.onSchalte}
-                />
-              ))}
-              {ebene2.map(feldZeile)}
-            </Gruppe>
-          </>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1.5">
+            {(schalter ?? []).map((s) => (
+              <Schalter
+                key={s.key}
+                an={s.an}
+                beschriftung={s.kurz ?? s.label}
+                hinweis={s.label}
+                onSchalte={s.onSchalte}
+              />
+            ))}
+          </div>
         )}
 
         <Trenner />
 
         <p className="flex items-baseline gap-2 px-1.5 text-dicht font-semibold uppercase tracking-wide text-matt">
-          <span className="min-w-0 truncate">{aktiv.label} wählen</span>
+          <span className="min-w-0 truncate">
+            {aktiv.label} wählen
+          </span>
           {sichtbareGruppen.length === 1 && (
             <span className="min-w-0 truncate normal-case tracking-normal">
               aus {sichtbareGruppen[0].name}

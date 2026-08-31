@@ -30,11 +30,13 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     {
       key: 'summe',
       label: 'Summe in der Fußzeile',
+      kurz: 'Summe',
       nurBeiWahl: SUMMIERBARE_ARTEN,
     },
     {
       key: 'aenderbar',
       label: 'In der Zeile änderbar',
+      kurz: 'änderbar',
       nurBeiWahl: AENDERBARE_ARTEN,
 
       // An, solange niemand ihn ausschaltet: der Bediener erwartet, in jeder
@@ -56,7 +58,12 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   eintragsFeldWahl: [
     {
       key: 'fuellFeld',
-      label: 'Füllfeld',
+
+      // „In der Zeile" und „Beim Erfassen" sagen beide, WANN das Feld gilt —
+      // und genau das unterscheidet sie. Namen wie „Spaltenfeld/Füllfeld"
+      // benennen zwei Taetigkeiten, die sich fuer den Bediener nicht
+      // erkennbar ausschliessen (Nutzer-Entscheidung 2026-08-28).
+      label: 'Nachschlagen',
       hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.',
       nurFremdeQuellen: true,
     },

@@ -142,12 +142,18 @@ export function useFeldBindung({
       }
 
       if (detail?.prop !== listenBindung.prop || typeof detail.index !== 'number') return
-      setListenPicker({
-        index: detail.index,
+      const index = detail.index
+      // Ein zweiter Klick auf DENSELBEN Kopf macht wieder zu. Der Kopf gilt
+      // dem Fenster als Anker, sonst haette der Zeigerdruck es schon
+      // geschlossen und der Klick danach sofort wieder geoeffnet — netto
+      // passierte nichts (Nutzer-Befund 2026-08-28). Ein anderer Kopf schaltet
+      // um statt zu schliessen.
+      setListenPicker((vorher) => (vorher !== null && vorher.index === index ? null : {
+        index,
         top: Math.max(8, detail.top ?? 0),
         left: Math.max(8, Math.min(detail.left ?? 0, window.innerWidth - 248)),
         ...(Array.isArray(detail.liste) ? { liste: detail.liste } : {}),
-      })
+      }))
     }
     el.addEventListener('ff-listen-bind', handler)
     return () => el.removeEventListener('ff-listen-bind', handler)
@@ -284,6 +290,8 @@ export function useFeldBindung({
             schalter={schalterFuer(listenBindung, eintrag).map((s) => ({
               key: s.key,
               label: s.label,
+              kurz: s.kurz,
+              standard: s.standard,
               an: schalterAn(s, eintrag),
               onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
             }))}
@@ -305,6 +313,7 @@ export function useFeldBindung({
             } : undefined}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
             quellenWahl={proQuelle ? undefined : quellenWahl}
+            anker={containerRef}
             top={listenPicker.top}
             left={listenPicker.left}
             onPick={(roh) => {
@@ -314,24 +323,31 @@ export function useFeldBindung({
                 const ziel = next[listenPicker.index]
                 if (!ziel) return
 
-                // Der Titel gehoert dem Bediener. Von selbst gesetzt wird er
-                // NUR, solange die Spalte noch gar keinen eigenen Namen hat
-                // ("Spalte 3"). Vorher ueberschrieb JEDE Feldwahl den Titel
-                // mit dem Feldnamen — wer seine Spalte "Artikel-Nr" genannt
-                // hatte, verlor den Namen beim Binden, und beim Umbinden auf
-                // eine andere Quelle gleich noch einmal (Nutzer 2026-08-27).
-                const bisher = String(ziel[listenBindung.titelKey] ?? '').trim()
-                if (bisher === '' || bisher === standardTitel) {
-                  ziel[listenBindung.titelKey] = wert === ''
-                    ? standardTitel
-                    : (proQuelle
-                        ? (quelleAusProp.fields.find((f) => f.code === wert)?.label ?? '')
-                        : klarnameVon(wert, quellen)) || wert
-                }
+                // Die Feldwahl setzt den Titel IMMER auf den Klarnamen des
+                // Feldes. Umbenennen geht danach jederzeit — bis zur naechsten
+                // Feldwahl, dann fuehrt wieder das Feld.
+                //
+                // Das kehrt eine Regel vom 2026-08-27 um. Damals galt: ein
+                // selbst getippter Name bleibt unangetastet, die Wahl setzt den
+                // Titel nur, solange er noch „Spalte 3" heisst. Der Nutzer hat
+                // das am 2026-08-28 zweimal ausdruecklich anders verlangt
+                // („ich nehme ein feld aus, aber die Spaltenueberschrift bleibt
+                // gleich"). Die Kehrseite ist bekannt und in Kauf genommen: wer
+                // eine Spalte benannt hat und danach umbindet, muss den Namen
+                // neu tippen.
+                const klarname = (feldWert: string): string => (proQuelle
+                  ? (quelleAusProp.fields.find((f) => f.code === feldWert)?.label ?? '')
+                  : klarnameVon(feldWert, quellen)) || feldWert
+
+                ziel[listenBindung.titelKey] = wert === '' ? standardTitel : klarname(wert)
                 ziel[listenBindung.feldKey] = wert
                 editor.updateProperty(block.id, listenBindung.prop, next)
               })
-              closeListenPicker()
+              // Das Fenster bleibt OFFEN. Es ist die Einstellflaeche der
+              // Spalte, kein einmaliger Feldwaehler: nach dem Feld will man
+              // meist noch die Darstellung, das Nachschlage-Feld oder einen
+              // Schalter setzen (Nutzer-Ansage 2026-08-28). Zu geht es ueber
+              // Esc, einen Klick daneben oder einen anderen Spaltenkopf.
             }}
             onClose={closeListenPicker}
           />
