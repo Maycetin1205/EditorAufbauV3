@@ -4,12 +4,29 @@ Stand: 2026-08-28. Entscheidung: **V3 weiterbauen, kein Neubau.** PageBuilder (C
 
 Dieser Plan ist der Arbeitsauftrag. Etappen strikt in Reihenfolge, jede endet mit einem Commit. Beim Abarbeiten Haken in diese Datei setzen — sonst wird sie nicht angefasst.
 
-**Stand 2026-08-28:** Etappe 4 ist bei Punkt 5 (Datencenter) abgehakt, und die Quellen-UI hat ihre Punkte **6, 4 und 5** (Spaltenkopf zweigeteilt, Füllfeld, Hilfsquellen-Spalte nie änderbar) — als Nächstes Quellen-UI Punkt 3, s. Reihenfolge gleich unten. Die Quellen-UI wird in dieser Reihenfolge gebaut, nicht in ihrer Nummerierung: **6+4 → 5 → 3 → 1+2 → 7**. Grund steht in Punkt 6 („Diese Teilung ist Teil von Punkt 4") und in Punkt 4 („gespiegelt in der Hilfsquellen-Liste aus Punkt 1b") — das Modell muss vor die Liste, die es spiegelt, sonst wird die Liste zweimal gebaut. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
+**Stand 2026-08-28 (abends nachgezogen):** Etappe 4 ist bei Punkt 5 (Datencenter) abgehakt, die Quellen-UI hat ihre Punkte **6, 4 und 5** (Spaltenkopf zweigeteilt, Füllfeld, Hilfsquellen-Spalte nie änderbar), und Punkt **4.7** (Schlank) ist vorgezogen erledigt. Aus **Etappe 5** sind **Punkt 1** (Satznummer einstellbar) und **Punkt 4** (Ergebnisse über die Abschnittsgrenze) gebaut. Offen in Etappe 5 bleiben **Punkt 2** (liefert `645_10` im Datenschub überhaupt einen Wert?), **Punkt 3** (PINDEX vergiftet Bindungen auf andere Quellen) und **Punkt 5** (der fehlende Export-Test). **Als Nächstes: Quellen-UI Punkt 3**, s. Reihenfolge gleich unten — oder der Rest von Etappe 5, wenn der Nutzer am Durchstich weiterarbeitet. Die Quellen-UI wird in dieser Reihenfolge gebaut, nicht in ihrer Nummerierung: **6+4 → 5 → 3 → 1+2 → 7**. Grund steht in Punkt 6 („Diese Teilung ist Teil von Punkt 4") und in Punkt 4 („gespiegelt in der Hilfsquellen-Liste aus Punkt 1b") — das Modell muss vor die Liste, die es spiegelt, sonst wird die Liste zweimal gebaut. Am selben Tag ist der ganze Plan gegen den Code geprüft worden; die Funde stehen als datierte Absätze an den Stellen, die sie betreffen — sie sind Teil des Auftrags, keine Anmerkungen. Zwei Änderungen an der Struktur: die Quellen-UI bekommt das **Füllfeld** (zwei Felder je Spalte, ohne das ist eine Belegerfassung nicht abbildbar), und vor Rahmen00001 steht neu ein **Durchstich** (Etappe 5) — Rahmen00001 ist Etappe 6.
 
-**Nachmittag 2026-08-28 — acht Commits AM PLAN VORBEI, auf mündliche Ansage
+**Nachmittag 2026-08-28 — dreizehn Commits AM PLAN VORBEI, auf mündliche Ansage
 des Nutzers.** Er hat an der Belegerfassung getestet und der Reihe nach
 melden lassen, was ihn aufhält; gebaut wurde jeweils sofort. Der Plan ist
 davon unberührt, die Reihenfolge unten gilt weiter. Was gebaut wurde:
+
+Zuerst drei aus dem anderen Chat, an der Erfassungszeile (nachgetragen, sie
+fehlten in der ersten Fassung dieser Liste):
+
+- `ea31f6e` Fluss repariert: Enter sprang in einer Spalte auf der EIGENEN
+  Quelle nie weiter (bei der Belegerfassung die Menge) · Tab am Zeilenende
+  ließ die getippte Zeile unerfasst und verließ die Tabelle · nach dem
+  Nachschlage-Fenster kam der Fokus nicht zurück · die Erfassungszeile klebt
+  jetzt IMMER unten, nicht nur bei „Blättern = Nein"
+- `9115f31` erfasste Zeile wird zum Korrigieren ZURÜCKGEHOLT statt an Ort und
+  Stelle getippt — dort hatte sie weder Vorschlagsliste noch Fenster noch
+  Enter-Fluss. Damit fällt auch der Weg zur Leerzeile im ERP weg.
+- `5c1b3ad` ein Zell-Polster für alle Zeilenarten · Zebra zählt Zeilen statt
+  DOM-Kinder (kippte sonst beim Abschalten der Kopfzeile, und war stärker als
+  die Statusfarben) · Hover wischt die Kennfarbe nicht mehr weg
+
+Dann acht auf dieselbe Weise:
 
 - `4c3e8b1` Schalter „Schlank" restlos entfernt (das war Punkt 4.7)
 - `9e2972f` Lücke neben der letzten Spalte weg (`scrollbar-gutter` raus)
@@ -21,6 +38,20 @@ davon unberührt, die Reihenfolge unten gilt weiter. Was gebaut wurde:
 - `9c06c56` Nachschlage-Fenster zeigt alle Spalten seiner Quelle
 - `915794d` Nachbesserung zu `8e848cf` (Marken-Wahl fiel am Feld nie weg)
 - `8dd78c3` das Fenster wächst mit seinen Spalten
+
+Und zwei danach, die in der ersten Fassung dieser Liste noch fehlten — beide
+sind **Etappe 5 Punkt 1**:
+
+- `b0b1b68` die Bestellung nimmt die Satznummer wieder mit. Seit „nur benutzte
+  Felder" fiel `indexField` aus dem Zweig heraus; ohne sie löst `{PINDEX}` sich
+  nicht auf, und Ändern wie Löschen schreibt ins Nichts, ohne dass die Maske es
+  merkt (ein PUT ist ein Einweg-Ruf).
+- `da05673` die Satznummer wird im Quellen-Formular GEWÄHLT statt fest `0_10`
+  gesetzt; die Arten-Tabelle sagt, wer überhaupt eine hat.
+
+Nachgetragen, weil es sonst verlorengegangen wäre: `731ff6d` (Leertaste beim
+Umbenennen in einem Knopf) lag uncommitted im Arbeitsbaum und war nie
+eingecheckt.
 
 **Offen und NICHT gebaut** (jeweils Nutzer-Entscheidung nötig): einstellbare
 Fenster-Spalten (der Nutzer hatte sie gewünscht, gebaut ist die abgeleitete
@@ -168,7 +199,7 @@ Alles darüber hinaus bleibt gesperrt.
 
    **Nachgetragen:** `window.confirm` lebt nicht nur in `zentrale/helfer.ts:27-38`, sondern auch **zweimal in `src/editor/shell/Toolbar.tsx:37` und `:89`** — darunter der gefährlichste Dialog überhaupt („Maske unwiderruflich ersetzt"). Punkt 1 ist mit ✅ abgeschlossen, also fielen die zwei sonst durchs Raster. Sie gehören hierher.
 6. **[NACH ETAPPE 5]** Alte Atome/`tailwind-merge`/`clsx`-Reste entfernen, wenn aufruferlos. (Abhängigkeiten selbst erst entfernen, wenn wirklich nichts mehr importiert.)
-7. **[NACH ETAPPE 5] Der Tabellen-Schalter „Schlank" fliegt raus** (Nutzer-Ansage 2026-08-28: „hat absolut KEINEN Sinn").
+7. ✅ **Der Tabellen-Schalter „Schlank" fliegt raus** (Nutzer-Ansage 2026-08-28: „hat absolut KEINEN Sinn"). Vorgezogen erledigt in `4c3e8b1`, nicht erst nach Etappe 5.
 
    Er nimmt heute Rahmen, Radius und Hintergrund weg und kürzt das Zellpolster von 10 px auf 6 px — **nimmt aber den `box-shadow` nicht zurück** (`blocks/tabelle/tabelleStil.ts:217-224`). Ergebnis: ein Schatten um eine unsichtbare Kiste. Der Schalter kostet den Bediener eine Entscheidung und liefert dafür einen Darstellungsfehler.
 
@@ -330,7 +361,11 @@ Der schmalste Weg durch die ganze Kette, bevor Oberfläche für ihn gezeichnet w
 
 Anlass: die Prüfung vom 2026-08-28 hat vier Stellen belegt, an denen Etappe 6 heute scheitern MUSS. Keine davon ist eine Oberflächenfrage, alle vier liegen unter dem, was Etappe 4 gerade neu zeichnet. Sie hier zu finden kostet Stunden; in Etappe 6 kostet es die halbe Oberfläche noch einmal.
 
-1. **Die Satznummer muss einstellbar werden.** `editor/zentrale/DataSourceForm.tsx:167-169` setzt bei jeder im Editor angelegten Quelle fest `indexField: '0_10'`; in den 333 Zeilen des Formulars gibt es dafür kein Bedienelement. Ohne Änderung ist Etappe 6 nur erreichbar, indem jemand die Maskendatei von Hand editiert.
+1. ✅ **Die Satznummer muss einstellbar werden.** `editor/zentrale/DataSourceForm.tsx:167-169` setzt bei jeder im Editor angelegten Quelle fest `indexField: '0_10'`; in den 333 Zeilen des Formulars gibt es dafür kein Bedienelement. Ohne Änderung ist Etappe 6 nur erreichbar, indem jemand die Maskendatei von Hand editiert.
+
+   Gebaut in `da05673`: die Arten-Tabelle sagt, wer überhaupt eine Satznummer hat, und im Formular wird ein Feld der Quelle gewählt — Klarname, Feldcode daneben. Ein Wert, der zu keinem Feld passt, bleibt sichtbar stehen statt still zu verschwinden. Davor `b0b1b68`: die Bestellung nahm die Satznummer seit „nur benutzte Felder" gar nicht mehr mit, sobald irgendein Feld als benutzt galt — gebunden ist sie an keine Spalte. Ohne sie löst `{PINDEX}` sich nicht auf.
+
+   **Der zweite Teil dieses Punktes ist NICHT gebaut:** `blocks/tabelle/seRuntime.ts` (`hatSatzNummer`) prüft weiterhin nur, ob die Satznummer KONFIGURIERT ist, nicht ob sie einen WERT liefert. Der stille Fall aus dem Absatz unten steht also noch.
 
    **Und es scheitert still:** `blocks/tabelle/seRuntime.ts:53-58` (`hatSatzNummer`) prüft nur, ob die Satznummer KONFIGURIERT ist — nicht, ob sie einen Wert LIEFERT. Die Tabelle bietet Ändern und Löschen also an (`TabelleBlock.ts:437-443`), der Bediener tippt, und `aenderungen.ts:30-31` wirft jede Vormerkung mit `return false` weg. Kein Fehler, keine Meldung. Beides gehört repariert: das Bedienelement UND die Prüfung auf den gelieferten Wert.
 
@@ -340,7 +375,7 @@ Anlass: die Prüfung vom 2026-08-28 hat vier Stellen belegt, an denen Etappe 6 h
 
 3. **PINDEX darf Bindungen auf andere Quellen nicht vergiften.** `softengine/relations.ts:347-352` (Beleg s. Ketten-Editor Punkt 4). Zu bauen: eine Quelle ohne Zeilenbezug — der offene Satz voran — liefert in einem Zeilen-Abschnitt weiter `rows[0]`. Der Kommentar in `softengine/data.ts:153-155` schreibt genau diese Annahme schon hin; `relations.ts` überspringt sie. Mit Test.
 
-4. **Schritt-Ergebnisse über die Abschnittsgrenze.** Ohne das ist „BELNR aus Schritt-1-Ergebnis" nicht baubar (Beleg s. Ketten-Editor Punkt 4). Kleinste Fassung: das Ergebnis der Schritte VOR dem ersten Zeilen-Abschnitt steht allen Abschnitten zur Verfügung.
+4. ✅ **Schritt-Ergebnisse über die Abschnittsgrenze.** Ohne das ist „BELNR aus Schritt-1-Ergebnis" nicht baubar (Beleg s. Ketten-Editor Punkt 4). Kleinste Fassung: das Ergebnis der Schritte VOR dem ersten Zeilen-Abschnitt steht allen Abschnitten zur Verfügung. Gebaut in `f5d0ee9`, mit Tests in `seAktionen.test.ts`.
 
 5. **Der Export-Test, den Verbot 4 längst verlangt.** `exportMask.ts:76-192` (`nodeToHtml`) — der gesamte Baustein-Export — wird heute von KEINEM Test mit einem echten Baustein ausgeführt: die einzige Prüfmaske in `validator.test.ts:5-8` ist ein leerer Wurzelknoten. Vor jedem weiteren Export-Umbau: ein Test mit Formfeld + Tabelle mit gebundenen Spalten + Knopf mit Kette, der das erzeugte Markup prüft. Dazu je ein Fall für `kind: 'erpabfrage'` in `sevariablen.test.ts` und für `benutzteFelderJeQuelle` (`export/benutzteQuellen.ts:67-110`, heute ohne Test — und die neue Quellen-UI soll dieselbe Frage beantworten wie der Export; geben beide verschiedene Antworten, meldet das Panel eine Hilfsquelle als vollständig, während der Export ihre Felder nie bestellt).
 
