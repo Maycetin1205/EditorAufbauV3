@@ -87,6 +87,22 @@ test('Tiergewicht als Luecke wird aus dem Bezug zurueckgerechnet', () => {
   expect(geloest).toEqual({ platz: 'gewicht', wert: 450 })
 })
 
+// Der Fall aus der echten Nutzer-Konfiguration 2026-08-31: je-kg belegt,
+// Tiergewicht nicht. Mit Bezugswert MUSS die Rechnung schweigen — vorher
+// rechnete sie still mit 1/Bezug (Faktor 50 daneben).
+test('Bezug mit Wert ohne Tiergewicht-Platz: schweigen', () => {
+  const r = rechnung()
+  r.gewicht.feld = ''
+  const ohneGewicht = new Set<PlatzKey>(['menge', 'anzahl', 'dosis', 'bezug', 'tage'])
+  expect(loeseRechnung(r, werte({
+    menge: 5000, dosis: 5, bezug: 50, tage: 5,
+  }), ohneGewicht)).toBeNull()
+  // Pro-Tier-Artikel (Bezug in der Zeile leer) rechnen auch ohne den Platz.
+  expect(loeseRechnung(r, werte({
+    menge: 1200, dosis: 20, tage: 5,
+  }), ohneGewicht)).toEqual({ platz: 'anzahl', wert: 12 })
+})
+
 test('ohne belegte Menge gibt es keine Gleichung', () => {
   const r = rechnung()
   r.menge.feld = ''

@@ -149,6 +149,9 @@ export function loeseRechnung(
   // Bezug leer -> Dosis gilt pro Tier, das Paar faellt komplett weg.
   const paarAktiv = typeof bezug === 'number'
   if (paarAktiv && bezug === 0) return null
+  // Bezug mit Wert, aber kein Tiergewicht-Platz belegt: die Klammer ist
+  // unbestimmbar — schweigen, statt still mit 1/Bezug zu rechnen.
+  if (paarAktiv && !konfiguriert.has('gewicht')) return null
 
   const noetig: PlatzKey[] = ['menge']
   for (const k of ['anzahl', 'dosis', 'tage'] as const) {
