@@ -28,6 +28,31 @@ export function starteUmbenennen(
     })
   }
 
+  // Die Leertaste ist auf einem Knopf fuer den Browser "Knopf druecken": er
+  // verbraucht sie und tippt dann KEIN Leerzeichen ein. Wird hier in einem
+  // Knopf geschrieben (Schaltflaeche), setzen wir das Zeichen selbst; ueberall
+  // sonst tippt der Browser richtig, und dieser Weg bleibt unangetastet.
+  const imKnopf = ziel.closest('button') !== null
+
+  const tippeLeerzeichen = (): void => {
+    const wurzel = ziel.getRootNode() as Node & { getSelection?: () => Selection | null }
+    const markierung = wurzel.getSelection?.() ?? window.getSelection()
+    const stelle = markierung?.rangeCount ? markierung.getRangeAt(0) : null
+    if (!markierung || !stelle || !ziel.contains(stelle.startContainer)) return
+    // Markierter Text wird ersetzt, genau wie beim gewoehnlichen Tippen.
+    if (!stelle.collapsed) stelle.deleteContents()
+    const knoten = stelle.startContainer
+    if (knoten instanceof Text) {
+      const wo = stelle.startOffset
+      knoten.insertData(wo, ' ')
+      markierung.collapse(knoten, wo + 1)
+    } else {
+      const neu = document.createTextNode(' ')
+      stelle.insertNode(neu)
+      markierung.collapse(neu, 1)
+    }
+  }
+
   let fertig = false
   const abschluss = (commit: boolean): void => {
     if (fertig) return
@@ -46,6 +71,11 @@ export function starteUmbenennen(
     } else if (e.key === 'Escape') {
       e.preventDefault()
       abschluss(false)
+    } else if (e.key === ' ' && imKnopf) {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return
+      // preventDefault haelt zugleich den Knopfdruck auf (s. imKnopf oben).
+      e.preventDefault()
+      tippeLeerzeichen()
     }
   }
   ziel.addEventListener('blur', beiBlur)
