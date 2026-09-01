@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import type { ErfassungsUmfeld } from './erfassungsZellen'
 import type { Spalte } from './spalten'
+import { leereRechnung } from '../../core/data/rechnung'
 
 // Die Zeilen der Nachschlage-Quellen kommen im Produkt aus dem SEDATA-Paket
 // (quellenZeilen liest seGlobal()). Hier stehen sie als Testdaten daneben —
@@ -338,5 +339,73 @@ describe('Tastenentscheid', () => {
     expect(lauf.naechsteLeere(umfeld, 0)).toBe(2)
     expect(lauf.naechsteLeere(umfeld, 2)).toBe(3)
     expect(lauf.naechsteLeere(umfeld, 3)).toBe(-1)
+  })
+})
+
+// P4: Eine erfasste Zeile zur Korrektur zurueckholen. In ihr steht ALLES
+// gefuellt — auch der Platz, den die Rechnung selbst ausgerechnet hat. Wird
+// er als getippt uebernommen, gilt er als GEGEBEN: die Rechnung hat keine
+// Luecke mehr und schweigt. Der Bediener aendert die Tiere, und die alte
+// Abgabemenge geht ins ERP (Nutzer-Befund 2026-09-01).
+describe('Zurueckholen und die Rechnung', () => {
+  const spalten: Spalte[] = [
+    { kennung: 's1', titel: 'Artikel', feld: '18_25' },
+    { kennung: 's2', titel: 'Tiere', feld: '164_8' },
+    { kennung: 's3', titel: 'Dosis', feld: '930_3' },
+    { kennung: 's4', titel: 'Menge', feld: '280_12' },
+  ]
+
+  const rechnung = {
+    ...leereRechnung(),
+    menge: { spalte: 's4', runden: { stellen: 3, richtung: 'kfm' as const } },
+    anzahl: { spalte: 's2', runden: { stellen: 0, richtung: 'auf' as const } },
+    dosis: { spalte: 's3', runden: { stellen: 3, richtung: 'kfm' as const } },
+  }
+
+  const umfeld: ErfassungsUmfeld = { ...umfeldVon(spalten, {}), rechnung }
+
+  // Die Zeile, wie sie beim Erfassen entsteht: die Menge ist gerechnet.
+  function abgelegteZeile(): string[] {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(1, '10')
+    lauf.tippe(2, '2')
+    lauf.rechne(umfeld)
+    return spalten.map((_, i) => lauf.wertVon(umfeld, i))
+  }
+
+  test('die gerechnete Menge steht in der abgelegten Zeile', () => {
+    expect(abgelegteZeile()).toEqual(['', '10', '2', '20'])
+  })
+
+  test('nach dem Zurueckholen folgt die Menge einer geaenderten Tierzahl', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.uebernimmWerte(umfeld, abgelegteZeile())
+    expect(lauf.wertVon(umfeld, 3)).toBe('20')
+
+    lauf.tippe(1, '20')
+    lauf.rechne(umfeld)
+    expect(lauf.wertVon(umfeld, 3)).toBe('40')
+  })
+
+  // Die Gegenprobe: eine von Hand getippte Menge, die NICHT dem Ergebnis
+  // entspricht, ist eine Ansage des Bedieners. Sie bleibt stehen — dann
+  // rechnet sich die Dosis, nicht die Menge.
+  test('eine abweichende Menge bleibt gegeben', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.uebernimmWerte(umfeld, ['', '10', '2', '25'])
+    expect(lauf.wertVon(umfeld, 3)).toBe('25')
+
+    lauf.tippe(1, '20')
+    lauf.rechne(umfeld)
+    expect(lauf.wertVon(umfeld, 3)).toBe('25')
+  })
+
+  // Ohne Rechnung aendert sich am Zurueckholen nichts: jeder Wert ist
+  // getippt, keiner rechnet sich nach.
+  test('ohne Rechnung bleibt jeder Wert stehen', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.uebernimmWerte(umfeldVon(spalten, {}), ['', '10', '2', '20'])
+    expect(spalten.map((_, i) => lauf.wertVon(umfeldVon(spalten, {}), i)))
+      .toEqual(['', '10', '2', '20'])
   })
 })

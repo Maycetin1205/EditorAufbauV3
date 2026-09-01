@@ -61,21 +61,48 @@ export function neueSpalte(index: number): Spalte {
   return { kennung: '', titel: standardTitelFuer(index), feld: '' }
 }
 
+// Die Nummer, ab der neue Kennungen vergeben werden: HÖCHSTE vergebene + 1,
+// nie die niedrigste Lücke. Eine gelöschte Spalte hinterlässt ihre Nummer,
+// und wer sie neu vergibt, lässt Rechnung und Ketten-Parameter stumm auf die
+// frische Spalte zeigen — sie zeigen ja auf die Kennung (Nutzer-Vorfall
+// 2026-09-01). Eine Kennung, die nicht 'sN' ist, zählt nicht mit; mit ihr
+// kollidieren die neuen ohnehin nicht.
+//
+// ⚠ Zwilling: `vergebeKennungen` in `state/migrationenRoh.ts` macht dasselbe
+// auf den Rohdaten (sie darf nichts aus einem Baustein importieren, Regel 2).
+// Wer hier etwas ändert, ändert es dort mit.
+function abNummer(vergeben: ReadonlySet<string>): number {
+  let hoechste = 0
+  for (const k of vergeben) {
+    const treffer = /^s(\d+)$/.exec(k)
+    if (treffer) hoechste = Math.max(hoechste, Number(treffer[1]))
+  }
+  return hoechste + 1
+}
+
 // Vergibt fehlende Kennungen ('s1', 's2', …) und behebt doppelte — die
 // vorderste behält ihre. Bestehende bleiben unangetastet: an ihnen hängen
 // Ketten-Parameter und Rechnung, eine neu vergebene zeigte woandershin.
 export function mitKennungen(spalten: readonly Spalte[]): Spalte[] {
   const vergeben = new Set<string>()
-  let naechste = 1
+  // Erst ALLE vorhandenen einsammeln, auch die weiter hinten stehenden: sonst
+  // bekäme eine vordere Lücke eine Nummer, die hinten schon vergeben ist.
+  for (const s of spalten) {
+    const roh = s.kennung.trim()
+    if (roh !== '') vergeben.add(roh)
+  }
+  let naechste = abNummer(vergeben)
+  const behalten = new Set<string>()
   return spalten.map((s) => {
     const roh = s.kennung.trim()
-    if (roh !== '' && !vergeben.has(roh)) {
-      vergeben.add(roh)
+    if (roh !== '' && !behalten.has(roh)) {
+      behalten.add(roh)
       return s
     }
     while (vergeben.has(`s${naechste}`)) naechste += 1
     const kennung = `s${naechste}`
     vergeben.add(kennung)
+    behalten.add(kennung)
     return { ...s, kennung }
   })
 }

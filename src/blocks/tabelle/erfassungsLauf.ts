@@ -415,11 +415,38 @@ export class ErfassungsLauf {
   // laesst sich der Satz nicht eindeutig zurueckfinden (zwei Artikel duerfen
   // gleich heissen). Der Bediener sucht die Zelle, die er korrigieren will,
   // ohnehin neu aus; genau dafuer steht die Zeile wieder oben.
-  uebernimmWerte(werte: readonly string[]): void {
+  uebernimmWerte(umfeld: ErfassungsUmfeld, werte: readonly string[]): void {
     this.zuruecksetzen()
     werte.forEach((wert, index) => {
       if (wert !== '') this.getippt.set(index, wert)
     })
+    this.gibDemGerechnetenPlatzSeineLuecke(umfeld)
+    this.rechne(umfeld)
+  }
+
+  // In der abgelegten Zeile stehen ALLE Zellen gefuellt — auch der Platz, den
+  // die Rechnung selbst ausgerechnet hat. Als getippt uebernommen waere er ab
+  // jetzt ein GEGEBENER Wert: die Rechnung haette keine Luecke mehr und
+  // schwiege. Der Bediener aendert die Tiere von 10 auf 20, und die alte
+  // Abgabemenge geht ins ERP (Nutzer-Befund 2026-09-01).
+  //
+  // Erkannt wird der Platz daran, dass sein Wert exakt dem entspricht, was
+  // sich ohne ihn aus den uebrigen rechnet. Geprueft wird in PLATZ_KEYS-
+  // Reihenfolge, also die Abgabemenge zuerst: bei durchweg stimmigen Werten
+  // passen mehrere Plaetze, und sie ist die linke Seite der Gleichung.
+  private gibDemGerechnetenPlatzSeineLuecke(umfeld: ErfassungsUmfeld): void {
+    const r = umfeld.rechnung
+    if (!r) return
+    for (const key of PLATZ_KEYS) {
+      const index = spalteMitKennung(umfeld.spalten, r[key].spalte)
+      if (index === -1) continue
+      const wert = this.getippt.get(index)
+      if (wert === undefined || wert === '') continue
+      this.getippt.delete(index)
+      this.rechne(umfeld)
+      if (this._gerechnet?.index === index && this._gerechnet.wert === wert) return
+      this.getippt.set(index, wert)
+    }
   }
 
   zuruecksetzen(): void {

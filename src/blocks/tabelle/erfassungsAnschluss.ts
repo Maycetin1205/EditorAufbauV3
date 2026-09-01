@@ -38,18 +38,33 @@ export class ErfassungsAnschluss {
     return this._zeilen.map((z) => z.werte)
   }
 
+  // Die Kennung, die die oben stehende NEUE Zeile bekommen wird. Reserviert,
+  // nicht vergeben: `erfasse` zaehlt erst hoch, wenn die Zeile wirklich
+  // abgelegt wird. So traegt sie schon als Vormerkung denselben Namen, unter
+  // dem die Kette sie spaeter als geschrieben zurueckmeldet.
+  private get obenKennung(): string {
+    return `e${this.naechsteKennung}`
+  }
+
   // Was die KETTE und der Zaehler sehen: dieselben Zeilen PLUS die gerade oben
   // stehende, an ihrem Platz. Ohne sie fehlte beim Schreiben ausgerechnet die
   // Zeile, die der Bediener vor Augen hat, und der Knopf zaehlte sie nicht
   // mit — ein stiller Verlust genau dort, wo er am meisten weh tut.
+  //
+  // Das gilt fuer BEIDE Tipp-Zeilen: die zur Korrektur zurueckgeholte und die
+  // unten neu getippte. Die untere fehlte hier bis P4 — wer eine Zeile
+  // ausfuellte und dann buchte, ohne vorher Enter zu druecken, sah sie vor
+  // sich und bekam sie trotzdem nicht ins ERP (Nutzer-Befund 2026-09-01).
   vormerkungen(umfeld: ErfassungsUmfeld): { kennung: string; werte: readonly string[] }[] {
     const alle = this._zeilen
       .filter((z) => z.geschrieben !== true)
       .map((z) => ({ kennung: z.kennung, werte: z.werte as readonly string[] }))
-    const zurueck = this._zurueck
-    if (!zurueck) return alle
     const oben = umfeld.spalten.map((_, i) => this.lauf.wertVon(umfeld, i))
+    // Eine leere Tipp-Zeile ist keine Vormerkung — sie ist der Normalzustand
+    // der Erfassung und darf den Zaehler nicht bewegen.
     if (oben.every((w) => w === '')) return alle
+    const zurueck = this._zurueck
+    if (!zurueck) return [...alle, { kennung: this.obenKennung, werte: oben }]
     // Ihr Platz zaehlt in der GEFILTERTEN Liste: geschriebene Zeilen stehen
     // noch dazwischen, gehoeren aber nicht mehr dazu. Ohne das Umrechnen
     // rutschte die Zeile mit jeder geschriebenen Zeile vor ihr nach hinten.
@@ -126,7 +141,7 @@ export class ErfassungsAnschluss {
       ]
       this._zurueck = null
     } else {
-      this._zeilen = [...this._zeilen, { kennung: `e${this.naechsteKennung}`, werte }]
+      this._zeilen = [...this._zeilen, { kennung: this.obenKennung, werte }]
       this.naechsteKennung += 1
     }
     this.lauf.zuruecksetzen()
@@ -154,7 +169,7 @@ export class ErfassungsAnschluss {
     if (jetzt === -1) return false
     this._zeilen = this._zeilen.filter((_, i) => i !== jetzt)
     this._zurueck = { kennung: zeile.kennung, platz: jetzt }
-    this.lauf.uebernimmWerte(zeile.werte)
+    this.lauf.uebernimmWerte(umfeld, zeile.werte)
     return true
   }
 
@@ -198,6 +213,19 @@ export class ErfassungsAnschluss {
       this._zurueck = null
       this.lauf.zuruecksetzen()
       geaendert = true
+    } else if (zurueck === null && kennungen.includes(this.obenKennung)) {
+      // Dieselbe Mechanik fuer die UNTEN getippte Zeile: die Kette sieht sie
+      // (vormerkungen) und kann sie geschrieben haben, obwohl sie nie mit
+      // Enter abgelegt wurde. Sie wird jetzt zur abgelegten Zeile, markiert —
+      // oben stehen bliebe sie sonst als tippbare Zeile, die es im ERP schon
+      // gibt, und der naechste Buchen-Klick schickte sie ein zweites Mal.
+      const werte = umfeld.spalten.map((_, i) => this.lauf.wertVon(umfeld, i))
+      if (!werte.every((w) => w === '')) {
+        this._zeilen = [...this._zeilen, { kennung: this.obenKennung, werte, geschrieben: true }]
+        this.naechsteKennung += 1
+        this.lauf.zuruecksetzen()
+        geaendert = true
+      }
     }
     return geaendert
   }

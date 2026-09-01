@@ -69,13 +69,45 @@ test('eine unbrauchbare Breite faellt auf die Mindestbreite', () => {
 // Die Kennung ist der dauerhafte Ausweis der Spalte: Ketten und Rechnung
 // zeigen auf sie. Jede Lesung muss sie vollstaendig liefern — auch aus einer
 // Maske, die vor der Kennung exportiert wurde.
+//
+// Vergeben wird ueber der hoechsten schon vorhandenen (hier s7), nicht in
+// deren Luecken: eine niedrigere Nummer koennte einer geloeschten Spalte
+// gehoert haben. Frueher standen hier s1 und s2 — genau der Fehler.
 test('coerceSpalten vergibt fehlende Kennungen und behaelt vorhandene', () => {
   const raus = coerceSpalten([
     { titel: 'A', feld: '1_1' },
     { kennung: 's7', titel: 'B', feld: '2_1' },
     { titel: 'C', feld: '3_1' },
   ])
-  expect(raus.map((s) => s.kennung)).toEqual(['s1', 's7', 's2'])
+  expect(raus.map((s) => s.kennung)).toEqual(['s8', 's7', 's9'])
+})
+
+// Der Kern von P4: der Bediener loescht eine Spalte in der Mitte und legt
+// eine neue an. Bekaeme die neue die frei gewordene Kennung, zeigten
+// Rechnung und Ketten-Parameter der geloeschten Spalte ab sofort stumm auf
+// sie — sie zeigen ja auf die Kennung, nicht auf den Platz.
+test('eine geloeschte Kennung wird nicht wiedervergeben', () => {
+  const vorher = mitKennungen([
+    { kennung: '', titel: 'A', feld: '' },
+    { kennung: '', titel: 'B', feld: '' },
+    { kennung: '', titel: 'C', feld: '' },
+  ])
+  expect(vorher.map((s) => s.kennung)).toEqual(['s1', 's2', 's3'])
+
+  // 's2' faellt weg, eine frische Spalte kommt hinten dazu.
+  const nachher = mitKennungen([vorher[0], vorher[2], { kennung: '', titel: 'D', feld: '' }])
+  expect(nachher.map((s) => s.kennung)).toEqual(['s1', 's3', 's4'])
+})
+
+// Auch mehrere frische Spalten auf einmal duerfen sich nicht in die Luecken
+// setzen — und untereinander nicht kollidieren.
+test('mehrere frische Spalten zaehlen ueber der hoechsten weiter', () => {
+  const raus = mitKennungen([
+    { kennung: 's4', titel: 'A', feld: '' },
+    { kennung: '', titel: 'B', feld: '' },
+    { kennung: '', titel: 'C', feld: '' },
+  ])
+  expect(raus.map((s) => s.kennung)).toEqual(['s4', 's5', 's6'])
 })
 
 // Eine doppelte Kennung waere zwei Ausweise mit derselben Nummer: die

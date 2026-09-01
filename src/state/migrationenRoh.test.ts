@@ -95,3 +95,20 @@ test('bei doppeltem Belegfeld gewinnt die vorderste Spalte', () => {
   const rechnung = JSON.parse(src.t1.props.rechnung as string) as Record<string, unknown>
   expect(rechnung.dosis).toMatchObject({ spalte: 's3' })
 })
+
+// P4: derselbe Vergabe-Weg wie in `mitKennungen` (blocks/tabelle/spalten.ts,
+// Zwilling) — neue Kennungen zaehlen ueber der hoechsten weiter, statt sich
+// in die Luecke einer geloeschten Spalte zu setzen. Eine Maske, in der schon
+// s1 und s3 stehen, darf beim Laden kein zweites s2 bekommen: die Ketten der
+// frueheren s2 zeigten sonst stumm auf die neue Spalte.
+test('die Migration setzt neue Kennungen ueber die hoechste, nicht in die Luecke', () => {
+  const src = alteMaske()
+  // Aussen s1 und s3, in der Mitte eine Spalte ohne Kennung: die Luecke s2
+  // gehoerte einer geloeschten Spalte.
+  const roh = src.t1.props.spalten as Record<string, unknown>[]
+  roh[0].kennung = 's1'
+  roh[2].kennung = 's3'
+  migrateSpaltenKennungen(src)
+  const spalten = src.t1.props.spalten as { kennung?: string }[]
+  expect(spalten.map((s) => s.kennung)).toEqual(['s1', 's4', 's3'])
+})

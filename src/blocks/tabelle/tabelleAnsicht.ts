@@ -93,10 +93,22 @@ function summenVon(
   return raus
 }
 
+// Gesucht und sortiert wird ueber DENSELBEN Zellwert, den die Summe nimmt —
+// vorgemerkte Aenderung eingerechnet. Sonst sucht der Bediener nach dem, was
+// er gerade in die Zelle getippt hat, und seine eigene Zeile faellt aus der
+// Liste; sortiert stuende sie nach dem alten Wert an alter Stelle.
+function ansichtsZeilen(frage: AnsichtFrage): string[][] {
+  // Ueber die SPALTEN, nicht ueber die Laenge der Datenzeile: eine frisch
+  // angelegte Spalte hat in den gelieferten Daten noch keinen Eintrag und
+  // fiele sonst aus Suche und Sortierung heraus.
+  return frage.datenzeilen.map((_, zeile) => frage.spalten.map((__, s) => frage.wertVon(zeile, s)))
+}
+
 function sichtbareIndizes(frage: AnsichtFrage): number[] {
-  const gefiltert = passendeIndizes(frage.datenzeilen, frage.suchtext)
+  const zeilen = ansichtsZeilen(frage)
+  const gefiltert = passendeIndizes(zeilen, frage.suchtext)
   if (frage.sortSpalte < 0) return gefiltert
-  const rows = gefiltert.map((i) => frage.datenzeilen[i])
+  const rows = gefiltert.map((i) => zeilen[i])
   return sortiereIndizes(rows, frage.sortSpalte, frage.sortAuf).map((k) => gefiltert[k])
 }
 

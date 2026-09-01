@@ -620,7 +620,10 @@ export class TabelleBlock extends BasicBlock {
         seiten: ansicht.seiten,
         blaettert: this.blaettern === 'ja',
         summen: ansicht.summen,
-        erfasst: this._erfassung.zeilen.length,
+        // Dieselbe Zahl wie der Knopf: der liest `erfassteZeilen` ueber
+        // vormerkStand. `_erfassung.zeilen` waere eine zweite — sie zaehlt
+        // die schon geschriebenen Zeilen mit und die getippte nicht.
+        erfasst: this.erfassteZeilen.length,
         geaendert: this._zeilen.vorgemerkteAenderungen(),
         geloescht: this._zeilen.vorgemerkteLoeschungen(),
         leer: ansicht.leer,

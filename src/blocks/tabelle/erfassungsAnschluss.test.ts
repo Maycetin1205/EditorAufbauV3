@@ -187,3 +187,57 @@ test('korrekturPlatz nennt den Platz der geoeffneten Zeile', () => {
   expect(a.korrekturPlatz).toBeNull()
   expect(werte(a)).toEqual([['ART1', '1'], ['ART2', '2'], ['ART3', '3']])
 })
+
+// P4: Der Bediener fuellt die untere Zeile aus und klickt auf Buchen, ohne
+// vorher Enter zu druecken. Bis P4 zaehlte sie nicht mit und wurde nicht
+// geschrieben — sie stand sichtbar ausgefuellt vor ihm und ging still
+// verloren (Nutzer-Befund 2026-09-01). Dieselbe Mechanik wie bei der zur
+// Korrektur zurueckgeholten Zeile.
+test('die unten getippte Zeile zaehlt mit, auch ohne Enter', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  a.lauf.tippe(0, 'ART2')
+  a.lauf.tippe(1, '2')
+
+  expect(a.zeilen.length).toBe(1)
+  expect(a.vormerkungen(UMFELD).map((v) => [...v.werte]))
+    .toEqual([['ART1', '1'], ['ART2', '2']])
+})
+
+// Der Normalzustand der Erfassung ist eine leere Zeile unten. Wuerde sie
+// mitzaehlen, staende am Knopf dauerhaft eine Vormerkung mehr, als es gibt.
+test('die leere Zeile unten zaehlt nicht mit', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  expect(a.vormerkungen(UMFELD).map((v) => [...v.werte])).toEqual([['ART1', '1']])
+})
+
+// Die Kennung ist RESERVIERT, nicht vergeben: legt der Bediener die Zeile
+// danach doch mit Enter ab, traegt sie genau dieselbe. Sonst meldete die
+// Kette eine Kennung als geschrieben zurueck, die es in der Liste nicht gibt.
+test('die reservierte Kennung ist die, die Enter dann vergibt', () => {
+  const a = new ErfassungsAnschluss()
+  a.lauf.tippe(0, 'ART1')
+  a.lauf.tippe(1, '1')
+  const reserviert = a.vormerkungen(UMFELD)[0].kennung
+
+  a.erfasse(UMFELD)
+  expect([...a.schluessel]).toEqual([reserviert])
+})
+
+// Hat die Kette sie geschrieben, ist sie keine Tipp-Zeile mehr: sie geht in
+// die Liste, markiert. Bliebe sie oben stehen, schickte der naechste
+// Buchen-Klick sie ein zweites Mal ins ERP.
+test('die geschriebene untere Zeile geht markiert in die Liste', () => {
+  const a = new ErfassungsAnschluss()
+  a.lauf.tippe(0, 'ART1')
+  a.lauf.tippe(1, '1')
+  const kennung = a.vormerkungen(UMFELD)[0].kennung
+
+  expect(a.markiereGeschrieben(UMFELD, [kennung])).toBe(true)
+  expect(werte(a)).toEqual([['ART1', '1']])
+  expect(a.istGeschrieben(0)).toBe(true)
+  // Oben steht wieder eine leere Zeile, und sie ist keine Vormerkung mehr.
+  expect(a.lauf.wertVon(UMFELD, 0)).toBe('')
+  expect(a.vormerkungen(UMFELD)).toEqual([])
+})
