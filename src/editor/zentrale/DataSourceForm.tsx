@@ -3,6 +3,7 @@ import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Zeile } from '@/ui/werkbank/Zeile'
 import {
+  alias,
   artFuer,
   feldVorsatzFromInput,
   kennungAnzeige,
@@ -107,7 +108,16 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
     }
   }
 
-  const nameFehler = name.trim() === '' ? 'Anzeigename fehlt.' : ''
+  // SoftEngine legt die Zeilen einer Quelle unter ihrem Namen ab, und die
+  // Laufzeit sucht sie ueber genau diesen Namen (softengine/data.ts) — der
+  // erste Treffer gewinnt. Zwei gleich benannte Quellen zeigten stumm
+  // dieselben Daten.
+  const nameDoppelt = store.list.some(
+    (s) => s.id !== source?.id && alias(s.name) === alias(name),
+  )
+  let nameFehler = ''
+  if (name.trim() === '') nameFehler = 'Anzeigename fehlt.'
+  else if (nameDoppelt) nameFehler = 'Diesen Namen trägt schon eine andere Quelle.'
   const kennungFehler =
     kennungEingeben && kennungFromInput(kennungEingabe, art.idbKurzform) === ''
       ? `${art.kennungLabel} fehlt (z. B. ${art.kennungBeispiel}).`

@@ -186,6 +186,21 @@ export function rechnungVonAttribut(roh: unknown): Rechnung | null {
   }
 }
 
+// Eine gestrichene Spalte darf keinen Zeiger hinterlassen: der Platz wird
+// leer und damit unbenutzt. Sonst rechnete die Maske weiter mit einer Spalte,
+// die es nicht mehr gibt — und die naechste neue Spalte kann dieselbe Kennung
+// wieder bekommen (Vergabe = hoechste + 1, spalten.ts). Unveraendert kommt
+// dieselbe Rechnung zurueck, damit der Aufrufer nichts zu schreiben braucht.
+export function ohneSpalten(r: Rechnung, gestrichen: readonly string[]): Rechnung {
+  const weg = new Set(gestrichen)
+  if (!PLATZ_KEYS.some((k) => weg.has(r[k].spalte))) return r
+  const out = { ...r }
+  for (const k of PLATZ_KEYS) {
+    if (weg.has(out[k].spalte)) out[k] = { ...out[k], spalte: '' }
+  }
+  return out
+}
+
 export function rechnungAlsAttribut(r: Rechnung): string {
   return JSON.stringify(r)
 }

@@ -18,6 +18,7 @@ import {
   felderHinterSchnitt,
   istOffenerSatz,
   ladeRelationFor,
+  mitEindeutigenNamen,
   satzNummerVon,
   tableIdFor,
   type DataSource,
@@ -50,6 +51,7 @@ import {
   escapeHtmlAttr,
   escapeHtmlText,
   escapeNonAsciiJs,
+  guardJsonScript,
   guardScriptContent,
   stripCssComments,
 } from './serializer'
@@ -230,7 +232,10 @@ export function exportMask(
     .map((n) => nodeToHtml(tree, n, 'column', 2, popupName, spaltenIndex, sources, undefined, true))
     .join('\n')
 
-  const used = collectDataSources(tree, sources)
+  // Eindeutige Namen VOR beiden Verbrauchern: die SEFILELOOP-Bestellung
+  // (baueSevariablen) und FF_DATA_SOURCES muessen denselben Namen tragen,
+  // sonst sucht die Laufzeit einen Alias, den SoftEngine nie geliefert hat.
+  const used = mitEindeutigenNamen(collectDataSources(tree, sources))
 
   const benutzteFelder = benutzteFelderJeQuelle(tree, sources)
 
@@ -240,7 +245,7 @@ export function exportMask(
   const tokensCss = stripCssComments(tokensCssRaw)
   const runtimeJs = guardScriptContent(escapeNonAsciiJs(runtimeJsRaw.trim()))
 
-  const sourcesJs = guardScriptContent(escapeNonAsciiJs(
+  const sourcesJs = guardJsonScript(escapeNonAsciiJs(
     'window.FF_DATA_SOURCES = ' + JSON.stringify(used.map((s) => {
       const lade = ladeRelationFor(s)
       return {
@@ -256,7 +261,7 @@ export function exportMask(
     })) + ';',
   ))
 
-  const relationsJs = guardScriptContent(escapeNonAsciiJs(
+  const relationsJs = guardJsonScript(escapeNonAsciiJs(
     'window.FF_RELATIONS = ' + JSON.stringify(usedRelations.map((r) => ({
       id: r.id,
       verb: r.verb,

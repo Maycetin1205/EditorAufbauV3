@@ -9,6 +9,7 @@ import { dataSourceStore } from './DataSourceStore'
 import { ersteQuelleInReichweite, quellenInReichweite } from './quellenOps'
 import { gestenKlammer, Historie, type EditorSnapshot, type GestenKlammer } from './history'
 import { loadFromStorage, persistState, SAVE_DEBOUNCE_MS } from './persistence'
+import { gestricheneKennungen, ohneSpaltenZeiger } from './spaltenAufraeumen'
 import { SpeicherPlaner } from './speicherPlaner'
 import { Subject } from './Subject'
 import { dupliziereTeilbaum } from './duplizieren'
@@ -278,9 +279,17 @@ export class Editor extends Subject<Editor> {
 
     next[id] = startgroesseNachziehen(def, node.props, next[id])
 
+    // Verschwindet mit dieser Aenderung eine Kennung aus einer Liste (eine
+    // geloeschte Spalte), darf kein Ketten-Parameter mehr auf sie zeigen.
+    const geputzt = ohneSpaltenZeiger(
+      next,
+      id,
+      gestricheneKennungen(def, attr, node.props[attr], wert),
+    )
+
     this._tree = typeof wert === 'string' && def?.pageBlock === true && attr === 'name'
-      ? klarnamenNachziehen(next, id, wert)
-      : next
+      ? klarnamenNachziehen(geputzt, id, wert)
+      : geputzt
     this.notify(this)
   }
 

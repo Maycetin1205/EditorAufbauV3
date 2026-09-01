@@ -1,4 +1,9 @@
 import { html, type TemplateResult } from 'lit'
+import {
+  ohneSpalten,
+  rechnungAlsAttribut,
+  rechnungVonAttribut,
+} from '../../core/data/rechnung'
 import { starteUmbenennen } from '../shared/umbenennen'
 import {
   SPALTEN_MAX,
@@ -15,6 +20,25 @@ import {
 // 040b73c mit einem Wasserfall) — beide behandelten nur das Symptom.
 export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
   return mitKennungen([...spalten, neueSpalte(spalten.length)])
+}
+
+// Die Rechnung zeigt ueber die dauerhafte Kennung auf ihre Spalten. Wird eine
+// gestrichen, wird der Platz leer (= unbenutzt) — sonst rechnete die Maske mit
+// einer Spalte, die es nicht mehr gibt, und die naechste neue Spalte kann
+// dieselbe Kennung wieder bekommen. Rueckgabe: das neue Attribut, oder null,
+// wenn nichts abzuraeumen ist. Gegenstueck fuer die Ketten-Parameter im ganzen
+// Baum: state/spaltenAufraeumen.ts.
+export function rechnungNachSpalten(
+  roh: unknown,
+  alt: readonly Spalte[],
+  neu: readonly Spalte[],
+): string | null {
+  const rechnung = rechnungVonAttribut(roh)
+  if (!rechnung) return null
+  const bleibt = new Set(neu.map((s) => s.kennung))
+  const gestrichen = alt.map((s) => s.kennung).filter((k) => k !== '' && !bleibt.has(k))
+  const geputzt = ohneSpalten(rechnung, gestrichen)
+  return geputzt === rechnung ? null : rechnungAlsAttribut(geputzt)
 }
 
 // Eine Spalte streichen — von ueberall her, nicht nur hinten. EINE Stelle

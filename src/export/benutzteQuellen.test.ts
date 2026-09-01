@@ -16,7 +16,11 @@ registerBlockType({
   displayName: 'Positionen',
   category: 'anzeige',
   defaultProps: {},
-  customProperties: [],
+  // Wie das Marken-Feld der echten Tabelle: eine Feld-Eigenschaft OHNE
+  // quelleProp (tabelleEigenschaften.ts:37).
+  customProperties: [
+    { attributeName: 'tagField', name: 'Tag filtern nach', kind: 'field' },
+  ],
   acceptsChildren: false,
   resizableWidth: false,
   resizableHeight: false,
@@ -89,4 +93,23 @@ test('ein Fuellfeld allein wird bestellt', () => {
 test('die Hilfsquelle steht in der Quellenliste des Exports', () => {
   const tree = baum([{ titel: 'Bezeichnung', feld: '45_60', art: 'text', fuellFeld: 'q-art::bez' }])
   expect(collectDataSources(tree, BIBLIOTHEK).map((s) => s.id)).toEqual(['q-pos', 'q-art'])
+})
+
+// Eine Feld-Eigenschaft ohne quelleProp traegt dieselbe Form wie eine Bindung.
+// Ungetrennt bestellt der Export den ganzen Token "q-art::bez" als Feldcode bei
+// der Quelle in Reichweite — SoftEngine bricht daran laut Kontrakt die ganze
+// Loop-Liste ab oder liefert die Marke gar nicht.
+test('eine Feld-Eigenschaft mit Quelle im Wert wird bei DIESER Quelle bestellt', () => {
+  const tree = baum([{ titel: 'Menge', feld: '164_8' }])
+  tree[ROOT_ID].props.tagField = 'q-art::bez'
+  expect(codesVon(tree, 'q-art')).toEqual(['bez'])
+  expect(codesVon(tree, 'q-pos')).toEqual(['164_8'])
+})
+
+// Gegenprobe: ein nackter Feldcode gehoert weiter der Quelle in Reichweite.
+test('eine Feld-Eigenschaft ohne Quelle im Wert bleibt bei der eigenen Quelle', () => {
+  const tree = baum([{ titel: 'Menge', feld: '164_8' }])
+  tree[ROOT_ID].props.tagField = '45_60'
+  expect(codesVon(tree, 'q-pos')).toEqual(['164_8', '45_60'])
+  expect(benutzteFelderJeQuelle(tree, BIBLIOTHEK).has('q-art')).toBe(false)
 })

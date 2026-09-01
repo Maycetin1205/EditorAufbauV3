@@ -78,6 +78,26 @@ export function satzNummerVon(source: DataSource): string {
   return (source.indexField ?? '').trim()
 }
 
+// SoftEngine legt die Zeilen einer Quelle unter ihrem ALIAS ab, und die
+// Laufzeit sucht sie ueber genau diesen Namen (softengine/data.ts, sameAlias:
+// getrimmt und klein geschrieben) — der erste Treffer gewinnt. Zwei gleich
+// benannte Quellen zeigten damit stumm dieselben Daten. Das Formular laesst
+// Doppelnamen nicht mehr zu; Staende, die schon welche tragen, macht der
+// Export hier maschinell eindeutig.
+export function alias(name: string): string {
+  return name.trim().toLowerCase()
+}
+
+export function mitEindeutigenNamen(sources: readonly DataSource[]): DataSource[] {
+  const vergeben = new Set<string>()
+  return sources.map((s) => {
+    let name = s.name
+    for (let nr = 2; vergeben.has(alias(name)); nr++) name = `${s.name.trim()} ${nr}`
+    vergeben.add(alias(name))
+    return name === s.name ? s : { ...s, name }
+  })
+}
+
 export function tableIdFor(source: DataSource): string {
   const feste = artFuer(source.kind).tabellenId
   return feste === '' ? (source.idbId ?? '') : feste
@@ -214,6 +234,15 @@ export function pruefeDatenquellen(
     }
     if (typeof e.kind !== 'string' || !DATA_SOURCE_KINDS.includes(e.kind as DataSourceKind)) {
       weg('die Art der Datenquelle fehlt oder ist unbekannt')
+      continue
+    }
+    // Arten ohne feste Tabellen-ID (IDB) tragen sie als eigene Kennung. Fehlt
+    // sie, bestellte der Export einen SEFILELOOP-Eintrag mit ID:"" — SoftEngine
+    // findet dazu nichts und bricht laut Kontrakt die ganze Loop-Liste ab.
+    // Lieber hier melden als still eine unbrauchbare Bestellung schreiben.
+    if (artFuer(e.kind as DataSourceKind).tabellenId === ''
+      && (typeof e.idbId !== 'string' || e.idbId.trim() === '')) {
+      weg('die Tabellen-Kennung fehlt (z. B. IDB0001)')
       continue
     }
     const fields: DataSourceField[] = []

@@ -25,6 +25,15 @@ export function guardScriptContent(js: string): string {
   return js.replace(/<\/script/gi, '<\\/script')
 }
 
+// Fuer die zwei JSON-Skripte (FF_DATA_SOURCES, FF_RELATIONS): dort steht jedes
+// `<` in einer JSON-Zeichenkette, und \u003C ist dieselbe Zeichenkette.
+// Damit kann kein getippter Text das Skript verlassen — auch nicht ueber die
+// "double escaped script"-Masche, die am </script-Schutz vorbeikommt.
+// NICHT fuers Runtime-Buendel: dort ist `<` echter Code (Vergleiche).
+export function guardJsonScript(js: string): string {
+  return js.replace(/</g, '\\u003C')
+}
+
 export function stripCssComments(css: string): string {
   return css
     .replace(/\/\*[\s\S]*?\*\//g, '')

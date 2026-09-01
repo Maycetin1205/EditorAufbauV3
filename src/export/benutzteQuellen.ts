@@ -127,12 +127,11 @@ export function benutzteFelderJeQuelle(
     for (const prop of def?.customProperties ?? []) {
       if (prop.kind !== 'field') continue
       if (!propertySichtbar(prop.visibleWhen, node.props)) continue
-      merke(
-        prop.quelleProp === undefined
-          ? inReichweite()[0]?.source.id ?? ''
-          : String(node.props[prop.quelleProp] ?? ''),
-        node.props[prop.attributeName],
-      )
+      // Ohne `quelleProp` steht im Wert dieselbe Form wie in einer Bindung
+      // (`quelle::code`) — er muss aufgeloest werden, sonst bestellt der Export
+      // den ganzen Token als Feldcode bei der Quelle in Reichweite.
+      if (prop.quelleProp === undefined) merkeBindung(node.props[prop.attributeName])
+      else merke(String(node.props[prop.quelleProp] ?? ''), node.props[prop.attributeName])
     }
 
     if (traegtEigeneQuelle(node)) {

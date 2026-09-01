@@ -33,6 +33,7 @@ import {
   entferneSpalte,
   feldPickerAbbestellen,
   kopfGriffe,
+  rechnungNachSpalten,
   spaltenSteuerung,
   starteSpaltenZug,
 } from './spaltenBearbeiten'
@@ -436,10 +437,25 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
+  // Eine gestrichene Spalte darf keinen Zeiger hinterlassen. Die Rechnung
+  // sitzt an DIESER Tabelle und wird hier abgeraeumt; die Ketten-Parameter
+  // stehen im ganzen Baum — die raeumt der Store ab
+  // (state/spaltenAufraeumen.ts). Beide Meldungen bilden EINE Geste, sonst
+  // braeuchte ein Loeschen zwei Mal Strg+Z.
   private aendere(spalten: Spalte[]): void {
+    const rechnung = rechnungNachSpalten(this.rechnung, this.spaltenListe(), spalten)
+    if (rechnung === null) {
+      this.meldeProp('spalten', spalten)
+      return
+    }
+    this.meldeProp('rechnung', rechnung, 'beginn')
+    this.meldeProp('spalten', spalten, 'ende')
+  }
+
+  private meldeProp(attr: string, value: unknown, geste?: 'beginn' | 'ende'): void {
     this.dispatchEvent(
       new CustomEvent('ff-prop-change', {
-        detail: { attr: 'spalten', value: spalten },
+        detail: { attr, value, ...(geste === undefined ? {} : { geste }) },
         bubbles: true,
         composed: true,
       }),

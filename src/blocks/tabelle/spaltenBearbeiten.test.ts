@@ -1,5 +1,11 @@
 import { expect, test } from 'vitest'
-import { entferneSpalte, fuegeSpalteAn, verschiebeSpalteAn } from './spaltenBearbeiten'
+import { rechnungAlsAttribut, rechnungVonAttribut, leereRechnung } from '../../core/data/rechnung'
+import {
+  entferneSpalte,
+  fuegeSpalteAn,
+  rechnungNachSpalten,
+  verschiebeSpalteAn,
+} from './spaltenBearbeiten'
 import { SPALTEN_MAX, SPALTEN_MIN, spaltenRaster, type Spalte } from './spalten'
 
 function drei(): Spalte[] {
@@ -121,4 +127,30 @@ test('ein Ziel hinter dem Ende wird der letzte Platz', () => {
   let raus: Spalte[] = []
   verschiebeSpalteAn(0, 99, drei, (l) => { raus = l })
   expect(raus.map((s) => s.kennung)).toEqual(['s2', 's3', 's1'])
+})
+
+// Die Rechnung zeigt ueber die dauerhafte Kennung auf ihre Spalten. Bleibt der
+// Zeiger nach dem Loeschen stehen, rechnet die Maske weiter mit einer Spalte,
+// die es nicht mehr gibt — und die naechste neue Spalte bekommt dieselbe
+// Kennung (Vergabe = hoechste + 1).
+function rechnungMit(menge: string, anzahl: string): string {
+  const r = leereRechnung()
+  r.menge = { ...r.menge, spalte: menge }
+  r.anzahl = { ...r.anzahl, spalte: anzahl }
+  return rechnungAlsAttribut(r)
+}
+
+test('der Rechnungs-Platz der geloeschten Spalte wird leer', () => {
+  const roh = rechnungNachSpalten(rechnungMit('s1', 's3'), drei(), drei().slice(0, 2))
+  const r = rechnungVonAttribut(roh)
+  expect(r?.anzahl.spalte).toBe('')
+  expect(r?.menge.spalte).toBe('s1')
+})
+
+test('bleibt jede Spalte, ist nichts abzuraeumen', () => {
+  expect(rechnungNachSpalten(rechnungMit('s1', 's3'), drei(), drei())).toBeNull()
+})
+
+test('ohne Rechnung gibt es nichts abzuraeumen', () => {
+  expect(rechnungNachSpalten('', drei(), drei().slice(0, 2))).toBeNull()
 })
