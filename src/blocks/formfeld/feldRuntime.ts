@@ -1,5 +1,6 @@
 import { bindingAttr } from '../../core/blocks/BlockDefinition'
 import { satzIndexVon, setField } from '../../softengine/data'
+import { geberIdVon, klareAuswahl, setzeAuswahl } from '../shared/auswahl'
 import { macheDatenAnschluss } from '../shared/datenAnschluss'
 import { leseGebundeneStelle } from '../shared/gebundeneStelle'
 import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
@@ -44,6 +45,10 @@ export function hydrateField(field: RuntimeFieldElement): void {
   const stelle = leseGebundeneStelle(field, bindingAttr('value'))
   if (stelle.art !== 'wert') {
     fieldData.delete(field)
+    // Ein gebundenes Feld ist Geber seiner ANGEZEIGTEN Zeile (Nutzer
+    // 2026-09-01) — zeigt es keine, gibt es auch keine. Ohne data-ff-id
+    // (kein Geber) sind beide Rufe stumm.
+    klareAuswahl(geberIdVon(field))
 
     if (stelle.art === 'ohneZeile') field.value = ''
     return
@@ -55,6 +60,11 @@ export function hydrateField(field: RuntimeFieldElement): void {
   if (quelleId === '') fieldData.set(field, { row: zeile, code: reinerCode, pindex })
   else fieldData.delete(field)
   field.value = wert
+  // Die angezeigte Zeile veroeffentlichen — folgt das Feld selbst einer
+  // Auswahl, ist das bereits die gefundene Partnerzeile (gebundeneStelle
+  // liest ueber ersteZeileNachAuswahl). Gleiches Merkmal = stiller Ruf,
+  // darum kreist die Hydrier-Kette nicht.
+  setzeAuswahl(geberIdVon(field), zeile)
 }
 
 function writeLocal(field: RuntimeFieldElement): FieldData | undefined {

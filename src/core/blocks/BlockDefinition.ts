@@ -82,6 +82,11 @@ export interface BlockEventSpec {
   name: string
 }
 
+// Der Baustein gibt eine gewaehlte/angezeigte Zeile her (Auswahl-Geber).
+// `wenn` schaltet dabei NICHT die Faehigkeit, sondern waehlt nur die
+// Quell-Eigenschaft: sichtbar -> quelleProp, sonst Rueckfall auf `source`
+// (treeQuery/auswahlQuelleIdVon). So gibt das Nachschlage-Feld seine
+// gewaehlte Zeile und dasselbe Feld im Text-Modus seine gebundene.
 export interface SatzWahl {
   quelleProp?: string
 

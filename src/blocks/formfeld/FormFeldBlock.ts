@@ -61,6 +61,10 @@ export class FormFeldBlock extends BasicBlock {
 
   static readonly kannAuswahlFolgen = true
 
+  // Das Feld GIBT seine Zeile: beim Typ Nachschlagen die im Fenster gewaehlte
+  // (Quelle = nachschlagQuelle), bei allen anderen Typen die angezeigte Zeile
+  // seiner Datenquelle (wenn unsichtbar -> Rueckfall auf `source`,
+  // treeQuery/auswahlQuelleIdVon; veroeffentlicht in feldRuntime).
   static readonly satzWahl: SatzWahl = {
     quelleProp: 'nachschlagQuelle',
     wenn: { attributeName: 'fieldType', equals: 'nachschlagen' },

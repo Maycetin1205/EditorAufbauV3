@@ -77,11 +77,15 @@ export function auswahlQuelleIdVon(node: BlockNode | undefined): string {
   return typeof wert === 'string' ? wert : ''
 }
 
+// Geber ist, wer satzWahl deklariert UND eine Quelle aufloest. Die
+// wenn-Bedingung der satzWahl waehlt dabei nur, WELCHE Eigenschaft die
+// Quelle nennt (auswahlQuelleIdVon faellt sonst auf `source` zurueck) —
+// sie ist KEIN Schalter fuer die Faehigkeit: auch ein gebundenes
+// Formularfeld gibt seine angezeigte Zeile (Nutzer 2026-09-01), nicht nur
+// das Nachschlage-Feld seine gewaehlte.
 export function istAuswahlGeber(node: BlockNode | undefined): boolean {
   if (!node) return false
-  const wahl = getBlockDefinition(node.type)?.satzWahl
-  if (!wahl) return false
-  if (!propertySichtbar(wahl.wenn, node.props)) return false
+  if (!getBlockDefinition(node.type)?.satzWahl) return false
   return auswahlQuelleIdVon(node) !== ''
 }
 
