@@ -211,8 +211,12 @@ export const tabelleStil = css`
         font-weight: 400;
         color: var(--se-faint);
       }
-      .kopf > div:last-child,
-      .zeile > div:last-child { border-right: none; }
+      /* Die letzte ZELLE, nicht das letzte Kind: hinter den Zellen stehen noch
+         die Greifstreifen (Kopf) bzw. das Loeschkreuz (Zeile). Mit
+         :last-child traf die Regel dann gar nichts mehr, und die letzte Spalte
+         behielt ihren Trennstrich vor der Tafelkante. */
+      .kopf > div:last-of-type,
+      .zeile > div:last-of-type { border-right: none; }
       .kopf > div {
         cursor: pointer;
         user-select: none;
@@ -221,24 +225,39 @@ export const tabelleStil = css`
         position: relative;
       }
 
-      /* Der Greifstreifen an der rechten Kante einer Kopfzelle: hier wird die
-         Spaltenbreite gezogen. Er ist mit Absicht breiter als der Strich, den
-         er verschiebt — eine 1px-Linie trifft man mit der Maus nicht. Er
-         liegt INNEN, weil die Kopfzelle ihren Ueberhang abschneidet
-         (overflow: hidden); ein Streifen, der ueber die Kante ragt, waere zur
-         Haelfte weggeschnitten. */
+      /* Der Greifstreifen ist ein eigenes Kind der Kopfzeile und sitzt in
+         derselben Gitter-Spur wie die Kopfzelle links von ihm (grid-column am
+         Element). justify-self haelt ihn an deren Ende, der negative Rand
+         schiebt ihn ueber die Linie: 11px breit, 6px links und 5px rechts.
+         Eine 1px-Linie trifft man mit der Maus nicht — und wer sie anvisiert,
+         zielt auf die Mitte, nicht 5px daneben.
+
+         Er liegt bewusst NICHT in der Kopfzelle (die schneidet ihren
+         Ueberhang ab, overflow: hidden — samt Trefferflaeche) und auch nicht
+         in einer eigenen Lage darueber: eine Lage braucht inset oder vier
+         Kanten und einen zweiten Satz Spalten-Spuren. So haengt er an genau
+         derselben Gitter-Rechnung wie der Kopf und braucht nichts, was die
+         Tabelle nicht ohnehin schon braucht. */
       .breite-griff {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 8px;
-        height: 100%;
+        position: relative;
+        z-index: 2;
+        justify-self: end;
+        width: 11px;
+        margin-right: -5px;
         cursor: col-resize;
 
         /* Sonst rollt der Finger die Tabelle, statt zu ziehen. */
         touch-action: none;
       }
-      .breite-griff:hover { box-shadow: inset -2px 0 0 var(--se-accent); }
+      .breite-griff:hover {
+        background: linear-gradient(
+          to right,
+          transparent 4px,
+          var(--se-accent) 4px,
+          var(--se-accent) 7px,
+          transparent 7px
+        );
+      }
 
       /* Das Kreuz am Spaltenkopf — nur im Editor, und nur unter der Maus.
          Es sitzt LINKS vom Greifstreifen, sonst laegen Streichen und Ziehen
@@ -246,7 +265,11 @@ export const tabelleStil = css`
          (.zeile-weg weiter unten): unsichtbar, bis jemand hinfaehrt. */
       .kopf-weg {
         position: absolute;
-        right: 10px;
+
+        /* Abstand zum Greifstreifen (der reicht bis 6px links der Linie):
+           bei 10px lagen Ziehen und Loeschen 2px auseinander — zwei Pixel
+           zwischen "Spalte breiter" und "Spalte weg" (gemessen 2026-08-31). */
+        right: 20px;
         top: 50%;
         transform: translateY(-50%);
         padding: 0 3px;

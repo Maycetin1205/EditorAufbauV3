@@ -4,7 +4,7 @@ import { leerZustand } from '../shared/leerZustand'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { spaltenKreuz } from './spaltenBearbeiten'
-import { breitenGriff, type BreitenWirt } from './spaltenBreite'
+import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './spaltenBindung'
 import {
   bewegeZeilenFokus,
@@ -155,12 +155,18 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
       </div>` : ''}
       <div class="koerper" role=${lage.leer ? nothing : 'table'} tabindex="-1">
       ${lage.zeigeKopf ? html`<div class="kopf" role="row" style=${styleMap(lage.cols)}>
-        ${lage.spalten.map(
+        ${
+          // Kopfzelle und Greifstreifen nennen ihren Platz im Gitter BEIDE
+          // ausdruecklich (grid-row/grid-column). Sonst verteilt das Gitter die
+          // Zellen um die von den Streifen belegten Plaetze herum — in eine
+          // zweite Reihe.
+          lage.spalten.map(
           (s, i) => html`<div
             class=${
               lage.imEditor && (lage.herkunft[i] ?? '') !== '' ? 'mit-herkunft' : nothing}
             role="columnheader"
             data-ff-editable
+            style="grid-row: 1; grid-column: ${i + 1}"
             @dblclick=${(e: MouseEvent) => tun.dblklickKopf(e, i)}
             @click=${(e: MouseEvent) => tun.klickKopf(e, i)}
           >${
@@ -179,10 +185,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}${lage.imEditor && lage.editable && lage.spalten.length > 1
             ? spaltenKreuz(s.titel, i, tun.loescheSpalte)
-            : nothing}${i < lage.spalten.length - 1
-            ? breitenGriff(i, tun.breiten)
             : nothing}</div>`,
         )}
+        ${breitenGriffe(lage.spalten.length, tun.breiten)}
       </div>` : nothing}
         ${ ''}
         ${lage.leer ? leerZustand(lage.leerText, true) : html`

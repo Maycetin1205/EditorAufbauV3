@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { entferneSpalte, fuegeSpalteAn } from './spaltenBearbeiten'
-import { SPALTEN_MAX, SPALTEN_MIN, SPALTEN_MIN_BREITE, type Spalte } from './spalten'
+import { SPALTEN_MAX, SPALTEN_MIN, spaltenRaster, type Spalte } from './spalten'
 
 function drei(): Spalte[] {
   return [
@@ -51,115 +51,44 @@ test('ein Platz ausserhalb der Liste tut nichts', () => {
   expect(gerufen).toBe(false)
 })
 
-function dreiFeste(): Spalte[] {
-  return [
-    { titel: 'A', feld: '1_1', breite: 120 },
-    { titel: 'B', feld: '2_1', breite: 100 },
-    { titel: 'C', feld: '3_1', breite: 80 },
-  ]
-}
-
-const summe = (l: readonly Spalte[]): number =>
-  l.reduce((s, sp) => s + (sp.breite ?? 0), 0)
-
-// Der gemeldete Fehler: sobald jede Linie einmal gezogen ist, tragen alle
-// Spalten feste Pixel und fuellen die Tabelle genau aus. Die neue bekam einen
-// Anteil an einem Rest, den es nicht gab — null Pixel breit, unsichtbar. Der
-// Plus-Knopf sah kaputt aus, obwohl er die Spalte angelegt hatte.
-test('eine neue Spalte ist sichtbar, auch wenn alle anderen fest sind', () => {
-  const raus = fuegeSpalteAn(dreiFeste())
-  expect(raus).toHaveLength(4)
-  expect(raus[3].breite).toBeGreaterThanOrEqual(SPALTEN_MIN_BREITE)
-})
-
-// Dieselbe Regel wie beim Ziehen einer Linie: was die eine bekommt, geben die
-// anderen ab. Waechst die Summe stattdessen, laeuft die Tabelle aus ihrem
-// Kasten und die hinteren Spalten werden abgeschnitten.
-test('die Gesamtbreite bleibt beim Anfuegen gleich', () => {
-  expect(summe(fuegeSpalteAn(dreiFeste()))).toBe(summe(dreiFeste()))
-})
-
-// Waechst noch irgendeine Spalte mit, holt sich die neue ihren Platz von
-// allein — dann darf nichts umgerechnet werden, sonst verloere der Bediener
-// seine Handarbeit ohne Grund.
-test('mit einer mitwachsenden Spalte bleibt alles, wie es war', () => {
-  const raus = fuegeSpalteAn(drei())
-  expect(raus.map((s) => s.breite)).toEqual([undefined, 120, undefined, undefined])
-})
-
-// Stehen alle schon auf der Mindestbreite, ist nichts mehr zu holen. Dann
-// lieber die gezogenen Breiten aufgeben als eine Spalte anlegen, die niemand
-// sieht.
-test('ohne Platz geben alle ihre gezogene Breite ab', () => {
-  const eng: Spalte[] = [
-    { titel: 'A', feld: '1_1', breite: SPALTEN_MIN_BREITE },
-    { titel: 'B', feld: '2_1', breite: SPALTEN_MIN_BREITE },
-    { titel: 'C', feld: '3_1', breite: SPALTEN_MIN_BREITE },
-  ]
-  expect(fuegeSpalteAn(eng).every((s) => s.breite === undefined)).toBe(true)
-})
-
-// Spiegelbild: sonst bliebe der Platz der gestrichenen Spalte als Luecke am
-// rechten Rand stehen.
-test('beim Streichen nehmen die Verbliebenen den Platz auf', () => {
-  let raus: Spalte[] = []
-  entferneSpalte(1, dreiFeste, (l) => { raus = l })
-  expect(raus.map((s) => s.titel)).toEqual(['A', 'C'])
-  expect(summe(raus)).toBe(summe(dreiFeste()))
-})
-
 function feste(...breiten: number[]): Spalte[] {
   return breiten.map((breite, i) => ({ titel: `S${i}`, feld: `${i}_1`, breite }))
 }
 
-// Die Faelle, die 7f92603 durchgelassen hat: mindestens eine Spalte klebt an
-// der Mindestbreite und kann nichts abgeben. Die alte Rechnung liess deren
-// Anteil hinten herausfallen — die Summe wuchs um 13 bis 27 px, bei jedem
-// Klick erneut, und die hinterste Spalte lief aus der Tabelle.
-test('die Gesamtbreite bleibt gleich, auch wenn Spalten an der Mindestbreite kleben', () => {
-  const faelle = [
-    feste(40, 400),
-    feste(40, 40, 520),
-    feste(41, 41, 41, 477),
-    feste(40, 40, 40, 40, 440),
-    feste(SPALTEN_MIN_BREITE, SPALTEN_MIN_BREITE, 1000),
-  ]
-  for (const vor of faelle) {
-    expect(summe(fuegeSpalteAn(vor))).toBe(summe(vor))
-  }
+// Der gemeldete Fehler: waren alle Spalten gezogen, war der Rest fuer die
+// neue NULL Pixel — sie war angelegt und unsichtbar. Jetzt gibt es keinen
+// Rest, sondern Anteile: die neue bekommt den mittleren, die uebrigen ruecken
+// anteilig zusammen.
+test('die neue Spalte ist sichtbar, auch wenn alle anderen gezogen sind', () => {
+  const raus = fuegeSpalteAn(feste(120, 100, 80))
+  expect(raus).toHaveLength(4)
+  expect(spaltenRaster(raus))
+    .toBe('minmax(0, 120fr) minmax(0, 100fr) minmax(0, 80fr) minmax(0, 100fr)')
 })
 
-// Genauso wichtig wie die Summe: keine Spalte darf dabei unsichtbar werden.
-test('keine Spalte faellt unter die Mindestbreite', () => {
-  for (const vor of [feste(40, 400), feste(41, 41, 41, 477), feste(40, 40, 40, 40, 440)]) {
-    for (const s of fuegeSpalteAn(vor)) {
-      expect(s.breite).toBeGreaterThanOrEqual(SPALTEN_MIN_BREITE)
-    }
-  }
+// Was der Bediener gezogen hat, bleibt stehen. Frueher wurde beim Anfuegen
+// ALLES neu verteilt.
+test('gezogene Breiten bleiben beim Anfuegen unangetastet', () => {
+  expect(fuegeSpalteAn(feste(43, 97, 61, 399)).map((s) => s.breite))
+    .toEqual([43, 97, 61, 399, undefined])
 })
 
-// Es addiert sich: der gemeldete Fehler fiel nicht beim ersten Klick auf,
-// sondern nach mehreren. Darum wird hier bis zur Obergrenze geklickt.
-//
-// Die Tabelle ist absichtlich breit (1600 px): waere sie schmal, griffe
-// unterwegs der Rueckfall „alle geben ihre gezogene Breite ab" — 16 Spalten
-// mal 40 px passen in 600 px nicht hinein. Der Rueckfall hat seinen eigenen
-// Test; hier soll die Rechnung selbst laufen.
-test('auch nach vielen Klicks bleibt die Gesamtbreite stehen', () => {
-  let spalten = feste(40, 40, 1520)
-  const soll = summe(spalten)
+// Spiegelbild: die Verbliebenen behalten ihre Anteile und fuellen die Tabelle
+// trotzdem wieder aus. Vorher blieb der Platz der gestrichenen Spalte als
+// leere Flaeche am rechten Rand stehen (Nutzer-Befund 2026-08-31).
+test('beim Streichen behalten die Verbliebenen ihre Breite', () => {
+  let raus: Spalte[] = []
+  entferneSpalte(1, () => feste(120, 100, 80), (l) => { raus = l })
+  expect(raus.map((s) => s.titel)).toEqual(['S0', 'S2'])
+  expect(raus.map((s) => s.breite)).toEqual([120, 80])
+})
+
+// Bis zur Obergrenze klicken: keine Spalte faellt dabei auf den Anteil null.
+// Der Fehler fiel nicht beim ersten Klick auf, sondern nach mehreren.
+test('auch nach vielen Klicks hat jede Spalte einen Anteil', () => {
+  let spalten = feste(120, 100, 80)
   while (spalten.length < SPALTEN_MAX) {
     spalten = fuegeSpalteAn(spalten)
-    expect(summe(spalten)).toBe(soll)
-    for (const s of spalten) expect(s.breite).toBeGreaterThanOrEqual(SPALTEN_MIN_BREITE)
+    expect(spaltenRaster(spalten)).not.toMatch(/[^0-9]0fr/)
   }
-})
-
-// Streichen skaliert HOCH, dort klemmt die Mindestbreite nicht — aber die
-// Summe muss trotzdem auf das Pixel stimmen, sonst bleibt rechts eine Luecke.
-test('beim Streichen stimmt die Summe auch bei schiefen Zahlen', () => {
-  const vor = feste(43, 97, 61, 399)
-  let raus: Spalte[] = []
-  entferneSpalte(2, () => [...vor], (l) => { raus = l })
-  expect(summe(raus)).toBe(summe(vor))
 })

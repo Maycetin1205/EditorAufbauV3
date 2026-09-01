@@ -40,20 +40,48 @@ test('sind beide am Anschlag, bleibt alles stehen', () => {
     .toEqual({ links: SPALTEN_MIN_BREITE, rechts: SPALTEN_MIN_BREITE })
 })
 
-// Das Raster selbst: gezogene Spalten stehen fest, alle anderen teilen sich
-// den Rest zu gleichen Teilen.
-test('nur gezogene Spalten bekommen feste Pixel', () => {
+// Das Raster selbst: kein Pixelmass, nur Anteile. Eine Spalte ohne eigene
+// Zahl bekommt das Mittel der gesetzten — 120 und 80 ergeben 100.
+test('gezogene Spalten werden Anteile, ungezogene bekommen das Mittel', () => {
   const spalten = coerceSpalten([
     { titel: 'A', feld: '1_1', breite: 120 },
     { titel: 'B', feld: '2_1' },
     { titel: 'C', feld: '3_1', breite: 80 },
   ])
-  expect(spaltenRaster(spalten)).toBe('120px minmax(0, 1fr) 80px')
+  expect(spaltenRaster(spalten)).toBe('minmax(0, 120fr) minmax(0, 100fr) minmax(0, 80fr)')
+})
+
+test('ohne gezogene Breite teilen alle gleichmaessig', () => {
+  const spalten = coerceSpalten([{ titel: 'A', feld: '1_1' }, { titel: 'B', feld: '2_1' }])
+  expect(spaltenRaster(spalten)).toBe('minmax(0, 1fr) minmax(0, 1fr)')
+})
+
+// Feste Pixel summierten sich nur zufaellig auf die Tabellenbreite; die
+// Differenz stand rechts als leere Flaeche (Nutzer-Befund 2026-08-31).
+test('im Raster steht nie ein Pixelmass', () => {
+  const spalten = coerceSpalten([
+    { titel: 'A', feld: '1_1', breite: 120 },
+    { titel: 'B', feld: '2_1', breite: 80 },
+  ])
+  expect(spaltenRaster(spalten)).not.toContain('px')
 })
 
 // Der fluechtige Stand (Zug im Gange, oder in der Maske von Hand gesetzt)
 // schlaegt den gespeicherten.
 test('die gezogene Breite schlaegt die gespeicherte', () => {
-  const spalten = coerceSpalten([{ titel: 'A', feld: '1_1', breite: 120 }])
-  expect(spaltenRaster(spalten, (i) => (i === 0 ? 200 : undefined))).toBe('200px')
+  const spalten = coerceSpalten([
+    { titel: 'A', feld: '1_1', breite: 120 },
+    { titel: 'B', feld: '2_1', breite: 60 },
+  ])
+  expect(spaltenRaster(spalten, (i) => (i === 0 ? 200 : undefined)))
+    .toBe('minmax(0, 200fr) minmax(0, 60fr)')
+})
+
+// Und er gilt auch fuer eine Spalte, die noch GAR KEINE gespeicherte Breite
+// traegt. Genau dort wurde er verworfen: beim Ziehen bewegte sich nichts, und
+// erst das Loslassen liess die Spalte springen (Nutzer-Befund 2026-08-31).
+test('der fluechtige Stand gilt auch ohne gespeicherte Breite', () => {
+  const spalten = coerceSpalten([{ titel: 'A', feld: '1_1' }, { titel: 'B', feld: '2_1' }])
+  expect(spaltenRaster(spalten, (i) => (i === 0 ? 300 : 200)))
+    .toBe('minmax(0, 300fr) minmax(0, 200fr)')
 })

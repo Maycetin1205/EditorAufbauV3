@@ -44,10 +44,15 @@ export function verteileZug(
 // Editor die Tabelle auf der Flaeche, statt die Spalte zu weiten.
 function starteZug(e: PointerEvent, index: number, wirt: BreitenWirt): void {
   if (e.button !== 0) return
-  const griff = e.currentTarget as HTMLElement | null
-  const links = griff?.parentElement
-  const rechts = links?.nextElementSibling
-  if (!links || !(rechts instanceof HTMLElement)) return
+  // Die Spalten kommen ueber ihren PLATZ aus der Kopfzeile, nicht ueber
+  // Geschwister des Streifens: der Streifen ist selbst ein Kind der
+  // Kopfzeile und liegt NEBEN den Kopfzellen, nicht in einer von ihnen.
+  const kopf = (e.currentTarget as HTMLElement | null)?.parentElement
+  const zellen = [...(kopf?.children ?? [])]
+    .filter((k): k is HTMLElement => k instanceof HTMLElement && k.tagName === 'DIV')
+  const links = zellen[index]
+  const rechts = zellen[index + 1]
+  if (!links || !rechts) return
 
   e.stopPropagation()
   e.preventDefault()
@@ -65,10 +70,17 @@ function starteZug(e: PointerEvent, index: number, wirt: BreitenWirt): void {
     window.removeEventListener('blur', beiAbbruch)
   }
 
-  const alsPaar = (): BreitenAenderung[] => [
-    { index, breite: letzte.links },
-    { index: index + 1, breite: letzte.rechts },
-  ]
+  // Beim Anfassen bekommt JEDE Spalte ihren gemessenen Anteil, nicht nur die
+  // zwei an der Linie. Damit steht die Summe der Anteile fest, und der Zug
+  // verschiebt sichtbar nur die zwei Nachbarn — sonst teilten die uebrigen
+  // (noch ungezogenen) Spalten sich bei jedem Zug den Rest neu auf.
+  const gemessen = zellen.map((k) => Math.max(1, Math.round(k.getBoundingClientRect().width)))
+
+  const alsPaar = (): BreitenAenderung[] => gemessen.map((breite, i) => {
+    if (i === index) return { index: i, breite: letzte.links }
+    if (i === index + 1) return { index: i, breite: letzte.rechts }
+    return { index: i, breite }
+  })
 
   function beiBewegung(ev: PointerEvent): void {
     letzte = verteileZug(linksStart, rechtsStart, ev.clientX - startX)
@@ -98,18 +110,41 @@ function starteZug(e: PointerEvent, index: number, wirt: BreitenWirt): void {
   window.addEventListener('blur', beiAbbruch)
 }
 
-// Der Greifstreifen auf der Linie zwischen zwei Spalten. Er schluckt auch
-// Klick und Doppelklick: sonst oeffnete das Loslassen am Ende des Zugs den
-// Feld-Picker der Spalte (Editor) oder sortierte die Tabelle um (Maske).
-// Die LETZTE Spalte bekommt keinen — ihre rechte Kante ist die Kante der
-// Tabelle, und dahinter liegt keine Spalte, die den Platz hergeben koennte.
-export function breitenGriff(index: number, wirt: BreitenWirt): TemplateResult {
-  return html`<span
+// Je Spaltengrenze ein Greifstreifen, MITTIG auf der Linie. Sie sind eigene
+// Kinder der Kopfzeile und liegen in derselben Gitter-Spur wie die Kopfzelle
+// links von ihnen (`grid-column`) — sie haengen damit an genau derselben
+// Gitter-Rechnung wie der Kopf selbst. Keine zweite Spur-Angabe, keine
+// Zwischen-Lage, kein `inset`: die Streifen brauchen nichts, was die Tabelle
+// nicht ohnehin schon braucht (sie IST ein Gitter). Das ist der Grund fuer
+// diese Bauart — `inset: 0` kennt erst Chromium 87, und der eingebaute
+// Browser von SoftEngine ist aelter: dort hatte eine Lage keine Groesse und
+// kein Streifen war erreichbar (Nutzer-Befund 2026-08-31).
+//
+// Die Streifen schlucken Klick und Doppelklick — sonst oeffnete das Loslassen
+// am Ende des Zugs den Feld-Picker der Spalte (Editor) oder sortierte die
+// Tabelle um (Maske).
+//
+// Vorher lag jeder Streifen INNEN in seiner Kopfzelle und damit vollstaendig
+// LINKS der Linie. Gemessen am 2026-08-31: greifbar war `Linie − 9` bis
+// `Linie − 1` — der Pixel AUF der Linie und alles rechts davon war tot, und
+// weil die Spalten auf Bruchteil-Pixeln liegen, traf dieselbe Handbewegung an
+// einer Spalte zu, an der naechsten nicht. Innen lag er, weil die Kopfzelle
+// ihren Ueberhang abschneidet (`overflow: hidden`) und ein Streifen ueber der
+// Kante zur Haelfte weggeschnitten worden waere — samt seiner Trefferflaeche.
+//
+// Die LETZTE Grenze fehlt: rechts von der letzten Spalte ist die Kante der
+// Tabelle, und dahinter liegt keine Spalte, die Platz hergeben koennte.
+export function breitenGriffe(
+  spaltenAnzahl: number,
+  wirt: BreitenWirt,
+): TemplateResult[] {
+  return Array.from({ length: Math.max(0, spaltenAnzahl - 1) }, (_, i) => html`<span
     class="breite-griff"
     role="presentation"
+    style="grid-row: 1; grid-column: ${i + 1}"
     title="Linie ziehen: links breiter, rechts schmaler"
-    @pointerdown=${(e: PointerEvent) => starteZug(e, index, wirt)}
+    @pointerdown=${(e: PointerEvent) => starteZug(e, i, wirt)}
     @click=${(e: MouseEvent) => e.stopPropagation()}
     @dblclick=${(e: MouseEvent) => e.stopPropagation()}
-  ></span>`
+  ></span>`)
 }

@@ -2,11 +2,11 @@ export interface Spalte {
   titel: string
   feld: string
 
-  // Breite in Pixeln, von Hand am Spaltenkopf gezogen. OHNE Wert teilt sich
-  // die Spalte den freien Platz gleichmaessig mit allen anderen ohne Wert —
-  // das ist der Standard, und er ist bewusst nicht vom Inhalt abhaengig
-  // (eine inhaltsabhaengige Breite spraenge beim Blaettern, sobald die
-  // naechste Seite kuerzere Werte traegt).
+  // Die von Hand am Spaltenkopf gezogene Breite: der Pixelwert im Moment des
+  // Zugs, im Raster als ANTEIL verrechnet (spaltenRaster). Ohne Wert bekommt
+  // die Spalte das Mittel der uebrigen, ohne jeden Wert teilen alle gleich.
+  // Bewusst nicht vom Inhalt abhaengig — eine inhaltsabhaengige Breite spraenge
+  // beim Blaettern, sobald die naechste Seite kuerzere Werte traegt.
   breite?: number
 
   // Diese Spalte wird unter der Tabelle aufaddiert.
@@ -121,18 +121,26 @@ export function tryCoerceSpalten(v: string): Spalte[] {
 }
 
 // Das Raster der Tabelle: Kopf, Zeilen und Lineal benutzen dieselbe Spur —
-// EINE Stelle, sonst stehen Kopf und Zellen versetzt. Eine gezogene Spalte
-// bekommt feste Pixel, alle uebrigen teilen sich den Rest zu gleichen
-// Teilen. `minmax(0, …)` haelt lange Werte davon ab, ihre Spalte
-// aufzublaehen.
+// EINE Stelle, sonst stehen Kopf und Zellen versetzt.
+//
+// Die gezogene Zahl gilt als ANTEIL (`fr`), nicht als festes Pixelmass: ein
+// fr-Raster fuellt die Tabelle immer genau aus. Feste Pixel taten das nur,
+// solange ihre Summe zufaellig die Tabellenbreite traf — sonst stand rechts
+// eine leere Flaeche (Nutzer-Befund 2026-08-31), spaetestens nachdem die
+// Tabelle auf der Flaeche groesser gezogen war. Zwei Anlaeufe (7f92603,
+// 040b73c) haben an dieser Summe gerechnet; jetzt gibt es keine.
+//
+// Spalten ohne eigene Zahl bekommen das Mittel der gesetzten — so bleiben
+// alte Masken stehen, in denen nur einzelne Spalten gezogen wurden. Ohne jede
+// Zahl teilen alle gleichmaessig (1fr).
 export function spaltenRaster(
   spalten: readonly Spalte[],
   breiten: (index: number) => number | undefined = () => undefined,
 ): string {
-  return spalten
-    .map((s, i) => {
-      const breite = breiten(i) ?? s.breite
-      return breite === undefined ? 'minmax(0, 1fr)' : `${breite}px`
-    })
-    .join(' ')
+  const eigene = spalten.map((s, i) => breiten(i) ?? s.breite)
+  const gesetzt = eigene.filter((w): w is number => w !== undefined)
+  const mittel = gesetzt.length === 0
+    ? 1
+    : Math.max(1, Math.round(gesetzt.reduce((a, b) => a + b, 0) / gesetzt.length))
+  return eigene.map((w) => `minmax(0, ${w ?? mittel}fr)`).join(' ')
 }

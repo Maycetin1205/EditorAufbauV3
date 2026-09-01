@@ -1,6 +1,7 @@
 import {
   beobachteRumpf,
   gemessenesMass,
+  kopfHoehe,
   OHNE_RUMPF,
   rumpfHoehe,
   type MessZiel,
@@ -40,6 +41,8 @@ export class AnsichtsStand {
   private _taktGemessen = 0
 
   private _rumpfGemessen = OHNE_RUMPF
+
+  private _kopfGemessen = 0
 
   private _fokusZeile: number | null = null
   private _fokusHolen = false
@@ -115,8 +118,9 @@ export class AnsichtsStand {
   private messeRumpf(): void {
     const takt = this.wirt.zeilenHoehe()
     this._taktGemessen = takt
-    const { mass, hoehe } = gemessenesMass(this.wirt.baustein, takt)
+    const { mass, hoehe, kopf } = gemessenesMass(this.wirt.baustein, takt)
     this._rumpfGemessen = hoehe
+    this._kopfGemessen = kopf
     if (mass?.passen === this._mass?.passen && mass?.zeilenHoehe === this._mass?.zeilenHoehe) return
     this._mass = mass
     this.wirt.melde()
@@ -129,13 +133,15 @@ export class AnsichtsStand {
   }
 
   nachRendern(): void {
-    // Neu messen, sobald der Rumpf nicht mehr so hoch ist wie beim Rechnen: die
-    // Fusszeile haengt an der Seitenzahl, erscheint also erst NACH der Messung
-    // und nimmt dem Rumpf ihren Platz weg. Sonst haengt die Korrektur allein am
-    // ResizeObserver, einen Frame zu spaet — bis dahin ist die letzte Zeile
-    // angeschnitten. Kippen kann das nicht: die Fusszeile macht nur kleiner.
+    // Neu messen, sobald Rumpf ODER Kopf nicht mehr so hoch sind wie beim
+    // Rechnen. Beides aendert sich NACH der Messung: die Fusszeile haengt an
+    // der Seitenzahl und die an der Messung; der Kopf wird zweizeilig, sobald
+    // eine Spalte an eine Hilfsquelle gebunden ist. Den Kopf sieht der
+    // ResizeObserver ueberhaupt nie (er haengt am Rumpf, und der behaelt seine
+    // Hoehe) — ohne den Vergleich bleibt eine Zeile zu viel gerechnet.
     if (this._taktGemessen !== this.wirt.zeilenHoehe()
-      || this._rumpfGemessen !== rumpfHoehe(this.wirt.baustein)) {
+      || this._rumpfGemessen !== rumpfHoehe(this.wirt.baustein)
+      || this._kopfGemessen !== kopfHoehe(this.wirt.baustein)) {
       this.messeRumpf()
     }
     if (!this._fokusHolen) return
@@ -155,6 +161,7 @@ export class AnsichtsStand {
     this._mass = null
     this._taktGemessen = 0
     this._rumpfGemessen = OHNE_RUMPF
+    this._kopfGemessen = 0
   }
 
   zuruecksetzen(): void {

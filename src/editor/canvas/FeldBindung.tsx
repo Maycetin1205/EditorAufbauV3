@@ -238,6 +238,12 @@ export function useFeldBindung({
         const standardTitel = listenStandardTitel(listenBindung, listenPicker.index)
         return (
           <FieldPicker
+            // Ein anderer Spaltenkopf = frisches Fenster. Ohne `key` bleibt das
+            // Fenster am Leben und behaelt sein Schreibziel: wer einmal
+            // „Nachschlagen" angeklickt hatte, band bei der naechsten Spalte
+            // wieder das Fuellfeld — Titel und Zelle blieben leer
+            // (Nutzer-Befund 2026-08-31).
+            key={listenPicker.index}
             spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
             gruppen={listenGruppen}
             titel={{
