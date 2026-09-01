@@ -170,6 +170,41 @@ function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
   return regeln
 }
 
+// Die EINE Stelle, die Eintrags-Kennungen ('s1', 's2', …) vergibt — der
+// Baustein (blocks/tabelle/spalten.ts) und die Roh-Migration
+// (state/migrationenRoh.ts) rufen sie beide. Fehlende und doppelte Kennungen
+// bekommen eine neue, die vorderste behaelt ihre; bestehende bleiben
+// unangetastet, an ihnen haengen Ketten-Parameter und Rechnung. Neue Kennung
+// = HOECHSTE vergebene + 1, nie die niedrigste Luecke: eine geloeschte Nummer
+// neu zu vergeben liesse alte Zeiger stumm auf die frische Spalte zeigen.
+// Eine Kennung, die nicht 'sN' ist, zaehlt nicht mit; mit ihr kollidieren die
+// neuen ohnehin nicht.
+export function kennungenVergeben(vorhanden: readonly string[]): string[] {
+  const vergeben = new Set<string>()
+  for (const roh of vorhanden) {
+    const k = roh.trim()
+    if (k !== '') vergeben.add(k)
+  }
+  let naechste = 1
+  for (const k of vergeben) {
+    const treffer = /^s(\d+)$/.exec(k)
+    if (treffer) naechste = Math.max(naechste, Number(treffer[1]) + 1)
+  }
+  const behalten = new Set<string>()
+  return vorhanden.map((roh) => {
+    const k = roh.trim()
+    if (k !== '' && !behalten.has(k)) {
+      behalten.add(k)
+      return k
+    }
+    while (vergeben.has(`s${naechste}`)) naechste += 1
+    const neu = `s${naechste}`
+    vergeben.add(neu)
+    behalten.add(neu)
+    return neu
+  })
+}
+
 export function listeFuerExport(roh: unknown, b: ListenBindung): unknown {
   if (!Array.isArray(roh)) return roh
   const regeln = bedingteSchluessel(b)

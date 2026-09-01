@@ -1,3 +1,5 @@
+import { kennungenVergeben } from '../../core/blocks/listenBindung'
+
 export interface Spalte {
   // Der dauerhafte Ausweis der Spalte innerhalb ihrer Tabelle ('s1', 's2', …).
   // Ketten-Parameter und die Rechnung zeigen auf IHN — nie auf den Platz und
@@ -61,50 +63,13 @@ export function neueSpalte(index: number): Spalte {
   return { kennung: '', titel: standardTitelFuer(index), feld: '' }
 }
 
-// Die Nummer, ab der neue Kennungen vergeben werden: HÖCHSTE vergebene + 1,
-// nie die niedrigste Lücke. Eine gelöschte Spalte hinterlässt ihre Nummer,
-// und wer sie neu vergibt, lässt Rechnung und Ketten-Parameter stumm auf die
-// frische Spalte zeigen — sie zeigen ja auf die Kennung (Nutzer-Vorfall
-// 2026-09-01). Eine Kennung, die nicht 'sN' ist, zählt nicht mit; mit ihr
-// kollidieren die neuen ohnehin nicht.
-//
-// ⚠ Zwilling: `vergebeKennungen` in `state/migrationenRoh.ts` macht dasselbe
-// auf den Rohdaten (sie darf nichts aus einem Baustein importieren, Regel 2).
-// Wer hier etwas ändert, ändert es dort mit.
-function abNummer(vergeben: ReadonlySet<string>): number {
-  let hoechste = 0
-  for (const k of vergeben) {
-    const treffer = /^s(\d+)$/.exec(k)
-    if (treffer) hoechste = Math.max(hoechste, Number(treffer[1]))
-  }
-  return hoechste + 1
-}
-
 // Vergibt fehlende Kennungen ('s1', 's2', …) und behebt doppelte — die
-// vorderste behält ihre. Bestehende bleiben unangetastet: an ihnen hängen
-// Ketten-Parameter und Rechnung, eine neu vergebene zeigte woandershin.
+// vorderste behält ihre. Die Regel wohnt an EINER Stelle
+// (core/blocks/listenBindung.ts, kennungenVergeben); die Roh-Migration in
+// state/migrationenRoh.ts ruft dieselbe.
 export function mitKennungen(spalten: readonly Spalte[]): Spalte[] {
-  const vergeben = new Set<string>()
-  // Erst ALLE vorhandenen einsammeln, auch die weiter hinten stehenden: sonst
-  // bekäme eine vordere Lücke eine Nummer, die hinten schon vergeben ist.
-  for (const s of spalten) {
-    const roh = s.kennung.trim()
-    if (roh !== '') vergeben.add(roh)
-  }
-  let naechste = abNummer(vergeben)
-  const behalten = new Set<string>()
-  return spalten.map((s) => {
-    const roh = s.kennung.trim()
-    if (roh !== '' && !behalten.has(roh)) {
-      behalten.add(roh)
-      return s
-    }
-    while (vergeben.has(`s${naechste}`)) naechste += 1
-    const kennung = `s${naechste}`
-    vergeben.add(kennung)
-    behalten.add(kennung)
-    return { ...s, kennung }
-  })
+  const kennungen = kennungenVergeben(spalten.map((s) => s.kennung))
+  return spalten.map((s, i) => (s.kennung === kennungen[i] ? s : { ...s, kennung: kennungen[i] }))
 }
 
 // Die Spalte mit dieser Kennung — -1 bei leer/unbekannt (Zelle bleibt leer,
@@ -115,8 +80,10 @@ export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): n
   return spalten.findIndex((s) => s.kennung === t)
 }
 
+// Eine neue Tabelle startet mit EINER leeren Spalte (Nutzer-Entscheidung
+// 2026-09-01): drei Platzhalter-Spalten waren drei Klicks zum Wegräumen.
 export function standardSpalten(): Spalte[] {
-  return mitKennungen([0, 1, 2].map((i) => neueSpalte(i)))
+  return mitKennungen([neueSpalte(0)])
 }
 
 // Eine gezogene Breite kommt aus drei Richtungen: dem Zug selbst, dem

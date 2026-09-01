@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { ROOT_ID, type BlockNode } from './BlockData'
 import type { BlockDefinition, ListenBindung } from './BlockDefinition'
-import { feldWahlenLesen, listeFuerExport, schalterAn, schalterFuer } from './listenBindung'
+import { feldWahlenLesen, kennungenVergeben, listeFuerExport, schalterAn, schalterFuer } from './listenBindung'
 import { getBlockDefinition, registerBlockType } from './blockRegistry'
 import { traegtAenderungen } from './treeQuery'
 
@@ -143,4 +143,10 @@ test('eine Spalte auf fremder Quelle traegt keine Aenderungen', () => {
   })
   expect(traegtAenderungen(node('45_60'))).toBe(true)
   expect(traegtAenderungen(node('q-art::bez'))).toBe(false)
+})
+
+test('kennungenVergeben: hoechste + 1, nie die Luecke; eine doppelte bekommt hinten eine neue', () => {
+  expect(kennungenVergeben(['s1', '', 's3', 's1'])).toEqual(['s1', 's4', 's3', 's5'])
+  expect(kennungenVergeben(['', ''])).toEqual(['s1', 's2'])
+  expect(kennungenVergeben(['frei', ''])).toEqual(['frei', 's1'])
 })

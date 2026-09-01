@@ -1,5 +1,6 @@
 import { ROOT_ID } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
+import { kennungenVergeben } from '../core/blocks/listenBindung'
 import { RASTER, parseRasterPos, rasterSpecOf } from '../core/blocks/rasterLayout'
 
 export type EntfernGrund = 'karte-ohne-spalte' | 'knopf-in-tabelle' | 'huelle-aufgeloest'
@@ -173,35 +174,13 @@ function rohSpalten(node: RohKnoten): Record<string, unknown>[] {
   return roh.filter((e): e is Record<string, unknown> => Boolean(e) && typeof e === 'object')
 }
 
-// ⚠ Zwilling von `mitKennungen`/`abNummer` in `blocks/tabelle/spalten.ts` —
-// dort steht die ausfuehrliche Begruendung. Hier auf den Rohdaten, weil
-// generischer Code nichts aus einem Baustein importieren darf (Regel 2). Wer
-// dort etwas aendert, aendert es hier mit: neue Kennung = HOECHSTE vergebene
-// + 1, nie die niedrigste Luecke (eine geloeschte Nummer neu zu vergeben
-// liesse Rechnung und Ketten-Parameter stumm auf die frische Spalte zeigen).
+// Dieselbe Vergabe wie im Baustein (blocks/tabelle/spalten.ts), aus der EINEN
+// Stelle core/blocks/listenBindung.ts — hier auf den Rohdaten.
 function vergebeKennungen(spalten: readonly Record<string, unknown>[]): void {
-  const vergeben = new Set<string>()
-  for (const eintrag of spalten) {
-    const roh = typeof eintrag.kennung === 'string' ? eintrag.kennung.trim() : ''
-    if (roh !== '') vergeben.add(roh)
-  }
-  let naechste = 1
-  for (const k of vergeben) {
-    const treffer = /^s(\d+)$/.exec(k)
-    if (treffer) naechste = Math.max(naechste, Number(treffer[1]) + 1)
-  }
-  const behalten = new Set<string>()
-  for (const eintrag of spalten) {
-    const roh = typeof eintrag.kennung === 'string' ? eintrag.kennung.trim() : ''
-    if (roh !== '' && !behalten.has(roh)) {
-      behalten.add(roh)
-      continue
-    }
-    while (vergeben.has(`s${naechste}`)) naechste += 1
-    eintrag.kennung = `s${naechste}`
-    vergeben.add(eintrag.kennung as string)
-    behalten.add(eintrag.kennung as string)
-  }
+  const kennungen = kennungenVergeben(
+    spalten.map((e) => (typeof e.kennung === 'string' ? e.kennung : '')),
+  )
+  spalten.forEach((eintrag, i) => { eintrag.kennung = kennungen[i] })
 }
 
 function kennungAnPlatz(spalten: readonly Record<string, unknown>[], index: number): string {
