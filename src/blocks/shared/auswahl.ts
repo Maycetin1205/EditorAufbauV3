@@ -1,3 +1,4 @@
+import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import { AUSWAHL_FOLGE_PROP, type AuswahlFolge } from '../../core/data/auswahlFolge'
 import { getField } from '../../softengine/data'
 import { paarListeAusAttribut } from './paarListe'
@@ -67,8 +68,10 @@ export function auswahlNummer(geberId: string): number {
   return zustand.get(geberId)?.nummer ?? 0
 }
 
+// Die eine Baustein-Kennung der Maske (exportMask schreibt sie fuer jeden
+// adressierbaren Baustein, den Auswahl-Geber eingeschlossen).
 export function geberIdVon(el: Element): string {
-  return el.getAttribute('data-ff-id') ?? ''
+  return el.getAttribute(ACTION_VALUE_ID_ATTR) ?? ''
 }
 
 export function auswahlWiederfinden<T>(

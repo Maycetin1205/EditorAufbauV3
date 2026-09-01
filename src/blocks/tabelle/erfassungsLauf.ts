@@ -2,7 +2,7 @@ import {
   nachschlagEintraege,
   quellenZeilen,
   type Eintrag,
-} from '../formfeld/nachschlagen'
+} from '../shared/nachschlagen'
 import { getField } from '../../softengine/data'
 import {
   bewegteMarke,

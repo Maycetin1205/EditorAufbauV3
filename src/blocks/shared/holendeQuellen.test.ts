@@ -40,7 +40,7 @@ function fakeWurzel(...els: Element[]): ParentNode {
 // FELDTYP, nicht pauschal am Tag.
 test('ein Text-Feld mit uebriger Nachschlage-Quelle ist NICHT deren Geber', () => {
   const feld = fakeEl('ff-formfeld', {
-    'data-ff-id': 'f1',
+    'data-ff-block-id': 'f1',
     source: 'q-adr',
     nachschlagquelle: 'q-bel',
   })
@@ -54,7 +54,7 @@ test('ein Text-Feld mit uebriger Nachschlage-Quelle ist NICHT deren Geber', () =
 
 test('das Nachschlage-Feld gibt weiterhin ueber seine Nachschlage-Quelle', () => {
   const feld = fakeEl('ff-formfeld', {
-    'data-ff-id': 'f2',
+    'data-ff-block-id': 'f2',
     fieldtype: 'nachschlagen',
     source: 'q-adr',
     nachschlagquelle: 'q-bel',
@@ -68,7 +68,7 @@ test('das Nachschlage-Feld gibt weiterhin ueber seine Nachschlage-Quelle', () =>
 })
 
 test('die Tabelle gibt wie bisher ueber ihr source-Attribut', () => {
-  const tab = fakeEl('ff-tabelle', { 'data-ff-id': 't1', source: 'q-bel' })
+  const tab = fakeEl('ff-tabelle', { 'data-ff-block-id': 't1', source: 'q-bel' })
   const wurzel = fakeWurzel(tab)
   setzeAuswahl('t1', { satz: '4' })
 

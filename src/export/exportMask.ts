@@ -163,27 +163,21 @@ function nodeToHtml(
 
   const aktionen = serializeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key), popupName, spaltenIndex)
   const aktionenAttr = aktionen ? ` data-ff-aktionen="${escapeHtmlAttr(aktionen)}"` : ''
-  // Adressierbar fuer Ketten ist, wer Werte-Stellen hat ODER wessen
-  // Erfassungszeile an ist (G4: „Wert aus Erfassungszelle" findet die
-  // Tabelle zur Laufzeit ueber genau dieses Attribut).
-  const kannErfassen = (def.kannErfassen !== undefined
-    && propertySichtbar(def.kannErfassen.wenn, node.props))
-    // Auch die Traeger geaenderter und geloeschter Zeilen muessen fuer die
-    // Kette auffindbar sein.
+  // Die EINE Kennung eines Bausteins in der Maske. Sie traegt, wer fuer eine
+  // Kette adressierbar sein muss — Werte-Stellen, Erfassungszeile, Traeger
+  // geaenderter oder geloeschter Zeilen — und wer eine Zeile gibt
+  // (Auswahl-Geber). Alle Leser der Laufzeit greifen ueber dieses Attribut.
+  const adressierbar = (def.actionValueSpots?.length ?? 0) > 0
+    || (def.kannErfassen !== undefined && propertySichtbar(def.kannErfassen.wenn, node.props))
     || traegtAenderungen(node)
     || traegtLoeschungen(node)
-  const actionValueIdAttr = (def.actionValueSpots?.length ?? 0) > 0 || kannErfassen
-    ? ` ${ACTION_VALUE_ID_ATTR}="${escapeHtmlAttr(node.id)}"`
-    : ''
-
-  const auswahlIdAttr = istAuswahlGeber(node)
-    ? ` data-ff-id="${escapeHtmlAttr(node.id)}"`
-    : ''
+    || istAuswahlGeber(node)
+  const kennungAttr = adressierbar ? ` ${ACTION_VALUE_ID_ATTR}="${escapeHtmlAttr(node.id)}"` : ''
 
   const fuelltAttr = rasterEbene && def.pageBlock !== true ? ' fuellt' : ''
 
   const verborgenAttr = def.flaechenSeite === true ? ' hidden' : ''
-  const open = `${pad}<${def.tagName}${attrs}${aktionenAttr}${actionValueIdAttr}${auswahlIdAttr}${fuelltAttr}${verborgenAttr}${styleAttr(node, parentDirection, def.lockedWidth, rasterEbene, def.pageBlock === true)}>`
+  const open = `${pad}<${def.tagName}${attrs}${aktionenAttr}${kennungAttr}${fuelltAttr}${verborgenAttr}${styleAttr(node, parentDirection, def.lockedWidth, rasterEbene, def.pageBlock === true)}>`
   if (!def.acceptsChildren || node.childIds.length === 0) {
     return `${open}</${def.tagName}>`
   }

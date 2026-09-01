@@ -2,6 +2,7 @@ import type { BlockDefinition } from '../../core/blocks/BlockDefinition'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { propertySichtbar } from '../../core/blocks/PropertyDescription'
 import { QUELLE_PROP } from '../../core/blocks/treeQuery'
+import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, isRecord } from '../../softengine/data'
 import { ladeZeilenPerRelation } from '../../softengine/relationLader'
@@ -10,6 +11,7 @@ import {
   auswahlFuer,
   auswahlNummer,
   beimAuswahlZuruecksetzen,
+  geberIdVon,
   letzteWahlDurchBedienung,
   merkmalVon,
 } from './auswahl'
@@ -66,12 +68,12 @@ export function gewaehlteZeileDerQuelle(
 ): unknown {
   if (quelleId === '' || wurzel === undefined) return undefined
   let juengste: { zeile: unknown; nummer: number } | null = null
-  for (const el of Array.from(wurzel.querySelectorAll('[data-ff-id]'))) {
+  for (const el of Array.from(wurzel.querySelectorAll(`[${ACTION_VALUE_ID_ATTR}]`))) {
     const def = defsJeTag.get(el.tagName.toLowerCase())
     if (!def) continue
     const attr = quellenAttrFuer(el, def)
     if (attr === '' || el.getAttribute(attr) !== quelleId) continue
-    const geberId = el.getAttribute('data-ff-id') ?? ''
+    const geberId = geberIdVon(el)
     const zeile = auswahlFuer(geberId)
     if (zeile === undefined) continue
     const nummer = auswahlNummer(geberId)

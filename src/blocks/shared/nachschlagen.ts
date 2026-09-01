@@ -3,13 +3,13 @@ import type { ListenBindung } from '../../core/blocks/listenBindung'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, getField, rowsFor } from '../../softengine/data'
 import { meldeFehler } from '../../softengine/meldung'
-import { zeilenNachAuswahl } from '../shared/auswahl'
-import { lupeZeichen } from '../shared/lupeZeichen'
+import { zeilenNachAuswahl } from './auswahl'
+import { lupeZeichen } from './lupeZeichen'
 import {
   DIALOG_RAHMEN_TAG,
   type DialogGroesseDetail,
   type DialogRahmen,
-} from '../shared/DialogRahmen'
+} from './DialogRahmen'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from '../tabelle/spalten'
 import { TabelleBlock } from '../tabelle/TabelleBlock'
 import {

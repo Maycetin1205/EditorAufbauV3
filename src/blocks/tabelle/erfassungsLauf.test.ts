@@ -9,8 +9,8 @@ import { leereRechnung } from '../../core/data/rechnung'
 // genau dafuer ist ErfassungsUmfeld als Buendel geschnitten.
 const zeilen: Record<string, unknown[]> = {}
 
-vi.mock('../formfeld/nachschlagen', async (echte) => {
-  const modul = await echte<typeof import('../formfeld/nachschlagen')>()
+vi.mock('../shared/nachschlagen', async (echte) => {
+  const modul = await echte<typeof import('../shared/nachschlagen')>()
   return { ...modul, quellenZeilen: (id: string) => zeilen[id] ?? null }
 })
 

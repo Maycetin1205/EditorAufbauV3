@@ -14,7 +14,7 @@ import type {
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
 import { vorschlagStil } from '../shared/vorschlagListe'
-import { schliesseNachschlagenFuer } from '../formfeld/nachschlagen'
+import { schliesseNachschlagenFuer } from '../shared/nachschlagen'
 import {
   erfassungsZeileFuer,
   type ErfassungsWirt,

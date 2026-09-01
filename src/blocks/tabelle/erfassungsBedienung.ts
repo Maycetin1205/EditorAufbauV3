@@ -3,7 +3,7 @@ import {
   fensterBreiteFuer,
   FENSTER_HOEHE,
   oeffneNachschlagen,
-} from '../formfeld/nachschlagen'
+} from '../shared/nachschlagen'
 import type { ErfassungsLauf } from './erfassungsLauf'
 import {
   fensterSpaltenIn,
