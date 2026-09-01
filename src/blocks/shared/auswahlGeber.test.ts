@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest'
 import type { BlockNode } from '../../core/blocks/BlockData'
+import { bausteinName } from '../../core/blocks/bausteinName'
+import type { DataSource } from '../../core/data/dataSources'
 import { auswahlQuelleIdVon, istAuswahlGeber } from '../../core/blocks/treeQuery'
 import '../formfeld/FormFeldBlock'
 import '../tabelle/TabelleBlock'
@@ -41,4 +43,30 @@ test('die Tabelle gibt wie bisher ueber ihre eigene Quelle', () => {
 // Der Text-Baustein deklariert keine satzWahl: reine Anzeige, keine Zeilenwahl.
 test('der Text-Baustein bleibt kein Geber, auch gebunden', () => {
   expect(istAuswahlGeber(knoten('text', { source: 'q-bel', textField: 'x' }))).toBe(false)
+})
+
+// Der Name im Waehler muss dem Bild entsprechen: ein GEBUNDENES Feld zeigt im
+// Canvas den Klarnamen des gebundenen Feldes (die Vorschau ueberdeckt den
+// Platzhalter) — also heisst es auch im Waehler so, nicht nach dem alten,
+// unsichtbaren Platzhalter (Nutzer-Befund 2026-09-01: vier Felder hiessen
+// alle "Artikelnummer", im Canvas stand laengst anderes).
+test('der Baustein-Name folgt bei gebundenen Feldern dem Klarnamen', () => {
+  const quellen = [{
+    id: 'q-bel',
+    name: 'Belege',
+    kind: 'beleg',
+    fields: [{ code: '3_8', label: 'Beleg-Nr.' }],
+  }] as const
+
+  const gebunden = knoten('formfeld', {
+    fieldType: 'text',
+    placeholder: 'Artikelnummer',
+    source: 'q-bel',
+    valueField: '3_8',
+  })
+  expect(bausteinName(gebunden, quellen as unknown as DataSource[])).toBe('Beleg-Nr.')
+
+  // Ohne Bindung IST der Platzhalter das Bild — er bleibt der Name.
+  const frei = knoten('formfeld', { fieldType: 'text', placeholder: 'Artikelnummer', source: 'q-bel' })
+  expect(bausteinName(frei, quellen as unknown as DataSource[])).toBe('Artikelnummer')
 })
