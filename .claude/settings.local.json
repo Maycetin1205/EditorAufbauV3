@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell($src = \"C:\\\\Users\\\\mu.aycetin\\\\Desktop\\\\Tabellentest\\\\TestV5\"; $dst = \"$src\\\\backup-vor-umbau\"; if \\(-not \\(Test-Path $dst\\)\\) { New-Item -ItemType Directory -Path $dst | Out-Null }; Copy-Item \"$src\\\\Rahmen00001.basis.source.html\" -Destination $dst -Force; Copy-Item \"$src\\\\Rahmen00001.basis.SEvariablen.json\" -Destination $dst -Force; Get-ChildItem $dst | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize)",
-      "PowerShell($f = \"C:\\\\Users\\\\mu.aycetin\\\\Desktop\\\\Tabellentest\\\\TestV5\\\\Rahmen00001.basis.source.html\"; $b = [System.IO.File]::ReadAllBytes\\($f\\); $lf = \\($b | Where-Object { $_ -eq 10 }\\).Count; $cr = \\($b | Where-Object { $_ -eq 13 }\\).Count; $hi = \\($b | Where-Object { $_ -gt 127 }\\).Count; \"Bytes: $\\($b.Length\\)\"; \"LF: $lf\"; \"CR: $cr\"; \"Bytes>0x7F: $hi\")",
-      "Bash(cd \"C:/Users/mu.aycetin/Desktop/PageBuilder\" 2>/dev/null && grep -n \"pindex\\\\|PINDEX\" SOFTENGINE-FORMAT.md | head -30)"
-    ]
-  }
-}
