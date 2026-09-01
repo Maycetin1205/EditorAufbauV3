@@ -38,3 +38,6 @@ docs/chef-maske/*.log
 # TRIP/Codex-Skills: Laufzeit-Zustand (Thread-IDs, Review-Text, Event-Logs)
 # je Plan/Sitzung — Skripte/Prompts bleiben getrackt, der Zustand nicht.
 .claude/skills/*/state/
+
+# persoenliche Claude-Einstellungen (lokal, nie einchecken)
+.claude/settings.local.json
