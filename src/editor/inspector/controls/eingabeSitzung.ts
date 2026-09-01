@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { gestenKlammer, type GestenKlammer } from '../../../state/history'
 
 export interface Eingabesitzung {
@@ -35,5 +35,8 @@ export function useEingabeSitzung(
 
   useEffect(() => beenden, [beenden])
 
-  return { beginnen, beenden }
+  // Ein STABILES Objekt: wer die Sitzung als Effekt-Abhaengigkeit fuehrt
+  // (FieldPicker), bekam sonst je Render ein neues und schloss die Klammer
+  // bei jedem Tastendruck — ein Undo-Schritt je Buchstabe.
+  return useMemo(() => ({ beginnen, beenden }), [beginnen, beenden])
 }

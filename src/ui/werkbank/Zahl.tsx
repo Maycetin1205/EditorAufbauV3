@@ -12,14 +12,14 @@ export const Zahl = forwardRef<HTMLInputElement, ZahlProps>(
     <span className="relative inline-flex shrink-0 items-center">
       <input
         ref={ref}
-        type="number"
+        // Ein Textfeld mit Zahlen-Tastatur, KEIN type="number": das schluckt
+        // je Browser das Komma, und die Komma-Ersetzung der Aufrufer wurde
+        // nie erreicht. Was eine Zahl ist, entscheidet der Aufrufer.
+        type="text"
         inputMode="decimal"
         className={cn(
           EINGABE_KANTE,
           'h-steuer px-2 tabular-nums',
-          // Die Pfeilchen des Browsers fressen die halbe Feldbreite und
-          // treffen bei 28 px Hoehe ohnehin niemand.
-          '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
           einheit !== undefined && einheit !== '' && 'pr-6',
           className,
         )}

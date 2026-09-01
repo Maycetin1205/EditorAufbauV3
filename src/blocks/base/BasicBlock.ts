@@ -43,16 +43,18 @@ export abstract class BasicBlock extends LitElement implements BlockComponent {
     event.stopPropagation()
     event.preventDefault()
     starteUmbenennen(target, (neu, original) => {
-      if (neu !== original) {
-        this.dispatchEvent(new CustomEvent('ff-prop-change', {
-          detail: { attr, value: neu },
-          bubbles: true,
-          composed: true,
-        }))
-      }
-      // Nie wiederherstellen: der getippte Stand bleibt stehen, bis der
-      // Editor die Eigenschaft zurueckgibt und Lit neu rendert.
-      return true
+      if (neu === original) return true
+      const detail: { attr: string; value: string; abgelehnt?: boolean } = { attr, value: neu }
+      this.dispatchEvent(new CustomEvent('ff-prop-change', {
+        detail,
+        bubbles: true,
+        composed: true,
+      }))
+      // Der getippte Stand bleibt stehen, bis der Editor die Eigenschaft
+      // zurueckgibt und Lit neu rendert — ausser der Editor hat den Wert
+      // verworfen (leerer Seitenname): dann kommt nichts zurueck, und der
+      // alte Text muss selbst wieder hin.
+      return detail.abgelehnt !== true
     })
   }
 

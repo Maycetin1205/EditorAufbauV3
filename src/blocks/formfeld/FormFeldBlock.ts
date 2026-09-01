@@ -173,10 +173,13 @@ export class FormFeldBlock extends BasicBlock {
     this.dispatchEvent(new Event('change'))
   }
 
-  private textTpl(cls: string, hidden = false): TemplateResult {
+  // `gebunden` sperrt das Umbenennen: an einer gebundenen Stelle zeigt der
+  // Platzhalter den Klarnamen des Feldes, Tippen ginge ins Leere.
+  private textTpl(cls: string, hidden = false, gebunden = false): TemplateResult {
     return html`<span
       class=${cls}
       ?hidden=${hidden}
+      ?data-ff-bound=${gebunden}
       data-ff-editable
       @click=${this.onTextClick}
       @dblclick=${(e: MouseEvent) => this.inlineEdit(e, 'placeholder')}
@@ -489,7 +492,7 @@ export class FormFeldBlock extends BasicBlock {
       >
         ${this.controlTpl(typ)}
         ${MIT_PLATZHALTER.includes(typ)
-          ? this.textTpl(`ph ${PH_KLASSE[typ] ?? ''}`.trim(), !leer)
+          ? this.textTpl(`ph ${PH_KLASSE[typ] ?? ''}`.trim(), !leer, wertBindbar && this.valueField !== '')
           : nothing}
       </div>
       ${this.spaltenDialog && this.hasAttribute('data-ff-editor')

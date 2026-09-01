@@ -192,13 +192,18 @@ function registerSe(tries = 0): void {
     try { g.basisHTML_SetConsoleLog?.(true, true) } catch { /* optional */ }
     try {
       g.basisHTML_REGISTER((data: unknown) => { seConsume(data) }, document.title, '1.0')
+      return
     } catch (error) {
-      meldeFehler(
-        'SoftEngine-Anmeldung fehlgeschlagen: '
-        + (error instanceof Error ? error.message : String(error)),
-      )
+      // Die Funktion ist da, aber das Interface noch nicht bereit: weiter
+      // versuchen statt aufgeben — aufgegeben hiesse eine Maske ohne Daten.
+      if (tries >= 400) {
+        meldeFehler(
+          'SoftEngine-Anmeldung fehlgeschlagen: '
+          + (error instanceof Error ? error.message : String(error)),
+        )
+        return
+      }
     }
-    return
   }
   if (tries < 400) {
     setTimeout(() => { registerSe(tries + 1) }, 25)

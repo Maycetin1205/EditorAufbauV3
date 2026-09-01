@@ -252,15 +252,17 @@ export class Editor extends Subject<Editor> {
     return istMusterGeschuetzt(this._tree, id)
   }
 
-  updateProperty(id: string, attr: string, value: unknown): void {
+  // Liefert false, wenn der Wert VERWORFEN wurde (z. B. ein leerer
+  // Seitenname) — der Baustein stellt dann seinen alten Text wieder her.
+  updateProperty(id: string, attr: string, value: unknown): boolean {
     const node = this._tree[id]
-    if (!node) return
+    if (!node) return false
     const def = getBlockDefinition(node.type)
 
     const wert = schreibWert(def, this.pages, id, attr, value)
-    if (wert === null) return
+    if (wert === null) return false
 
-    if (Object.is(node.props[attr], wert)) return
+    if (Object.is(node.props[attr], wert)) return true
     this.pushHistory()
     const next: BlockTree = {
       ...this._tree,
@@ -291,6 +293,7 @@ export class Editor extends Subject<Editor> {
       ? klarnamenNachziehen(geputzt, id, wert)
       : geputzt
     this.notify(this)
+    return true
   }
 
   updateBlockEvents(id: string, events: BlockEventsMap): void {

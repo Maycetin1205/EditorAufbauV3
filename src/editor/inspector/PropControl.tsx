@@ -124,6 +124,15 @@ export function PropControl({
                   ed.updateProperty(block.id, andere.klarnameProp, '')
                 }
               }
+              // Auch eine Liste, die ihre Feldcodes aus DIESER Quelle nimmt
+              // (Nachschlage-Spalten), zeigt nach dem Wechsel ins Leere —
+              // sie behielte sonst Codes der alten Quelle und exportierte sie.
+              const liste = def?.listenBindung
+              const alteListe = liste ? block.props[liste.prop] : undefined
+              if (liste?.quelleProp === property.attributeName
+                && Array.isArray(alteListe) && alteListe.length > 0) {
+                ed.updateProperty(block.id, liste.prop, [])
+              }
             })
           },
         }

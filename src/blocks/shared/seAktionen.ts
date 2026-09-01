@@ -284,7 +284,24 @@ export async function laufeSchritte(
       continue
     }
     const relation = findRuntimeRelation(seGlobal().FF_RELATIONS, step.relationId)
-    if (!relation) continue
+    // Ohne Vorlage kann der Schritt nichts tun. Ihn zu ueberspringen hiesse,
+    // die Schritte dahinter auf ein Ergebnis zu setzen, das nie kam — still.
+    if (!relation) {
+      const text = `Schritt ${platz + 1} der Kette: seine Relation fehlt in dieser Maske.`
+      meldeFehler(text)
+      return { geschrieben, fehler: text, mitschrift: mitschrift() }
+    }
+
+    // Eine Zeile ohne Satznummer laesst sich nicht adressieren: ein PUT mit
+    // leerem {PINDEX} schriebe ins Nichts, und ein PUT meldet nichts zurueck.
+    const brauchtSatz = [...step.params, ...step.extraParams]
+      .some((b) => b.source === 'context' && b.value === 'PINDEX')
+    if (brauchtSatz && (values.PINDEX ?? '') === '') {
+      const text = `Schritt ${platz + 1} der Kette braucht die Satznummer der Zeile — sie fehlt `
+        + `(Relation Nr. ${relation.nr}). Nichts geschrieben.`
+      meldeFehler(text)
+      return { geschrieben, fehler: text, mitschrift: mitschrift() }
+    }
 
     const runtimeValues = {
       context: values,

@@ -24,6 +24,11 @@ interface PropChangeDetail {
   // alles dazwischen zu EINEM Undo-Schritt — sonst waere ein Zug ueber 200
   // Pixel auch 200 Mal Strg+Z.
   geste?: 'beginn' | 'ende'
+
+  // Vom Editor gesetzt, wenn er den Wert NICHT uebernommen hat. Das Ereignis
+  // laeuft synchron: der Baustein liest die Antwort direkt nach dem Senden
+  // und stellt seinen alten Text wieder her (BasicBlock.inlineEdit).
+  abgelehnt?: boolean
 }
 
 interface LitElementArgs {
@@ -79,7 +84,8 @@ export function useLitElement({
         klammer.current = editor.oeffneGeste()
       }
       klammer.current?.oeffne()
-      editor.updateProperty(blockRef.current.id, detail.attr, detail.value)
+      const uebernommen = editor.updateProperty(blockRef.current.id, detail.attr, detail.value)
+      if (!uebernommen) detail.abgelehnt = true
       if (detail.geste === 'ende') {
         klammer.current?.schliesse()
         klammer.current = null

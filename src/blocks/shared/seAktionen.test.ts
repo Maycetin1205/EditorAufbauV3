@@ -254,10 +254,30 @@ describe('laufeSchritte', () => {
     expect(geschrieben).toMatchObject({ geschrieben: true, fehler: '' })
   })
 
-  test('eine unbekannte Vorlage laesst den Rest der Kette laufen', async () => {
+  // Ein Schritt ohne Vorlage kann nichts tun. Weiterzulaufen hiesse, die
+  // Schritte dahinter auf ein Ergebnis zu setzen, das nie kam — still.
+  test('eine unbekannte Vorlage stoppt die Kette mit Meldung', async () => {
     const steps: RuntimeStep[] = [relationsSchritt(''), relationsSchritt('put-b')]
-    expect((await laufeSchritte(el, steps, {}, undefined)).geschrieben).toBe(true)
-    expect(laeufe).toEqual(['start put-b', 'ende put-b'])
+    const ergebnis = await laufeSchritte(el, steps, {}, undefined)
+    expect(ergebnis.geschrieben).toBe(false)
+    expect(ergebnis.fehler).toContain('Relation fehlt')
+    expect(laeufe).toEqual([])
+  })
+
+  // Ein PUT mit leerem {PINDEX} schriebe ins Nichts — und meldet das nie.
+  test('ein Schritt mit {PINDEX} laeuft nicht ohne Satznummer', async () => {
+    const steps: RuntimeStep[] = [
+      relationsSchritt('put-a', [{ source: 'context', value: 'PINDEX' }]),
+      relationsSchritt('put-b'),
+    ]
+    const ohne = await laufeSchritte(el, steps, {}, undefined)
+    expect(ohne.geschrieben).toBe(false)
+    expect(ohne.fehler).toContain('Satznummer')
+    expect(laeufe).toEqual([])
+
+    const mit = await laufeSchritte(el, steps, { PINDEX: '48' }, undefined)
+    expect(mit.fehler).toBe('')
+    expect(gerufen.map((g) => g.params)).toEqual([['48'], []])
   })
 
   // Weiterlaufen hiesse, die naechsten Schritte auf ein Ergebnis zu setzen,
