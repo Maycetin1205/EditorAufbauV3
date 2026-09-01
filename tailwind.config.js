@@ -31,42 +31,6 @@ export default {
         akzent: 'hsl(var(--wb-akzent) / <alpha-value>)',
         fehler: 'hsl(var(--wb-fehler) / <alpha-value>)',
         vormerkung: 'hsl(var(--wb-vormerkung) / <alpha-value>)',
-
-        // Die shadcn-Namen der alten Atome. Sie zeigen auf dieselben Werte
-        // (index.css) und gehen mit ihren letzten Aufrufern.
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
-        },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-        popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
-        },
       },
       // ============================================================
       // Die Masseinheiten der Werkbank. Bis 2026-08-07 hat sich jede der

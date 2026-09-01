@@ -110,7 +110,7 @@ export function AuswahlFenster({
       }}
       style={{ position: 'fixed', top: position.top, left: position.left, zIndex: 50 }}
       className={cn(
-        'overflow-y-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md',
+        'overflow-y-auto rounded-md border border-linie bg-panel p-1 text-tinte shadow-md',
         className,
       )}
     >

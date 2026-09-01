@@ -115,7 +115,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
 
         height: '100%',
         cursor: selected ? 'default' : 'pointer',
-        outline: selected ? '2px solid hsl(var(--ring))' : '2px solid transparent',
+        outline: selected ? '2px solid hsl(var(--wb-auswahl))' : '2px solid transparent',
         outlineOffset: amRand ? -2 : 1,
         borderRadius: 6,
         userSelect: 'none',
@@ -129,7 +129,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
 
           ...(isContainer && def?.containerHint !== false
             ? {
-                border: '1.5px dashed hsl(var(--border))',
+                border: '1.5px dashed hsl(var(--wb-linie))',
                 borderRadius: 4,
                 minHeight: 40,
               }
@@ -167,7 +167,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
             padding: 0,
             border: 'none',
             borderRadius: 9999,
-            background: 'hsl(var(--ring))',
+            background: 'hsl(var(--wb-auswahl))',
             color: '#fff',
             fontSize: 12,
             lineHeight: '16px',
@@ -200,7 +200,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
             width: 7,
             height: 26,
             borderRadius: 4,
-            background: 'hsl(var(--ring))',
+            background: 'hsl(var(--wb-auswahl))',
             cursor: 'ew-resize',
           }}
         />
@@ -225,7 +225,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
             width: 26,
             height: 7,
             borderRadius: 4,
-            background: 'hsl(var(--ring))',
+            background: 'hsl(var(--wb-auswahl))',
             cursor: 'ns-resize',
           }}
         />
@@ -249,7 +249,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
             width: 7,
             height: 26,
             borderRadius: 4,
-            background: 'hsl(var(--ring))',
+            background: 'hsl(var(--wb-auswahl))',
             cursor: 'ew-resize',
           }}
         />
@@ -273,7 +273,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
             width: 26,
             height: 7,
             borderRadius: 4,
-            background: 'hsl(var(--ring))',
+            background: 'hsl(var(--wb-auswahl))',
             cursor: 'ns-resize',
           }}
         />
@@ -313,7 +313,7 @@ function AddChildButton({ label, childType, parentId, platz }: AddChildButtonPro
         padding: 0,
         border: 'none',
         borderRadius: 9999,
-        background: 'hsl(var(--ring))',
+        background: 'hsl(var(--wb-auswahl))',
         color: '#fff',
         fontSize: 13,
         lineHeight: '16px',

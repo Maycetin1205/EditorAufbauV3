@@ -37,7 +37,7 @@ function restrictCoreImports(files, parentSegments) {
 }
 
 export default defineConfig([
-  globalIgnores(['dist', 'src.vibe-backup-*', 'grundlast']),
+  globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

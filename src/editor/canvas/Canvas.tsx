@@ -98,8 +98,8 @@ export function Canvas() {
                     h: dropTarget.h,
                   }),
                   pointerEvents: 'none',
-                  background: 'hsl(var(--ring) / 0.16)',
-                  border: '2px dashed hsl(var(--ring))',
+                  background: 'hsl(var(--wb-auswahl) / 0.16)',
+                  border: '2px dashed hsl(var(--wb-auswahl))',
                   borderRadius: 4,
                 }}
               />

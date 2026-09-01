@@ -119,8 +119,8 @@ export function PopupSeite({ popupId }: { popupId: string }) {
             style={{
               ...rasterItemStyle(geist),
               pointerEvents: 'none',
-              background: 'hsl(var(--ring) / 0.16)',
-              border: '2px dashed hsl(var(--ring))',
+              background: 'hsl(var(--wb-auswahl) / 0.16)',
+              border: '2px dashed hsl(var(--wb-auswahl))',
               borderRadius: 4,
             }}
           />
@@ -155,7 +155,7 @@ export function PopupSeite({ popupId }: { popupId: string }) {
               width: 7,
               height: 26,
               borderRadius: 4,
-              background: 'hsl(var(--ring))',
+              background: 'hsl(var(--wb-auswahl))',
               cursor: 'ew-resize',
               zIndex: 20,
             }}
@@ -178,7 +178,7 @@ export function PopupSeite({ popupId }: { popupId: string }) {
               width: 26,
               height: 7,
               borderRadius: 4,
-              background: 'hsl(var(--ring))',
+              background: 'hsl(var(--wb-auswahl))',
               cursor: 'ns-resize',
               zIndex: 20,
             }}

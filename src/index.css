@@ -27,34 +27,8 @@
     --wb-fehler: 4 66% 47%;
     --wb-vormerkung: 39 68% 54%;
 
-    /* Die shadcn-Namen des alten Editor-Chromes. Sie stehen hier mit ihren
-       EIGENEN Werten und nicht als Verweis auf die --wb-*: so sehen die 33
-       noch nicht umgestellten Dateien exakt so aus wie vorher. Sie gehen
-       Paket fuer Paket mit ihren letzten Aufrufern. */
-    --background: 40 20% 95%;
-    --card: 40 40% 99%;
-    --popover: 40 40% 99%;
-    --secondary: 40 16% 90%;
-    --muted: 40 15% 91%;
-
-    --foreground: 30 14% 13%;
-    --card-foreground: 30 14% 13%;
-    --popover-foreground: 30 14% 13%;
-    --secondary-foreground: 30 14% 13%;
-
-    --muted-foreground: 32 10% 36%;
-
-    --primary: 246 52% 44%;
-    --primary-foreground: 0 0% 100%;
-    --accent: 246 45% 93%;
-    --accent-foreground: 246 55% 34%;
-    --ring: 246 60% 56%;
-
-    --destructive: 4 66% 47%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 38 14% 82%;
-    --input: 38 14% 79%;
+    /* Auswahlrahmen und Anfasser im Canvas. */
+    --wb-auswahl: 246 60% 56%;
 
     /* Fast kantig — 2 PIXEL, kein rem. Nutzer-Ansage 2026-08-31: die
        Rundungen sollen runter, "ganz leicht ist ok". In rem haette die Ecke
@@ -69,7 +43,7 @@
   }
 
   * {
-    border-color: hsl(var(--border));
+    border-color: hsl(var(--wb-linie));
   }
 
   /* Die Grundgroesse des ganzen Editors — ein PIXELWERT, kein Prozent.
@@ -91,8 +65,8 @@
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background-color: hsl(var(--wb-grund));
+    color: hsl(var(--wb-tinte));
   }
 }
 

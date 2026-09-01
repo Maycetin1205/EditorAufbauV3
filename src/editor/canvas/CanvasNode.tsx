@@ -24,7 +24,7 @@ function InsertionLine({ direction }: { direction: FlowDirection }) {
     <div
       data-ff-editor-helper
       style={{
-        background: 'hsl(var(--ring))',
+        background: 'hsl(var(--wb-auswahl))',
         borderRadius: 2,
         ...(direction === 'column'
           ? { alignSelf: 'stretch', height: 2 }
