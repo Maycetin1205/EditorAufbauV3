@@ -16,7 +16,7 @@ import { dataSourceStore } from '../../state/DataSourceStore'
 import { uebernehmeMaske } from '../../state/maskeUebernehmen'
 import { packeMaske, packeMaskeAus } from '../../state/maskenDatei'
 import { meldungen } from '../../state/meldungen'
-import { meldeVerworfeneTypen } from '../../state/persistence'
+import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from '../../state/persistence'
 import { relationStore } from '../../state/RelationStore'
 import { useEditor } from '../../state/useEditor'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -106,6 +106,7 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
 
     uebernehmeMaske(ed, ergebnis.inhalt)
     meldeVerworfeneTypen(ergebnis.verworfen)
+    meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
   }
 
   return (

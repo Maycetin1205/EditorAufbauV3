@@ -1,6 +1,9 @@
 import { type EintragProblem } from '../core/data/ladeProblem'
 import { deepClone } from '../lib/deepClone'
+import { meldungen } from './meldungen'
 import {
+  kopieSatz,
+  legeKopieAn,
   meldeSpeicherPanne,
   merkeSpeicherErfolg,
   sichereUnlesbaren,
@@ -28,6 +31,28 @@ export interface VorlagenBauplan<T extends VorlagenEintrag> {
   startbestand?: readonly T[]
 }
 
+// Was `pruefe` aussortiert, ist beim naechsten Speichern endgueltig weg —
+// die gekuerzte Liste ueberschreibt den Rohstand. Darum VOR dem ersten
+// Rueckschreiben eine Kopie anlegen und sagen, was fehlt.
+function meldeGekuerzten(
+  schluessel: string,
+  klarname: string,
+  roh: string,
+  probleme: readonly EintragProblem[],
+): void {
+  const backupKey = legeKopieAn(schluessel, roh)
+  const liste = probleme.slice(0, 10)
+    .map((p) => `• ${p.stelle === '' ? '' : `${p.stelle}: `}${p.grund}`)
+  const rest = probleme.length - liste.length
+  meldungen.melde([
+    `Beim Laden von „${klarname}" wurde(n) ${probleme.length} Eintrag/Einträge übergangen:`,
+    ...liste,
+    ...(rest > 0 ? [`… und ${rest} weitere.`] : []),
+    kopieSatz(schluessel, backupKey),
+    'Beim nächsten Speichern schreibt der Editor die gekürzte Liste zurück.',
+  ].join('\n'))
+}
+
 function ladeAusSpeicher<T extends VorlagenEintrag>(bauplan: VorlagenBauplan<T>): T[] | null {
   let roh: string | null = null
   try {
@@ -49,7 +74,10 @@ function ladeAusSpeicher<T extends VorlagenEintrag>(bauplan: VorlagenBauplan<T>)
       return null
     }
 
-    const { liste } = bauplan.pruefe(rohListe)
+    const { liste, probleme } = bauplan.pruefe(rohListe)
+    if (probleme.length > 0) {
+      meldeGekuerzten(bauplan.schluessel, bauplan.klarnameLesen, roh, probleme)
+    }
     return liste
   } catch {
     sichereUnlesbaren(bauplan.schluessel, roh, bauplan.klarnameLesen)

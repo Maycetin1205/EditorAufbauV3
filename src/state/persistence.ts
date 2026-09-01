@@ -2,8 +2,11 @@ import { type BlockTree } from '../core/blocks/BlockData'
 import { baumAusRohdaten } from './ladeKette'
 import { meldungen } from './meldungen'
 import { CURRENT_SCHEMA_VERSION, DEMO_CLEANUP_BEFORE_SCHEMA } from './migrations'
+import { type EntfernGrund } from './migrationenRoh'
 import {
   backupKeyFor,
+  kopieSatz,
+  legeKopieAn,
   meldeSpeicherPanne,
   merkeSpeicherErfolg,
   sichereUnlesbaren,
@@ -11,7 +14,6 @@ import {
 
 export const STORAGE_KEY = 'aufbau_editor_mvp_v1'
 
-export const BACKUP_KEY = backupKeyFor(STORAGE_KEY)
 export const SAVE_DEBOUNCE_MS = 500
 
 try {
@@ -51,6 +53,50 @@ export function meldeVerworfeneTypen(verworfen: Map<string, number>): void {
   )
 }
 
+// Gemeldet wird nur, wo wirklich etwas fehlt: die aufgelösten Hüllen
+// (Kanban-Vorlage, Zeile) haben ihre Kinder an Ort und Stelle behalten —
+// dafür einen Verlust zu melden wäre die nächste Unwahrheit.
+const ENTFERN_TEXT: Partial<Record<EntfernGrund, (anzahl: number) => string>> = {
+  'karte-ohne-spalte': (n) => `${n} Kanban-Karte(n), deren Spalte im Stand fehlte`,
+  'knopf-in-tabelle': (n) => `${n} Knopf/Knöpfe, die in einer Tabelle lagen`,
+}
+
+export function meldeAbsichtlichEntfernte(
+  entfernt: ReadonlyMap<string, EntfernGrund>,
+): void {
+  const gezaehlt = new Map<EntfernGrund, number>()
+  for (const grund of entfernt.values()) {
+    gezaehlt.set(grund, (gezaehlt.get(grund) ?? 0) + 1)
+  }
+  const teile: string[] = []
+  for (const [grund, anzahl] of gezaehlt) {
+    const text = ENTFERN_TEXT[grund]
+    if (text) teile.push(text(anzahl))
+  }
+  if (teile.length === 0) return
+  meldungen.melde(
+    `Beim Laden entfernt: ${teile.join('; ')}.\n`
+    + 'Diese Bausteine gibt es an dieser Stelle nicht mehr; der Rest der Maske '
+    + 'ist unverändert.',
+  )
+}
+
+// Ein Stand aus einem neueren Editor wird weder gelesen noch beim Start
+// zurückgeschrieben: das hiesige Verständnis würde ihn beim ersten Speichern
+// auf den alten Aufbau eindampfen.
+function meldeZukunftsStand(raw: string, gespeichert: number): void {
+  const backupKey = legeKopieAn(STORAGE_KEY, raw)
+  meldungen.melde(
+    'Der im Browser gespeicherte Stand stammt aus einer neueren Version des '
+    + `Editors (Aufbau-Version ${gespeichert}, dieser Editor kennt `
+    + `${CURRENT_SCHEMA_VERSION}).\n`
+    + 'Er wurde NICHT geladen und beim Start NICHT verändert. '
+    + `${kopieSatz(STORAGE_KEY, backupKey)}\n`
+    + 'Der Editor startet leer. Sobald hier gearbeitet wird, überschreibt das '
+    + 'den alten Stand — die Notfallkopie bleibt.',
+  )
+}
+
 export function loadFromStorage(): LoadedState | null {
   let raw: string | null = null
   try {
@@ -69,6 +115,10 @@ export function loadFromStorage(): LoadedState | null {
     }
 
     const schemaVersion = typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1
+    if (schemaVersion > CURRENT_SCHEMA_VERSION) {
+      meldeZukunftsStand(raw, schemaVersion)
+      return null
+    }
     const baum = baumAusRohdaten(
       { ...parsed, schemaVersion },
       schemaVersion < DEMO_CLEANUP_BEFORE_SCHEMA,
@@ -78,6 +128,7 @@ export function loadFromStorage(): LoadedState | null {
       return null
     }
     meldeVerworfeneTypen(baum.verworfen)
+    meldeAbsichtlichEntfernte(baum.absichtlichEntfernt)
     return {
       tree: baum.tree,
       selectedId: baum.selectedId,

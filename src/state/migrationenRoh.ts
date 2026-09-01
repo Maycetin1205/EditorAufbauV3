@@ -2,10 +2,17 @@ import { ROOT_ID } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { RASTER, parseRasterPos, rasterSpecOf } from '../core/blocks/rasterLayout'
 
+export type EntfernGrund = 'karte-ohne-spalte' | 'knopf-in-tabelle' | 'huelle-aufgeloest'
+
+export interface RohEntfernt {
+  id: string
+  grund: EntfernGrund
+}
+
 export function migrateKanbanVorlage(
   src: Record<string, { type?: unknown; childIds?: unknown }>,
-): string[] {
-  const entfernt: string[] = []
+): RohEntfernt[] {
+  const entfernt: RohEntfernt[] = []
   for (const [id, node] of Object.entries(src)) {
     if (!node || typeof node !== 'object' || node.type !== 'kanban-vorlage') continue
     const parent = Object.values(src).find(
@@ -19,25 +26,27 @@ export function migrateKanbanVorlage(
     if (spalte) {
       spalte.childIds = [...cards, ...(Array.isArray(spalte.childIds) ? spalte.childIds : [])]
     } else {
-      for (const cid of cards) if (typeof cid === 'string') entfernt.push(cid)
+      for (const cid of cards) {
+        if (typeof cid === 'string') entfernt.push({ id: cid, grund: 'karte-ohne-spalte' })
+      }
     }
     parent.childIds = parent.childIds.filter((cid) => cid !== id)
-    entfernt.push(id)
+    entfernt.push({ id, grund: 'huelle-aufgeloest' })
   }
   return entfernt
 }
 
 export function migrateKnopfAusTabelle(
   src: Record<string, { type?: unknown; childIds?: unknown }>,
-): string[] {
-  const entfernt: string[] = []
+): RohEntfernt[] {
+  const entfernt: RohEntfernt[] = []
   for (const node of Object.values(src)) {
     if (!node || typeof node !== 'object' || node.type !== 'tabelle') continue
     if (!Array.isArray(node.childIds)) continue
     node.childIds = node.childIds.filter((cid) => {
       const kind = typeof cid === 'string' ? src[cid] : undefined
       const istKnopf = Boolean(kind) && typeof kind === 'object' && kind.type === 'button'
-      if (istKnopf && typeof cid === 'string') entfernt.push(cid)
+      if (istKnopf && typeof cid === 'string') entfernt.push({ id: cid, grund: 'knopf-in-tabelle' })
       return !istKnopf
     })
   }
@@ -84,8 +93,8 @@ function verteileImBand(
   }
 }
 
-export function migrateZeileAufloesen(src: Record<string, RohKnoten>): string[] {
-  const entfernt: string[] = []
+export function migrateZeileAufloesen(src: Record<string, RohKnoten>): RohEntfernt[] {
+  const entfernt: RohEntfernt[] = []
   for (const [id, node] of Object.entries(src)) {
     if (!node || typeof node !== 'object' || node.type !== 'zeile') continue
     const eltern = Object.entries(src).find(
@@ -106,7 +115,7 @@ export function migrateZeileAufloesen(src: Record<string, RohKnoten>): string[] 
     if (istFlaecheRoh(elternId, elternKnoten)) {
       verteileImBand(src, parseRasterPos(rohProps(node)), kinder)
     }
-    entfernt.push(id)
+    entfernt.push({ id, grund: 'huelle-aufgeloest' })
   }
   return entfernt
 }

@@ -21,6 +21,7 @@ import {
   migrateKnopfAusTabelle,
   migrateSpaltenKennungen,
   migrateZeileAufloesen,
+  type EntfernGrund,
 } from './migrationenRoh'
 import { topologieProbleme } from './topologie'
 import { createEmptyTree, normalizeProps } from './treeOps'
@@ -29,7 +30,7 @@ export function sanitizeTree(
   raw: Record<string, unknown>,
   meldungen?: {
     typVerworfen?: (type: string) => void
-    absichtlichEntfernt?: (id: string) => void
+    absichtlichEntfernt?: (id: string, grund: EntfernGrund) => void
   },
 ): BlockTree {
   const tree = createEmptyTree()
@@ -43,8 +44,8 @@ export function sanitizeTree(
     ...migrateKnopfAusTabelle(src),
     ...migrateZeileAufloesen(src),
   ]
-  for (const id of rohEntfernt) {
-    meldungen?.absichtlichEntfernt?.(id)
+  for (const { id, grund } of rohEntfernt) {
+    meldungen?.absichtlichEntfernt?.(id, grund)
   }
 
   const addChild = (parentId: string, childId: unknown): void => {
@@ -89,7 +90,7 @@ export interface BaumErgebnis {
 
   absichtlichGeleert: ReadonlySet<string>
 
-  absichtlichEntfernt: ReadonlySet<string>
+  absichtlichEntfernt: ReadonlyMap<string, EntfernGrund>
 
   verworfen: Map<string, number>
 }
@@ -104,13 +105,13 @@ export function baumAusRohdaten(parsed: {
 
   const verworfen = new Map<string, number>()
   const absichtlichGeleert = new Set<string>()
-  const absichtlichEntfernt = new Set<string>()
+  const absichtlichEntfernt = new Map<string, EntfernGrund>()
   if (parsed.tree && typeof parsed.tree === 'object') {
     tree = sanitizeTree(parsed.tree as Record<string, unknown>, {
       typVerworfen: (type) => {
         verworfen.set(type, (verworfen.get(type) ?? 0) + 1)
       },
-      absichtlichEntfernt: (id) => absichtlichEntfernt.add(id),
+      absichtlichEntfernt: (id, grund) => absichtlichEntfernt.set(id, grund),
     })
 
     if (putzeDemos) for (const p of putzeAlteKartenDemos(tree)) absichtlichGeleert.add(p)

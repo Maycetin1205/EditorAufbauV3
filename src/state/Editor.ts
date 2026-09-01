@@ -38,8 +38,6 @@ import {
 import { auswahlAufSeite, auswahlZiel } from './selectionOps'
 import { deepClone } from '../lib/deepClone'
 
-export { BACKUP_KEY } from './persistence'
-
 export class Editor extends Subject<Editor> {
   private _tree: BlockTree = createEmptyTree()
   private _selectedId: string | null = null

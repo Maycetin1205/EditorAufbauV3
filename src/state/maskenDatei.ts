@@ -10,6 +10,7 @@ import {
 import { pruefeRelationsVorlagen, type RelationTemplate } from '../core/data/relations'
 import { keinVerlust, pruefeBaumStand } from './ladeKette'
 import { CURRENT_SCHEMA_VERSION } from './migrations'
+import { type EntfernGrund } from './migrationenRoh'
 
 export const MASKEN_DATEI_ART = 'aufbau-editor-maske'
 
@@ -22,7 +23,12 @@ export interface MaskenInhalt {
 }
 
 export type AuspackErgebnis =
-  | { ok: true; inhalt: MaskenInhalt; verworfen: Map<string, number> }
+  | {
+    ok: true
+    inhalt: MaskenInhalt
+    verworfen: Map<string, number>
+    absichtlichEntfernt: ReadonlyMap<string, EntfernGrund>
+  }
   | { ok: false; grund: string; probleme: readonly LadeProblem[] }
 
 function beschaedigtSatz(probleme: readonly LadeProblem[]): string {
@@ -160,5 +166,6 @@ function auspacken(text: string): AuspackErgebnis {
     },
 
     verworfen: baum.verworfen,
+    absichtlichEntfernt: baum.absichtlichEntfernt,
   }
 }
