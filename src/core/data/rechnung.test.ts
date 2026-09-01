@@ -13,99 +13,72 @@ import {
 
 function rechnung() {
   const r = leereRechnung()
-  for (const k of ['menge', 'anzahl', 'dosis', 'gewicht', 'bezug', 'tage'] as const) {
+  for (const k of ['menge', 'anzahl', 'dosis', 'tage'] as const) {
     r[k].spalte = k
   }
   return r
 }
 
-const ALLE = new Set<PlatzKey>(['menge', 'anzahl', 'dosis', 'gewicht', 'bezug', 'tage'])
+const ALLE = new Set<PlatzKey>(['menge', 'anzahl', 'dosis', 'tage'])
 
 function werte(teil: Partial<Record<PlatzKey, PlatzWert>>): Record<PlatzKey, PlatzWert> {
-  return {
-    menge: null, anzahl: null, dosis: null, gewicht: null, bezug: null, tage: null,
-    ...teil,
-  }
+  return { menge: null, anzahl: null, dosis: null, tage: null, ...teil }
 }
 
-// Der Praxisfall aus den Kundendaten: Baytril 5 %, 5 ml je 50 kg, 5 Tage.
-// 5000 ml Vorrat, Rinder mit 450 kg -> 22,2 Tiere -> aufgerundet 23.
+// Der Praxisfall aus den Kundendaten: Baytril 5 % (IDB-Satz ART00005/Rind),
+// Behandlungsmenge 5, Behandlungsdauer 5. 5000 ml Vorrat -> 200 Tiere.
+// In der IDB steht bei diesem Artikel auch ein Koerpergewicht (50) — es
+// zaehlt seit 2026-09-01 NICHT mehr mit, die Dosis gilt pro Tier.
 test('Anzahl Tiere ist die Luecke und wird aufgerundet', () => {
-  const geloest = loeseRechnung(rechnung(), werte({
-    menge: 5000, dosis: 5, gewicht: 450, bezug: 50, tage: 5,
-  }), ALLE)
-  expect(geloest).toEqual({ platz: 'anzahl', wert: 23 })
+  const geloest = loeseRechnung(rechnung(), werte({ menge: 5000, dosis: 5, tage: 5 }), ALLE)
+  expect(geloest).toEqual({ platz: 'anzahl', wert: 200 })
+})
+
+test('krumme Anzahl wird aufgerundet, damit kein Tier leer ausgeht', () => {
+  const geloest = loeseRechnung(rechnung(), werte({ menge: 100, dosis: 3, tage: 5 }), ALLE)
+  expect(geloest).toEqual({ platz: 'anzahl', wert: 7 })
 })
 
 test('Abgabemenge ist die Luecke', () => {
-  const geloest = loeseRechnung(rechnung(), werte({
-    anzahl: 12, dosis: 5, gewicht: 450, bezug: 50, tage: 5,
-  }), ALLE)
-  expect(geloest).toEqual({ platz: 'menge', wert: 2700 })
+  const geloest = loeseRechnung(rechnung(), werte({ anzahl: 12, dosis: 5, tage: 5 }), ALLE)
+  expect(geloest).toEqual({ platz: 'menge', wert: 300 })
 })
 
-// Bezug leer = Dosis pro Tier: das Paar Tiergewicht/Bezug faellt weg,
-// ein getipptes Tiergewicht darf NICHT mitmultiplizieren.
-test('ohne Bezug rechnet die Dosis pro Tier', () => {
-  const geloest = loeseRechnung(rechnung(), werte({
-    anzahl: 12, dosis: 20, gewicht: 450, tage: 5,
-  }), ALLE)
-  expect(geloest).toEqual({ platz: 'menge', wert: 1200 })
+// Nicht belegte Plaetze fallen auf 1: eine Tabelle ohne Behandlungsdauer
+// rechnet Menge = Anzahl x Dosis.
+test('unbelegte Plaetze zaehlen als Faktor 1', () => {
+  const r = rechnung()
+  r.tage.spalte = ''
+  const ohneTage = new Set<PlatzKey>(['menge', 'anzahl', 'dosis'])
+  expect(loeseRechnung(r, werte({ menge: 60, dosis: 5 }), ohneTage))
+    .toEqual({ platz: 'anzahl', wert: 12 })
 })
 
 test('zwei Luecken: nichts wird gerechnet', () => {
-  expect(loeseRechnung(rechnung(), werte({ dosis: 5, bezug: 50, tage: 5 }), ALLE)).toBeNull()
+  expect(loeseRechnung(rechnung(), werte({ dosis: 5 }), ALLE)).toBeNull()
 })
 
 test('alle Plaetze voll: nichts wird ueberschrieben', () => {
   expect(loeseRechnung(rechnung(), werte({
-    menge: 5000, anzahl: 23, dosis: 5, gewicht: 450, bezug: 50, tage: 5,
+    menge: 5000, anzahl: 200, dosis: 5, tage: 5,
   }), ALLE)).toBeNull()
 })
 
 test('unlesbarer Wert: die Rechnung schweigt statt zu raten', () => {
   expect(loeseRechnung(rechnung(), werte({
-    menge: 5000, dosis: 'fehler', gewicht: 450, bezug: 50, tage: 5,
+    menge: 5000, dosis: 'fehler', tage: 5,
   }), ALLE)).toBeNull()
 })
 
 test('Division durch null: keine Antwort', () => {
-  expect(loeseRechnung(rechnung(), werte({
-    menge: 5000, dosis: 0, gewicht: 450, bezug: 50, tage: 5,
-  }), ALLE)).toBeNull()
-  expect(loeseRechnung(rechnung(), werte({
-    menge: 5000, dosis: 5, gewicht: 450, bezug: 0, tage: 5,
-  }), ALLE)).toBeNull()
-})
-
-test('Tiergewicht als Luecke wird aus dem Bezug zurueckgerechnet', () => {
-  const geloest = loeseRechnung(rechnung(), werte({
-    menge: 2700, anzahl: 12, dosis: 5, bezug: 50, tage: 5,
-  }), ALLE)
-  expect(geloest).toEqual({ platz: 'gewicht', wert: 450 })
-})
-
-// Der Fall aus der echten Nutzer-Konfiguration 2026-08-31: je-kg belegt,
-// Tiergewicht nicht. Mit Bezugswert MUSS die Rechnung schweigen — vorher
-// rechnete sie still mit 1/Bezug (Faktor 50 daneben).
-test('Bezug mit Wert ohne Tiergewicht-Platz: schweigen', () => {
-  const r = rechnung()
-  r.gewicht.spalte = ''
-  const ohneGewicht = new Set<PlatzKey>(['menge', 'anzahl', 'dosis', 'bezug', 'tage'])
-  expect(loeseRechnung(r, werte({
-    menge: 5000, dosis: 5, bezug: 50, tage: 5,
-  }), ohneGewicht)).toBeNull()
-  // Pro-Tier-Artikel (Bezug in der Zeile leer) rechnen auch ohne den Platz.
-  expect(loeseRechnung(r, werte({
-    menge: 1200, dosis: 20, tage: 5,
-  }), ohneGewicht)).toEqual({ platz: 'anzahl', wert: 12 })
+  expect(loeseRechnung(rechnung(), werte({ menge: 5000, dosis: 0, tage: 5 }), ALLE)).toBeNull()
 })
 
 test('ohne belegte Menge gibt es keine Gleichung', () => {
   const r = rechnung()
   r.menge.spalte = ''
-  const nurRest = new Set<PlatzKey>(['anzahl', 'dosis', 'gewicht', 'bezug', 'tage'])
-  expect(loeseRechnung(r, werte({ dosis: 5, gewicht: 450, bezug: 50, tage: 5 }), nurRest)).toBeNull()
+  const nurRest = new Set<PlatzKey>(['anzahl', 'dosis', 'tage'])
+  expect(loeseRechnung(r, werte({ dosis: 5, tage: 5 }), nurRest)).toBeNull()
 })
 
 test('zahlStreng liest deutsch und raet nie', () => {
@@ -149,18 +122,23 @@ test('kaputtes Attribut liefert null statt Truemmer', () => {
   expect(rechnungVonAttribut('[1,2]')).toBeNull()
 })
 
-// Alte Masken tragen im Attribut noch einheitFeld/einheiten (der Umrechner
-// von vor 2026-09-01) und `feld` statt `spalte` (vor der Spalten-Kennung) —
-// die Leser lassen Unbekanntes einfach fallen; `feld` uebersetzt die
-// Lade-Migration (migrationenRoh), nicht dieser Leser.
+// Alte Masken tragen im Attribut noch die ausgebauten Teile: einheitFeld/
+// einheiten (Umrechner), gewicht/bezug (Tiergewicht und je-kg, beide raus am
+// 2026-09-01) und `feld` statt `spalte` (vor der Spalten-Kennung) — die Leser
+// lassen Unbekanntes einfach fallen; `feld` uebersetzt die Lade-Migration
+// (migrationenRoh), nicht dieser Leser.
 test('unbekannte Attribut-Teile werden beim Lesen fallengelassen', () => {
   const roh = JSON.stringify({
     menge: { spalte: 's5', feld: 'm' },
+    gewicht: { spalte: 's9', runden: { stellen: 3, richtung: 'kfm' } },
+    bezug: { spalte: 's6', runden: { stellen: 3, richtung: 'kfm' } },
     einheitFeld: '1646_5',
     einheiten: [{ kennung: 'ml', klarname: 'Milliliter', art: 'volumen', faktor: 1 }],
   })
   const r = rechnungVonAttribut(roh)
   expect(r?.menge.spalte).toBe('s5')
   expect(r).not.toHaveProperty('einheiten')
+  expect(r).not.toHaveProperty('gewicht')
+  expect(r).not.toHaveProperty('bezug')
   expect(r?.menge).not.toHaveProperty('feld')
 })

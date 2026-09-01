@@ -1,7 +1,14 @@
-// Die Rechnung der Belegerfassung (Auftrag: RECHNUNG-BELEGERFASSUNG.md):
-//   Abgabemenge = Anzahl x Dosis x (Tiergewicht / Bezug) x Tage
+// Die Rechnung der Belegerfassung:
+//   Abgabemenge = Anzahl x Dosis x Tage
 // Gerechnet wird der EINE leere Platz; Getipptes und aus Quellen Gefuelltes
-// gilt als gegeben. Bezug leer (Dosis pro Tier) -> das Paar faellt auf 1.
+// gilt als gegeben.
+//
+// Tiergewicht und "je kg" sind am 2026-09-01 auf Nutzer-Ansage RAUS: die
+// Dosis gilt pro Tier. Mit ihnen war ein Artikel, bei dem in der IDB ein
+// Koerpergewicht steht (313_5, z. B. Baytril "5 ml / 50 kg"), nur zu rechnen,
+// wenn der Bediener zusaetzlich ein Tiergewicht tippte — sonst waren es zwei
+// Luecken und die Rechnung schwieg. Genau das war der Nutzer-Befund. Nicht
+// ohne neue Entscheidung wieder einbauen.
 
 export type RundungsRichtung = 'auf' | 'ab' | 'kfm'
 
@@ -19,18 +26,14 @@ export interface RechnungsPlatz {
   runden: Rundung
 }
 
-export type PlatzKey = 'menge' | 'anzahl' | 'dosis' | 'gewicht' | 'bezug' | 'tage'
+export type PlatzKey = 'menge' | 'anzahl' | 'dosis' | 'tage'
 
-export const PLATZ_KEYS: readonly PlatzKey[] = [
-  'menge', 'anzahl', 'dosis', 'gewicht', 'bezug', 'tage',
-]
+export const PLATZ_KEYS: readonly PlatzKey[] = ['menge', 'anzahl', 'dosis', 'tage']
 
 export const PLATZ_NAMEN: Record<PlatzKey, string> = {
   menge: 'Abgabemenge',
   anzahl: 'Anzahl Tiere',
   dosis: 'Dosis',
-  gewicht: 'Tiergewicht',
-  bezug: 'je (kg)',
   tage: 'Behandlungstage',
 }
 
@@ -42,8 +45,6 @@ export interface Rechnung {
   menge: RechnungsPlatz
   anzahl: RechnungsPlatz
   dosis: RechnungsPlatz
-  gewicht: RechnungsPlatz
-  bezug: RechnungsPlatz
   tage: RechnungsPlatz
 }
 
@@ -56,8 +57,6 @@ export function leereRechnung(): Rechnung {
     // (Nutzer-Entscheidung 2026-08-31).
     anzahl: { spalte: '', runden: { stellen: 0, richtung: 'auf' } },
     dosis: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-    gewicht: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-    bezug: { spalte: '', runden: { ...RUNDEN_STANDARD } },
     tage: { spalte: '', runden: { ...RUNDEN_STANDARD } },
   }
 }
@@ -107,21 +106,11 @@ export function loeseRechnung(
   konfiguriert: ReadonlySet<PlatzKey>,
 ): { platz: PlatzKey; wert: number } | null {
   if (!konfiguriert.has('menge')) return null
-  const bezug = konfiguriert.has('bezug') ? werte.bezug : null
-  if (bezug === 'fehler') return null
-  // Bezug mit Wert -> Dosis gilt je Bezugsgewicht, das Tiergewicht zaehlt.
-  // Bezug leer -> Dosis gilt pro Tier, das Paar faellt komplett weg.
-  const paarAktiv = typeof bezug === 'number'
-  if (paarAktiv && bezug === 0) return null
-  // Bezug mit Wert, aber kein Tiergewicht-Platz belegt: die Klammer ist
-  // unbestimmbar — schweigen, statt still mit 1/Bezug zu rechnen.
-  if (paarAktiv && !konfiguriert.has('gewicht')) return null
 
   const noetig: PlatzKey[] = ['menge']
   for (const k of ['anzahl', 'dosis', 'tage'] as const) {
     if (konfiguriert.has(k)) noetig.push(k)
   }
-  if (paarAktiv && konfiguriert.has('gewicht')) noetig.push('gewicht')
 
   const luecken: PlatzKey[] = []
   for (const k of noetig) {
@@ -132,25 +121,19 @@ export function loeseRechnung(
   if (luecken.length !== 1) return null
   const luecke = luecken[0]
 
+  // Ein unbelegter oder leerer Platz zaehlt als Faktor 1: die Luecke selbst
+  // steht so als 1 in der rechten Seite, und Teilen loest nach ihr auf.
   const zahl = (k: PlatzKey): number => {
     const w = werte[k]
     return typeof w === 'number' ? w : 1
   }
 
+  const rechte = zahl('anzahl') * zahl('dosis') * zahl('tage')
   let wert: number
-  if (luecke === 'gewicht') {
-    const nenner = zahl('anzahl') * zahl('dosis') * zahl('tage')
-    if (nenner === 0) return null
-    wert = (zahl('menge') / nenner) * (bezug as number)
-  } else {
-    const ratio = paarAktiv ? zahl('gewicht') / (bezug as number) : 1
-    const rechte = zahl('anzahl') * zahl('dosis') * zahl('tage') * ratio
-    if (luecke === 'menge') wert = rechte
-    else {
-      // Der Luecken-Faktor steht in `rechte` als 1 — teilen loest nach ihm auf.
-      if (rechte === 0) return null
-      wert = zahl('menge') / rechte
-    }
+  if (luecke === 'menge') wert = rechte
+  else {
+    if (rechte === 0) return null
+    wert = zahl('menge') / rechte
   }
   if (!Number.isFinite(wert)) return null
   return { platz: luecke, wert: rundeWert(wert, r[luecke].runden) }
@@ -199,8 +182,6 @@ export function rechnungVonAttribut(roh: unknown): Rechnung | null {
     menge: alsPlatz(o.menge, leer.menge.runden),
     anzahl: alsPlatz(o.anzahl, leer.anzahl.runden),
     dosis: alsPlatz(o.dosis, leer.dosis.runden),
-    gewicht: alsPlatz(o.gewicht, leer.gewicht.runden),
-    bezug: alsPlatz(o.bezug, leer.bezug.runden),
     tage: alsPlatz(o.tage, leer.tage.runden),
   }
 }

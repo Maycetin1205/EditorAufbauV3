@@ -98,8 +98,8 @@ export function RechnungenBereich() {
       )}
 
       <div className="text-dicht text-matt">
-        Abgabemenge = Anzahl × Dosis × (Tiergewicht ÷ je kg) × Tage — gerechnet
-        wird der eine leere Platz der Erfassungszeile.
+        Abgabemenge = Anzahl × Dosis × Tage — gerechnet wird der eine leere
+        Platz der Erfassungszeile.
       </div>
 
       <div className="flex flex-col gap-1.5">

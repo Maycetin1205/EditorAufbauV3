@@ -156,7 +156,7 @@ export function migrateAnzeigeFeldAufSpalten(src: Record<string, RohKnoten>): vo
 // steht.
 const ZELLEN_QUELLEN_ROH = new Set(['erfassungszelle', 'aenderungszelle', 'loeschzelle'])
 
-const RECHNUNG_PLAETZE_ROH = ['menge', 'anzahl', 'dosis', 'gewicht', 'bezug', 'tage'] as const
+const RECHNUNG_PLAETZE_ROH = ['menge', 'anzahl', 'dosis', 'tage'] as const
 
 function rohSpalten(node: RohKnoten): Record<string, unknown>[] {
   const roh = rohProps(node).spalten
@@ -230,10 +230,13 @@ function schreibeRechnungUm(node: RohKnoten, spalten: readonly Record<string, un
       : kennungAnPlatz(spalten, spalten.findIndex((s) => s.feld === feld))
     delete p.feld
   }
-  // Der Einheiten-Umrechner ist ausgebaut (2026-09-01) — seine Reste sollen
-  // nicht in jedem Export weiterreisen.
+  // Ausgebaut und darum aus dem Attribut raus, sonst reisen die Reste in
+  // jedem Export weiter: der Einheiten-Umrechner und die beiden Plaetze
+  // Tiergewicht/je-kg (beides 2026-09-01, s. core/data/rechnung.ts).
   delete r.einheitFeld
   delete r.einheiten
+  delete r.gewicht
+  delete r.bezug
   props.rechnung = JSON.stringify(r)
 }
 

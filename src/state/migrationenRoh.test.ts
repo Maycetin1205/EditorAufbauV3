@@ -15,11 +15,13 @@ function alteMaske() {
         spalten: [
           { titel: 'Artikel', feld: '18_25' },
           { titel: 'Menge', feld: '164_8' },
-          { titel: 'Tiergewicht', feld: '930_3' },
+          { titel: 'Dosis', feld: '930_3' },
         ],
         rechnung: JSON.stringify({
           menge: { feld: '164_8', runden: { stellen: 3, richtung: 'kfm' } },
-          gewicht: { feld: '930_3', runden: { stellen: 3, richtung: 'kfm' } },
+          dosis: { feld: '930_3', runden: { stellen: 3, richtung: 'kfm' } },
+          gewicht: { feld: '1808_30', runden: { stellen: 3, richtung: 'kfm' } },
+          bezug: { feld: '930_3', runden: { stellen: 3, richtung: 'kfm' } },
           einheitFeld: '1646_5',
           einheiten: [{ kennung: 'ml', art: 'volumen', faktor: 1 }],
         }),
@@ -61,13 +63,16 @@ test('Spalten bekommen Kennungen, Ketten und Rechnung ziehen um', () => {
   expect(params[0].value).toBe('0')
 
   // Die Rechnung spricht die Kennung, das Belegfeld ist raus — und die Reste
-  // des ausgebauten Einheiten-Umrechners reisen nicht laenger mit.
+  // des Einheiten-Umrechners wie der ausgebauten Plaetze Tiergewicht/je-kg
+  // reisen nicht laenger mit.
   const rechnung = JSON.parse(src.t1.props.rechnung as string) as Record<string, unknown>
   expect(rechnung.menge).toMatchObject({ spalte: 's2' })
-  expect(rechnung.gewicht).toMatchObject({ spalte: 's3' })
+  expect(rechnung.dosis).toMatchObject({ spalte: 's3' })
   expect(rechnung.menge).not.toHaveProperty('feld')
   expect(rechnung).not.toHaveProperty('einheitFeld')
   expect(rechnung).not.toHaveProperty('einheiten')
+  expect(rechnung).not.toHaveProperty('gewicht')
+  expect(rechnung).not.toHaveProperty('bezug')
 })
 
 // Ein zweiter Lauf darf nichts mehr veraendern — die Migration laeuft bei
@@ -88,5 +93,5 @@ test('bei doppeltem Belegfeld gewinnt die vorderste Spalte', () => {
   ;(src.t1.props.spalten as Record<string, unknown>[]).push({ titel: 'KG', feld: '930_3' })
   migrateSpaltenKennungen(src)
   const rechnung = JSON.parse(src.t1.props.rechnung as string) as Record<string, unknown>
-  expect(rechnung.gewicht).toMatchObject({ spalte: 's3' })
+  expect(rechnung.dosis).toMatchObject({ spalte: 's3' })
 })
