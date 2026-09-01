@@ -5,6 +5,13 @@ import type { RuntimeRelation } from './relations'
 // Ruf ueberhaupt hinausgeht.
 const brueckeGlobal: { basisHTML_SND_MSG?: (verb: string, obj: unknown) => void } = {}
 const gemeldet: string[] = []
+const antwortZuhoerer = new Set<(raw: unknown) => void>()
+
+// Was SoftEngine zurueckschiebt. Der Rueckruf traegt NICHT, auf welche Frage
+// die Antwort gehoert — genau daran haengt die Verfallsmarke.
+function antworte(roh: unknown): void {
+  antwortZuhoerer.forEach((cb) => { cb(roh) })
+}
 
 vi.mock('./bridge', async (echte) => {
   const modul = await echte<typeof import('./bridge')>()
@@ -12,7 +19,10 @@ vi.mock('./bridge', async (echte) => {
     ...modul,
     bootSe: () => {},
     seGlobal: () => brueckeGlobal,
-    onSeAntwort: () => () => {},
+    onSeAntwort: (cb: (raw: unknown) => void) => {
+      antwortZuhoerer.add(cb)
+      return () => { antwortZuhoerer.delete(cb) }
+    },
   }
 })
 
@@ -21,7 +31,7 @@ vi.mock('./meldung', async (echte) => {
   return { ...modul, meldeFehler: (text: string) => { gemeldet.push(text) } }
 })
 
-const { executeRelation } = await import('./relations')
+const { executeRelation, setzeVerfallZurueck } = await import('./relations')
 
 function vorlage(verb: RuntimeRelation['verb']): RuntimeRelation {
   return { id: 'x', verb, nr: '174', params: [] }
@@ -29,6 +39,8 @@ function vorlage(verb: RuntimeRelation['verb']): RuntimeRelation {
 
 beforeEach(() => {
   delete brueckeGlobal.basisHTML_SND_MSG
+  antwortZuhoerer.clear()
+  setzeVerfallZurueck()
   gemeldet.length = 0
 })
 
@@ -71,4 +83,33 @@ test('still schweigt auf dem Balken, meldet aber trotzdem zurueck', async () => 
   const antwort = await executeRelation(vorlage('GET_RELATION'), ['a'], { still: true })
   expect(antwort.fehler).toBe('Daten laden nicht möglich: keine Verbindung zu SoftEngine.')
   expect(gemeldet).toEqual([])
+})
+
+// Es gibt keine Ruf-Antwort-Zuordnung: eine Antwort sagt nicht, auf welche
+// Frage sie gehoert. Ohne Riegel loeste die verspaetete Antwort eines
+// aufgegebenen Rufs den naechsten Frager auf — mit den Daten der falschen
+// Position.
+test('eine verspaetete Antwort loest den naechsten Frager NICHT auf', async () => {
+  vi.useFakeTimers()
+  try {
+    brueckeGlobal.basisHTML_SND_MSG = () => {}
+
+    const ersterRuf = executeRelation(vorlage('GET_RELATION'), ['1'])
+    await vi.advanceTimersByTimeAsync(20_000)
+    expect((await ersterRuf).fehler)
+      .toBe('Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. 174).')
+
+    const zweiterRuf = executeRelation(vorlage('GET_RELATION'), ['2'])
+    let erledigt = false
+    void zweiterRuf.then(() => { erledigt = true })
+
+    antworte({ RESULT: 'antwort-auf-ruf-1' })
+    await vi.advanceTimersByTimeAsync(300)
+    expect(erledigt).toBe(false)
+
+    antworte({ RESULT: 'antwort-auf-ruf-2' })
+    expect(await zweiterRuf).toMatchObject({ wert: 'antwort-auf-ruf-2' })
+  } finally {
+    vi.useRealTimers()
+  }
 })

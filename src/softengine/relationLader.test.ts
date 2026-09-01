@@ -1,0 +1,99 @@
+import { beforeEach, expect, test, vi } from 'vitest'
+import type { RuntimeLadeRelation } from './data'
+
+interface Sollantwort { wert: string; fehler?: string }
+
+const antworten: Sollantwort[] = []
+const gemeldet: string[] = []
+let lieferungen = 0
+
+vi.mock('./relations', () => ({
+  executeRelation: () => {
+    const naechste = antworten.shift()
+    if (naechste === undefined) return Promise.resolve({ wert: '', roh: undefined })
+    return Promise.resolve({ wert: naechste.wert, roh: undefined, fehler: naechste.fehler })
+  },
+}))
+
+vi.mock('./bridge', () => ({ meldeNeueDaten: () => { lieferungen += 1 } }))
+
+vi.mock('./meldung', () => ({ meldeFehler: (text: string) => { gemeldet.push(text) } }))
+
+const { ladeZeilenPerRelation } = await import('./relationLader')
+const { geholteZeilenFuer, setzeGeholteZeilenZurueck } = await import('./geholteZeilen')
+
+const QUELLE = { id: 'q-pos', name: 'POS' }
+
+// Ein Satz, den die Ende-Pruefung NICHT fuer das Listenende haelt: ab Stelle
+// 11 steht etwas.
+const SATZ = 'x'.repeat(11) + 'ABC'
+
+function lade(zusatzFelder: readonly string[] = []): RuntimeLadeRelation {
+  return {
+    nr: '69',
+    geberQuelleId: 'q-bel',
+    belegartFeld: '2_1',
+    belegnummerFeld: '3_8',
+    jahrFeld: '',
+    archivFeld: '',
+    endeFelder: ['11_6'],
+    zusatzFelder,
+  }
+}
+
+const GEBER = { '2_1': 'A', '3_8': '4711' }
+
+function abwarten(): Promise<void> {
+  return new Promise((fertig) => { setTimeout(fertig, 0) })
+}
+
+beforeEach(() => {
+  antworten.length = 0
+  gemeldet.length = 0
+  lieferungen = 0
+  setzeGeholteZeilenZurueck()
+})
+
+test('ein vollstaendiger Lauf veroeffentlicht die Zeilen', async () => {
+  antworten.push({ wert: SATZ }, { wert: '' })
+  ladeZeilenPerRelation(QUELLE, lade(), GEBER)
+  await abwarten()
+
+  expect(geholteZeilenFuer('POS')).toEqual([{ SATZ }])
+  expect(gemeldet).toEqual([])
+  expect(lieferungen).toBe(1)
+})
+
+// Ein gescheiterter Ruf liefert einen LEEREN Satz. Der sieht aus wie das Ende
+// der Liste: bis P2 schnitt ein Timeout die restlichen Positionen stumm ab und
+// die halbe Liste ging als ganze durch.
+test('ein Fehler bricht ab, meldet und veroeffentlicht KEINE halbe Liste', async () => {
+  antworten.push(
+    { wert: SATZ },
+    { wert: '', fehler: 'Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. 69).' },
+  )
+  ladeZeilenPerRelation(QUELLE, lade(), GEBER)
+  await abwarten()
+
+  expect(geholteZeilenFuer('POS')).toEqual([])
+  expect(lieferungen).toBe(0)
+  expect(gemeldet).toHaveLength(1)
+  expect(gemeldet[0]).toContain('SoftEngine hat nicht geantwortet')
+  expect(gemeldet[0]).toContain('Zeile 2')
+})
+
+// Die Hol-Rufe laufen 'still' — der Balken bliebe sonst bei jeder Position
+// stehen. Der Abbruch selbst muss trotzdem sichtbar sein.
+test('auch ein Fehler im Zusatzfeld bricht ab und meldet', async () => {
+  antworten.push(
+    { wert: SATZ },
+    { wert: '', fehler: 'Daten laden nicht möglich: keine Verbindung zu SoftEngine.' },
+  )
+  ladeZeilenPerRelation(QUELLE, lade(['645_10']), GEBER)
+  await abwarten()
+
+  expect(geholteZeilenFuer('POS')).toEqual([])
+  expect(lieferungen).toBe(0)
+  expect(gemeldet).toHaveLength(1)
+  expect(gemeldet[0]).toContain('keine Verbindung zu SoftEngine')
+})

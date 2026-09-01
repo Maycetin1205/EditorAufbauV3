@@ -1,7 +1,7 @@
 import { meldeNeueDaten } from './bridge'
 import { getField, type RuntimeLadeRelation } from './data'
 import { geholteZeilenFuer, setzeGeholteZeilen } from './geholteZeilen'
-import { executeRelation } from './relations'
+import { executeRelation, type RelationAntwort } from './relations'
 import { meldeFehler } from './meldung'
 
 const MAX_POSITIONEN = 999
@@ -28,8 +28,8 @@ async function frage(
   posNr: number,
   pos: string,
   len: string,
-): Promise<string> {
-  const antwort = await executeRelation(
+): Promise<RelationAntwort> {
+  return executeRelation(
     { id: 'relation-lader', verb: 'GET_RELATION', nr: lade.nr, params: [] },
     [
       schluessel.belegart,
@@ -47,7 +47,16 @@ async function frage(
     ],
     { still: true, satzAntwort: true },
   )
-  return antwort.wert
+}
+
+// Die Hol-Rufe laufen 'still': bei bis zu 999 Positionen blinkte der Balken
+// sonst ununterbrochen. Der Abbruch selbst muss trotzdem sichtbar sein —
+// ohne ihn saehe der Bediener eine kurze Liste, die wie die ganze aussieht.
+function meldeAbbruch(nr: string, posNr: number, grund: string): void {
+  meldeFehler(
+    `Positionen laden bei Zeile ${posNr} abgebrochen (Relation Nr. ${nr}): ${grund} `
+    + 'Es werden keine Positionen angezeigt — die Liste wäre unvollständig.',
+  )
 }
 
 export function ladeZeilenPerRelation(
@@ -83,8 +92,17 @@ export function ladeZeilenPerRelation(
     let endeGesehen = false
 
     for (let posNr = 1; posNr <= MAX_POSITIONEN; posNr += 1) {
-      const satz = await frage(lade, schluessel, posNr, SCHNITT_POS, SCHNITT_LEN)
+      const antwort = await frage(lade, schluessel, posNr, SCHNITT_POS, SCHNITT_LEN)
       if (generationen.get(quelle.id) !== gen) return
+
+      // Ein gescheiterter Ruf liefert einen LEEREN Satz — der ist von einem
+      // echten Listenende nicht zu unterscheiden. Weiterzumachen hiesse, die
+      // halbe Liste als ganze auszugeben.
+      if (antwort.fehler !== undefined) {
+        meldeAbbruch(lade.nr, posNr, antwort.fehler)
+        return
+      }
+      const satz = antwort.wert
 
       if (lade.endeFelder.every((feld) => getField({ SATZ: satz }, feld) === '')) {
         endeGesehen = true
@@ -94,7 +112,7 @@ export function ladeZeilenPerRelation(
       const zeile: Record<string, string> = { SATZ: satz }
       for (const feld of lade.zusatzFelder) {
         const trenner = feld.indexOf('_')
-        const wert = await frage(
+        const zusatz = await frage(
           lade,
           schluessel,
           posNr,
@@ -102,7 +120,11 @@ export function ladeZeilenPerRelation(
           feld.slice(trenner + 1),
         )
         if (generationen.get(quelle.id) !== gen) return
-        zeile[feld] = wert
+        if (zusatz.fehler !== undefined) {
+          meldeAbbruch(lade.nr, posNr, zusatz.fehler)
+          return
+        }
+        zeile[feld] = zusatz.wert
       }
       zeilen.push(zeile)
     }

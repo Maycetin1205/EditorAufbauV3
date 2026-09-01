@@ -157,18 +157,22 @@ export function seMessageKeys(seData: unknown): string[] {
   return Object.keys(seData).filter((key) => /^Message\d+$/.test(key))
 }
 
+export interface NeueNachricht extends RelationAntwort {
+  schluessel: string
+}
+
 export function newSeMessageResult(
   seData: unknown,
   before: ReadonlySet<string>,
   satzAntwort = false,
-): RelationAntwort | undefined {
+): NeueNachricht | undefined {
   if (!isRecord(seData)) return undefined
   const keys = seMessageKeys(seData)
     .filter((key) => !before.has(key))
     .sort((a, b) => Number(b.slice(7)) - Number(a.slice(7)))
   for (const key of keys) {
     const found = satzAntwort ? extractSatzAntwort(seData[key]) : extractRelationResult(seData[key])
-    if (found !== undefined) return { wert: found, roh: seData[key] }
+    if (found !== undefined) return { wert: found, roh: seData[key], schluessel: key }
   }
   return undefined
 }
@@ -187,8 +191,32 @@ interface GetJob {
 
 const getQueue: GetJob[] = []
 let getBusy = false
-const GET_TIMEOUT_MS = 6_000
+const GET_TIMEOUT_MS = 20_000
 const GET_POLL_MS = 100
+
+// Eine Antwort sagt nicht, auf welche Frage sie gehoert; es ist immer nur EIN
+// Ruf unterwegs. Laeuft er in den Timeout, ist seine Antwort trotzdem noch
+// unterwegs und loeste sonst den naechsten Frager mit fremden Daten auf —
+// darum verfaellt danach die naechste eintreffende Antwort. Je Weg einzeln,
+// weil Rueckruf und SEDATA-Nachlese denselben Ruf unabhaengig tragen.
+// Zwei Grenzen, damit die Marke nie selbst zum Fehler wird: kommt gar nichts
+// mehr, verfaellt sie nach VERFALL_MS; und wer selbst eine Antwort verfallen
+// liess und trotzdem in den Timeout laeuft, setzt keine neue — sonst
+// schluckte die Marke von da an jede Antwort.
+const VERFALL_MS = GET_TIMEOUT_MS
+let verfallenBis = 0
+let verfaelltRueckruf = false
+let verfaelltNachlese = false
+
+function markeGilt(): boolean {
+  return Date.now() < verfallenBis
+}
+
+export function setzeVerfallZurueck(): void {
+  verfaelltRueckruf = false
+  verfaelltNachlese = false
+  verfallenBis = 0
+}
 
 function runNextGet(): void {
   if (getBusy || getQueue.length === 0) return
@@ -197,6 +225,7 @@ function runNextGet(): void {
   const g = seGlobal()
   const before = new Set(seMessageKeys(g.SEDATA))
   let settled = false
+  let verfallenGenutzt = false
 
   const finish = (wert: string, roh: unknown, fehler?: string): void => {
     if (settled) return
@@ -214,12 +243,26 @@ function runNextGet(): void {
 
   const unsubscribe = onSeAntwort((raw) => {
     const result = satzAntwort ? extractSatzAntwort(raw) : extractRelationResult(raw)
-    if (result !== undefined) finish(result, raw)
+    if (result === undefined) return
+    if (verfaelltRueckruf && markeGilt()) {
+      verfaelltRueckruf = false
+      verfallenGenutzt = true
+      return
+    }
+    finish(result, raw)
   })
 
   const poll = setInterval(() => {
-    const antwort = newSeMessageResult(seGlobal().SEDATA, before, satzAntwort)
-    if (antwort !== undefined) finish(antwort.wert, antwort.roh)
+    const nachricht = newSeMessageResult(seGlobal().SEDATA, before, satzAntwort)
+    if (nachricht === undefined) return
+    if (verfaelltNachlese && markeGilt()) {
+      verfaelltNachlese = false
+      verfallenGenutzt = true
+      // Sonst faende der naechste Durchlauf dieselbe Nachricht erneut.
+      before.add(nachricht.schluessel)
+      return
+    }
+    finish(nachricht.wert, nachricht.roh)
   }, GET_POLL_MS)
 
   // Der Balken schweigt bei 'still' (Hintergrund-Nachladen), der Bericht an
@@ -231,6 +274,11 @@ function runNextGet(): void {
   }
 
   const timeout = setTimeout(() => {
+    if (!verfallenGenutzt) {
+      verfaelltRueckruf = true
+      verfaelltNachlese = true
+      verfallenBis = Date.now() + VERFALL_MS
+    }
     gescheitert(`Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. ${job.template.nr}).`)
   }, GET_TIMEOUT_MS)
 
