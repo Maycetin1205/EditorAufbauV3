@@ -13,7 +13,7 @@
 > wieder einführen.
 > Sachlich, direkt, kein Cheerleading.
 
-## KORREKTUR 2026-08-28 — diese Datei ist an vier Stellen veraltet
+## KORREKTUR 2026-08-28 (ergänzt 2026-09-01) — diese Datei ist an mehreren Stellen veraltet
 
 Am Code nachgeprüft. Wo unten etwas anderes steht, gilt das hier:
 
@@ -22,7 +22,8 @@ Am Code nachgeprüft. Wo unten etwas anderes steht, gilt das hier:
 | Bauauftrag in `UMBAU-PLAN-V6.md` | Die Datei heißt **`UMBAUPLAN.md`** (Repo-Stamm). |
 | Prüfbündel mit `npm run check:regeln` + `check:runtime` + `npx tsc -b` + `npx eslint src` | `package.json` kennt vier Scripts: **`npm run check`** (= tsc + eslint), **`npm test`**, `build`, `build:runtime`. **Es gibt keine Wächter-Scripts** — `check:regeln`, `check:runtime`, `check:docs` existieren nicht. |
 | Gearbeitet wird auf `main` | Der Branch heißt **`master`**. |
-| Referenzabzug-Test in `src/export/referenz/` | Gibt es nicht. `nodeToHtml` hat **keinen Test** — s. UMBAUPLAN Etappe 5 Punkt 5. |
+| Referenzabzug-Test fehlt (Stand 2026-08-28) | Seit P5 (2026-09-01) gibt es ihn wieder: `src/export/referenzabzug.test.ts` + `src/export/referenz/` (byte-gleich; erneuern nur mit `REFERENZ_ERNEUERN=1`, s. UMBAUPLAN Verbot 5). |
+| Musterbogen eingecheckt in `designsprache/` | Den Ordner gibt es in diesem Repo nicht (geprüft 2026-09-01). Die Fellnase-Werte stehen nur in `src/design/masken-tokens.css`. |
 
 Grund: die Historie dieses Repos beginnt bei `c4bdad7` („Sicherungsstand: Editor
 wie vom alten Rechner uebernommen"). Alles davor liegt woanders — die Datei
@@ -292,7 +293,7 @@ bestehende englische bleiben; umbenannt wird nur, was ohnehin angefasst wird.
   Immer seriell; `ALS_ARRAY`/`ALIAS` machen die Antwort nur zur 10er-Liste
   mit trotzdem EINEM Wert. ⚠ ERPAPICALL per `basisHTML_SND_MSG` friert die
   WinUI-Maske EIN (nur Task-Manager) — tabu, bis die ErpApiCall-Referenz
-  der Installation vorliegt. Bauauftrag: UMBAU-PLAN-V6.md, Welle R.
+  der Installation vorliegt. Bauauftrag: UMBAUPLAN.md, Welle R.
   echtem SE-Log, s. `docs/softengine-wiki/muster-satz-anlegen.md` — beim
   Anlegen werden auch LEERE Felder geschrieben; Ketten brauchen
   adressierbare Ergebnisse je Schritt („Ergebnis von Schritt N").
@@ -338,7 +339,7 @@ ohne neue Entscheidung. Geblieben ist, was BEWEIST statt zu erzählen:
 
 ### Woran gerade gearbeitet wird
 
-**Der Bauauftrag steht seit 2026-08-10 in `UMBAU-PLAN-V6.md` im Repo-Stamm.**
+**Der Bauauftrag steht seit 2026-08-10 in `UMBAUPLAN.md` im Repo-Stamm.**
 Er ist die Ausnahme vom Doku-Schnitt oben und war eine ausdrückliche
 Nutzer-Entscheidung: der Nutzer arbeitet in mehreren Chats, und ein neuer Chat
 weiß nichts vom vorherigen — die Datei ist die einzige Übergabe. Sein
@@ -468,7 +469,7 @@ Nutzer-Entscheidung anfassen:**
   hat: zwei Felder am selben Popup füllen sich bei einem Zeilenklick beide.
   Nicht wieder vorschlagen; Begründung und die drei fehlenden Bausteine
   (Feld-Klick-Ereignis, Tabellen-Zeilen-Ereignis, Rückgabeweg) stehen im
-  Beschluss-Kopf der Welle D in `UMBAU-PLAN-V6.md`, die Bauschritte in D4.
+  Beschluss-Kopf der Welle D in `UMBAUPLAN.md`, die Bauschritte in D4.
 - **Keine Warn-Anzeigen (Nutzer 2026-08-10, sehr deutlich):** Es wird KEINE
   Anzeige für Preflight-/Bindungs-Warnungen gebaut und keine vorgeschlagen —
   Bedienfehler verantwortet der Nutzer selbst, der Editor soll funktionieren,
