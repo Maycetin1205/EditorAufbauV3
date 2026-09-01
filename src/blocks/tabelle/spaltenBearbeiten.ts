@@ -1,8 +1,9 @@
-import { html, type TemplateResult } from 'lit'
+import { html, nothing, type TemplateResult } from 'lit'
 import { starteUmbenennen } from '../shared/umbenennen'
 import {
   SPALTEN_MAX,
   SPALTEN_MIN,
+  mitKennungen,
   neueSpalte,
   type Spalte,
 } from './spalten'
@@ -13,7 +14,7 @@ import {
 // Anlaeufe davor haben die Summe fester Pixel umverteilt (7f92603, dann
 // 040b73c mit einem Wasserfall) — beide behandelten nur das Symptom.
 export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
-  return [...spalten, neueSpalte(spalten.length)]
+  return mitKennungen([...spalten, neueSpalte(spalten.length)])
 }
 
 // Eine Spalte streichen — von ueberall her, nicht nur hinten. EINE Stelle
@@ -59,6 +60,51 @@ export function spaltenSteuerung(
       }}
     >+</button>
   </div>`
+}
+
+// Eine Spalte einen Platz nach links oder rechts schieben. Alles Ihre reist
+// im Eintrag mit (Kennung, Titel, Belegfeld, Fuellfeld, Breite); Ketten und
+// Rechnung zeigen auf die KENNUNG und brauchen deshalb kein Nachziehen —
+// genau dafuer gibt es sie (spalten.ts).
+export function verschiebeSpalte(
+  index: number,
+  richtung: -1 | 1,
+  liste: () => Spalte[],
+  aendere: (spalten: Spalte[]) => void,
+): void {
+  const l = liste()
+  const ziel = index + richtung
+  if (index < 0 || index >= l.length || ziel < 0 || ziel >= l.length) return
+  const [spalte] = l.splice(index, 1)
+  l.splice(ziel, 0, spalte)
+  aendere(l)
+}
+
+// Die zwei Schiebe-Pfeile am Spaltenkopf — nur im Editor, dieselbe Machart
+// wie das Kreuz (unsichtbar bis zur Maus). Am Rand entfaellt der Pfeil ins
+// Leere. Beide fangen ihre Klicks ab, sonst oeffnete derselbe Druck noch den
+// Feld-Picker der Spalte.
+export function spaltenPfeile(
+  titel: string,
+  index: number,
+  anzahl: number,
+  tun: (index: number, richtung: -1 | 1) => void,
+): TemplateResult {
+  const pfeil = (richtung: -1 | 1, zeichen: string): TemplateResult | typeof nothing => {
+    const ziel = index + richtung
+    if (ziel < 0 || ziel >= anzahl) return nothing
+    const wohin = richtung === -1 ? 'nach links' : 'nach rechts'
+    return html`<button
+      class=${richtung === -1 ? 'kopf-schieb links' : 'kopf-schieb rechts'}
+      type="button"
+      title=${`Spalte „${titel}" ${wohin} schieben`}
+      aria-label=${`Spalte „${titel}" ${wohin} schieben`}
+      @pointerdown=${(e: PointerEvent) => e.stopPropagation()}
+      @click=${(e: MouseEvent) => { e.stopPropagation(); tun(index, richtung) }}
+      @dblclick=${(e: MouseEvent) => e.stopPropagation()}
+    >${zeichen}</button>`
+  }
+  return html`${pfeil(-1, '‹')}${pfeil(1, '›')}`
 }
 
 export function starteTitelEdit(

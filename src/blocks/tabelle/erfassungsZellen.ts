@@ -61,12 +61,6 @@ export interface ErfassungsUmfeld {
 
 // Welche Spalte ein Rechnungs-Platz meint: die Referenz ist deren `feld` —
 // der stabile Technikwert; Titel sind frei umbenennbar, Plaetze verschieben sich.
-export function platzSpalteIn(spalten: readonly Spalte[], feld: string): number {
-  const t = feld.trim()
-  if (t === '') return -1
-  return spalten.findIndex((s) => s.feld === t)
-}
-
 export function zellenzielVon(
   spalte: Spalte | undefined,
   tabellenQuelleId: string,
@@ -133,7 +127,8 @@ export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalt
     const anderes = zellenzielVon(spalte, umfeld.quelleId)
     if (anderes.quelleId !== ziel.quelleId || anderes.code === '') continue
     if (raus.some((s) => s.feld === anderes.code)) continue
-    raus.push({ titel: spalte.titel, feld: anderes.code })
+    // Fenster-Spalten sind fluechtige Anzeige — nichts adressiert sie.
+    raus.push({ kennung: '', titel: spalte.titel, feld: anderes.code })
   }
   return raus
 }

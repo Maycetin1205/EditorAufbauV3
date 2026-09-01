@@ -10,7 +10,7 @@ import {
 import type { Spalte } from './spalten'
 
 function spalte(titel: string, feld: string): Spalte {
-  return { titel, feld }
+  return { kennung: '', titel, feld }
 }
 
 const paare: readonly SchluesselPaar[] = [{ fromField: '18_25', toField: 'artnr' }]
@@ -78,6 +78,7 @@ test('Zellenart: frei, eigen oder verknuepft', () => {
 // Artikelstamm (`fuellFeld`). Vorher ging nur eines von beiden.
 test('das Fuellfeld fuehrt beim Erfassen, nicht das Spaltenfeld', () => {
   const beide: Spalte = {
+    kennung: '',
     titel: 'Bezeichnung',
     feld: '45_60',
     fuellFeld: 'q-art::bez',
@@ -88,7 +89,7 @@ test('das Fuellfeld fuehrt beim Erfassen, nicht das Spaltenfeld', () => {
 })
 
 test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
-  const nurSpalte: Spalte = { titel: 'Menge', feld: '164_8', fuellFeld: '' }
+  const nurSpalte: Spalte = { kennung: '', titel: 'Menge', feld: '164_8', fuellFeld: '' }
   expect(zellenzielVon(nurSpalte, 'q-pos')).toEqual({
     art: 'eigen', quelleId: 'q-pos', code: '164_8',
   })
@@ -97,7 +98,7 @@ test('ohne Fuellfeld bleibt es beim Spaltenfeld', () => {
 // Eine Spalte ohne Spaltenfeld ist zulaessig: sie schreibt nichts, hilft aber
 // beim Aussuchen (die Bezeichnung, an der der Bediener den Artikel erkennt).
 test('ein Fuellfeld allein genuegt der Erfassungszeile', () => {
-  const nurFuell: Spalte = { titel: 'Suche', feld: '', fuellFeld: 'q-art::bez' }
+  const nurFuell: Spalte = { kennung: '', titel: 'Suche', feld: '', fuellFeld: 'q-art::bez' }
   expect(zellenzielVon(nurFuell, 'q-pos').art).toBe('verknuepft')
 })
 
@@ -118,7 +119,7 @@ const FENSTER_UMFELD: ErfassungsUmfeld = {
   spalten: [
     spalte('Artikelnummer', 'q-art::artnr'),
     spalte('Bezeichnung', 'q-art::name'),
-    { titel: 'Preis', feld: 'q-art::preis' },
+    { kennung: '', titel: 'Preis', feld: 'q-art::preis' },
     spalte('Menge', '164_8'),
     spalte('Tierart', 'q-tier::rasse'),
   ],
@@ -128,10 +129,11 @@ const FENSTER_UMFELD: ErfassungsUmfeld = {
 }
 
 test('das Fenster zeigt alle Spalten derselben Quelle, in Tabellenreihenfolge', () => {
+  // Fenster-Spalten sind fluechtige Anzeige ohne Kennung — nichts adressiert sie.
   expect(fensterSpaltenIn(FENSTER_UMFELD, 0)).toEqual([
-    { titel: 'Artikelnummer', feld: 'artnr' },
-    { titel: 'Bezeichnung', feld: 'name' },
-    { titel: 'Preis', feld: 'preis' },
+    { kennung: '', titel: 'Artikelnummer', feld: 'artnr' },
+    { kennung: '', titel: 'Bezeichnung', feld: 'name' },
+    { kennung: '', titel: 'Preis', feld: 'preis' },
   ])
 })
 

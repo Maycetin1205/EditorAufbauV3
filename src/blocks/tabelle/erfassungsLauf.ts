@@ -21,10 +21,10 @@ import {
   type PlatzWert,
 } from '../../core/data/rechnung'
 import { alsZahl } from './sortierung'
+import { spalteMitKennung } from './spalten'
 import {
   anzeigeSpalteIn,
   passendeSaetze,
-  platzSpalteIn,
   verknuepfteQuellenIn,
   zellenzielVon,
   zielIn,
@@ -140,7 +140,7 @@ export class ErfassungsLauf {
     const indizes = {} as Record<PlatzKey, number>
     const konfiguriert = new Set<PlatzKey>()
     for (const key of PLATZ_KEYS) {
-      const index = platzSpalteIn(umfeld.spalten, r[key].feld)
+      const index = spalteMitKennung(umfeld.spalten, r[key].spalte)
       indizes[key] = index
       werte[key] = index === -1 ? null : this.gegebeneZahl(umfeld, index)
       if (index !== -1) konfiguriert.add(key)

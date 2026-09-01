@@ -18,7 +18,7 @@ const { ErfassungsLauf } = await import('./erfassungsLauf')
 const HAUPT = 'q-pos'
 
 function spalte(titel: string, feld: string): Spalte {
-  return { titel, feld }
+  return { kennung: '', titel, feld }
 }
 
 function umfeldVon(
@@ -144,7 +144,7 @@ test('schluesselWert kommt ueber die Verknuepfungskette, wenn es die Zeile noch 
 describe('Belegerfassung ueber Fuellfelder', () => {
   function belegUmfeld(): ErfassungsUmfeld {
     const mit = (titel: string, feld: string, fuellFeld: string): Spalte =>
-      ({ titel, feld, fuellFeld })
+      ({ kennung: '', titel, feld, fuellFeld })
     return umfeldVon(
       [
         mit('Artikelnummer', '18_25', 'q-art::artnr'),

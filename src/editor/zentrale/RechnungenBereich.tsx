@@ -36,17 +36,19 @@ function kannRechnen(node: BlockNode): boolean {
 }
 
 // Die Spalten des Bausteins, so weit dieses Formular sie braucht: Titel als
-// Anzeige, `feld` als stabiler Griff der Plaetze.
-function spaltenVon(node: BlockNode): { titel: string; feld: string }[] {
+// Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das Belegfeld,
+// das kann doppelt vergeben sein und traf dann stumm die falsche Spalte
+// (Nutzer-Vorfall 2026-09-01, zweimal 930_3).
+function spaltenVon(node: BlockNode): { titel: string; kennung: string }[] {
   const roh = node.props.spalten
   if (!Array.isArray(roh)) return []
-  const raus: { titel: string; feld: string }[] = []
+  const raus: { titel: string; kennung: string }[] = []
   for (const eintrag of roh) {
     if (!eintrag || typeof eintrag !== 'object') continue
     const o = eintrag as Record<string, unknown>
-    const feld = typeof o.feld === 'string' ? o.feld.trim() : ''
-    if (feld === '') continue
-    raus.push({ titel: typeof o.titel === 'string' ? o.titel : '', feld })
+    const kennung = typeof o.kennung === 'string' ? o.kennung.trim() : ''
+    if (kennung === '') continue
+    raus.push({ titel: typeof o.titel === 'string' ? o.titel : '', kennung })
   }
   return raus
 }
@@ -69,9 +71,8 @@ export function RechnungenBereich() {
   const stand = rechnungVonAttribut(aktiv.props.rechnung) ?? leereRechnung()
   const spalten = spaltenVon(aktiv)
   const spaltenOptionen: WahlOption[] = spalten.map((s) => ({
-    wert: s.feld,
-    name: s.titel === '' ? s.feld : s.titel,
-    kennung: s.feld,
+    wert: s.kennung,
+    name: s.titel === '' ? s.kennung : s.titel,
   }))
   const gesetzt = typeof aktiv.props.rechnung === 'string' && aktiv.props.rechnung.trim() !== ''
 
@@ -109,9 +110,9 @@ export function RechnungenBereich() {
             </span>
             <Wahl
               optionen={spaltenOptionen}
-              wert={stand[key].feld}
+              wert={stand[key].spalte}
               leerText="— nicht belegt —"
-              onWaehle={(feld) => setzePlatz(key, { feld })}
+              onWaehle={(spalte) => setzePlatz(key, { spalte })}
             />
             <Zahl
               einheit="NK"

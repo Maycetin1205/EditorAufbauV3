@@ -14,7 +14,7 @@ import {
 function rechnung() {
   const r = leereRechnung()
   for (const k of ['menge', 'anzahl', 'dosis', 'gewicht', 'bezug', 'tage'] as const) {
-    r[k].feld = k
+    r[k].spalte = k
   }
   return r
 }
@@ -90,7 +90,7 @@ test('Tiergewicht als Luecke wird aus dem Bezug zurueckgerechnet', () => {
 // rechnete sie still mit 1/Bezug (Faktor 50 daneben).
 test('Bezug mit Wert ohne Tiergewicht-Platz: schweigen', () => {
   const r = rechnung()
-  r.gewicht.feld = ''
+  r.gewicht.spalte = ''
   const ohneGewicht = new Set<PlatzKey>(['menge', 'anzahl', 'dosis', 'bezug', 'tage'])
   expect(loeseRechnung(r, werte({
     menge: 5000, dosis: 5, bezug: 50, tage: 5,
@@ -103,7 +103,7 @@ test('Bezug mit Wert ohne Tiergewicht-Platz: schweigen', () => {
 
 test('ohne belegte Menge gibt es keine Gleichung', () => {
   const r = rechnung()
-  r.menge.feld = ''
+  r.menge.spalte = ''
   const nurRest = new Set<PlatzKey>(['anzahl', 'dosis', 'gewicht', 'bezug', 'tage'])
   expect(loeseRechnung(r, werte({ dosis: 5, gewicht: 450, bezug: 50, tage: 5 }), nurRest)).toBeNull()
 })
@@ -150,14 +150,17 @@ test('kaputtes Attribut liefert null statt Truemmer', () => {
 })
 
 // Alte Masken tragen im Attribut noch einheitFeld/einheiten (der Umrechner
-// von vor 2026-09-01) — die Leser lassen Unbekanntes einfach fallen.
+// von vor 2026-09-01) und `feld` statt `spalte` (vor der Spalten-Kennung) —
+// die Leser lassen Unbekanntes einfach fallen; `feld` uebersetzt die
+// Lade-Migration (migrationenRoh), nicht dieser Leser.
 test('unbekannte Attribut-Teile werden beim Lesen fallengelassen', () => {
   const roh = JSON.stringify({
-    menge: { feld: 'm' },
+    menge: { spalte: 's5', feld: 'm' },
     einheitFeld: '1646_5',
     einheiten: [{ kennung: 'ml', klarname: 'Milliliter', art: 'volumen', faktor: 1 }],
   })
   const r = rechnungVonAttribut(roh)
-  expect(r?.menge.feld).toBe('m')
+  expect(r?.menge.spalte).toBe('s5')
   expect(r).not.toHaveProperty('einheiten')
+  expect(r?.menge).not.toHaveProperty('feld')
 })

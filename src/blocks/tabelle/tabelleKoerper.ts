@@ -3,7 +3,7 @@ import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
-import { spaltenKreuz } from './spaltenBearbeiten'
+import { spaltenKreuz, spaltenPfeile } from './spaltenBearbeiten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './spaltenBindung'
 import {
@@ -106,6 +106,9 @@ export interface KoerperHandeln {
   // letzten. Nur im Editor.
   loescheSpalte: (index: number) => void
 
+  // Diese Spalte einen Platz nach links/rechts schieben. Nur im Editor.
+  verschiebeSpalte: (index: number, richtung: -1 | 1) => void
+
   dblklickKopf: (e: MouseEvent, index: number) => void
   klickKopf: (e: MouseEvent, index: number) => void
 
@@ -184,7 +187,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           }${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}${lage.imEditor && lage.editable && lage.spalten.length > 1
-            ? spaltenKreuz(s.titel, i, tun.loescheSpalte)
+            ? html`${spaltenPfeile(s.titel, i, lage.spalten.length, tun.verschiebeSpalte)}${spaltenKreuz(s.titel, i, tun.loescheSpalte)}`
             : nothing}</div>`,
         )}
         ${breitenGriffe(lage.spalten.length, tun.breiten)}

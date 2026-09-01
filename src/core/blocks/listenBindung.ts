@@ -7,6 +7,12 @@ export interface ListenBindung {
 
   feldKey: string
 
+  // Gesetzt: jeder Eintrag trägt unter diesem Schlüssel eine dauerhafte
+  // Kennung. Ketten-Parameter und Formulare zeigen dann auf SIE statt auf den
+  // Platz — der Export übersetzt zurück in den Platz (withoutEditorId).
+  // Platznummern verrutschen beim Löschen/Verschieben von Einträgen.
+  kennungKey?: string
+
   standardTitel: string
 
   // Gesetzt: die Feld-Auswahl liest NUR die Bibliotheks-Quelle, deren id in

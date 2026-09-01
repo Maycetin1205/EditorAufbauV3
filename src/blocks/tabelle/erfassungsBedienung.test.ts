@@ -5,7 +5,7 @@ import type { ErfassungsUmfeld } from './erfassungsZellen'
 import type { Spalte } from './spalten'
 
 function spalte(titel: string, feld: string): Spalte {
-  return { titel, feld }
+  return { kennung: '', titel, feld }
 }
 
 interface Protokoll {

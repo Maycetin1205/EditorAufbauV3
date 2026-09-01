@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { listeFuerExport } from '../../core/blocks/BlockDefinition'
-import { coerceSpalten, SPALTEN_MIN_BREITE } from './spalten'
+import { coerceSpalten, mitKennungen, spalteMitKennung, SPALTEN_MIN_BREITE } from './spalten'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
 
 // Der Weg, den eine Spalte wirklich nimmt: Editor-Eigenschaft -> Export
@@ -64,4 +64,46 @@ test('eine unbrauchbare Breite faellt auf die Mindestbreite', () => {
     .toBe(SPALTEN_MIN_BREITE)
   expect(coerceSpalten([{ titel: 'A', feld: '1_1', breite: 'breit' }])[0].breite)
     .toBeUndefined()
+})
+
+// Die Kennung ist der dauerhafte Ausweis der Spalte: Ketten und Rechnung
+// zeigen auf sie. Jede Lesung muss sie vollstaendig liefern — auch aus einer
+// Maske, die vor der Kennung exportiert wurde.
+test('coerceSpalten vergibt fehlende Kennungen und behaelt vorhandene', () => {
+  const raus = coerceSpalten([
+    { titel: 'A', feld: '1_1' },
+    { kennung: 's7', titel: 'B', feld: '2_1' },
+    { titel: 'C', feld: '3_1' },
+  ])
+  expect(raus.map((s) => s.kennung)).toEqual(['s1', 's7', 's2'])
+})
+
+// Eine doppelte Kennung waere zwei Ausweise mit derselben Nummer: die
+// vorderste behaelt ihre, die zweite bekommt eine frische.
+test('mitKennungen behebt Doppelte, ohne die erste anzufassen', () => {
+  const raus = mitKennungen([
+    { kennung: 's1', titel: 'A', feld: '' },
+    { kennung: 's1', titel: 'B', feld: '' },
+  ])
+  expect(raus[0].kennung).toBe('s1')
+  expect(raus[1].kennung).not.toBe('s1')
+  expect(raus[1].kennung).not.toBe('')
+})
+
+test('spalteMitKennung findet den Platz, leer und unbekannt sind -1', () => {
+  const spalten = coerceSpalten([
+    { kennung: 'a', titel: 'A', feld: '' },
+    { kennung: 'b', titel: 'B', feld: '' },
+  ])
+  expect(spalteMitKennung(spalten, 'b')).toBe(1)
+  expect(spalteMitKennung(spalten, '')).toBe(-1)
+  expect(spalteMitKennung(spalten, 'zzz')).toBe(-1)
+})
+
+// Die Kennung reist im spalten-Attribut in die exportierte Maske — dort
+// loest die Rechnung sie zur Laufzeit auf. Faellt sie im Export weg, rechnet
+// die Maske nichts mehr.
+test('die Kennung ueberlebt Export und Einlesen', () => {
+  expect(rundlauf({ kennung: 's3', titel: 'Menge', feld: '164_8' }))
+    .toMatchObject({ kennung: 's3' })
 })

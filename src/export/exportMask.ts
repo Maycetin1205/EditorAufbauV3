@@ -1,5 +1,5 @@
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
-import { bindingProp, listeFuerExport } from '../core/blocks/BlockDefinition'
+import { bindingProp, listeFuerExport, listeLesen } from '../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import {
   bindbareStellenVon,
@@ -74,6 +74,21 @@ interface TemplateCtx {
   id: string | undefined
 }
 
+// Spalten-Kennung -> Platz fuer die Ketten-Parameter (aktionen.ts,
+// ZELLEN_PARAM_QUELLEN): generisch ueber die Listen-Bindung des Ziel-
+// Bausteins, kein Bausteintyp-Sondercode (Regel 2). Unbekannt -> '-1',
+// die Laufzeit liefert dann den leeren Wert — dieselbe Antwort wie ueberall.
+function spaltenIndexFuer(tree: BlockTree): (blockId: string, kennung: string) => string {
+  return (blockId, kennung) => {
+    const ziel = tree[blockId]
+    const bindung = ziel ? getBlockDefinition(ziel.type)?.listenBindung : undefined
+    const key = bindung?.kennungKey
+    if (!ziel || !bindung || key === undefined) return '-1'
+    return String(listeLesen(ziel.props[bindung.prop], bindung)
+      .findIndex((eintrag) => eintrag[key] === kennung))
+  }
+}
+
 function nodeToHtml(
   tree: BlockTree,
   node: BlockNode,
@@ -81,6 +96,8 @@ function nodeToHtml(
   depth: number,
 
   popupName: (id: string) => string,
+
+  spaltenIndex: (blockId: string, kennung: string) => string,
 
   sources: readonly DataSource[],
   templateCtx?: TemplateCtx,
@@ -93,7 +110,7 @@ function nodeToHtml(
   const pad = '  '.repeat(depth)
   if (templateCtx && node.type === templateCtx.type) {
     if (node.id !== templateCtx.id) return ''
-    const inner = nodeToHtml(tree, node, parentDirection, depth + 1, popupName, sources, undefined, rasterEbene)
+    const inner = nodeToHtml(tree, node, parentDirection, depth + 1, popupName, spaltenIndex, sources, undefined, rasterEbene)
     return `${pad}<template data-ff-template>\n${inner}\n${pad}</template>`
   }
 
@@ -142,7 +159,7 @@ function nodeToHtml(
     })
     .join('')
 
-  const aktionen = serializeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key), popupName)
+  const aktionen = serializeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key), popupName, spaltenIndex)
   const aktionenAttr = aktionen ? ` data-ff-aktionen="${escapeHtmlAttr(aktionen)}"` : ''
   // Adressierbar fuer Ketten ist, wer Werte-Stellen hat ODER wessen
   // Erfassungszeile an ist (G4: „Wert aus Erfassungszelle" findet die
@@ -184,7 +201,7 @@ function nodeToHtml(
     // die eine Stelle, die auch `Editor.addBlock` und der Canvas fragen —
     // wuerde der Export hier eigenstaendig raten, saessen die Bausteine in
     // SoftEngine woanders als im Editor (Regel 1).
-    .map((c) => nodeToHtml(tree, c, childDirection, depth + 1, popupName, sources, childCtx, istRasterFlaeche(node)))
+    .map((c) => nodeToHtml(tree, c, childDirection, depth + 1, popupName, spaltenIndex, sources, childCtx, istRasterFlaeche(node)))
     .filter((html) => html !== '')
     .join('\n')
   return children === ''
@@ -204,12 +221,13 @@ export function exportMask(
 
   const seitenNameById = new Map(seitenDerMaske(tree).map((s) => [s.id, s.name]))
   const popupName = (id: string): string => seitenNameById.get(id) ?? ''
+  const spaltenIndex = spaltenIndexFuer(tree)
 
   const blocks = (root?.childIds ?? [])
     .map((id) => tree[id])
     .filter((n): n is BlockNode => Boolean(n))
     // Direkte Wurzel-Kinder = Raster-Ebene (rasterEbene=true).
-    .map((n) => nodeToHtml(tree, n, 'column', 2, popupName, sources, undefined, true))
+    .map((n) => nodeToHtml(tree, n, 'column', 2, popupName, spaltenIndex, sources, undefined, true))
     .join('\n')
 
   const used = collectDataSources(tree, sources)

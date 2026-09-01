@@ -34,6 +34,7 @@ import {
   feldPickerAbbestellen,
   kopfGriffe,
   spaltenSteuerung,
+  verschiebeSpalte,
 } from './spaltenBearbeiten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
@@ -579,6 +580,10 @@ export class TabelleBlock extends BasicBlock {
           // Spalte nachziehen, die es gerade weggenommen hat.
           feldPickerAbbestellen(this)
           entferneSpalte(index, () => this.spaltenListe(), (l) => this.aendere(l))
+        },
+        verschiebeSpalte: (index, richtung) => {
+          feldPickerAbbestellen(this)
+          verschiebeSpalte(index, richtung, () => this.spaltenListe(), (l) => this.aendere(l))
         },
         ...kopfGriffe({
           baustein: this,

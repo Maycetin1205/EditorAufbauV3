@@ -258,7 +258,9 @@ type SpaltenQuelle = Pick<NachschlagenArgs, 'speicherFeld' | 'speicherTitel'>
 // ein — die erste davon ist dann, was im Feld steht.
 export function automatikSpalten(args: SpaltenQuelle): Spalte[] {
   const titel = args.speicherTitel !== '' ? args.speicherTitel : 'Wert'
-  return [{ titel, feld: args.speicherFeld }]
+  // Ohne Kennung: die Fenster-Spalten des Formularfelds adressiert nichts
+  // (kein kennungKey an seiner Bindung) — beim Speichern fuellt coerceSpalten.
+  return [{ kennung: '', titel, feld: args.speicherFeld }]
 }
 
 interface FensterArgs {

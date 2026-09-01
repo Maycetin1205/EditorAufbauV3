@@ -38,7 +38,10 @@ export const ACTION_PARAM_SOURCES = [
   // „Wert aus Erfassungszelle <Spalte>": liefert je Ketten-Lauf den
   // sichtbaren Zellwert der jeweiligen erfassten Zeile — Herkunft egal,
   // gewaehlt oder frei getippt (Formularfeld-Prinzip, G4). blockId = die
-  // Tabelle, value = der Spalten-Index. Die Kette laeuft einmal je Zeile.
+  // Tabelle. value = im BAUM die dauerhafte Spalten-KENNUNG (Spalte.kennung,
+  // verrutscht nicht beim Verschieben/Loeschen), im EXPORT der Spalten-Index
+  // (withoutEditorId uebersetzt — dasselbe Muster wie popupId -> Name und
+  // step_result -> Position). Die Kette laeuft einmal je Zeile.
   'erfassungszelle',
 
   // "Wert aus geaenderter Zelle <Spalte>": wie oben, nur fuer die vorgemerkten
@@ -56,6 +59,10 @@ export const ACTION_PARAM_SOURCES = [
 ] as const
 
 export const GESPEICHERTE_PARAM_QUELLEN = [...ACTION_PARAM_SOURCES, 'aus'] as const
+
+// Die drei Quellen, deren value eine Spalte einer Liste adressiert — im Baum
+// als Kennung, im Export als Index (s. Kommentar an 'erfassungszelle').
+export const ZELLEN_PARAM_QUELLEN = ['erfassungszelle', 'aenderungszelle', 'loeschzelle'] as const
 
 export type ActionParamSource = (typeof GESPEICHERTE_PARAM_QUELLEN)[number]
 
@@ -300,9 +307,18 @@ function withoutEditorId(
   popupName: (id: string) => string,
 
   stepPosition: (id: string) => string,
+
+  spaltenIndex: (blockId: string, kennung: string) => string,
 ): RuntimeStep {
-  const binding = (b: ActionParamBinding): ActionParamBinding =>
-    b.source === 'step_result' ? { ...b, value: stepPosition(b.value) } : { ...b }
+  const binding = (b: ActionParamBinding): ActionParamBinding => {
+    if (b.source === 'step_result') return { ...b, value: stepPosition(b.value) }
+    // Spalten-Kennung -> Platz: die Laufzeit greift die Zeilenwerte ueber
+    // werte[index] (seAktionen), sie kennt keine Kennungen.
+    if ((ZELLEN_PARAM_QUELLEN as readonly string[]).includes(b.source)) {
+      return { ...b, value: spaltenIndex(b.blockId ?? '', b.value) }
+    }
+    return { ...b }
+  }
   if (step.type === 'START_TOOL') {
     return {
       type: step.type,
@@ -335,6 +351,10 @@ export function serializeBlockEvents(
   eventOrder: readonly string[],
 
   popupName: (id: string) => string = () => '',
+
+  // Ohne Aufloeser bleibt die Kennung stehen — nur fuer Aufrufer ohne Baum
+  // (Tests); der Export reicht immer seinen echten durch.
+  spaltenIndex: (blockId: string, kennung: string) => string = (_, kennung) => kennung,
 ): string | null {
   if (!events) return null
   const out: Record<string, RuntimeStep[]> = {}
@@ -344,7 +364,7 @@ export function serializeBlockEvents(
 
     const position = new Map(steps.map((s, i) => [s.id, String(i)]))
     out[key] = steps.map((step) =>
-      withoutEditorId(step, popupName, (id) => position.get(id) ?? '-1'))
+      withoutEditorId(step, popupName, (id) => position.get(id) ?? '-1', spaltenIndex))
   }
   return Object.keys(out).length > 0 ? JSON.stringify(out) : null
 }

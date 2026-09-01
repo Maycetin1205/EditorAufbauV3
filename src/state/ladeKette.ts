@@ -19,6 +19,7 @@ import {
   migrateErfassungsRollenWeg,
   migrateKanbanVorlage,
   migrateKnopfAusTabelle,
+  migrateSpaltenKennungen,
   migrateZeileAufloesen,
 } from './migrationenRoh'
 import { topologieProbleme } from './topologie'
@@ -36,6 +37,7 @@ export function sanitizeTree(
   const onDropType = meldungen?.typVerworfen
   migrateAnzeigeFeldAufSpalten(src)
   migrateErfassungsRollenWeg(src)
+  migrateSpaltenKennungen(src)
   const rohEntfernt = [
     ...migrateKanbanVorlage(src),
     ...migrateKnopfAusTabelle(src),

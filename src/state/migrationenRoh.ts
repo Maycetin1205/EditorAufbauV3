@@ -145,6 +145,109 @@ export function migrateAnzeigeFeldAufSpalten(src: Record<string, RohKnoten>): vo
   }
 }
 
+// V-Kennung (2026-09-01): Jede Tabellen-Spalte traegt eine dauerhafte Kennung
+// (Spalte.kennung), und alles zeigt auf SIE: Ketten-Parameter (Wert aus
+// Erfassungs-/Aenderungs-/Loeschzelle, vorher Platznummer — verrutschte beim
+// Loeschen/Verschieben) und die Rechnung (vorher Belegfeld — doppelt vergeben
+// traf sie stumm die falsche Spalte, Nutzer-Vorfall 2026-09-01). Laeuft auf
+// den Rohdaten VOR normalizeProps und ist absichtlich idempotent: vergebene
+// Kennungen bleiben, Ketten-Werte werden nur umgeschrieben, wenn sie noch
+// eine Ziffernfolge sind, die Rechnung nur, wo noch `feld` statt `spalte`
+// steht.
+const ZELLEN_QUELLEN_ROH = new Set(['erfassungszelle', 'aenderungszelle', 'loeschzelle'])
+
+const RECHNUNG_PLAETZE_ROH = ['menge', 'anzahl', 'dosis', 'gewicht', 'bezug', 'tage'] as const
+
+function rohSpalten(node: RohKnoten): Record<string, unknown>[] {
+  const roh = rohProps(node).spalten
+  if (!Array.isArray(roh)) return []
+  return roh.filter((e): e is Record<string, unknown> => Boolean(e) && typeof e === 'object')
+}
+
+function vergebeKennungen(spalten: readonly Record<string, unknown>[]): void {
+  const vergeben = new Set<string>()
+  let naechste = 1
+  for (const eintrag of spalten) {
+    const roh = typeof eintrag.kennung === 'string' ? eintrag.kennung.trim() : ''
+    if (roh !== '' && !vergeben.has(roh)) {
+      vergeben.add(roh)
+      continue
+    }
+    while (vergeben.has(`s${naechste}`)) naechste += 1
+    eintrag.kennung = `s${naechste}`
+    vergeben.add(eintrag.kennung as string)
+  }
+}
+
+function kennungAnPlatz(spalten: readonly Record<string, unknown>[], index: number): string {
+  const kennung = spalten[index]?.kennung
+  return typeof kennung === 'string' ? kennung : ''
+}
+
+function schreibeKettenUm(src: Record<string, RohKnoten>, node: RohKnoten): void {
+  const events = (node as { events?: unknown }).events
+  if (!events || typeof events !== 'object') return
+  for (const kette of Object.values(events as Record<string, unknown>)) {
+    if (!Array.isArray(kette)) continue
+    for (const schritt of kette) {
+      if (!schritt || typeof schritt !== 'object') continue
+      const s = schritt as { params?: unknown; extraParams?: unknown }
+      for (const liste of [s.params, s.extraParams]) {
+        if (!Array.isArray(liste)) continue
+        for (const bindung of liste) {
+          if (!bindung || typeof bindung !== 'object') continue
+          const b = bindung as Record<string, unknown>
+          if (typeof b.source !== 'string' || !ZELLEN_QUELLEN_ROH.has(b.source)) continue
+          if (typeof b.value !== 'string' || !/^\d+$/.test(b.value)) continue
+          const ziel = typeof b.blockId === 'string' ? src[b.blockId] : undefined
+          if (!ziel) continue
+          b.value = kennungAnPlatz(rohSpalten(ziel), Number(b.value))
+        }
+      }
+    }
+  }
+}
+
+function schreibeRechnungUm(node: RohKnoten, spalten: readonly Record<string, unknown>[]): void {
+  const props = rohProps(node)
+  if (typeof props.rechnung !== 'string' || props.rechnung.trim() === '') return
+  let roh: unknown
+  try {
+    roh = JSON.parse(props.rechnung)
+  } catch {
+    return
+  }
+  if (!roh || typeof roh !== 'object' || Array.isArray(roh)) return
+  const r = roh as Record<string, unknown>
+  for (const key of RECHNUNG_PLAETZE_ROH) {
+    const platz = r[key]
+    if (!platz || typeof platz !== 'object') continue
+    const p = platz as Record<string, unknown>
+    if (typeof p.spalte === 'string' || typeof p.feld !== 'string') continue
+    const feld = p.feld.trim()
+    p.spalte = feld === ''
+      ? ''
+      : kennungAnPlatz(spalten, spalten.findIndex((s) => s.feld === feld))
+    delete p.feld
+  }
+  // Der Einheiten-Umrechner ist ausgebaut (2026-09-01) — seine Reste sollen
+  // nicht in jedem Export weiterreisen.
+  delete r.einheitFeld
+  delete r.einheiten
+  props.rechnung = JSON.stringify(r)
+}
+
+export function migrateSpaltenKennungen(src: Record<string, RohKnoten>): void {
+  const tabellen = Object.values(src)
+    .filter((n) => n && typeof n === 'object' && n.type === 'tabelle')
+  for (const node of tabellen) vergebeKennungen(rohSpalten(node))
+  for (const node of Object.values(src)) {
+    if (!node || typeof node !== 'object') continue
+    schreibeKettenUm(src, node)
+  }
+  for (const node of tabellen) schreibeRechnungUm(node, rohSpalten(node))
+}
+
 // G3 (2026-08-18): Die Erfassungszeile stellt nichts mehr je Zelle ein — was
 // eine Zelle tut, leitet sie aus der Bindung der Spalte und der Verknuepfung
 // des Bausteins ab. Die vier alten Zellen-Angaben fallen weg; sie muessen AUS

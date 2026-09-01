@@ -11,8 +11,11 @@ export interface Rundung {
 }
 
 export interface RechnungsPlatz {
-  // Spalten-Referenz ueber deren `feld`. Leer = Platz unbenutzt (Faktor 1).
-  feld: string
+  // Spalten-Referenz ueber die dauerhafte KENNUNG der Spalte (Spalte.kennung),
+  // nie ueber Platz oder Belegfeld: Plaetze verrutschen beim Verschieben/
+  // Loeschen, und ein doppelt vergebenes Belegfeld traf stumm die falsche
+  // Spalte (Nutzer-Vorfall 2026-09-01). Leer = Platz unbenutzt (Faktor 1).
+  spalte: string
   runden: Rundung
 }
 
@@ -48,19 +51,19 @@ const RUNDEN_STANDARD: Rundung = { stellen: 3, richtung: 'kfm' }
 
 export function leereRechnung(): Rechnung {
   return {
-    menge: { feld: '', runden: { ...RUNDEN_STANDARD } },
+    menge: { spalte: '', runden: { ...RUNDEN_STANDARD } },
     // Tiere sind ganze Tiere; aufgerundet, damit keines leer ausgeht
     // (Nutzer-Entscheidung 2026-08-31).
-    anzahl: { feld: '', runden: { stellen: 0, richtung: 'auf' } },
-    dosis: { feld: '', runden: { ...RUNDEN_STANDARD } },
-    gewicht: { feld: '', runden: { ...RUNDEN_STANDARD } },
-    bezug: { feld: '', runden: { ...RUNDEN_STANDARD } },
-    tage: { feld: '', runden: { ...RUNDEN_STANDARD } },
+    anzahl: { spalte: '', runden: { stellen: 0, richtung: 'auf' } },
+    dosis: { spalte: '', runden: { ...RUNDEN_STANDARD } },
+    gewicht: { spalte: '', runden: { ...RUNDEN_STANDARD } },
+    bezug: { spalte: '', runden: { ...RUNDEN_STANDARD } },
+    tage: { spalte: '', runden: { ...RUNDEN_STANDARD } },
   }
 }
 
 export function istRechnungLeer(r: Rechnung): boolean {
-  return PLATZ_KEYS.every((k) => r[k].feld.trim() === '')
+  return PLATZ_KEYS.every((k) => r[k].spalte.trim() === '')
 }
 
 // Getippte Zahl, deutsch und STRENG: Komma ist das Dezimalzeichen, Punkte
@@ -167,10 +170,10 @@ function alsRundung(roh: unknown, standard: Rundung): Rundung {
 }
 
 function alsPlatz(roh: unknown, standard: Rundung): RechnungsPlatz {
-  if (!roh || typeof roh !== 'object') return { feld: '', runden: { ...standard } }
+  if (!roh || typeof roh !== 'object') return { spalte: '', runden: { ...standard } }
   const o = roh as Record<string, unknown>
   return {
-    feld: typeof o.feld === 'string' ? o.feld : '',
+    spalte: typeof o.spalte === 'string' ? o.spalte : '',
     runden: alsRundung(o.runden, standard),
   }
 }

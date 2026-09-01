@@ -1,4 +1,13 @@
 export interface Spalte {
+  // Der dauerhafte Ausweis der Spalte innerhalb ihrer Tabelle ('s1', 's2', …).
+  // Ketten-Parameter und die Rechnung zeigen auf IHN — nie auf den Platz und
+  // nie auf das Belegfeld: Platznummern verrutschen beim Löschen/Verschieben,
+  // und ein Belegfeld kann doppelt vergeben sein (Nutzer-Vorfall 2026-09-01:
+  // zweimal 930_3, die Rechnung erwischte stumm die falsche Spalte). Für die
+  // Ketten übersetzt der Export die Kennung in den Platz (withoutEditorId);
+  // im spalten-Attribut reist sie mit, damit die Rechnung sie zur Laufzeit
+  // auflösen kann.
+  kennung: string
   titel: string
   feld: string
 
@@ -49,11 +58,38 @@ export function standardTitelFuer(index: number): string {
 }
 
 export function neueSpalte(index: number): Spalte {
-  return { titel: standardTitelFuer(index), feld: '' }
+  return { kennung: '', titel: standardTitelFuer(index), feld: '' }
+}
+
+// Vergibt fehlende Kennungen ('s1', 's2', …) und behebt doppelte — die
+// vorderste behält ihre. Bestehende bleiben unangetastet: an ihnen hängen
+// Ketten-Parameter und Rechnung, eine neu vergebene zeigte woandershin.
+export function mitKennungen(spalten: readonly Spalte[]): Spalte[] {
+  const vergeben = new Set<string>()
+  let naechste = 1
+  return spalten.map((s) => {
+    const roh = s.kennung.trim()
+    if (roh !== '' && !vergeben.has(roh)) {
+      vergeben.add(roh)
+      return s
+    }
+    while (vergeben.has(`s${naechste}`)) naechste += 1
+    const kennung = `s${naechste}`
+    vergeben.add(kennung)
+    return { ...s, kennung }
+  })
+}
+
+// Die Spalte mit dieser Kennung — -1 bei leer/unbekannt (Zelle bleibt leer,
+// dieselbe Antwort wie überall im Projekt).
+export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): number {
+  const t = kennung.trim()
+  if (t === '') return -1
+  return spalten.findIndex((s) => s.kennung === t)
 }
 
 export function standardSpalten(): Spalte[] {
-  return [0, 1, 2].map((i) => neueSpalte(i))
+  return mitKennungen([0, 1, 2].map((i) => neueSpalte(i)))
 }
 
 // Eine gezogene Breite kommt aus drei Richtungen: dem Zug selbst, dem
@@ -72,6 +108,7 @@ function alsSpalte(x: unknown, index: number): Spalte {
     const o = x as Record<string, unknown>
     const breite = o.breite === undefined ? undefined : alsBreite(o.breite)
     return {
+      kennung: typeof o.kennung === 'string' ? o.kennung.trim() : '',
       titel: typeof o.titel === 'string' ? o.titel : standardTitelFuer(index),
       feld: typeof o.feld === 'string' ? o.feld : '',
 
@@ -109,7 +146,9 @@ export function coerceSpalten(v: unknown): Spalte[] {
   }
   if (arr.length > SPALTEN_MAX) arr = arr.slice(0, SPALTEN_MAX)
   if (arr.length < SPALTEN_MIN) arr = [neueSpalte(0)]
-  return arr
+  // Jede Lesung liefert vollstaendige Kennungen — auch das Attribut einer
+  // Maske, die vor der Kennung exportiert wurde.
+  return mitKennungen(arr)
 }
 
 export function tryCoerceSpalten(v: string): Spalte[] {

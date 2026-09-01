@@ -7,6 +7,7 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   prop: 'spalten',
   titelKey: 'titel',
   feldKey: 'feld',
+  kennungKey: 'kennung',
   standardTitel: STANDARD_TITEL,
 
   eintragsSchalter: [

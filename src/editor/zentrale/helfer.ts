@@ -120,7 +120,11 @@ export interface AuswahlGeberOption {
 export interface ErfassungsOption {
   blockId: string
   label: string
-  spalten: readonly { index: number; titel: string }[]
+
+  // Angesprochen wird die Spalte ueber ihre dauerhafte KENNUNG, nie ueber den
+  // Platz — der verrutscht beim Verschieben/Loeschen (aktionen.ts,
+  // ZELLEN_PARAM_QUELLEN). Eintraege ohne Kennung sind nicht adressierbar.
+  spalten: readonly { kennung: string; titel: string }[]
 }
 
 export function erfassungsOptionen(
@@ -129,14 +133,18 @@ export function erfassungsOptionen(
 ): ErfassungsOption[] {
   return traeger.map((node) => {
     const bindung = getBlockDefinition(node.type)?.listenBindung
+    const kennungKey = bindung?.kennungKey
     const roh = bindung ? node.props[bindung.prop] : undefined
-    const spalten = bindung && Array.isArray(roh)
-      ? roh.map((eintrag, index) => {
-          const titel = (eintrag as Record<string, unknown>)[bindung.titelKey]
-          return {
-            index,
+    const spalten = bindung && kennungKey !== undefined && Array.isArray(roh)
+      ? roh.flatMap((eintrag) => {
+          const e = eintrag as Record<string, unknown>
+          const kennung = e[kennungKey]
+          if (typeof kennung !== 'string' || kennung === '') return []
+          const titel = e[bindung.titelKey]
+          return [{
+            kennung,
             titel: typeof titel === 'string' && titel !== '' ? titel : bindung.standardTitel,
-          }
+          }]
         })
       : []
     return { blockId: node.id, label: bausteinName(node, sources), spalten }

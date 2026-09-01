@@ -286,6 +286,29 @@ export const tabelleStil = css`
       .kopf > div:hover .kopf-weg,
       .kopf-weg:focus { opacity: 1; }
       .kopf-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
+
+      /* Die Schiebe-Pfeile am Spaltenkopf — dieselbe Machart wie das Kreuz,
+         links davon gruppiert: ‹ › ✕. */
+      .kopf-schieb {
+        position: absolute;
+        right: 34px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 0 3px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs-sm);
+        line-height: 1;
+        color: var(--se-faint);
+        background: var(--se-panel-2);
+        border: 0;
+        border-radius: var(--se-r-sm);
+        cursor: pointer;
+        opacity: 0;
+      }
+      .kopf-schieb.links { right: 48px; }
+      .kopf > div:hover .kopf-schieb,
+      .kopf-schieb:focus { opacity: 1; }
+      .kopf-schieb:hover { color: var(--se-ink); background: var(--se-line); }
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
       .zeile > div { color: var(--se-ink); }

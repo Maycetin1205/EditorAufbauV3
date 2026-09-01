@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest'
-import { entferneSpalte, fuegeSpalteAn } from './spaltenBearbeiten'
+import { entferneSpalte, fuegeSpalteAn, verschiebeSpalte } from './spaltenBearbeiten'
 import { SPALTEN_MAX, SPALTEN_MIN, spaltenRaster, type Spalte } from './spalten'
 
 function drei(): Spalte[] {
   return [
-    { titel: 'A', feld: '1_1' },
-    { titel: 'B', feld: '2_1', breite: 120 },
-    { titel: 'C', feld: '3_1' },
+    { kennung: 's1', titel: 'A', feld: '1_1' },
+    { kennung: 's2', titel: 'B', feld: '2_1', breite: 120 },
+    { kennung: 's3', titel: 'C', feld: '3_1' },
   ]
 }
 
@@ -37,7 +37,7 @@ test('die gezogene Breite bleibt bei ihrer Spalte', () => {
 // Eine Tabelle ohne Spalte waere ein leerer Kasten: der Plus-Knopf sitzt an
 // der Steuerung, aber es gaebe keinen Kopf mehr, an dem man etwas einstellt.
 test('die letzte verbliebene Spalte bleibt stehen', () => {
-  const eine = (): Spalte[] => [{ titel: 'A', feld: '1_1' }]
+  const eine = (): Spalte[] => [{ kennung: 's1', titel: 'A', feld: '1_1' }]
   let gerufen = false
   entferneSpalte(0, eine, () => { gerufen = true })
   expect(gerufen).toBe(false)
@@ -52,7 +52,7 @@ test('ein Platz ausserhalb der Liste tut nichts', () => {
 })
 
 function feste(...breiten: number[]): Spalte[] {
-  return breiten.map((breite, i) => ({ titel: `S${i}`, feld: `${i}_1`, breite }))
+  return breiten.map((breite, i) => ({ kennung: `s${i + 1}`, titel: `S${i}`, feld: `${i}_1`, breite }))
 }
 
 // Der gemeldete Fehler: waren alle Spalten gezogen, war der Rest fuer die
@@ -91,4 +91,25 @@ test('auch nach vielen Klicks hat jede Spalte einen Anteil', () => {
     spalten = fuegeSpalteAn(spalten)
     expect(spaltenRaster(spalten)).not.toMatch(/[^0-9]0fr/)
   }
+})
+
+// Verschieben: der ganze Eintrag reist mit (Kennung, Titel, Feld, Breite).
+// Ketten und Rechnung zeigen auf die Kennung — sie brauchen kein Nachziehen.
+test('verschiebeSpalte tauscht mit der Nachbarin, samt allem Ihren', () => {
+  let raus: Spalte[] = []
+  verschiebeSpalte(0, 1, drei, (l) => { raus = l })
+  expect(raus.map((s) => s.kennung)).toEqual(['s2', 's1', 's3'])
+  expect(raus.map((s) => s.titel)).toEqual(['B', 'A', 'C'])
+  expect(raus[0].breite).toBe(120)
+
+  verschiebeSpalte(2, -1, drei, (l) => { raus = l })
+  expect(raus.map((s) => s.kennung)).toEqual(['s1', 's3', 's2'])
+})
+
+test('am Rand verschiebt nichts', () => {
+  let gerufen = false
+  verschiebeSpalte(0, -1, drei, () => { gerufen = true })
+  verschiebeSpalte(2, 1, drei, () => { gerufen = true })
+  verschiebeSpalte(9, 1, drei, () => { gerufen = true })
+  expect(gerufen).toBe(false)
 })

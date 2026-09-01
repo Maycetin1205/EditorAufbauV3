@@ -156,13 +156,13 @@ export function ZellenBindung({ binding, wahlen, onChange }: BindungsProps) {
         gruppen={[{
           key: 'spalten',
           eintraege: (tabelle?.spalten ?? []).map((s) => ({
-            wert: String(s.index),
+            wert: s.kennung,
             name: s.titel,
           })),
         }]}
         wert={binding.value}
         platzhalter="— Spalte —"
-        onWaehle={(index) => onChange({ ...binding, value: index })}
+        onWaehle={(kennung) => onChange({ ...binding, value: kennung })}
       />
     </Paar>
   )
