@@ -9,6 +9,8 @@ import {
   Undo2,
 } from '@/ui/zeichen'
 import { useRef, useState } from 'react'
+import { ROOT_ID } from '../../core/blocks/BlockData'
+import { MASKEN_NAME_PROP, MASKEN_NAME_STANDARD, maskenNameVon } from '../../core/blocks/maskenName'
 import { exportMask } from '../../export/exportMask'
 import { failedChecks, validateMaskHtml } from '../../export/validator'
 import { downloadFile } from '../../lib/dateiDownload'
@@ -19,14 +21,21 @@ import { meldungen } from '../../state/meldungen'
 import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from '../../state/persistence'
 import { relationStore } from '../../state/RelationStore'
 import { useEditor } from '../../state/useEditor'
+import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Popover } from '@/ui/werkbank/Popover'
 import { Trenner } from '@/ui/werkbank/Trenner'
+import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 import { useFrage } from './Frage'
 
 export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const ed = useEditor()
   const [frageKnoten, frage] = useFrage()
+
+  // Der Maskenname wird wie jede Eigenschaft im Baum gefuehrt (Undo, Speichern,
+  // Maskendatei) — eine Tipp-Sitzung ist EIN Undo-Schritt.
+  const nameSitzung = useEingabeSitzung(() => ed.beginTransaction(), () => ed.endTransaction())
+  const maskenName = String(ed.tree[ROOT_ID]?.props[MASKEN_NAME_PROP] ?? '')
 
   const handleClear = async () => {
     if (ed.blockCount === 0) return
@@ -49,7 +58,7 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const handleExport = () => {
     const sources = dataSourceStore.list
     const relations = relationStore.list
-    const { html, sevariablen } = exportMask(ed.tree, 'Maske', sources, relations)
+    const { html, sevariablen } = exportMask(ed.tree, maskenNameVon(ed.tree), sources, relations)
     const failed = failedChecks(validateMaskHtml(html))
     if (failed.length > 0) {
       meldungen.melde(
@@ -120,6 +129,19 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
       />
 
       <Trenner senkrecht className="mx-1" />
+
+      <Feld
+        value={maskenName}
+        placeholder={MASKEN_NAME_STANDARD}
+        aria-label="Name der Maske"
+        title="Name der Maske — wird der Titel der exportierten Maske und ihr Anmeldename in SoftEngine"
+        className="w-40"
+        onChange={(e) => {
+          nameSitzung.beginnen()
+          ed.updateProperty(ROOT_ID, MASKEN_NAME_PROP, e.currentTarget.value)
+        }}
+        onBlur={nameSitzung.beenden}
+      />
 
       <Knopf
         onClick={onDatencenter}

@@ -1,5 +1,6 @@
 import { ROOT_ID, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
+import { MASKEN_NAME_PROP } from '../core/blocks/maskenName'
 import { sanitizeBlockEvents } from '../core/data/aktionen'
 import { BEREICH_AUFBAU, type LadeProblem } from '../core/data/ladeProblem'
 import {
@@ -36,6 +37,16 @@ export function sanitizeTree(
   const tree = createEmptyTree()
   const src = raw as Record<string, { type?: unknown; props?: unknown; childIds?: unknown; events?: unknown }>
   const onDropType = meldungen?.typVerworfen
+
+  // Die Wurzel traegt genau eine Eigenschaft, die mitreist: den Maskennamen.
+  // Alles andere an ihr ist Aufbau und entsteht neu.
+  const rohWurzelProps = src[ROOT_ID]?.props
+  const rohName = rohWurzelProps && typeof rohWurzelProps === 'object'
+    ? (rohWurzelProps as Record<string, unknown>)[MASKEN_NAME_PROP]
+    : undefined
+  if (typeof rohName === 'string' && rohName.trim() !== '') {
+    tree[ROOT_ID].props[MASKEN_NAME_PROP] = rohName
+  }
   migrateAnzeigeFeldAufSpalten(src)
   migrateErfassungsRollenWeg(src)
   migrateSpaltenKennungen(src)

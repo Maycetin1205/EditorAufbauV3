@@ -359,7 +359,10 @@ export class Editor extends Subject<Editor> {
   clear(): void {
     if (this.blockCount === 0) return
     this.pushHistory()
-    this._tree = createEmptyTree()
+    // Die Bausteine gehen, der Name der Maske bleibt — er ist kein Baustein.
+    const leer = createEmptyTree()
+    leer[ROOT_ID] = { ...leer[ROOT_ID], props: { ...this._tree[ROOT_ID].props } }
+    this._tree = leer
     this._selectedId = null
     this.notify(this)
   }
