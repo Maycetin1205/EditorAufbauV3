@@ -222,8 +222,10 @@ describe('Tastenentscheid', () => {
     expect(lauf.entscheideTaste(umfeld, 0, 'ArrowDown')).toBe('nichts')
   })
 
-  test('Enter im leeren Feld holt das Fenster', () => {
-    expect(new ErfassungsLauf().entscheideTaste(umfeld, 2, 'Enter')).toBe('fenster')
+  // Leer lassen ist eine Aussage (die Lücke rechnet die Rechnung) — Enter
+  // hält dort nicht an. Das Fenster bleibt auf F4/Alt+Pfeil-runter.
+  test('Enter im leeren Feld springt weiter', () => {
+    expect(new ErfassungsLauf().entscheideTaste(umfeld, 2, 'Enter')).toBe('weiter')
   })
 
   test('Enter haengt nicht, wenn es keinen einzigen moeglichen Satz gibt', () => {

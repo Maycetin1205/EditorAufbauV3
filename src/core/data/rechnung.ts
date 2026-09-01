@@ -10,16 +10,6 @@ export interface Rundung {
   richtung: RundungsRichtung
 }
 
-export type EinheitenArt = 'masse' | 'volumen' | 'stueck'
-
-export interface EinheitenEintrag {
-  // Die Schreibweise, wie sie in den ERP-Daten steht ('ml', 'Inj.').
-  kennung: string
-  klarname: string
-  art: EinheitenArt
-  faktor: number
-}
-
 export interface RechnungsPlatz {
   // Spalten-Referenz ueber deren `feld`. Leer = Platz unbenutzt (Faktor 1).
   feld: string
@@ -41,6 +31,10 @@ export const PLATZ_NAMEN: Record<PlatzKey, string> = {
   tage: 'Behandlungstage',
 }
 
+// Einheiten trägt die Rechnung KEINE (ein Einheiten-Umrechner an der
+// Abgabemenge ist am 2026-09-01 auf Nutzer-Ansage wieder ausgebaut): die
+// Einheit kommt aus den Daten der Zeile (Behandlungseinheit) und ist oft
+// gar nicht umrechenbar ('Inj.', 'Stab') — getippt wird in genau ihr.
 export interface Rechnung {
   menge: RechnungsPlatz
   anzahl: RechnungsPlatz
@@ -48,20 +42,7 @@ export interface Rechnung {
   gewicht: RechnungsPlatz
   bezug: RechnungsPlatz
   tage: RechnungsPlatz
-
-  // Woher die Ziel-Einheit der Abgabemenge kommt (Spalten-`feld`, z. B. die
-  // Einheiten-Spalte mit Fuellfeld Behandlungseinheit). Leer = kein Umrechner.
-  einheitFeld: string
-  einheiten: EinheitenEintrag[]
 }
-
-export const STANDARD_EINHEITEN: readonly EinheitenEintrag[] = [
-  { kennung: 'mg', klarname: 'Milligramm', art: 'masse', faktor: 0.001 },
-  { kennung: 'g', klarname: 'Gramm', art: 'masse', faktor: 1 },
-  { kennung: 'kg', klarname: 'Kilogramm', art: 'masse', faktor: 1000 },
-  { kennung: 'ml', klarname: 'Milliliter', art: 'volumen', faktor: 1 },
-  { kennung: 'l', klarname: 'Liter', art: 'volumen', faktor: 1000 },
-]
 
 const RUNDEN_STANDARD: Rundung = { stellen: 3, richtung: 'kfm' }
 
@@ -75,8 +56,6 @@ export function leereRechnung(): Rechnung {
     gewicht: { feld: '', runden: { ...RUNDEN_STANDARD } },
     bezug: { feld: '', runden: { ...RUNDEN_STANDARD } },
     tage: { feld: '', runden: { ...RUNDEN_STANDARD } },
-    einheitFeld: '',
-    einheiten: [...STANDARD_EINHEITEN],
   }
 }
 
@@ -104,24 +83,6 @@ export function rundeWert(wert: number, runden: Rundung): number {
     ? Math.ceil(x - 1e-9)
     : runden.richtung === 'ab' ? Math.floor(x + 1e-9) : Math.round(x)
   return grob / f
-}
-
-// Umgerechnet wird nur innerhalb derselben Art (Masse<->Masse). Gleiche
-// Kennung braucht keine Liste (Stab -> Stab). Unbekannt/unpassend -> null.
-export function umgerechnet(
-  wert: number,
-  von: string,
-  nach: string,
-  einheiten: readonly EinheitenEintrag[],
-): number | null {
-  const vonK = von.trim()
-  const nachK = nach.trim()
-  if (vonK === '' || nachK === '') return null
-  if (vonK === nachK) return wert
-  const a = einheiten.find((e) => e.kennung === vonK)
-  const b = einheiten.find((e) => e.kennung === nachK)
-  if (!a || !b || a.art !== b.art) return null
-  return (wert * a.faktor) / b.faktor
 }
 
 // Gerechnete Werte reisen OHNE Tausender-Gruppierung ('2,7', '5000'): so
@@ -214,30 +175,6 @@ function alsPlatz(roh: unknown, standard: Rundung): RechnungsPlatz {
   }
 }
 
-function alsEinheiten(roh: unknown): EinheitenEintrag[] {
-  if (!Array.isArray(roh)) return []
-  const raus: EinheitenEintrag[] = []
-  for (const e of roh) {
-    if (!e || typeof e !== 'object') continue
-    const o = e as Record<string, unknown>
-    const kennung = typeof o.kennung === 'string' ? o.kennung.trim() : ''
-    const art = o.art === 'masse' || o.art === 'volumen' || o.art === 'stueck' ? o.art : null
-    const faktor = typeof o.faktor === 'number' && Number.isFinite(o.faktor) && o.faktor > 0
-      ? o.faktor
-      : null
-    if (kennung === '' || art === null || faktor === null) continue
-    raus.push({
-      kennung,
-      klarname: typeof o.klarname === 'string' && o.klarname.trim() !== ''
-        ? o.klarname
-        : kennung,
-      art,
-      faktor,
-    })
-  }
-  return raus
-}
-
 // Liest das `rechnung`-Attribut der Tabelle (JSON-String im Baum/Export).
 // null nur, wenn gar nichts Brauchbares dasteht — eine Rechnung ohne
 // belegte Plaetze kommt coerct zurueck, damit das Formular nichts verliert.
@@ -262,8 +199,6 @@ export function rechnungVonAttribut(roh: unknown): Rechnung | null {
     gewicht: alsPlatz(o.gewicht, leer.gewicht.runden),
     bezug: alsPlatz(o.bezug, leer.bezug.runden),
     tage: alsPlatz(o.tage, leer.tage.runden),
-    einheitFeld: typeof o.einheitFeld === 'string' ? o.einheitFeld : '',
-    einheiten: alsEinheiten(o.einheiten),
   }
 }
 

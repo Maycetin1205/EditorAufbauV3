@@ -70,6 +70,14 @@ damit die Rechnung aufgeht. Der Rest bleibt Rest.
 
 ## 5. Einheiten
 
+> **ÜBERHOLT (Nutzer-Ansage 2026-09-01):** Das hier beschriebene
+> Einheiten-Wahlfeld samt Umrechner ist gebaut worden und wieder
+> AUSGEBAUT. Getippt wird immer in der Einheit, die die Daten der Zeile
+> vorgeben (Behandlungseinheit) — ein Wahlfeld ergibt keinen Sinn, weil
+> die Einheiten vorgegeben und oft gar nicht umrechenbar sind (`Inj.`,
+> `Stab`). **Nicht wieder einbauen.** Der Rest des Abschnitts bleibt nur
+> als Beleg stehen, welche Einheiten in den Kundendaten vorkommen.
+
 Die Kundendaten führen `mg`, `g`, `ml` **und** Stück-Einheiten: `Inj.`, `Inj`
 (zwei Schreibweisen desselben!), `Stab`, `Blt.`, `Amp`, `Clip`, `Beutel`,
 `Injektoren`.

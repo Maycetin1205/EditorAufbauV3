@@ -7,11 +7,10 @@ import {
 import type { ErfassungsLauf } from './erfassungsLauf'
 import {
   fensterSpaltenIn,
-  platzSpalteIn,
   zielIn,
   type ErfassungsUmfeld,
 } from './erfassungsZellen'
-import { erfassungsZeileTpl, type ErfassungsLage } from './erfassungsZeile'
+import { erfassungsZeileTpl } from './erfassungsZeile'
 
 // Was die Zellen der Erfassungszeile tun. Getrennt vom Baustein, weil der
 // sonst über seinen Zeilen-Deckel liefe — und weil die Bedienung so nur über
@@ -136,30 +135,6 @@ function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
   wirt.melde()
 }
 
-// Der Umrechner sitzt an der Abgabemenge-Zelle der Rechnung — nur dort, und
-// nur, wenn eine Ziel-Einheit bekannt ist (sonst gäbe es kein Wohin).
-function einheitWahlFuer(
-  wirt: ErfassungsWirt,
-  umfeld: ErfassungsUmfeld,
-): ErfassungsLage['einheitWahl'] {
-  const rechnung = umfeld.rechnung
-  if (!rechnung || rechnung.einheiten.length === 0) return undefined
-  const index = platzSpalteIn(umfeld.spalten, rechnung.menge.feld)
-  if (index === -1) return undefined
-  const ziel = wirt.lauf.zielEinheit(umfeld)
-  if (ziel === '') return undefined
-  return {
-    index,
-    ziel,
-    optionen: rechnung.einheiten,
-    umrechnen: (kennung) => {
-      wirt.lauf.rechneUm(wirt.umfeld(), kennung)
-      wirt.melde()
-      wirt.fokussiere(index)
-    },
-  }
-}
-
 export function erfassungsZeileFuer(
   wirt: ErfassungsWirt,
   cols: Readonly<Record<string, string>>,
@@ -176,7 +151,6 @@ export function erfassungsZeileFuer(
     vorschlaege: wirt.lauf.vorschlaege,
     marke: wirt.lauf.marke,
     listeNachOben,
-    einheitWahl: einheitWahlFuer(wirt, umfeld),
   }, {
     // Was der Bediener tippt, gehört der Zeile — kein Daten-Push räumt es weg
     // (das tut nur ein Zweckwechsel des Bausteins).

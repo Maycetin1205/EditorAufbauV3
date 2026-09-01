@@ -6,9 +6,7 @@ import {
   rechnungAlsAttribut,
   rechnungVonAttribut,
   rundeWert,
-  umgerechnet,
   zahlStreng,
-  STANDARD_EINHEITEN,
   type PlatzKey,
   type PlatzWert,
 } from './rechnung'
@@ -132,18 +130,6 @@ test('rundeWert kennt auf, ab und kaufmaennisch', () => {
   expect(rundeWert(45 / 5, { stellen: 0, richtung: 'auf' })).toBe(9)
 })
 
-test('umgerechnet nur innerhalb derselben Art', () => {
-  const liste = STANDARD_EINHEITEN
-  expect(umgerechnet(5, 'l', 'ml', liste)).toBe(5000)
-  expect(umgerechnet(5, 'kg', 'g', liste)).toBe(5000)
-  expect(umgerechnet(5000, 'mg', 'g', liste)).toBe(5)
-  // Masse wird nie zu Volumen (braeuchte die Dichte).
-  expect(umgerechnet(5, 'kg', 'ml', liste)).toBeNull()
-  // Gleiche Kennung braucht keine Liste (Stueck-Einheiten).
-  expect(umgerechnet(4, 'Stab', 'Stab', liste)).toBe(4)
-  expect(umgerechnet(4, 'Stab', 'ml', liste)).toBeNull()
-})
-
 test('platzText schreibt ohne Tausenderpunkte, mit Komma', () => {
   expect(platzText(5000, 3)).toBe('5000')
   expect(platzText(2.7, 3)).toBe('2,7')
@@ -152,7 +138,6 @@ test('platzText schreibt ohne Tausenderpunkte, mit Komma', () => {
 
 test('Attribut-Rundreise erhaelt die Rechnung', () => {
   const r = rechnung()
-  r.einheitFeld = 'einheit'
   const zurueck = rechnungVonAttribut(rechnungAlsAttribut(r))
   expect(zurueck).toEqual(r)
 })
@@ -164,18 +149,15 @@ test('kaputtes Attribut liefert null statt Truemmer', () => {
   expect(rechnungVonAttribut('[1,2]')).toBeNull()
 })
 
-test('fremde Einheiten-Eintraege werden beim Lesen aussortiert', () => {
+// Alte Masken tragen im Attribut noch einheitFeld/einheiten (der Umrechner
+// von vor 2026-09-01) — die Leser lassen Unbekanntes einfach fallen.
+test('unbekannte Attribut-Teile werden beim Lesen fallengelassen', () => {
   const roh = JSON.stringify({
     menge: { feld: 'm' },
-    einheiten: [
-      { kennung: 'ml', klarname: 'Milliliter', art: 'volumen', faktor: 1 },
-      { kennung: '', art: 'masse', faktor: 1 },
-      { kennung: 'x', art: 'masse', faktor: 0 },
-      { kennung: 'y', art: 'quatsch', faktor: 1 },
-    ],
+    einheitFeld: '1646_5',
+    einheiten: [{ kennung: 'ml', klarname: 'Milliliter', art: 'volumen', faktor: 1 }],
   })
   const r = rechnungVonAttribut(roh)
-  expect(r?.einheiten).toEqual([
-    { kennung: 'ml', klarname: 'Milliliter', art: 'volumen', faktor: 1 },
-  ])
+  expect(r?.menge.feld).toBe('m')
+  expect(r).not.toHaveProperty('einheiten')
 })

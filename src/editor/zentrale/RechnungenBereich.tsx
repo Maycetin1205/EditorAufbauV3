@@ -1,6 +1,4 @@
 import { useState } from 'react'
-import { Plus, X } from '@/ui/zeichen'
-import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Wahl, type WahlOption } from '@/ui/werkbank/Wahl'
 import { Zahl } from '@/ui/werkbank/Zahl'
@@ -12,8 +10,6 @@ import {
   rechnungVonAttribut,
   PLATZ_KEYS,
   PLATZ_NAMEN,
-  STANDARD_EINHEITEN,
-  type EinheitenEintrag,
   type PlatzKey,
   type Rechnung,
   type RundungsRichtung,
@@ -30,12 +26,6 @@ const RICHTUNGEN: WahlOption[] = [
   { wert: 'auf', name: 'aufrunden' },
   { wert: 'ab', name: 'abrunden' },
   { wert: 'kfm', name: 'kaufmännisch' },
-]
-
-const ARTEN: WahlOption[] = [
-  { wert: 'masse', name: 'Masse' },
-  { wert: 'volumen', name: 'Volumen' },
-  { wert: 'stueck', name: 'Stück' },
 ]
 
 // Rechnen kann, was eine Erfassungszeile hat: Listen-Baustein mit
@@ -59,10 +49,6 @@ function spaltenVon(node: BlockNode): { titel: string; feld: string }[] {
     raus.push({ titel: typeof o.titel === 'string' ? o.titel : '', feld })
   }
   return raus
-}
-
-function leereEinheit(): EinheitenEintrag {
-  return { kennung: '', klarname: '', art: 'stueck', faktor: 1 }
 }
 
 export function RechnungenBereich() {
@@ -95,11 +81,6 @@ export function RechnungenBereich() {
 
   const setzePlatz = (key: PlatzKey, teil: Partial<Rechnung[PlatzKey]>): void => {
     speichere({ ...stand, [key]: { ...stand[key], ...teil } })
-  }
-
-  const setzeEinheit = (index: number, teil: Partial<EinheitenEintrag>): void => {
-    const einheiten = stand.einheiten.map((e, i) => (i === index ? { ...e, ...teil } : e))
-    speichere({ ...stand, einheiten })
   }
 
   return (
@@ -152,73 +133,6 @@ export function RechnungenBereich() {
                 runden: { ...stand[key].runden, richtung: richtung as RundungsRichtung },
               })}
             />
-          </div>
-        ))}
-        <div className="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-2">
-          <span className="truncate text-dicht text-matt" title="Spalte, die die Ziel-Einheit der Abgabemenge trägt (z. B. Behandlungseinheit)">
-            Einheit aus
-          </span>
-          <Wahl
-            optionen={spaltenOptionen}
-            wert={stand.einheitFeld}
-            leerText="— kein Umrechner —"
-            onWaehle={(feld) => speichere({ ...stand, einheitFeld: feld })}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5 border-t border-linie pt-3">
-        <div className="flex items-center justify-between">
-          <span className="text-ui font-medium text-tinte">Einheiten</span>
-          <div className="flex gap-2">
-            {stand.einheiten.length === 0 && (
-              <Knopf onClick={() => speichere({ ...stand, einheiten: [...STANDARD_EINHEITEN] })}>
-                Standard einsetzen
-              </Knopf>
-            )}
-            <Knopf onClick={() => speichere({ ...stand, einheiten: [...stand.einheiten, leereEinheit()] })}>
-              <Plus size={14} /> Einheit
-            </Knopf>
-          </div>
-        </div>
-        {stand.einheiten.map((e, i) => (
-          <div key={i} className="grid grid-cols-[72px_minmax(0,1fr)_110px_96px_28px] items-center gap-2">
-            <Feld
-              value={e.kennung}
-              placeholder="ml"
-              title="Schreibweise, wie sie in den ERP-Daten steht"
-              onChange={(ev) => setzeEinheit(i, { kennung: ev.target.value })}
-            />
-            <Feld
-              value={e.klarname}
-              placeholder="Milliliter"
-              title={'Angezeigter Name — nie ein nacktes „l", das liest sich wie eine 1'}
-              onChange={(ev) => setzeEinheit(i, { klarname: ev.target.value })}
-            />
-            <Wahl
-              optionen={ARTEN}
-              wert={e.art}
-              onWaehle={(art) => setzeEinheit(i, { art: art as EinheitenEintrag['art'] })}
-            />
-            <Zahl
-              title="Faktor zur Basiseinheit der Art (g bzw. ml = 1)"
-              step="any"
-              value={e.faktor}
-              onChange={(ev) => {
-                const faktor = Number(ev.target.value)
-                if (Number.isFinite(faktor) && faktor > 0) setzeEinheit(i, { faktor })
-              }}
-            />
-            <Knopf
-              nurZeichen
-              aria-label="Einheit entfernen"
-              onClick={() => speichere({
-                ...stand,
-                einheiten: stand.einheiten.filter((_, j) => j !== i),
-              })}
-            >
-              <X size={14} />
-            </Knopf>
           </div>
         ))}
       </div>

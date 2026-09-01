@@ -15,7 +15,6 @@ import {
 import {
   loeseRechnung,
   platzText,
-  umgerechnet,
   zahlStreng,
   PLATZ_KEYS,
   type PlatzKey,
@@ -154,36 +153,6 @@ export class ErfassungsLauf {
     }
   }
 
-  // Die Ziel-Einheit der Abgabemenge: der Wert der eingestellten
-  // Einheiten-Spalte in der werdenden Zeile (z. B. 'ml' aus der Dosier-IDB).
-  zielEinheit(umfeld: ErfassungsUmfeld): string {
-    const r = umfeld.rechnung
-    if (!r || r.einheitFeld.trim() === '') return ''
-    const index = platzSpalteIn(umfeld.spalten, r.einheitFeld)
-    if (index === -1) return ''
-    return this.wertVon(umfeld, index).trim()
-  }
-
-  // Der Einheiten-Umrechner an der Abgabemenge: der aktuelle Zellwert wird
-  // als Wert IN der gewählten Einheit gelesen und einmalig in die
-  // Ziel-Einheit umgerechnet — sichtbar in der Zelle, nichts bleibt versteckt
-  // ('5' + Liter -> '5000' bei Ziel ml). Unpassende Arten: nichts passiert.
-  rechneUm(umfeld: ErfassungsUmfeld, vonKennung: string): void {
-    const r = umfeld.rechnung
-    if (!r) return
-    const index = platzSpalteIn(umfeld.spalten, r.menge.feld)
-    if (index === -1) return
-    const roh = this.wertVon(umfeld, index).trim()
-    if (roh === '') return
-    const wert = zahlStreng(roh) ?? alsZahl(roh)
-    if (wert === null) return
-    const ziel = this.zielEinheit(umfeld)
-    const neu = umgerechnet(wert, vonKennung, ziel, r.einheiten)
-    if (neu === null) return
-    this.getippt.set(index, platzText(neu, r.menge.runden.stellen))
-    this.rechne(umfeld)
-  }
-
   tippe(index: number, text: string): void {
     this.getippt.set(index, text)
     this._tippSpalte = index
@@ -242,6 +211,10 @@ export class ErfassungsLauf {
       this._markeVonHand = true
     }
     else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
+    // Enter im LEEREN Feld springt weiter (Nutzer 2026-09-01): leer lassen
+    // ist in der Erfassungszeile eine Aussage — die Lücke rechnet die
+    // Rechnung. Das große Fenster öffnet hier F4 oder Alt+Pfeil-runter.
+    else if (folge === 'fenster' && wert === '') return 'weiter'
     // Kein einziger möglicher Satz (kein Partner): Enter bleibt nicht hängen.
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
     // Auf einem gewählten Wert geht Enter weiter. Getipptes hält dagegen an
