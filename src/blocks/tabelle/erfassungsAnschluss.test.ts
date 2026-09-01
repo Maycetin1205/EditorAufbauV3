@@ -241,3 +241,21 @@ test('die geschriebene untere Zeile geht markiert in die Liste', () => {
   expect(a.lauf.wertVon(UMFELD, 0)).toBe('')
   expect(a.vormerkungen(UMFELD)).toEqual([])
 })
+
+// Faellt eine Zeile VOR der korrigierten weg, muss deren Platz mitruecken —
+// sonst stuende die Korrektur nach Enter eine Position zu tief.
+test('Wegnehmen einer Zeile vor der korrigierten rueckt deren Platz nach', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  lege(a, 'ART2', '2')
+  lege(a, 'ART3', '3')
+
+  a.zurueckholen(UMFELD, 2)
+  expect(a.korrekturPlatz).toBe(2)
+  expect(a.entferne(0)).toBe(true)
+  expect(a.korrekturPlatz).toBe(1)
+
+  a.lauf.tippe(1, '9')
+  a.erfasse(UMFELD)
+  expect(werte(a)).toEqual([['ART2', '2'], ['ART3', '9']])
+})

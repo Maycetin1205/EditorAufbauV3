@@ -1,5 +1,5 @@
 import { beforeEach, expect, test, vi } from 'vitest'
-import type { RuntimeRelation } from './relations'
+import { extractRelationResult, type RuntimeRelation } from './relations'
 
 // Was die Maske als Bruecke sieht. Nur diese eine Funktion entscheidet, ob ein
 // Ruf ueberhaupt hinausgeht.
@@ -112,4 +112,13 @@ test('eine verspaetete Antwort loest den naechsten Frager NICHT auf', async () =
   } finally {
     vi.useRealTimers()
   }
+})
+
+// Eine leere Antwort IST eine Antwort: {"RESULT":""} heisst „kein Treffer",
+// nicht „noch keine Nachricht". Vorher blieb der Job offen bis zum Timeout,
+// und die Verfallsmarke verwarf danach die erste Antwort des naechsten Rufs.
+test('extractRelationResult loest eine leere RESULT-Antwort als leeren Text auf', () => {
+  expect(extractRelationResult('{"RESULT":""}')).toBe('')
+  expect(extractRelationResult({ RESULT: '', PINDEX: '48' })).toBe('48')
+  expect(extractRelationResult({ MSG: { DATA: [] } })).toBeUndefined()
 })

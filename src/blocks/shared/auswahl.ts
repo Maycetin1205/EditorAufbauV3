@@ -15,43 +15,45 @@ export function merkmalVon(zeile: unknown): string {
 // Die Wahl-Nummer sagt, WANN gewaehlt wurde: zeigen zwei Bausteine dieselbe
 // Quelle, gewinnt die juengste Wahl (s. gewaehlteZeileDerQuelle).
 const zustand = new Map<string, { zeile: unknown; merkmal: string; nummer: number }>()
-const hoerer = new Set<() => void>()
+const hoerer = new Set<(durchBedienung: boolean) => void>()
 const zuruecksetzer = new Set<() => void>()
 
 let wahlZaehler = 0
 
-// Ob die juengste Auswahl-Aenderung vom BEDIENER kam (Zeilenklick,
-// waehleAuswahl) oder aus einem Programm-Lauf (setzeAuswahl/klareAuswahl beim
-// Hydrieren). Die holenden Quellen lesen das als Bremse gegen Kreis-Feuer:
-// nur eine Bedienung darf dieselbe Zeile beliebig oft neu laden lassen
-// (Nutzer-Befund 2026-09-01: zwei Geber schaukelten sich hoch, Relation 69
-// feuerte im Halbsekundentakt gegen das ERP).
-let wahlDurchBedienung = false
-
-export function letzteWahlDurchBedienung(): boolean {
-  return wahlDurchBedienung
-}
-
+// Ob eine Auswahl-Aenderung vom BEDIENER kam (Zeilenklick, Satz im
+// Nachschlage-Fenster) oder aus einem Programm-Lauf (Hydrieren), reist als
+// Argument MIT der Meldung zu jedem Hoerer. Die holenden Quellen lesen das als
+// Bremse gegen Kreis-Feuer: nur eine Bedienung darf dieselbe Zeile beliebig
+// oft neu laden lassen (Nutzer-Befund 2026-09-01: zwei Geber schaukelten sich
+// hoch, Relation 69 feuerte im Halbsekundentakt gegen das ERP). Frueher stand
+// die Herkunft in einem globalen Flag — das ueberschrieb der ERSTE Hoerer
+// (Hydrierung eines Folge-Felds ruft setzeAuswahl), bevor der zweite las, und
+// der dritte Klick auf denselben Beleg holte keine Positionen mehr.
 let meldungLaeuft = false
 let nachmeldung = false
+let nachBedienung = false
 
-function melde(): void {
+function melde(durchBedienung: boolean): void {
   if (meldungLaeuft) {
     nachmeldung = true
+    nachBedienung ||= durchBedienung
     return
   }
   meldungLaeuft = true
+  let herkunft = durchBedienung
   try {
     do {
       nachmeldung = false
-      hoerer.forEach((cb) => cb())
+      nachBedienung = false
+      hoerer.forEach((cb) => cb(herkunft))
+      herkunft = nachBedienung
     } while (nachmeldung)
   } finally {
     meldungLaeuft = false
   }
 }
 
-export function aufAuswahlHoeren(cb: () => void): void {
+export function aufAuswahlHoeren(cb: (durchBedienung: boolean) => void): void {
   hoerer.add(cb)
 }
 
@@ -97,25 +99,25 @@ export function waehleAuswahl(geberId: string, zeile: unknown): void {
   const alt = zustand.get(geberId)
   if (alt && alt.merkmal === merkmal) zustand.delete(geberId)
   else zustand.set(geberId, { zeile, merkmal, nummer: ++wahlZaehler })
-  wahlDurchBedienung = true
-  melde()
+  melde(true)
 }
 
-export function setzeAuswahl(geberId: string, zeile: unknown): void {
+// Setzt die Auswahl ohne Umschalten (nochmal derselbe Satz bleibt gewaehlt).
+// `durchBedienung` sagt, ob ein Mensch den Satz gewaehlt hat (Nachschlagen,
+// Vorschlag) — die Hydrierung laesst es weg.
+export function setzeAuswahl(geberId: string, zeile: unknown, durchBedienung = false): void {
   if (geberId === '') return
   const merkmal = merkmalVon(zeile)
   if (merkmal === '') return
   if (zustand.get(geberId)?.merkmal === merkmal) return
   zustand.set(geberId, { zeile, merkmal, nummer: ++wahlZaehler })
-  wahlDurchBedienung = false
-  melde()
+  melde(durchBedienung)
 }
 
 export function klareAuswahl(geberId: string): void {
   if (!zustand.has(geberId)) return
   zustand.delete(geberId)
-  wahlDurchBedienung = false
-  melde()
+  melde(false)
 }
 
 // Wer eigene Spuren zur Auswahl haelt, laesst sie hier mitloeschen.
@@ -126,7 +128,6 @@ export function beimAuswahlZuruecksetzen(cb: () => void): void {
 export function setzeAuswahlZurueck(): void {
   zustand.clear()
   wahlZaehler = 0
-  wahlDurchBedienung = false
   zuruecksetzer.forEach((cb) => cb())
 }
 

@@ -229,7 +229,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               ? String(rohIndex === lage.auswahlIndex)
               : nothing}
             style=${styleMap(lage.cols)}
-            @click=${() => tun.aktiviereZeile(rohIndex, ansichtIndex)}
+            @click=${(e: MouseEvent) => {
+              // Ein Klick INS Eingabefeld setzt nur die Schreibmarke — er
+              // waehlt keine Zeile und startet keine Kette (wie unten bei
+              // Doppelklick und Tasten).
+              if ((e.target as HTMLElement).closest('.zell-eingabe')) return
+              tun.aktiviereZeile(rohIndex, ansichtIndex)
+            }}
             @dblclick=${(e: MouseEvent) => {
               // In einer aenderbaren Zelle heisst Doppelklick „Wort markieren".
               // Die Kette gehoert der ZEILE, nicht dem Eingabefeld.
@@ -237,8 +243,10 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               tun.zeileDoppelt(rohIndex)
             }}
             @keydown=${(e: KeyboardEvent) => {
-              // In einer Eingabezelle gehoeren die Pfeile dem Text.
-              if ((e.target as HTMLElement).closest('.zell-eingabe')) return
+              // In einer Eingabezelle gehoeren die Pfeile dem Text; auf dem
+              // Kreuz gehoert Enter dem Knopf — das preventDefault unten
+              // unterdrueckte sonst genau seinen Klick.
+              if ((e.target as HTMLElement).closest('.zell-eingabe, button')) return
               if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 const hoch = e.key === 'ArrowUp'
                 const bewegt = bewegeZeilenFokus(e.target, hoch ? -1 : 1)

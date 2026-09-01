@@ -12,7 +12,6 @@ import {
   auswahlNummer,
   beimAuswahlZuruecksetzen,
   geberIdVon,
-  letzteWahlDurchBedienung,
   merkmalVon,
 } from './auswahl'
 
@@ -105,11 +104,10 @@ export function setzeLadeSpurZurueck(): void {
   stillGeladen.clear()
 }
 
-function pruefeHolendeQuellen(): void {
+function pruefeHolendeQuellen(durchBedienung: boolean): void {
   const liste: unknown = seGlobal().FF_DATA_SOURCES
   if (!Array.isArray(liste)) return
   const defsJeTag = defsMitSatzWahl()
-  const durchBedienung = letzteWahlDurchBedienung()
   for (const eintrag of liste) {
     if (!isRecord(eintrag) || typeof eintrag.id !== 'string') continue
     const quelle = findRuntimeDataSource(liste, eintrag.id)

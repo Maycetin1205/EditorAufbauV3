@@ -29,28 +29,36 @@ export function buildStartToolLink(nr: string, params: readonly string[]): strin
   return link
 }
 
-function seBwLink(befehl: string): void {
+// Beide Sende-Wege sagen, ob der Ruf HINAUSGING. Frueher schluckten sie
+// jeden Fehler (kein Bruecken-Objekt, Aufruf wirft), und die Kette lief
+// weiter, als stuende das Werkzeug schon — GET/PUT meldeten an derselben
+// Stelle laengst „keine Verbindung zu SoftEngine".
+function seBwLink(befehl: string): boolean {
   const zeile = befehl.trim()
-  if (zeile === '') return
+  if (zeile === '') return false
   const g = seGlobal()
   try {
     if (typeof g.sendBWLink === 'function') {
       g.sendBWLink(zeile)
-      return
+      return true
     }
   } catch { /* faellt auf den internen Weg zurueck */ }
   try {
-    if (typeof g.sendBWLinkIntern === 'function') g.sendBWLinkIntern(zeile)
+    if (typeof g.sendBWLinkIntern === 'function') {
+      g.sendBWLinkIntern(zeile)
+      return true
+    }
   } catch { /* nicht in SE */ }
+  return false
 }
 
-function seStartTool(nr: string, params: readonly string[]): void {
-  if (nr.trim() === '') return
+function seStartTool(nr: string, params: readonly string[]): boolean {
+  if (nr.trim() === '') return false
   const g = seGlobal()
   try {
     if (typeof g.sendBWLinkIntern === 'function') {
       g.sendBWLinkIntern(buildStartToolLink(nr, params))
-      return
+      return true
     }
   } catch { /* faellt auf den obj-Weg zurueck, wie die Referenz */ }
   try {
@@ -58,8 +66,10 @@ function seStartTool(nr: string, params: readonly string[]): void {
       const obj: Record<string, unknown> = { NR: nr }
       if (params.length > 0) obj.PARAMS = [...params]
       g.basisHTML_SND_MSG('START_TOOL', obj)
+      return true
     }
   } catch { /* nicht in SE */ }
+  return false
 }
 
 export function applyPopupStep(root: ParentNode, name: string, oeffnen: boolean): void {
@@ -272,11 +282,25 @@ export async function laufeSchritte(
   for (const [platz, step] of steps.entries()) {
     if (nur && !nur.has(platz)) continue
     if (step.type === 'START_TOOL') {
-      seStartTool(step.toolNr, resolveParams({ params: step.toolParams }, values))
+      if (!seStartTool(step.toolNr, resolveParams({ params: step.toolParams }, values))) {
+        const text = step.toolNr.trim() === ''
+          ? `Schritt ${platz + 1} der Kette: START_TOOL ohne Werkzeug-Nummer.`
+          : `Schritt ${platz + 1} der Kette: START_TOOL ${step.toolNr} ging nicht hinaus `
+            + '— keine Verbindung zu SoftEngine.'
+        meldeFehler(text)
+        return { geschrieben, fehler: text, mitschrift: mitschrift() }
+      }
       continue
     }
     if (step.type === 'BW_LINK') {
-      seBwLink(resolveParams({ params: [step.befehl] }, values)[0] ?? '')
+      const befehl = resolveParams({ params: [step.befehl] }, values)[0] ?? ''
+      if (!seBwLink(befehl)) {
+        const text = befehl.trim() === ''
+          ? `Schritt ${platz + 1} der Kette: BW_LINK ohne Befehl.`
+          : `Schritt ${platz + 1} der Kette: BW_LINK ging nicht hinaus — keine Verbindung zu SoftEngine.`
+        meldeFehler(text)
+        return { geschrieben, fehler: text, mitschrift: mitschrift() }
+      }
       continue
     }
     if (step.type === 'POPUP_OPEN' || step.type === 'POPUP_CLOSE') {

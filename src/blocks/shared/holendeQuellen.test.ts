@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from 'vitest'
 import {
-  letzteWahlDurchBedienung,
+  aufAuswahlHoeren,
   setzeAuswahl,
   setzeAuswahlZurueck,
   waehleAuswahl,
@@ -94,9 +94,25 @@ test('die Bremse stoppt Kreis-Feuer, laesst Bedienung aber immer durch', () => {
   expect(darfLaden('q', 'A', true)).toBe(true)
 })
 
-test('waehleAuswahl gilt als Bedienung, setzeAuswahl nicht', () => {
+
+// Die Herkunft reist mit der Meldung, nicht ueber ein globales Flag: ein
+// Hoerer, der selbst setzeAuswahl ruft (Hydrierung eines Folge-Felds), darf
+// dem NAECHSTEN Hoerer den Zeilenklick nicht als Programm-Lauf verkaufen —
+// sonst bremste darfLaden den dritten Klick auf denselben Beleg aus.
+// Steht absichtlich am Ende: die Hoerer bleiben fuer den Rest der Datei stehen.
+test('die Herkunft der Wahl erreicht jeden Hoerer unverfaelscht', () => {
+  const gesehen: boolean[] = []
+  aufAuswahlHoeren((durchBedienung) => {
+    if (durchBedienung) setzeAuswahl('folger', { b: 2 })
+  })
+  aufAuswahlHoeren((durchBedienung) => { gesehen.push(durchBedienung) })
+
   waehleAuswahl('g1', { a: 1 })
-  expect(letzteWahlDurchBedienung()).toBe(true)
-  setzeAuswahl('g2', { b: 2 })
-  expect(letzteWahlDurchBedienung()).toBe(false)
+  expect(gesehen).toEqual([true, false])
+
+  gesehen.length = 0
+  setzeAuswahl('g2', { c: 3 })
+  expect(gesehen).toEqual([false])
+  setzeAuswahl('g3', { d: 4 }, true)
+  expect(gesehen).toEqual([false, true])
 })

@@ -422,7 +422,10 @@ export class FormFeldBlock extends BasicBlock {
     this.value = wert
     this.satz = satz
 
-    setzeAuswahl(geberIdVon(this), satz)
+    // Hier hat ein MENSCH den Satz gewaehlt (Nachschlagen oder Vorschlag) —
+    // das zaehlt als Bedienung, sonst bremste die Kreis-Bremse der holenden
+    // Quellen die Rueckkehr zu einem schon einmal gewaehlten Beleg aus.
+    setzeAuswahl(geberIdVon(this), satz, true)
   }
 
   private onNachschlagVerlassen(): void {

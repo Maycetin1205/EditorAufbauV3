@@ -42,6 +42,8 @@ export function findRuntimeRelation(list: unknown, id: string): RuntimeRelation 
   return undefined
 }
 
+const SATZ_SCHLUESSEL = ['RESULT', 'result'] as const
+
 const RESULT_KEYS = [
   'RESULT', 'result', 'PINDEX', 'pindex', 'INDEX', 'index',
   '0_10', 'KEY', 'key', 'ID', 'id', 'VALUE', 'value',
@@ -93,6 +95,14 @@ export function extractRelationResult(raw: unknown): string | undefined {
     const found = firstScalar(value[key], 0)
     if (found !== undefined) return found
   }
+  // Traegt die Nachricht den RESULT-Schluessel, IST sie die Antwort — auch
+  // leer (kein Treffer, leeres Feld). Vorher blieb der Job bei {"RESULT":""}
+  // offen, lief in den 20-s-Timeout, meldete „nicht geantwortet" und stellte
+  // die Verfallsmarke scharf, die dann die erste echte Antwort des NAECHSTEN
+  // Rufs verwarf.
+  for (const key of SATZ_SCHLUESSEL) {
+    if (typeof value[key] === 'string') return ''
+  }
   for (const entry of Object.values(value)) {
     if (Array.isArray(entry)) {
       for (const item of entry) {
@@ -106,8 +116,6 @@ export function extractRelationResult(raw: unknown): string | undefined {
   }
   return undefined
 }
-
-const SATZ_SCHLUESSEL = ['RESULT', 'result'] as const
 
 export function extractSatzAntwort(raw: unknown, tiefe = 0): string | undefined {
   if (tiefe > 12) return undefined

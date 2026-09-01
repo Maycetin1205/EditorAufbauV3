@@ -246,14 +246,16 @@ function stepFields(raw: unknown): RuntimeStep | null {
   if (raw.type === 'RELATION') {
     if (typeof raw.relationId !== 'string') return null
     if (!Array.isArray(raw.extraParams)) return null
-    if (!Array.isArray(raw.params) && !isRecord(raw.bindings)) return null
+    // Frueher liess eine Ausnahme fuer ein Alt-Feld `bindings` den Schritt
+    // durch — mit LEEREN params, weil niemand `bindings` je umsetzte. Die
+    // Relation ging dann mit lauter leeren Parametern ins ERP. Ein Schritt
+    // ohne params-Liste ist jetzt ungueltig und faellt beim Laden auf.
+    if (!Array.isArray(raw.params)) return null
     const params: ActionParamBinding[] = []
-    if (Array.isArray(raw.params)) {
-      for (const value of raw.params) {
-        const binding = bindingFields(value)
-        if (!binding) return null
-        params.push(binding)
-      }
+    for (const value of raw.params) {
+      const binding = bindingFields(value)
+      if (!binding) return null
+      params.push(binding)
     }
 
     const extraParams: ActionParamBinding[] = []

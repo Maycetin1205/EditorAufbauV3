@@ -53,6 +53,18 @@ export function meldeVerworfeneTypen(verworfen: Map<string, number>): void {
   )
 }
 
+// Eine Aktionskette, die beim Laden die Pruefung nicht besteht, faellt weg —
+// der Baustein bleibt stehen und tut nichts mehr. Das muss man erfahren, denn
+// der naechste Auto-Speicher schreibt den gekuerzten Stand fest.
+export function meldeVerloreneKetten(anzahl: number): void {
+  if (anzahl === 0) return
+  meldungen.melde(
+    `Beim Laden verworfen: ${anzahl} Aktionskette(n), die nicht mehr lesbar war(en).\n`
+    + 'Die betroffenen Bausteine stehen noch in der Maske, ihre Kette ist leer — '
+    + 'bitte neu anlegen. Der Rest der Maske ist unverändert.',
+  )
+}
+
 // Gemeldet wird nur, wo wirklich etwas fehlt: die aufgelösten Hüllen
 // (Kanban-Vorlage, Zeile) haben ihre Kinder an Ort und Stelle behalten —
 // dafür einen Verlust zu melden wäre die nächste Unwahrheit.
@@ -129,6 +141,7 @@ export function loadFromStorage(): LoadedState | null {
     }
     meldeVerworfeneTypen(baum.verworfen)
     meldeAbsichtlichEntfernte(baum.absichtlichEntfernt)
+    meldeVerloreneKetten(baum.verloreneKetten)
     return {
       tree: baum.tree,
       selectedId: baum.selectedId,

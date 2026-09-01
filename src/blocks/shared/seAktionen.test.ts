@@ -280,6 +280,19 @@ describe('laufeSchritte', () => {
     expect(gerufen.map((g) => g.params)).toEqual([['48'], []])
   })
 
+  // Ein Werkzeugstart, der nie hinausgeht, darf nicht als gelaufen gelten —
+  // sonst schreibt der Schritt dahinter, als stuende das Werkzeug schon.
+  test('START_TOOL ohne Bruecke stoppt die Kette mit Meldung', async () => {
+    const steps: RuntimeStep[] = [
+      { type: 'START_TOOL', resultKey: '', toolNr: '508', toolParams: [] },
+      relationsSchritt('put-b'),
+    ]
+    const ergebnis = await laufeSchritte(el, steps, {}, undefined)
+    expect(ergebnis.fehler).toContain('START_TOOL 508')
+    expect(fehler.at(-1)).toContain('SoftEngine')
+    expect(gerufen).toEqual([])
+  })
+
   // Weiterlaufen hiesse, die naechsten Schritte auf ein Ergebnis zu setzen,
   // das es nicht gibt.
   test('ein nicht durchgekommener Ruf stoppt die restlichen Schritte', async () => {

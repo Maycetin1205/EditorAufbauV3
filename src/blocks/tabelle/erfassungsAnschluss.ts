@@ -179,6 +179,12 @@ export class ErfassungsAnschluss {
   entferne(index: number): boolean {
     if (index < 0 || index >= this._zeilen.length) return false
     this._zeilen = this._zeilen.filter((_, i) => i !== index)
+    // Faellt eine Zeile VOR der gerade korrigierten weg, rueckt deren Platz
+    // nach — sonst zeichnete die Tipp-Zeile eine Position zu tief, und Enter
+    // setzte die Korrektur an den falschen Platz.
+    if (this._zurueck !== null && index < this._zurueck.platz) {
+      this._zurueck = { ...this._zurueck, platz: this._zurueck.platz - 1 }
+    }
     return true
   }
 

@@ -32,6 +32,7 @@ export function sanitizeTree(
   meldungen?: {
     typVerworfen?: (type: string) => void
     absichtlichEntfernt?: (id: string, grund: EntfernGrund) => void
+    ketteVerloren?: (blockId: string, ereignis: string) => void
   },
 ): BlockTree {
   const tree = createEmptyTree()
@@ -74,6 +75,17 @@ export function sanitizeTree(
     }
 
     const events = sanitizeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key))
+    // Eine Kette, die die Pruefung nicht besteht, faellt KOMPLETT weg. Das
+    // darf nicht still passieren: der Knopf bliebe im Baum und taete nichts,
+    // und der naechste Auto-Speicher schriebe den gekuerzten Stand fest —
+    // der Datei-Weg lehnt denselben Stand dagegen laut ab (keinVerlust).
+    if (node.events && typeof node.events === 'object' && !Array.isArray(node.events)) {
+      for (const [key, kette] of Object.entries(node.events as Record<string, unknown>)) {
+        if (Array.isArray(kette) && kette.length > 0 && events?.[key] === undefined) {
+          meldungen?.ketteVerloren?.(childId, key)
+        }
+      }
+    }
     tree[childId] = {
       id: childId,
       type: node.type,
@@ -104,6 +116,9 @@ export interface BaumErgebnis {
   absichtlichEntfernt: ReadonlyMap<string, EntfernGrund>
 
   verworfen: Map<string, number>
+
+  // Aktionsketten, die beim Laden die Pruefung nicht bestanden und wegfielen.
+  verloreneKetten: number
 }
 
 export function baumAusRohdaten(parsed: {
@@ -117,12 +132,14 @@ export function baumAusRohdaten(parsed: {
   const verworfen = new Map<string, number>()
   const absichtlichGeleert = new Set<string>()
   const absichtlichEntfernt = new Map<string, EntfernGrund>()
+  let verloreneKetten = 0
   if (parsed.tree && typeof parsed.tree === 'object') {
     tree = sanitizeTree(parsed.tree as Record<string, unknown>, {
       typVerworfen: (type) => {
         verworfen.set(type, (verworfen.get(type) ?? 0) + 1)
       },
       absichtlichEntfernt: (id, grund) => absichtlichEntfernt.set(id, grund),
+      ketteVerloren: () => { verloreneKetten += 1 },
     })
 
     if (putzeDemos) for (const p of putzeAlteKartenDemos(tree)) absichtlichGeleert.add(p)
@@ -151,7 +168,10 @@ export function baumAusRohdaten(parsed: {
     typeof parsed.selectedId === 'string' && tree[parsed.selectedId] && parsed.selectedId !== ROOT_ID
       ? parsed.selectedId
       : null
-  return { tree, selectedId, schemaAdvanced, absichtlichGeleert, absichtlichEntfernt, verworfen }
+  return {
+    tree, selectedId, schemaAdvanced, absichtlichGeleert, absichtlichEntfernt, verworfen,
+    verloreneKetten,
+  }
 }
 
 export function keinVerlust(roh: unknown, rein: unknown): boolean {

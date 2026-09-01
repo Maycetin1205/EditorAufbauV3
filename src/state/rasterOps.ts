@@ -69,6 +69,7 @@ export function verschiebeInContainer(
   const oldParentId = node.parentId
   if (!oldParentId) return null
   const oldParent = tree[oldParentId]
+  if (!oldParent) return null
 
   const next: BlockTree = { ...tree }
 
@@ -118,6 +119,10 @@ export function zelleneinzug(
   const ny = Math.max(0, y)
 
   if (gleicheFlaeche && nx === cur.x && ny === cur.y && w === cur.w && h === cur.h) return null
+  // Ohne bekannten alten und neuen Elternteil laesst sich der Baustein nicht
+  // umhaengen: er zeigte sonst auf eine Flaeche, die ihn nicht kennt — und
+  // Canvas wie Export gehen ueber childIds, der Baustein waere verwaist.
+  if (!gleicheFlaeche && (!node.parentId || !tree[node.parentId] || !tree[parentId])) return null
   const next: BlockTree = { ...tree }
   if (!gleicheFlaeche && node.parentId && next[node.parentId]) {
     next[node.parentId] = {
