@@ -71,6 +71,11 @@ export interface KoerperLage {
   // Aus heisst: auch eine als aenderbar gestellte Spalte bleibt Text.
   aendernMoeglich: boolean
 
+  // Nur im Editor: Spalten, in denen der Bediener in der Maske tippen darf,
+  // tragen ein Zeichen im Kopf. Reine Anzeige — was die Maske tut, sagt
+  // aendernMoeglich. Ohne Quelle gibt es nichts zu zeigen.
+  tippbarZeigen: boolean
+
   zeilenStand: ZeilenStand
 
   // Zeilen lassen sich zum Loeschen vormerken (Schalter am Baustein).
@@ -191,7 +196,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                   title=${`Diese Spalte holt ihren Wert aus: ${lage.herkunft[i]}`}
                 >${lage.herkunft[i]}</span>`
               : s.titel
-          }${!lage.editable && lage.sortSpalte === i
+          }${lage.tippbarZeigen && spalteAenderbar(s)
+            ? html`<span class="kopf-tippbar" title="In der Maske tippbar">&#x270E;</span>`
+            : nothing}${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}${lage.imEditor && lage.editable && lage.spalten.length > 1
             ? spaltenKreuz(s.titel, i, tun.loescheSpalte)
@@ -236,6 +243,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 const hoch = e.key === 'ArrowUp'
                 const bewegt = bewegeZeilenFokus(e.target, hoch ? -1 : 1)
                 if (bewegt || (hoch && fokussiereSuchzeile(e.target))) e.preventDefault()
+                return
+              }
+              // Entf merkt die fokussierte Zeile zum Loeschen vor — und nimmt
+              // es am selben Weg zurueck (Nutzer-Entscheidung 2026-09-01).
+              if (e.key === 'Delete' && lage.loeschbar && rohIndex !== null && !lage.imEditor) {
+                e.preventDefault()
+                tun.schalteLoeschung(rohIndex)
                 return
               }
               if (e.key !== 'Enter') return
@@ -287,6 +301,12 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                   aria-label=${geloescht ? 'Löschen zurücknehmen' : 'Position zum Löschen vormerken'}
                   @click=${(e: MouseEvent) => { e.stopPropagation(); tun.schalteLoeschung(rohIndex) }}
                 >${geloescht ? '\u21BA' : '\u2715'}</button>`
+              : nothing}
+            ${lage.loeschbar && lage.imEditor
+              ? html`<span
+                  class="zeile-weg zeile-weg-anzeige"
+                  title="Zeilen l\u00F6schbar \u2014 in der Maske per Kreuz oder Entf-Taste"
+                >&#x2715;</span>`
               : nothing}
           </div>`
         })}

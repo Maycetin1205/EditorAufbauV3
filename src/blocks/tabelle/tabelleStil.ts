@@ -296,6 +296,14 @@ export const tabelleStil = css`
       .kopf > div.zug-slot-ende { box-shadow: inset -3px 0 0 var(--se-accent); }
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
+      /* Nur im Editor: diese Spalte ist in der Maske tippbar. */
+      .kopf-tippbar {
+        margin-left: 4px;
+        font-size: var(--se-fs-xs);
+        font-weight: 400;
+        color: var(--se-muted);
+      }
+
       .zeile > div { color: var(--se-ink); }
 
 
@@ -375,6 +383,9 @@ export const tabelleStil = css`
       .zeile.geloescht .zeile-weg,
       .zeile-weg:focus { opacity: 1; }
       .zeile-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
+
+      /* Im Editor steht das Kreuz still da: es zeigt, dass Loeschen an ist. */
+      .zeile-weg.zeile-weg-anzeige { opacity: 1; cursor: default; }
 
       /* Treffer der Suchzeile: gelb hinterlegt, Schriftfarbe bleibt — wie in
          der Handmaske (dort <mark> mit #ffedb0). */

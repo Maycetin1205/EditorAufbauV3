@@ -570,6 +570,7 @@ export class TabelleBlock extends BasicBlock {
         aendernMoeglich: !this.hasAttribute('data-ff-editor')
           && ansicht.hatQuelle
           && hatSatzNummer(this),
+        tippbarZeigen: this.hasAttribute('data-ff-editor') && this.source.trim() !== '',
         loeschbar: this.loeschbar === 'ja'
           && !this.hasAttribute('data-ff-editor')
           && ansicht.hatQuelle
