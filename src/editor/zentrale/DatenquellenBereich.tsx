@@ -19,6 +19,16 @@ import { DtkImportForm } from './DtkImportForm'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { loeschFrage, ikonFuer } from './helfer'
 
+// „Belege (Kopie)", und wenn es die schon gibt: „Belege (Kopie 2)" usw. —
+// zwei gleichnamige Quellen wären im Feld-Picker nicht zu unterscheiden.
+function kopieName(name: string, vergeben: readonly string[]): string {
+  const basis = `${name} (Kopie)`
+  if (!vergeben.includes(basis)) return basis
+  let n = 2
+  while (vergeben.includes(`${name} (Kopie ${n})`)) n += 1
+  return `${name} (Kopie ${n})`
+}
+
 export function DatenquellenBereich() {
   const store = useDataSources()
   const ed = useEditor()
@@ -56,6 +66,20 @@ export function DatenquellenBereich() {
     artFuer(s.kind).felderEinzeln && s.fields.length === 0
 
   const kennung = (s: DataSource): string => quellenKennung(s)
+
+  // Zum Testen und Weiterverbiegen, ohne alle Felder von Hand nachzutragen —
+  // die Maskendatei zu laden ersetzt ja den GANZEN Stand (Nutzer 2026-09-01).
+  // Die Kopie ist eigenständig; Bausteine zeigen weiter auf das Original.
+  // store.add klont tief und setzt die eigene Kennung ZULETZT — die alte id
+  // im Spread wird also sicher überschrieben.
+  function dupliziere(s: DataSource) {
+    const kopie = store.add({
+      ...s,
+      name: kopieName(s.name, store.list.map((q) => q.name)),
+    })
+    setAuswahlId(kopie.id)
+    setModus('lesen')
+  }
 
   async function loeschen(s: DataSource) {
     const ja = await frage(loeschFrage(
@@ -201,6 +225,7 @@ export function DatenquellenBereich() {
 
             <div className="flex gap-2 border-t border-linie pt-3">
               <Knopf art="primaer" onClick={() => setModus('bearbeiten')}>Bearbeiten</Knopf>
+              <Knopf onClick={() => dupliziere(auswahl)}>Duplizieren</Knopf>
               <Knopf art="gefahr" onClick={() => void loeschen(auswahl)}>
                 Löschen…
               </Knopf>
