@@ -1,4 +1,4 @@
-import { meldeNeueDaten } from './bridge'
+import { meldeAnstoss } from './bridge'
 import { getField, type RuntimeLadeRelation } from './data'
 import { geholteZeilenFuer, setzeGeholteZeilen } from './geholteZeilen'
 import { executeRelation, type RelationAntwort } from './relations'
@@ -19,7 +19,7 @@ const generationen = new Map<string, number>()
 function leereQuelle(name: string): void {
   const vorher = geholteZeilenFuer(name)
   setzeGeholteZeilen(name, [])
-  if (vorher !== undefined && vorher.length > 0) meldeNeueDaten()
+  if (vorher !== undefined && vorher.length > 0) meldeAnstoss()
 }
 
 async function frage(
@@ -139,7 +139,7 @@ export function ladeZeilenPerRelation(
 
     if (generationen.get(quelle.id) === gen) {
       setzeGeholteZeilen(quelle.name, zeilen)
-      meldeNeueDaten()
+      meldeAnstoss()
     }
   })()
 }

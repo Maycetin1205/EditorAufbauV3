@@ -28,7 +28,7 @@ function refreshDataBasis(): void {
 
 // Der Schalter sagt, ob wirklich NEUE Daten da sind. Nur dann darf eine
 // geschriebene Zeile aus der Maske verschwinden: ein blosser Anstoss
-// (frischeDatenAnfordern) beweist keine Lieferung.
+// (meldeAnstoss, frischeDatenAnfordern) beweist keine Lieferung.
 const zuhoerer = new Set<(lieferung: boolean) => void>()
 const antwortZuhoerer = new Set<(raw: unknown) => void>()
 
@@ -68,7 +68,7 @@ function nachlaufStarten(): void {
     ausstehend = false
     const lief = ausstehendeLieferung
     ausstehendeLieferung = false
-    zuhoerer.forEach((cb) => { cb(lief) })
+    verteile(lief)
   }, NACHLAUF_MS)
 }
 
@@ -87,6 +87,19 @@ export function onSeAntwort(cb: (raw: unknown) => void): () => void {
   return () => { antwortZuhoerer.delete(cb) }
 }
 
+// Ein werfender Baustein darf weder die uebrigen Zuhoerer abschneiden noch
+// den Empfang stilllegen. Er meldet nur, dass diese Runde unvollstaendig war:
+// dann bleibt die Signatur ungesetzt und derselbe Stand wird beim naechsten
+// Schub noch einmal verteilt, statt als schon gezeigt verworfen zu werden.
+function verteile(lieferung: boolean): void {
+  let vollstaendig = true
+  zuhoerer.forEach((cb) => {
+    try { cb(lieferung) } catch { vollstaendig = false }
+  })
+  if (vollstaendig && offeneSignatur !== null) letzteSignatur = offeneSignatur
+  offeneSignatur = null
+}
+
 function klingeln(lieferung: boolean): void {
   if (lieferung) ausstehendeLieferung = true
   if (fokusBeiUns()) {
@@ -97,11 +110,14 @@ function klingeln(lieferung: boolean): void {
   ausstehend = false
   const lief = ausstehendeLieferung
   ausstehendeLieferung = false
-  zuhoerer.forEach((cb) => cb(lief))
+  verteile(lief)
 }
 
-export function meldeNeueDaten(): void {
-  klingeln(true)
+// Anstoss OHNE Lieferungs-Beweis: die Maske zeichnet neu, aber kein Baustein
+// darf daran etwas verwerfen (s. datenAnschluss). Eine Lieferung meldet allein
+// der Push-Weg, der sie belegen kann.
+export function meldeAnstoss(): void {
+  klingeln(false)
 }
 
 // Nach dem Schreiben will der Bediener den neuen Stand sehen. SoftEngine
@@ -124,7 +140,7 @@ function datenSindNeu(): boolean {
   if (!isRecord(roh)) return false
   const signatur = signaturVon(roh)
   if (signatur !== '' && signatur === letzteSignatur) return false
-  letzteSignatur = signatur
+  offeneSignatur = signatur
   return true
 }
 
@@ -142,6 +158,7 @@ function antwortKlingeln(raw: unknown): void {
 const SIGNATUR_GRENZE = 2_000_000
 
 let letzteSignatur = ''
+let offeneSignatur: string | null = null
 
 function signaturVon(daten: UnknownRecord): string {
   try {
@@ -165,7 +182,7 @@ function seConsume(raw: unknown): void {
 
   const signatur = signaturVon(daten)
   if (signatur !== '' && signatur === letzteSignatur) return
-  letzteSignatur = signatur
+  offeneSignatur = signatur
   klingeln(true)
 }
 

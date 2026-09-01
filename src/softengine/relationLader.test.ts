@@ -5,7 +5,7 @@ interface Sollantwort { wert: string; fehler?: string }
 
 const antworten: Sollantwort[] = []
 const gemeldet: string[] = []
-let lieferungen = 0
+let anstoesse = 0
 
 vi.mock('./relations', () => ({
   executeRelation: () => {
@@ -15,7 +15,10 @@ vi.mock('./relations', () => ({
   },
 }))
 
-vi.mock('./bridge', () => ({ meldeNeueDaten: () => { lieferungen += 1 } }))
+// Der Hol-Lauf haengt am Zeilenklick, nicht an einem SoftEngine-Schub: er
+// darf nur ANSTOSSEN. Meldete er eine Lieferung, verwuerfe die Tabelle daran
+// ihre hinausgeschickten Erfassungszeilen (s. vergissGeschriebene).
+vi.mock('./bridge', () => ({ meldeAnstoss: () => { anstoesse += 1 } }))
 
 vi.mock('./meldung', () => ({ meldeFehler: (text: string) => { gemeldet.push(text) } }))
 
@@ -50,7 +53,7 @@ function abwarten(): Promise<void> {
 beforeEach(() => {
   antworten.length = 0
   gemeldet.length = 0
-  lieferungen = 0
+  anstoesse = 0
   setzeGeholteZeilenZurueck()
 })
 
@@ -61,7 +64,7 @@ test('ein vollstaendiger Lauf veroeffentlicht die Zeilen', async () => {
 
   expect(geholteZeilenFuer('POS')).toEqual([{ SATZ }])
   expect(gemeldet).toEqual([])
-  expect(lieferungen).toBe(1)
+  expect(anstoesse).toBe(1)
 })
 
 // Ein gescheiterter Ruf liefert einen LEEREN Satz. Der sieht aus wie das Ende
@@ -76,7 +79,7 @@ test('ein Fehler bricht ab, meldet und veroeffentlicht KEINE halbe Liste', async
   await abwarten()
 
   expect(geholteZeilenFuer('POS')).toEqual([])
-  expect(lieferungen).toBe(0)
+  expect(anstoesse).toBe(0)
   expect(gemeldet).toHaveLength(1)
   expect(gemeldet[0]).toContain('SoftEngine hat nicht geantwortet')
   expect(gemeldet[0]).toContain('Zeile 2')
@@ -93,7 +96,7 @@ test('auch ein Fehler im Zusatzfeld bricht ab und meldet', async () => {
   await abwarten()
 
   expect(geholteZeilenFuer('POS')).toEqual([])
-  expect(lieferungen).toBe(0)
+  expect(anstoesse).toBe(0)
   expect(gemeldet).toHaveLength(1)
   expect(gemeldet[0]).toContain('keine Verbindung zu SoftEngine')
 })
