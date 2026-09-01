@@ -19,6 +19,18 @@ const zuruecksetzer = new Set<() => void>()
 
 let wahlZaehler = 0
 
+// Ob die juengste Auswahl-Aenderung vom BEDIENER kam (Zeilenklick,
+// waehleAuswahl) oder aus einem Programm-Lauf (setzeAuswahl/klareAuswahl beim
+// Hydrieren). Die holenden Quellen lesen das als Bremse gegen Kreis-Feuer:
+// nur eine Bedienung darf dieselbe Zeile beliebig oft neu laden lassen
+// (Nutzer-Befund 2026-09-01: zwei Geber schaukelten sich hoch, Relation 69
+// feuerte im Halbsekundentakt gegen das ERP).
+let wahlDurchBedienung = false
+
+export function letzteWahlDurchBedienung(): boolean {
+  return wahlDurchBedienung
+}
+
 let meldungLaeuft = false
 let nachmeldung = false
 
@@ -82,6 +94,7 @@ export function waehleAuswahl(geberId: string, zeile: unknown): void {
   const alt = zustand.get(geberId)
   if (alt && alt.merkmal === merkmal) zustand.delete(geberId)
   else zustand.set(geberId, { zeile, merkmal, nummer: ++wahlZaehler })
+  wahlDurchBedienung = true
   melde()
 }
 
@@ -91,12 +104,14 @@ export function setzeAuswahl(geberId: string, zeile: unknown): void {
   if (merkmal === '') return
   if (zustand.get(geberId)?.merkmal === merkmal) return
   zustand.set(geberId, { zeile, merkmal, nummer: ++wahlZaehler })
+  wahlDurchBedienung = false
   melde()
 }
 
 export function klareAuswahl(geberId: string): void {
   if (!zustand.has(geberId)) return
   zustand.delete(geberId)
+  wahlDurchBedienung = false
   melde()
 }
 
@@ -108,6 +123,7 @@ export function beimAuswahlZuruecksetzen(cb: () => void): void {
 export function setzeAuswahlZurueck(): void {
   zustand.clear()
   wahlZaehler = 0
+  wahlDurchBedienung = false
   zuruecksetzer.forEach((cb) => cb())
 }
 
