@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { entferneSpalte, fuegeSpalteAn, verschiebeSpalte } from './spaltenBearbeiten'
+import { entferneSpalte, fuegeSpalteAn, verschiebeSpalteAn } from './spaltenBearbeiten'
 import { SPALTEN_MAX, SPALTEN_MIN, spaltenRaster, type Spalte } from './spalten'
 
 function drei(): Spalte[] {
@@ -93,23 +93,32 @@ test('auch nach vielen Klicks hat jede Spalte einen Anteil', () => {
   }
 })
 
-// Verschieben: der ganze Eintrag reist mit (Kennung, Titel, Feld, Breite).
-// Ketten und Rechnung zeigen auf die Kennung — sie brauchen kein Nachziehen.
-test('verschiebeSpalte tauscht mit der Nachbarin, samt allem Ihren', () => {
+// Verschieben (Ziehen am Spaltenkopf): der ganze Eintrag reist mit (Kennung,
+// Titel, Feld, Breite). Ketten und Rechnung zeigen auf die Kennung — sie
+// brauchen kein Nachziehen.
+test('verschiebeSpalteAn setzt die Spalte an den Ziel-Platz, samt allem Ihren', () => {
   let raus: Spalte[] = []
-  verschiebeSpalte(0, 1, drei, (l) => { raus = l })
-  expect(raus.map((s) => s.kennung)).toEqual(['s2', 's1', 's3'])
-  expect(raus.map((s) => s.titel)).toEqual(['B', 'A', 'C'])
+  verschiebeSpalteAn(0, 2, drei, (l) => { raus = l })
+  expect(raus.map((s) => s.kennung)).toEqual(['s2', 's3', 's1'])
+  expect(raus.map((s) => s.titel)).toEqual(['B', 'C', 'A'])
   expect(raus[0].breite).toBe(120)
 
-  verschiebeSpalte(2, -1, drei, (l) => { raus = l })
-  expect(raus.map((s) => s.kennung)).toEqual(['s1', 's3', 's2'])
+  verschiebeSpalteAn(2, 0, drei, (l) => { raus = l })
+  expect(raus.map((s) => s.kennung)).toEqual(['s3', 's1', 's2'])
 })
 
-test('am Rand verschiebt nichts', () => {
+test('derselbe Platz und Unsinns-Plaetze verschieben nichts', () => {
   let gerufen = false
-  verschiebeSpalte(0, -1, drei, () => { gerufen = true })
-  verschiebeSpalte(2, 1, drei, () => { gerufen = true })
-  verschiebeSpalte(9, 1, drei, () => { gerufen = true })
+  verschiebeSpalteAn(1, 1, drei, () => { gerufen = true })
+  verschiebeSpalteAn(9, 0, drei, () => { gerufen = true })
+  verschiebeSpalteAn(-1, 2, drei, () => { gerufen = true })
   expect(gerufen).toBe(false)
+})
+
+// Ein Ziel hinter dem Ende landet auf dem letzten Platz — der Zug-Slot
+// hinter der letzten Spalte darf nicht ins Leere fallen.
+test('ein Ziel hinter dem Ende wird der letzte Platz', () => {
+  let raus: Spalte[] = []
+  verschiebeSpalteAn(0, 99, drei, (l) => { raus = l })
+  expect(raus.map((s) => s.kennung)).toEqual(['s2', 's3', 's1'])
 })

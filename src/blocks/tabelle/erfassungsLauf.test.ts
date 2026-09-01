@@ -200,6 +200,32 @@ describe('Tastenentscheid', () => {
     expect(new ErfassungsLauf().entscheideTaste(umfeld, 2, 'Tab')).toBe('weiter')
   })
 
+  // Tab ist die Weiter-Taste — IMMER (Nutzer 2026-09-01). Vorher riss sie
+  // bei mehreren Treffern das grosse Fenster auf, mitten im Durchtabben.
+  test('Tab bei mehreren Treffern springt weiter statt Fenster', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'e')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.vorschlaege.length).toBeGreaterThan(1)
+    expect(lauf.entscheideTaste(umfeld, 2, 'Tab')).toBe('weiter')
+  })
+
+  test('Tab nimmt den einzigen Treffer im Vorbeigehen mit', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'Kab')
+    lauf.aktualisiereVorschlaege(umfeld)
+    expect(lauf.vorschlaege).toHaveLength(1)
+    expect(lauf.entscheideTaste(umfeld, 2, 'Tab')).toBe('uebernehmen')
+  })
+
+  test('Tab nimmt die von Hand markierte Wahl mit', () => {
+    const lauf = new ErfassungsLauf()
+    lauf.tippe(2, 'e')
+    lauf.aktualisiereVorschlaege(umfeld)
+    lauf.entscheideTaste(umfeld, 2, 'ArrowDown')
+    expect(lauf.entscheideTaste(umfeld, 2, 'Tab')).toBe('uebernehmen')
+  })
+
   test('F4 an einer freien Zelle tut nichts', () => {
     expect(new ErfassungsLauf().entscheideTaste(umfeld, 0, 'F4')).toBe('nichts')
   })

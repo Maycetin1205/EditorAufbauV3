@@ -175,11 +175,14 @@ export class ErfassungsLauf {
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
     const listeOffen = this._tippSpalte === index && this._vorschlaege.length > 0
-    // Tab ist die Weiter-Taste: mit offener Liste übernimmt sie wie Enter,
-    // sonst springt sie — auch dort, wo Enter absichtlich anhält (Tippfehler).
+    // Tab ist die Weiter-Taste — IMMER (Nutzer 2026-09-01). Eine eindeutige
+    // Wahl (Marke von Hand oder genau ein Treffer) nimmt sie im Vorbeigehen
+    // mit; bei mehreren Treffern springt sie einfach weiter. Das große
+    // Fenster öffnen nur Enter und F4, nie die Weiter-Taste — vorher riss
+    // Tab dem Bediener mitten im Durchtabben ein Fenster auf.
     if (taste === 'Tab') {
-      if (!listeOffen) return 'weiter'
-      taste = 'Enter'
+      if (listeOffen && (this._markeVonHand || this._vorschlaege.length === 1)) taste = 'Enter'
+      else return 'weiter'
     }
     // F4 (und Alt+Pfeil-runter, vom Aufrufer darauf abgebildet) macht das
     // grosse Fenster IMMER auf. Ohne das kam man nur an ein LEERES Feld

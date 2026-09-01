@@ -34,7 +34,7 @@ import {
   feldPickerAbbestellen,
   kopfGriffe,
   spaltenSteuerung,
-  verschiebeSpalte,
+  starteSpaltenZug,
 } from './spaltenBearbeiten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
@@ -563,13 +563,15 @@ export class TabelleBlock extends BasicBlock {
         leerText: this.leerText,
         erfasste: this._erfassung.zeilen,
         erfasstStand: (index) => this.erfasstStand(index),
+        korrekturPlatz: this.erfassungAn ? this._erfassung.korrekturPlatz : null,
         erfassung: this.erfassungAn
           ? erfassungsZeileFuer(
               this.erfassungsWirt(),
               ansicht.cols,
-              // Kein Lineal mehr uebrig heisst: die Zeile ist die letzte im
-              // Rumpf, unter ihr ist kein Platz fuer die Liste.
-              (ansicht.linealTakte ?? 1) <= 0,
+              // Kein Lineal mehr uebrig heisst: die Zeile sitzt ganz unten im
+              // Rumpf, unter ihr ist kein Platz fuer die Liste. Eine Korrektur
+              // mitten in der Liste hat dagegen Platz unter sich.
+              this._erfassung.korrekturPlatz === null && (ansicht.linealTakte ?? 1) <= 0,
             )
           : nothing,
       }, {
@@ -581,10 +583,12 @@ export class TabelleBlock extends BasicBlock {
           feldPickerAbbestellen(this)
           entferneSpalte(index, () => this.spaltenListe(), (l) => this.aendere(l))
         },
-        verschiebeSpalte: (index, richtung) => {
-          feldPickerAbbestellen(this)
-          verschiebeSpalte(index, richtung, () => this.spaltenListe(), (l) => this.aendere(l))
-        },
+        spaltenZug: (e, index) => starteSpaltenZug(e, index, {
+          editable: () => this.editable,
+          liste: () => this.spaltenListe(),
+          aendere: (l) => this.aendere(l),
+          vorZug: () => feldPickerAbbestellen(this),
+        }),
         ...kopfGriffe({
           baustein: this,
           editable: () => this.editable,

@@ -19,13 +19,21 @@ export class ErfassungsAnschluss {
 
   private naechsteKennung = 1
 
-  // Die Zeile, die gerade zur Korrektur OBEN in der Erfassungszeile steht, mit
-  // ihrer Kennung und ihrem Platz in der Liste. Sie ist solange nicht in
-  // `_zeilen` — sie wird ja gerade getippt.
+  // Die Zeile, die gerade AN ORT UND STELLE korrigiert wird, mit ihrer
+  // Kennung und ihrem Platz in der Liste. Sie ist solange nicht in `_zeilen`
+  // — sie wird ja gerade getippt; die Tipp-Zeile zeichnet an ihrem Platz
+  // (korrekturPlatz), und Enter setzt sie genau dorthin zurueck.
   private _zurueck: { kennung: string; platz: number } | null = null
 
-  // Was die LISTE zeigt: die abgelegten Zeilen. Die zur Korrektur
-  // zurueckgeholte fehlt hier absichtlich, sie steht oben.
+  // Wo die Tipp-Zeile gerade sitzt: null = unten (neue Zeile anlegen), sonst
+  // der Platz der Zeile, die an Ort und Stelle korrigiert wird. Nichts
+  // springt, nichts sortiert sich um (Nutzer 2026-09-01).
+  get korrekturPlatz(): number | null {
+    return this._zurueck === null ? null : this._zurueck.platz
+  }
+
+  // Was die LISTE zeigt: die abgelegten Zeilen. Die zur Korrektur geoeffnete
+  // fehlt hier absichtlich — an ihrem Platz zeichnet die Tipp-Zeile.
   get zeilen(): readonly (readonly string[])[] {
     return this._zeilen.map((z) => z.werte)
   }
@@ -126,12 +134,13 @@ export class ErfassungsAnschluss {
   }
 
   // Eine erfasste Zeile ist bis zum Schreiben nichts als eine Vormerkung —
-  // also bleibt sie korrigierbar. Sie kommt dafuer ZURUECK in die
-  // Erfassungszeile, statt an Ort und Stelle ein Textfeld zu sein: dort hat
-  // sie wieder die ganze Bedienung (Vorschlagsliste, F4-Fenster, Enter-Fluss).
-  // An Ort und Stelle hatte sie davon nichts — wer eine Artikelnummer
-  // ausloeschte, bekam keine Saetze mehr angeboten, und die Nachbarzellen
-  // blieben mit den Werten des alten Artikels stehen.
+  // also bleibt sie korrigierbar, AN ORT UND STELLE: die Zeile selbst wird
+  // wieder zur Tipp-Zeile (die Tipp-Zeile zeichnet an korrekturPlatz), mit
+  // der ganzen Bedienung — Vorschlagsliste, F4-Fenster, Enter-Fluss. Zwei
+  // fruehere Anlaeufe waren schlechter: nackte Textfelder in der Zeile
+  // (keine Vorschlaege, Nachbarzellen blieben stehen) und danach das
+  // Teleportieren in die untere Erfassungszeile (die Liste "sortierte sich
+  // um", Nutzer-Befund 2026-09-01).
   zurueckholen(umfeld: ErfassungsUmfeld, index: number): boolean {
     const zeile = this._zeilen[index]
     // Eine hinausgeschickte Zeile kommt nicht zurueck: sie steht nur noch als

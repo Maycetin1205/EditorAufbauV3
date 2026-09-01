@@ -3,7 +3,7 @@ import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
-import { spaltenKreuz, spaltenPfeile } from './spaltenBearbeiten'
+import { spaltenKreuz } from './spaltenBearbeiten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './spaltenBindung'
 import {
@@ -92,6 +92,11 @@ export interface KoerperLage {
   // Ohne echte Daten (Editor, leere Quelle) ist das Zeile 1 ganz oben —
   // nicht unten hinter den Platzhalter-Strichen.
   erfassung: TemplateResult | typeof nothing
+
+  // null: die Tipp-Zeile sitzt unten und legt NEUE Zeilen an. Sonst: der
+  // Platz unter den erfassten Zeilen, an dem sie gerade eine Zeile AN ORT
+  // UND STELLE korrigiert — dort zeichnet sie statt unten. Nichts springt.
+  korrekturPlatz: number | null
 }
 
 export interface KoerperHandeln {
@@ -106,8 +111,9 @@ export interface KoerperHandeln {
   // letzten. Nur im Editor.
   loescheSpalte: (index: number) => void
 
-  // Diese Spalte einen Platz nach links/rechts schieben. Nur im Editor.
-  verschiebeSpalte: (index: number, richtung: -1 | 1) => void
+  // Spaltenkopf angefasst: ab der Zug-Schwelle wird daraus das Verschieben
+  // der Spalte (spaltenBearbeiten/starteSpaltenZug). Nur im Editor.
+  spaltenZug: (e: PointerEvent, index: number) => void
 
   dblklickKopf: (e: MouseEvent, index: number) => void
   klickKopf: (e: MouseEvent, index: number) => void
@@ -120,8 +126,8 @@ export interface KoerperHandeln {
 
   // Eine erfasste Zeile ist noch nichts als eine Vormerkung: der Bediener
   // muss den Vertipper geradeziehen koennen, ohne sie wegzuwerfen und neu zu
-  // tippen. Sie geht dafuer ZURUECK in die Erfassungszeile — dort hat sie
-  // wieder Vorschlagsliste, Fenster und Enter-Fluss.
+  // tippen. Sie wird dafuer AN ORT UND STELLE wieder zur Tipp-Zeile — mit
+  // Vorschlagsliste, Fenster und Enter-Fluss (korrekturPlatz).
   holeErfassteZeile: (index: number) => void
 
   schalteLoeschung: (rohIndex: number) => void
@@ -170,6 +176,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
             role="columnheader"
             data-ff-editable
             style="grid-row: 1; grid-column: ${i + 1}"
+            @pointerdown=${(e: PointerEvent) => tun.spaltenZug(e, i)}
             @dblclick=${(e: MouseEvent) => tun.dblklickKopf(e, i)}
             @click=${(e: MouseEvent) => tun.klickKopf(e, i)}
           >${
@@ -187,14 +194,14 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           }${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}${lage.imEditor && lage.editable && lage.spalten.length > 1
-            ? html`${spaltenPfeile(s.titel, i, lage.spalten.length, tun.verschiebeSpalte)}${spaltenKreuz(s.titel, i, tun.loescheSpalte)}`
+            ? spaltenKreuz(s.titel, i, tun.loescheSpalte)
             : nothing}</div>`,
         )}
         ${breitenGriffe(lage.spalten.length, tun.breiten)}
       </div>` : nothing}
         ${ ''}
         ${lage.leer ? leerZustand(lage.leerText, true) : html`
-        ${lage.hatQuelle ? nothing : lage.erfassung}
+        ${lage.hatQuelle || lage.korrekturPlatz !== null ? nothing : lage.erfassung}
         ${lage.zeilen.map((rohIndex, ansichtIndex) => {
           const aktivierbar = rohIndex !== null && !lage.imEditor
           const geloescht = rohIndex !== null && lage.zeilenStand.istGeloescht(rohIndex)
@@ -288,7 +295,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           // Hinausgeschickt heisst: nicht mehr anfassen. Ein Zurueckholen
           // wuerde eine Zeile zum Tippen anbieten, die im ERP schon steht.
           const fest = zeichen.status === 'geschrieben'
-          return html`<div
+          return html`${zeilenIndex === lage.korrekturPlatz ? lage.erfassung : nothing}<div
           class="zeile erfasst"
           role="row"
           data-status=${zeichen.status}
@@ -311,7 +318,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
             >&#x2715;</button>`}
         </div>`
         })}
-        ${lage.hatQuelle ? lage.erfassung : nothing}
+        ${
+          // Korrigiert sie gerade die letzte (oder eine schon entfallene)
+          // Zeile, zeichnet die Tipp-Zeile HINTER allen erfassten.
+          lage.korrekturPlatz !== null && lage.korrekturPlatz >= lage.erfasste.length
+            ? lage.erfassung
+            : nothing}
+        ${lage.hatQuelle && lage.korrekturPlatz === null ? lage.erfassung : nothing}
         ${lineal(lage)}`}
       </div>
     `

@@ -110,8 +110,18 @@ export function springe(wirt: ErfassungsWirt, index: number, taste: string): boo
 }
 
 function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
-  // Rückwärts (Shift+Tab) bleibt Browser-Sache — jede Zelle ist erreichbar.
-  if (e.key === 'Tab' && e.shiftKey) return
+  // Rückwärts (Shift+Tab) ist GARANTIERT eine Zelle zurück, egal was
+  // drinsteht — komplette Tastatursteuerung in beide Richtungen (Nutzer
+  // 2026-09-01). Vorher war es dem Browser überlassen, und der Weg durch
+  // die Schatten-Wurzeln war nicht verlässlich. Vor der ersten Zelle
+  // gehört die Taste dem Browser: raus aus der Tabelle.
+  if (e.key === 'Tab' && e.shiftKey) {
+    if (index === 0) return
+    e.preventDefault()
+    wirt.fokussiere(index - 1)
+    wirt.melde()
+    return
+  }
   // Alt+Pfeil-runter ist derselbe Wunsch wie F4: das große Fenster. Der
   // Entscheid kennt nur Tastennamen, darum hier abgebildet.
   const gedrueckt = e.key === 'ArrowDown' && e.altKey ? 'F4' : e.key

@@ -1,4 +1,4 @@
-import { html, nothing, type TemplateResult } from 'lit'
+import { html, type TemplateResult } from 'lit'
 import { starteUmbenennen } from '../shared/umbenennen'
 import {
   SPALTEN_MAX,
@@ -62,49 +62,130 @@ export function spaltenSteuerung(
   </div>`
 }
 
-// Eine Spalte einen Platz nach links oder rechts schieben. Alles Ihre reist
-// im Eintrag mit (Kennung, Titel, Belegfeld, Fuellfeld, Breite); Ketten und
-// Rechnung zeigen auf die KENNUNG und brauchen deshalb kein Nachziehen —
-// genau dafuer gibt es sie (spalten.ts).
-export function verschiebeSpalte(
-  index: number,
-  richtung: -1 | 1,
+// Eine Spalte an einen anderen Platz setzen. `nach` = Ziel-Platz in der
+// Liste. Alles Ihre reist im Eintrag mit (Kennung, Titel, Belegfeld,
+// Fuellfeld, Breite); Ketten und Rechnung zeigen auf die KENNUNG und
+// brauchen deshalb kein Nachziehen — genau dafuer gibt es sie (spalten.ts).
+export function verschiebeSpalteAn(
+  von: number,
+  nach: number,
   liste: () => Spalte[],
   aendere: (spalten: Spalte[]) => void,
 ): void {
   const l = liste()
-  const ziel = index + richtung
-  if (index < 0 || index >= l.length || ziel < 0 || ziel >= l.length) return
-  const [spalte] = l.splice(index, 1)
+  if (von < 0 || von >= l.length) return
+  const ziel = Math.max(0, Math.min(nach, l.length - 1))
+  if (ziel === von) return
+  const [spalte] = l.splice(von, 1)
   l.splice(ziel, 0, spalte)
   aendere(l)
 }
 
-// Die zwei Schiebe-Pfeile am Spaltenkopf — nur im Editor, dieselbe Machart
-// wie das Kreuz (unsichtbar bis zur Maus). Am Rand entfaellt der Pfeil ins
-// Leere. Beide fangen ihre Klicks ab, sonst oeffnete derselbe Druck noch den
-// Feld-Picker der Spalte.
-export function spaltenPfeile(
-  titel: string,
-  index: number,
-  anzahl: number,
-  tun: (index: number, richtung: -1 | 1) => void,
-): TemplateResult {
-  const pfeil = (richtung: -1 | 1, zeichen: string): TemplateResult | typeof nothing => {
-    const ziel = index + richtung
-    if (ziel < 0 || ziel >= anzahl) return nothing
-    const wohin = richtung === -1 ? 'nach links' : 'nach rechts'
-    return html`<button
-      class=${richtung === -1 ? 'kopf-schieb links' : 'kopf-schieb rechts'}
-      type="button"
-      title=${`Spalte „${titel}" ${wohin} schieben`}
-      aria-label=${`Spalte „${titel}" ${wohin} schieben`}
-      @pointerdown=${(e: PointerEvent) => e.stopPropagation()}
-      @click=${(e: MouseEvent) => { e.stopPropagation(); tun(index, richtung) }}
-      @dblclick=${(e: MouseEvent) => e.stopPropagation()}
-    >${zeichen}</button>`
+export interface SpaltenZugWirt {
+  editable: () => boolean
+
+  liste: () => Spalte[]
+
+  aendere: (spalten: Spalte[]) => void
+
+  // Ein anstehender Feld-Picker (Einzelklick kurz davor) gehoert abbestellt,
+  // bevor der Zug die Spalten umbaut.
+  vorZug: () => void
+}
+
+// Ab so vielen Pixeln ist der Druck ein ZUG — darunter bleibt er Klick
+// (Feld waehlen) oder Doppelklick (umbenennen). Derselbe Gedanke wie die
+// Zug-Regel der Bausteine (editor/canvas/rasterMove.ts).
+const ZUG_SCHWELLE = 5
+
+// Spalte am Kopf anfassen und an ihren neuen Platz ziehen (Nutzer 2026-09-01:
+// „anklicken, halten, verschieben" statt Pfeil-Knoepfen, an denen man sich
+// verklickt). Der Kopf behaelt dafuer seinen pointerdown — wie die
+// Breiten-Griffe; der Baustein selbst bleibt von ueberall sonst ziehbar.
+export function starteSpaltenZug(e: PointerEvent, index: number, wirt: SpaltenZugWirt): void {
+  if (e.button !== 0 || !wirt.editable()) return
+  // Waehrend des Umbenennens gehoert die Maus dem Text.
+  if (e.target instanceof HTMLElement && e.target.isContentEditable) return
+  const kopf = (e.currentTarget as HTMLElement | null)?.parentElement
+  if (!kopf) return
+  const zellen = [...kopf.children]
+    .filter((k): k is HTMLElement => k instanceof HTMLElement && k.tagName === 'DIV')
+  if (zellen.length < 2) return
+  e.stopPropagation()
+
+  const startX = e.clientX
+  let zieht = false
+  let slot = index
+
+  // Der Einfuege-Slot: vor welcher Zelle der Zeiger steht (die Zellmitte
+  // trennt); hinter der letzten ist Slot = Anzahl.
+  const slotVon = (x: number): number => {
+    for (let i = 0; i < zellen.length; i++) {
+      const r = zellen[i].getBoundingClientRect()
+      if (x < r.left + r.width / 2) return i
+    }
+    return zellen.length
   }
-  return html`${pfeil(-1, '‹')}${pfeil(1, '›')}`
+
+  const zeige = (s: number): void => {
+    zellen.forEach((z, i) => {
+      z.classList.toggle('zug-quelle', zieht && i === index)
+      z.classList.toggle('zug-slot', zieht && i === s)
+      z.classList.toggle('zug-slot-ende', zieht && s === zellen.length && i === zellen.length - 1)
+    })
+  }
+
+  // Der Klick, der nach dem Loslassen folgt, gehoert dem Zug — nicht dem
+  // Feld-Picker oder dem Sortieren.
+  const schluckeKlick = (ev: MouseEvent): void => {
+    ev.stopPropagation()
+    ev.preventDefault()
+  }
+
+  const aufraeumen = (): void => {
+    window.removeEventListener('pointermove', beiBewegung)
+    window.removeEventListener('pointerup', beiEnde)
+    window.removeEventListener('pointercancel', beiAbbruch)
+    window.removeEventListener('blur', beiAbbruch)
+    const war = zieht
+    zieht = false
+    zeige(-1)
+    if (war) document.body.style.cursor = ''
+  }
+
+  function beiBewegung(ev: PointerEvent): void {
+    if (!zieht) {
+      if (Math.abs(ev.clientX - startX) < ZUG_SCHWELLE) return
+      zieht = true
+      wirt.vorZug()
+      document.body.style.cursor = 'grabbing'
+      window.addEventListener('click', schluckeKlick, { capture: true, once: true })
+    }
+    ev.preventDefault()
+    slot = slotVon(ev.clientX)
+    zeige(slot)
+  }
+
+  function beiEnde(): void {
+    const war = zieht
+    const s = slot
+    aufraeumen()
+    if (!war) return
+    // Slot -> Ziel-Platz: rechts vom alten Platz sitzt die Liste nach dem
+    // Herausnehmen einen Platz weiter links.
+    verschiebeSpalteAn(index, s > index ? s - 1 : s, wirt.liste, wirt.aendere)
+  }
+
+  function beiAbbruch(): void {
+    // Es folgt kein Klick, den es zu schlucken gaebe.
+    if (zieht) window.removeEventListener('click', schluckeKlick, true)
+    aufraeumen()
+  }
+
+  window.addEventListener('pointermove', beiBewegung)
+  window.addEventListener('pointerup', beiEnde)
+  window.addEventListener('pointercancel', beiAbbruch)
+  window.addEventListener('blur', beiAbbruch)
 }
 
 export function starteTitelEdit(

@@ -46,7 +46,7 @@ export const erfassungStil = css`
          links markiert — erst der Knopf macht aus ihnen echte Positionen.
          Die Markierung selbst macht der Statusbalken (tabelleStil).
 
-         Ein Klick holt sie zum Korrigieren zurueck in die Erfassungszeile,
+         Ein Klick macht sie AN ORT UND STELLE wieder zur Tipp-Zeile,
          darum der Zeigefinger. Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie
          an der gebuchten Zeile: absolut rechts, erst bei Hover. Vorher sass
          es mitten in der ERSTEN Zelle und schob deren Wert um rund 20px nach

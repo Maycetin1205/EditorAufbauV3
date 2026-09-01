@@ -168,3 +168,22 @@ test('eine ganz leere Erfassungszeile wird weiterhin nicht abgelegt', () => {
   expect(a.erfasse(UMFELD)).toBe(false)
   expect(werte(a)).toEqual([])
 })
+
+// Die Tipp-Zeile zeichnet AN ORT UND STELLE der geoeffneten Zeile
+// (korrekturPlatz), nicht unten — nichts springt, nichts sortiert sich um
+// (Nutzer 2026-09-01). Enter legt sie dort wieder ab, und die Tipp-Zeile
+// sitzt wieder unten (null).
+test('korrekturPlatz nennt den Platz der geoeffneten Zeile', () => {
+  const a = new ErfassungsAnschluss()
+  lege(a, 'ART1', '1')
+  lege(a, 'ART2', '2')
+  lege(a, 'ART3', '3')
+  expect(a.korrekturPlatz).toBeNull()
+
+  a.zurueckholen(UMFELD, 1)
+  expect(a.korrekturPlatz).toBe(1)
+
+  a.erfasse(UMFELD)
+  expect(a.korrekturPlatz).toBeNull()
+  expect(werte(a)).toEqual([['ART1', '1'], ['ART2', '2'], ['ART3', '3']])
+})
