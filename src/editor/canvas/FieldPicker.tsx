@@ -3,6 +3,7 @@ import { AuswahlFenster } from '@/ui/molecules/auswahl-fenster'
 import { cn } from '@/lib/utils'
 import { Marke } from '@/ui/werkbank/Marke'
 import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { MenueZeile } from '@/ui/werkbank/MenueZeile'
 import { Schalter } from '@/ui/werkbank/Schalter'
@@ -81,6 +82,12 @@ interface FieldPickerProps {
   }
 
   current?: string
+
+  // Diesen Eintrag (die Spalte) streichen — als Fusszeile des Fensters. Das
+  // Kreuz am Spaltenkopf gibt es nicht mehr: es lag bei schmalen Spalten
+  // ueber dem Titel.
+  onEntfernen?: () => void
+  entfernenLabel?: string
 
   // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
   // schliesst nicht — sonst raeumt dieser Druck das Fenster ab und der Klick
@@ -185,6 +192,8 @@ export function FieldPicker({
   left,
   onPick,
   onClose,
+  onEntfernen,
+  entfernenLabel,
 }: FieldPickerProps) {
   // Schließt das Fenster ohne blur (Escape, Außenklick), bliebe die offene
   // Tipp-Klammer sonst stehen — und Undo wäre für den Rest der Sitzung stumm.
@@ -349,6 +358,13 @@ export function FieldPicker({
           onWaehle={aktiv.onWaehle}
         />
           </>
+        )}
+        {onEntfernen !== undefined && (
+          // Klebt am unteren Rand des rollenden Fensters: die Streich-Taste ist
+          // immer da, egal wie lang die Feldliste ist.
+          <div className="sticky bottom-0 -mb-1 flex justify-end border-t border-linie bg-panel px-1.5 py-1.5">
+            <Knopf art="gefahr" onClick={onEntfernen}>{entfernenLabel ?? 'Entfernen'}</Knopf>
+          </div>
         )}
       </div>
     </AuswahlFenster>

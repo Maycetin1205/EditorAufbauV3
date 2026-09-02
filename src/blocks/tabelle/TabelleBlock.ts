@@ -30,11 +30,9 @@ import {
 import { connectTable, disconnectTable, hatSatzNummer } from './seRuntime'
 import { zeigtEchteDaten } from './suche'
 import {
-  entferneSpalte,
   feldPickerAbbestellen,
   kopfGriffe,
   rechnungNachSpalten,
-  spaltenSteuerung,
   starteSpaltenZug,
 } from './spaltenBearbeiten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
@@ -527,7 +525,6 @@ export class TabelleBlock extends BasicBlock {
 
   override render(): TemplateResult {
     const spalten = this.spaltenListe()
-    const stop = (e: Event): void => e.stopPropagation()
 
     const ansicht = tabelleAnsicht({
       spalten,
@@ -549,7 +546,6 @@ export class TabelleBlock extends BasicBlock {
       '--takt': `${ansicht.takt}px`,
       '--zeilen-hoehe': `${ansicht.zeilenHoehe}px`,
     })}>
-      ${spaltenSteuerung(() => this.spaltenListe(), (l) => this.aendere(l), stop)}
       ${tabelleKoerper({
         spalten,
         cols: ansicht.cols,
@@ -569,9 +565,7 @@ export class TabelleBlock extends BasicBlock {
         auswahlIndex: this.auswahlIndex,
         aendernMoeglich: !this.hasAttribute('data-ff-editor')
           && ansicht.hatQuelle
-          && hatSatzNummer(this),
-        tippbarZeigen: this.hasAttribute('data-ff-editor') && this.source.trim() !== '',
-        loeschbar: this.loeschbar === 'ja'
+          && hatSatzNummer(this),        loeschbar: this.loeschbar === 'ja'
           && !this.hasAttribute('data-ff-editor')
           && ansicht.hatQuelle
           && hatSatzNummer(this),
@@ -593,14 +587,7 @@ export class TabelleBlock extends BasicBlock {
           : nothing,
       }, {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
-        breiten: this.breitenWirt(),
-        loescheSpalte: (index) => {
-          // Der Klick auf das Kreuz darf nicht noch den Feld-Picker der
-          // Spalte nachziehen, die es gerade weggenommen hat.
-          feldPickerAbbestellen(this)
-          entferneSpalte(index, () => this.spaltenListe(), (l) => this.aendere(l))
-        },
-        spaltenZug: (e, index) => starteSpaltenZug(e, index, {
+        breiten: this.breitenWirt(),        spaltenZug: (e, index) => starteSpaltenZug(e, index, {
           editable: () => this.editable,
           liste: () => this.spaltenListe(),
           aendere: (l) => this.aendere(l),

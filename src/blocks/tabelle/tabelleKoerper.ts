@@ -3,7 +3,6 @@ import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
-import { spaltenKreuz } from './spaltenBearbeiten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './spaltenBindung'
 import {
@@ -71,11 +70,6 @@ export interface KoerperLage {
   // Aus heisst: auch eine als aenderbar gestellte Spalte bleibt Text.
   aendernMoeglich: boolean
 
-  // Nur im Editor: Spalten, in denen der Bediener in der Maske tippen darf,
-  // tragen ein Zeichen im Kopf. Reine Anzeige — was die Maske tut, sagt
-  // aendernMoeglich. Ohne Quelle gibt es nichts zu zeigen.
-  tippbarZeigen: boolean
-
   zeilenStand: ZeilenStand
 
   // Zeilen lassen sich zum Loeschen vormerken (Schalter am Baustein).
@@ -111,10 +105,6 @@ export interface KoerperHandeln {
   // weil er auch in der exportierten Maske gilt — dort gibt es weder
   // Feld-Picker noch Umbenennen.
   breiten: BreitenWirt
-
-  // Diese eine Spalte streichen — von jedem Platz aus, nicht nur vom
-  // letzten. Nur im Editor.
-  loescheSpalte: (index: number) => void
 
   // Spaltenkopf angefasst: ab der Zug-Schwelle wird daraus das Verschieben
   // der Spalte (spaltenBearbeiten/starteSpaltenZug). Nur im Editor.
@@ -196,13 +186,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                   title=${`Diese Spalte holt ihren Wert aus: ${lage.herkunft[i]}`}
                 >${lage.herkunft[i]}</span>`
               : s.titel
-          }${lage.tippbarZeigen && spalteAenderbar(s)
-            ? html`<span class="kopf-tippbar" title="In der Maske tippbar">&#x270E;</span>`
-            : nothing}${!lage.editable && lage.sortSpalte === i
+          }${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
-            : ''}${lage.imEditor && lage.editable && lage.spalten.length > 1
-            ? spaltenKreuz(s.titel, i, tun.loescheSpalte)
-            : nothing}</div>`,
+            : ''}</div>`,
         )}
         ${breitenGriffe(lage.spalten.length, tun.breiten)}
       </div>` : nothing}

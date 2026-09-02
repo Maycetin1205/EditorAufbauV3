@@ -15,6 +15,7 @@ import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
 import { quellenKennung } from '../../core/data/dataSources'
 import { paarKlartext, type QuelleInReichweite } from '../../core/data/sourceLinks'
 import type { Editor } from '../../state/Editor'
+import { wendeProps } from '../../state/propsPatch'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
@@ -275,6 +276,13 @@ export function useFeldBindung({
               onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
             }))}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
+            entfernenLabel={`${listenBindung.standardTitel.replace(/\s*\{n\}/, '')} entfernen`}
+            onEntfernen={listenBindung.eintragWeg === undefined ? undefined : () => {
+              const weg = listenBindung.eintragWeg
+              if (!weg) return
+              if (!wendeProps(editor, block.id, weg(block.props, listenPicker.index))) return
+              setListenPicker(null)
+            }}
             quellenWahl={proQuelle ? undefined : quellenWahl}
             anker={containerRef}
             top={listenPicker.top}

@@ -31,6 +31,13 @@ export interface ListenBindung {
   // defaultProps)`). Die Angabe gehoert in den Editor und nie in die Maske;
   // ein Test haelt das fest (export/herkunft.test.ts).
   herkunftProp?: string
+
+  // Editier-Vorgaenge als REINE Funktionen ueber den Props des Bausteins: sie
+  // geben die geaenderten Props zurueck (leer = nicht erlaubt). Der Editor
+  // ruft sie (Werkzeugleiste am Baustein, Feld-Picker); der Baustein zeichnet
+  // keine eigenen Knoepfe mehr in die Maske.
+  eintragNeu?: (props: Readonly<Record<string, unknown>>) => Record<string, unknown>
+  eintragWeg?: (props: Readonly<Record<string, unknown>>, index: number) => Record<string, unknown>
 }
 
 // Ein ZWEITES Feld je Eintrag, unabhaengig von der gewaehlten Darstellung.

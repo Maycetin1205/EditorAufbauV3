@@ -259,34 +259,6 @@ export const tabelleStil = css`
         );
       }
 
-      /* Das Kreuz am Spaltenkopf — nur im Editor, und nur unter der Maus.
-         Es sitzt LINKS vom Greifstreifen, sonst laegen Streichen und Ziehen
-         auf demselben Fleck. Dieselbe Machart wie das Kreuz an der Zeile
-         (.zeile-weg weiter unten): unsichtbar, bis jemand hinfaehrt. */
-      .kopf-weg {
-        position: absolute;
-
-        /* Abstand zum Greifstreifen (der reicht bis 6px links der Linie):
-           bei 10px lagen Ziehen und Loeschen 2px auseinander — zwei Pixel
-           zwischen "Spalte breiter" und "Spalte weg" (gemessen 2026-08-31). */
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        padding: 0 3px;
-        font-family: var(--se-font);
-        font-size: var(--se-fs-sm);
-        line-height: 1;
-        color: var(--se-faint);
-        background: var(--se-panel-2);
-        border: 0;
-        border-radius: var(--se-r-sm);
-        cursor: pointer;
-        opacity: 0;
-      }
-      .kopf > div:hover .kopf-weg,
-      .kopf-weg:focus { opacity: 1; }
-      .kopf-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
-
       /* Spalte am Kopf ziehen (nur Editor): die Einfuege-Stelle zeigt sich
          als Strich an der Zellkante — links der Zelle, vor der eingefuegt
          wird; hinter der letzten an deren rechter Kante. Die gezogene Spalte
@@ -295,14 +267,6 @@ export const tabelleStil = css`
       .kopf > div.zug-slot { box-shadow: inset 3px 0 0 var(--se-accent); }
       .kopf > div.zug-slot-ende { box-shadow: inset -3px 0 0 var(--se-accent); }
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
-
-      /* Nur im Editor: diese Spalte ist in der Maske tippbar. */
-      .kopf-tippbar {
-        margin-left: 4px;
-        font-size: var(--se-fs-xs);
-        font-weight: 400;
-        color: var(--se-muted);
-      }
 
       .zeile > div { color: var(--se-ink); }
 
@@ -480,30 +444,5 @@ export const tabelleStil = css`
       .seiten-nav button:disabled {
         opacity: 0.3;
         cursor: default;
-      }
-
-      .steuerung { display: none; }
-      :host([data-ff-editor]) .steuerung {
-        position: absolute;
-        top: 3px;
-        right: 3px;
-        z-index: 2;
-        display: inline-flex;
-        gap: 4px;
-      }
-      .steuerung button {
-        font-family: var(--se-font);
-        font-size: var(--se-fs-sm);
-        line-height: 1;
-        padding: 3px 7px;
-        border: var(--se-border) solid var(--se-line);
-        border-radius: var(--se-r-sm);
-        background: var(--se-panel);
-        color: var(--se-muted);
-        cursor: pointer;
-      }
-      .steuerung button:hover {
-        border-color: var(--se-accent);
-        color: var(--se-accent);
       }
 `

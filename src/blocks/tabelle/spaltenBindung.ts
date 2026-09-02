@@ -1,7 +1,8 @@
 import type { ListenBindung } from '../../core/blocks/BlockDefinition'
 import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
 import type { Spalte } from './spalten'
-import { STANDARD_TITEL } from './spalten'
+import { coerceSpalten, SPALTEN_MAX, STANDARD_TITEL } from './spalten'
+import { fuegeSpalteAn, ohneSpalte, rechnungNachSpalten } from './spaltenBearbeiten'
 
 export const SPALTEN_BINDUNG: ListenBindung = {
   prop: 'spalten',
@@ -9,6 +10,20 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   feldKey: 'feld',
   kennungKey: 'kennung',
   standardTitel: STANDARD_TITEL,
+
+  // Spalte anfuegen / streichen als reine Vorgaenge fuer den Editor. Faellt
+  // eine Spalte, verliert die Rechnung ihren Platz darauf gleich mit.
+  eintragNeu: (props) => {
+    const alt = coerceSpalten(props.spalten)
+    return alt.length >= SPALTEN_MAX ? {} : { spalten: fuegeSpalteAn(alt) }
+  },
+  eintragWeg: (props, index) => {
+    const alt = coerceSpalten(props.spalten)
+    const neu = ohneSpalte(alt, index)
+    if (neu === alt) return {}
+    const rechnung = rechnungNachSpalten(props.rechnung, alt, neu)
+    return { spalten: [...neu], ...(rechnung === null ? {} : { rechnung }) }
+  },
 
   eintragsSchalter: [
     {

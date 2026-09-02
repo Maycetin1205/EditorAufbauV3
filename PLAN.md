@@ -244,6 +244,13 @@ Status: offen
 ### Schritt 8 — Editor-Bedienung raus aus den Masken-Bytes
 Status: offen
 Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
+- Teil 1 erledigt 2026-09-02: Plus/Minus-Knoepfe, Spalten-Kreuz und
+  Stift-Marke sind aus dem Baustein raus. Der Editor hat dafuer EINE
+  Werkzeugleiste am gewaehlten Baustein (`canvas/AuswahlLeiste.tsx`: Kind
+  anlegen, Spalte anfuegen, Entfernen) und „Spalte entfernen" im Feld-Picker;
+  beides laeuft ueber reine Registry-Vorgaenge (`listenBindung.eintragNeu/
+  eintragWeg`). Offen (Teil 2): Kopf-Klick, Umbenennen, Spalten-Zug und
+  Breiten-Griffe aus dem Buendel in den Editor.
 - Was das ist, in Klartext: Heute steckt der Code, mit dem man im EDITOR die
   Tabellenspalten bedient (Kopf anklicken, umbenennen, Spalten ziehen,
   Breite ziehen, Plus/Minus), IM Tabellen-Baustein selbst — und wandert

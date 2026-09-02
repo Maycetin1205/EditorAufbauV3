@@ -1,6 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import type { MouseEvent as ReactMouseEvent } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import {
   quellenAufloesen,
@@ -15,6 +14,7 @@ import { useEditorInstance } from '../../state/EditorContext'
 import { loescheBaustein } from '../../state/loescheBaustein'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
+import { AuswahlLeiste } from './AuswahlLeiste'
 import { useFeldBindung } from './FeldBindung'
 import { useBlockResize } from './useBlockResize'
 import { useLitElement } from './useLitElement'
@@ -92,16 +92,8 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
   const eltern = block.parentId ? editor.getNode(block.parentId) : undefined
   const amRand = rand || (eltern ? istRandBaustein(eltern) : false)
 
-  const kreuzStil = amRand ? { top: 4, right: 4 } : { top: -9, right: -9 }
-  const plusStil = amRand ? { bottom: 4, left: 4 } : { top: -9, right: 14 }
 
   const templateMark = editor.templateMarkFor(block.id)
-
-  function onRemoveClick(e: ReactMouseEvent<HTMLButtonElement>) {
-    e.stopPropagation()
-
-    loescheBaustein(editor, blockRef.current.id)
-  }
 
   return (
     <div
@@ -141,43 +133,14 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
           : null}
       </div>
       {pickers}
-      {def?.addChildButton
-        && editor.selectedId !== null
-        && editor.isInSubtree(block.id, editor.selectedId) && (
-        <AddChildButton
-          label={def.addChildButton.label}
-          childType={def.addChildButton.childType}
-          parentId={block.id}
-          platz={plusStil}
-        />
-      )}
       {selected && !templateMark && (
-        <button
-          type="button"
-          aria-label="Entfernen"
-          title="Entfernen"
-          onClick={onRemoveClick}
-          onPointerDown={(e) => e.stopPropagation()}
-          onDragStart={(e) => { e.preventDefault(); e.stopPropagation() }}
-          style={{
-            position: 'absolute',
-            ...kreuzStil,
-            width: 18,
-            height: 18,
-            padding: 0,
-            border: 'none',
-            borderRadius: 9999,
-            background: 'hsl(var(--wb-auswahl))',
-            color: '#fff',
-            fontSize: 12,
-            lineHeight: '16px',
-            cursor: 'pointer',
-            display: 'grid',
-            placeItems: 'center',
-          }}
-        >
-          ×
-        </button>
+        <AuswahlLeiste
+          block={block}
+          def={def}
+          // Ganz oben auf der Flaeche gibt es kein „darueber" — dann innen.
+          innen={amRand || Number(block.props.rasterY ?? 1) === 0}
+          onEntfernen={() => loescheBaustein(editor, blockRef.current.id)}
+        />
       )}
 
       {selected && rasterZiehbar && rasterSpec.breiteZiehbar && (
@@ -279,50 +242,5 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
         />
       )}
     </div>
-  )
-}
-
-interface AddChildButtonProps {
-  label: string
-  childType: string
-  parentId: string
-
-  platz: { top?: number; right?: number; bottom?: number; left?: number }
-}
-
-function AddChildButton({ label, childType, parentId, platz }: AddChildButtonProps) {
-  const editor = useEditorInstance()
-  return (
-    <button
-      type="button"
-      data-ff-editor-helper
-      draggable={false}
-      aria-label={label}
-      title={label}
-      onClick={(e) => {
-        e.stopPropagation()
-        editor.addBlock(childType, parentId)
-      }}
-      onPointerDown={(e) => e.stopPropagation()}
-      onDragStart={(e) => { e.preventDefault(); e.stopPropagation() }}
-      style={{
-        position: 'absolute',
-        ...platz,
-        width: 18,
-        height: 18,
-        padding: 0,
-        border: 'none',
-        borderRadius: 9999,
-        background: 'hsl(var(--wb-auswahl))',
-        color: '#fff',
-        fontSize: 13,
-        lineHeight: '16px',
-        cursor: 'pointer',
-        display: 'grid',
-        placeItems: 'center',
-      }}
-    >
-      +
-    </button>
   )
 }

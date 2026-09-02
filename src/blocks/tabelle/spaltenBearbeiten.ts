@@ -1,4 +1,3 @@
-import { html, type TemplateResult } from 'lit'
 import {
   ohneSpalten,
   rechnungAlsAttribut,
@@ -6,7 +5,6 @@ import {
 } from '../../core/data/rechnung'
 import { starteUmbenennen } from '../shared/umbenennen'
 import {
-  SPALTEN_MAX,
   SPALTEN_MIN,
   mitKennungen,
   neueSpalte,
@@ -51,39 +49,17 @@ export function entferneSpalte(
   aendere: (spalten: Spalte[]) => void,
 ): void {
   const l = liste()
-  if (l.length <= SPALTEN_MIN || index < 0 || index >= l.length) return
-  l.splice(index, 1)
-
-  // Auch hier keine Rechnung: die verbliebenen Anteile fuellen die Tabelle
-  // wieder aus, der Platz der gestrichenen Spalte bleibt nicht als leere
-  // Flaeche am rechten Rand stehen (Nutzer-Befund 2026-08-31).
-  aendere(l)
+  const neu = ohneSpalte(l, index)
+  if (neu !== l) aendere([...neu])
 }
 
-// Kein Stop auf pointerdown (Zug-Regel in editor/canvas/rasterMove.ts) — der
-// Stop auf CLICK bleibt, sonst waehlte jeder Knopfdruck die Tabelle mit aus.
-export function spaltenSteuerung(
-  liste: () => Spalte[],
-  aendere: (spalten: Spalte[]) => void,
-  stop: (e: Event) => void,
-): TemplateResult {
-  return html`<div class="steuerung">
-    <button
-      title="Letzte Spalte entfernen"
-      @click=${(e: Event) => {
-        stop(e)
-        entferneSpalte(liste().length - 1, liste, aendere)
-      }}
-    >−</button>
-    <button
-      title="Spalte hinzufügen"
-      @click=${(e: Event) => {
-        stop(e)
-        const l = liste()
-        if (l.length < SPALTEN_MAX) aendere(fuegeSpalteAn(l))
-      }}
-    >+</button>
-  </div>`
+// Streicht GENAU diese Spalte — rein: dieselbe Liste zurueck heisst „nicht
+// erlaubt" (letzte Spalte, Platz ausserhalb). Die verbliebenen Anteile
+// fuellen die Tabelle wieder aus (spaltenRaster), der Platz der gestrichenen
+// bleibt nicht als leere Flaeche stehen (Nutzer-Befund 2026-08-31).
+export function ohneSpalte(spalten: readonly Spalte[], index: number): readonly Spalte[] {
+  if (spalten.length <= SPALTEN_MIN || index < 0 || index >= spalten.length) return spalten
+  return spalten.filter((_, i) => i !== index)
 }
 
 // Eine Spalte an einen anderen Platz setzen. `nach` = Ziel-Platz in der
@@ -262,25 +238,6 @@ export interface FeldPickerRuf {
   // Rückfallebene, wenn die Eigenschaft selbst noch leer ist (Automatik-
   // Spalten des Nachschlagens) — sonst zeigt der Index ins Leere.
   liste?: () => Spalte[]
-}
-
-// Das Kreuz am Spaltenkopf: streicht GENAU diese Spalte. Es faengt seinen
-// Klick ab, sonst oeffnete derselbe Druck noch den Feld-Picker der Spalte,
-// die es gerade weggenommen hat.
-export function spaltenKreuz(
-  titel: string,
-  index: number,
-  tun: (index: number) => void,
-): TemplateResult {
-  return html`<button
-    class="kopf-weg"
-    type="button"
-    title=${`Spalte „${titel}" entfernen`}
-    aria-label=${`Spalte „${titel}" entfernen`}
-    @pointerdown=${(e: PointerEvent) => e.stopPropagation()}
-    @click=${(e: MouseEvent) => { e.stopPropagation(); tun(index) }}
-    @dblclick=${(e: MouseEvent) => e.stopPropagation()}
-  >&#x2715;</button>`
 }
 
 export interface KopfGriffWirt {
