@@ -38,8 +38,9 @@
    - Der Schritt braucht eine Entscheidung, die hier nicht steht.
 6. Commit: ein Schritt = ein Commit, Text in Klartext, erste Zeile
    `Schritt <Nr> — <Ziel>`. Dann `git push -u origin <branch>`. Nie force.
-7. Danach in DIESER Datei die Statuszeile des Schritts auf
-   `Status: erledigt <Datum> <Commit-Kurzhash>` setzen und mitcommitten.
+7. Vor dem Commit in DIESER Datei die Statuszeile des Schritts auf
+   `Status: erledigt <Datum>` setzen und mitcommitten (der Commit selbst
+   ist in `git log` zu finden).
 8. Bericht an den Nutzer: was gebaut wurde, die Klickprobe aus dem Schritt
    (was öffnen, was tun, was zu sehen sein muss), was du nicht prüfen
    konntest. Keine Technik-Reviews. Dann aufhören.
@@ -73,7 +74,7 @@
 ## 2. Teil A — eine Bedienlogik (Maske byte-gleich)
 
 ### Schritt 1 — Kettenfenster im Aufbau „Liste links, Detail rechts"
-Status: offen
+Status: erledigt 2026-09-02
 - Ziel: Das Kettenfenster (`Schritt anlegen` am Inspector) sieht aus wie das
   Datencenter: links die Schrittliste mit `+ Schritt`, rechts das Schritt-
   Formular des gewählten Schritts, unten rechts Abbrechen/Speichern.

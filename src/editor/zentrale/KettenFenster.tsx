@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from '@/ui/zeichen'
 import { Dialog } from '@/ui/werkbank/Dialog'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { ListeDetail } from '@/ui/werkbank/ListeDetail'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import type { ActionStep } from '../../core/data/aktionen'
 import { bausteinName } from '../../core/blocks/bausteinName'
@@ -40,60 +41,63 @@ export function KettenFenster({ block, eventKey, eventName, onClose }: KettenFen
     setOffeneId(step.id)
   }
 
+  // Rechts steht IMMER genau eines: das Formular des neuen Schritts, das
+  // des gewaehlten, oder der Hinweis, was zu tun ist.
+  const detail = neu
+    ? <StepForm key="neu" kette={kette} onClose={() => setNeu(false)} onSave={speichere} />
+    : offen
+      ? (
+          <StepForm
+            key={offen.id}
+            step={offen}
+            kette={kette}
+            onClose={() => setOffeneId(null)}
+            onSave={speichere}
+          />
+        )
+      : (
+          <p className="text-ui text-matt">
+            {kette.length === 0 ? 'Noch kein Schritt. Lege links einen an.' : 'Schritt links wählen.'}
+          </p>
+        )
+
+  // Derselbe Aufbau wie das Datencenter: Liste links mit dem Anlegen-Knopf
+  // im Kopf, Detail rechts. Ein Fenster-Aufbau fuer den ganzen Editor.
   return (
     <Dialog
       randlos
       titel={bausteinName(block, quellen.list)}
       nebenTitel={`${eventName} · ${kette.length} ${kette.length === 1 ? 'Schritt' : 'Schritte'}`}
-      aktionen={
-        <Knopf
-          onClick={() => {
-            setOffeneId(null)
-            setNeu(true)
-          }}
-        >
-          <Plus size={13} /> Schritt
-        </Knopf>
-      }
       onClose={onClose}
     >
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-        <SchrittListe
-          steps={kette}
-          aktivId={offeneId ?? undefined}
-          onWaehle={(s) => {
-            setNeu(false)
-
-            setOffeneId((jetzt) => (jetzt === s.id ? null : s.id))
-          }}
-          onAendern={setzeKette}
-          aufgeklappt={
-            <StepForm
-
-              key={offeneId ?? 'keiner'}
-              step={offen}
-              kette={kette}
-              onClose={() => setOffeneId(null)}
-              onSave={speichere}
-            />
-          }
-        />
-
-        {neu && (
-          <div className="border-t border-linie bg-panel px-3 py-3">
-            <StepForm
-              key="neu"
-              kette={kette}
-              onClose={() => setNeu(false)}
-              onSave={speichere}
-            />
-          </div>
-        )}
-        {kette.length === 0 && !neu && (
-
-          <p className="px-3 py-3 text-ui text-matt">Noch kein Schritt.</p>
-        )}
-      </div>
+      <ListeDetail
+        listeKopf={
+          <Knopf
+            className="w-full"
+            onClick={() => {
+              setOffeneId(null)
+              setNeu(true)
+            }}
+          >
+            <Plus size={13} /> Schritt
+          </Knopf>
+        }
+        listeOhneRand
+        liste={kette.length === 0
+          ? <p className="px-3 py-3 text-ui text-matt">Noch kein Schritt.</p>
+          : (
+              <SchrittListe
+                steps={kette}
+                aktivId={offeneId ?? undefined}
+                onWaehle={(s) => {
+                  setNeu(false)
+                  setOffeneId(s.id)
+                }}
+                onAendern={setzeKette}
+              />
+            )}
+        detail={detail}
+      />
     </Dialog>
   )
 }

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Copy, X } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -23,12 +22,13 @@ interface SchrittListeProps {
   onWaehle?: (step: ActionStep) => void
 
   onAendern?: (steps: ActionStep[]) => void
-
-  aufgeklappt?: ReactNode
 }
 
+// Nur die Liste. Das Formular des gewaehlten Schritts steht rechts daneben
+// (KettenFenster, Aufbau ListeDetail) — frueher klappte es unter der Zeile
+// auf, und das Fenster sah aus wie kein anderes im Editor.
 export function SchrittListe({
-  steps, aktivId, onWaehle, onAendern, aufgeklappt,
+  steps, aktivId, onWaehle, onAendern,
 }: SchrittListeProps) {
   const ed = useEditor()
   const relations = useRelations()
@@ -218,12 +218,6 @@ export function SchrittListe({
                 </span>
               )}
             </div>
-
-            {s.id === aktivId && aufgeklappt !== undefined && (
-              <div className="border-t border-linie bg-panel px-3 py-3">
-                {aufgeklappt}
-              </div>
-            )}
           </li>
         )
       })}
