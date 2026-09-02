@@ -1,5 +1,6 @@
-import { useLayoutEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { cn } from '@/lib/utils'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import {
   quellenAufloesen,
@@ -144,103 +145,80 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
       )}
 
       {selected && rasterZiehbar && rasterSpec.breiteZiehbar && (
-        <div
-          draggable={false}
-          onPointerDown={(e) => startRasterResize(e, 'x')}
-          onDragStart={(e) => e.preventDefault()}
-          onDoubleClick={(e) => {
-            e.stopPropagation()
-            const node = blockRef.current
-            const spec = rasterSpecOf(getBlockDefinition(node.type), node.props)
-            editor.updateProperty(node.id, 'rasterW', spec.startW)
-          }}
+        <Anfasser
+          achse="x"
           title="Breite ziehen (rastet auf Zellen) · Doppelklick: Startgröße"
-          style={{
-            position: 'absolute',
-            right: -4,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 7,
-            height: 26,
-            borderRadius: 4,
-            background: 'hsl(var(--wb-auswahl))',
-            cursor: 'ew-resize',
+          onStart={(e) => startRasterResize(e, 'x')}
+          onReset={() => {
+            const node = blockRef.current
+            editor.updateProperty(node.id, 'rasterW', rasterSpecOf(getBlockDefinition(node.type), node.props).startW)
           }}
         />
       )}
       {selected && rasterZiehbar && (
-        <div
-          draggable={false}
-          onPointerDown={(e) => startRasterResize(e, 'y')}
-          onDragStart={(e) => e.preventDefault()}
-          onDoubleClick={(e) => {
-            e.stopPropagation()
-            const node = blockRef.current
-            const spec = rasterSpecOf(getBlockDefinition(node.type), node.props)
-            editor.updateProperty(node.id, 'rasterH', spec.startH)
-          }}
+        <Anfasser
+          achse="y"
           title="Höhe ziehen (rastet auf Zellen) · Doppelklick: Startgröße"
-          style={{
-            position: 'absolute',
-            bottom: -4,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 26,
-            height: 7,
-            borderRadius: 4,
-            background: 'hsl(var(--wb-auswahl))',
-            cursor: 'ns-resize',
+          onStart={(e) => startRasterResize(e, 'y')}
+          onReset={() => {
+            const node = blockRef.current
+            editor.updateProperty(node.id, 'rasterH', rasterSpecOf(getBlockDefinition(node.type), node.props).startH)
           }}
         />
       )}
       {selected && !raster && resizable && (
-        <div
-          draggable={false}
-          onPointerDown={(e) => startResize(e, 'width', 40)}
-          onDragStart={(e) => e.preventDefault()}
-          onDoubleClick={(e) => {
-            e.stopPropagation()
-            const standard = getBlockDefinition(blockRef.current.type)?.defaultProps.width ?? 'auto'
-            editor.updateProperty(blockRef.current.id, 'width', standard)
-          }}
+        <Anfasser
+          achse="x"
           title="Breite ziehen · Doppelklick: Standard"
-          style={{
-            position: 'absolute',
-            right: -4,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 7,
-            height: 26,
-            borderRadius: 4,
-            background: 'hsl(var(--wb-auswahl))',
-            cursor: 'ew-resize',
+          onStart={(e) => startResize(e, 'width', 40)}
+          onReset={() => {
+            const node = blockRef.current
+            editor.updateProperty(node.id, 'width', getBlockDefinition(node.type)?.defaultProps.width ?? 'auto')
           }}
         />
       )}
       {selected && !raster && heightResizable && (
-        <div
-          draggable={false}
-          onPointerDown={(e) => startResize(e, 'height', 120)}
-          onDragStart={(e) => e.preventDefault()}
-          onDoubleClick={(e) => {
-            e.stopPropagation()
-            const standard = getBlockDefinition(blockRef.current.type)?.defaultProps.height ?? 'auto'
-            editor.updateProperty(blockRef.current.id, 'height', standard)
-          }}
+        <Anfasser
+          achse="y"
           title="Höhe ziehen · Doppelklick: Standard"
-          style={{
-            position: 'absolute',
-            bottom: -4,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: 26,
-            height: 7,
-            borderRadius: 4,
-            background: 'hsl(var(--wb-auswahl))',
-            cursor: 'ns-resize',
+          onStart={(e) => startResize(e, 'height', 120)}
+          onReset={() => {
+            const node = blockRef.current
+            editor.updateProperty(node.id, 'height', getBlockDefinition(node.type)?.defaultProps.height ?? 'auto')
           }}
         />
       )}
     </div>
+  )
+}
+
+interface AnfasserProps {
+  achse: 'x' | 'y'
+  title: string
+  onStart: (e: ReactPointerEvent<HTMLDivElement>) => void
+  onReset: () => void
+}
+
+// Der eine Anfasser fuer Breite und Hoehe: ein Pillenstrich in der
+// Auswahlfarbe, mittig auf der Kante. Vorher standen vier Kopien desselben
+// Stilblocks im BlockHost.
+function Anfasser({ achse, title, onStart, onReset }: AnfasserProps) {
+  return (
+    <div
+      draggable={false}
+      title={title}
+      onPointerDown={onStart}
+      onDragStart={(e) => e.preventDefault()}
+      onDoubleClick={(e) => {
+        e.stopPropagation()
+        onReset()
+      }}
+      className={cn(
+        'absolute rounded-[4px] bg-[hsl(var(--wb-auswahl))]',
+        achse === 'x'
+          ? '-right-1 top-1/2 h-[26px] w-[7px] -translate-y-1/2 cursor-ew-resize'
+          : '-bottom-1 left-1/2 h-[7px] w-[26px] -translate-x-1/2 cursor-ns-resize',
+      )}
+    />
   )
 }

@@ -15,6 +15,7 @@ import { useEditor } from '../../state/useEditor'
 import { BlockHost } from './BlockHost'
 import { isNewBlockDrag, newBlockDragType } from './dnd'
 import { commitDrop, useDnd } from './dndState'
+import { cn } from '@/lib/utils'
 import { ziehePosition } from './rasterMove'
 
 const CONTAINER_EDGE = 12
@@ -23,13 +24,10 @@ function InsertionLine({ direction }: { direction: FlowDirection }) {
   return (
     <div
       data-ff-editor-helper
-      style={{
-        background: 'hsl(var(--wb-auswahl))',
-        borderRadius: 2,
-        ...(direction === 'column'
-          ? { alignSelf: 'stretch', height: 2 }
-          : { width: 2, alignSelf: 'stretch', minHeight: 24 }),
-      }}
+      className={cn(
+        'self-stretch rounded-[2px] bg-[hsl(var(--wb-auswahl))]',
+        direction === 'column' ? 'h-[2px]' : 'min-h-6 w-[2px]',
+      )}
     />
   )
 }

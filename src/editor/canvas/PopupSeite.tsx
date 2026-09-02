@@ -84,7 +84,7 @@ export function PopupSeite({ popupId }: { popupId: string }) {
   return (
     <div
       ref={wrapRef}
-      style={{ position: 'absolute', inset: 0 }}
+      className="absolute inset-0"
       onDragOver={(e) => {
         if (dnd.dragId === null && !isNewBlockDrag(e.dataTransfer)) return
         const gridEl = rumpf()
@@ -129,8 +129,7 @@ export function PopupSeite({ popupId }: { popupId: string }) {
 
       {ed.childNodesOf(node.id).length === 0 && (
         <div
-          className="pointer-events-none absolute inset-0 flex items-center justify-center"
-          style={{ zIndex: 20 }}
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
         >
           <LeerHinweis titel={`Leeres Fenster „${String(node.props.name ?? '')}“`} />
         </div>
