@@ -1,3 +1,5 @@
+> **Hinweis 2026-09-02 (Nutzer-Ansage):** Dieser Plan ist KI-generiert und nicht bindend. Er bleibt als Ideenliste stehen; was gebaut wird, entscheidet das Urteil im aktuellen Chat. Abgehakte Punkte sind gebaut.
+
 # UMBAUPLAN EditorAufbauV3 — Belegerfassung fertig + Editor-UI komplett neu
 
 Stand: 2026-08-28. Entscheidung: **V3 weiterbauen, kein Neubau.** PageBuilder (C:\Users\mu.aycetin\Desktop\PageBuilder) ist eingefroren und dient nur noch als Wissensspender.
