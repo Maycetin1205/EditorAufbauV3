@@ -107,7 +107,7 @@ Status: erledigt 2026-09-02
   Nichts fehlt, nichts springt.
 
 ### Schritt 3 — Rechnung wandert in den Tabellen-Inspector
-Status: offen
+Status: erledigt 2026-09-02
 - Ziel: Die Rechnung (Abgabemenge = Anzahl × Dosis × Tage) wird an der
   Tabelle bedient, zu der sie gehört: neuer Inspector-Abschnitt „Rechnung",
   sichtbar nur bei Tabellen mit Erfassungszeile, mit genau den vier Plätzen,

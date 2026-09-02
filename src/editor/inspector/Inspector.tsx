@@ -14,6 +14,7 @@ import { AktionenSektion } from './AktionenSektion'
 import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
 import { PropControl } from './PropControl'
 import { QuellenListe } from './QuellenListe'
+import { kannRechnen, RechnungSektion } from './RechnungSektion'
 
 interface InspectorZeile {
   row?: string
@@ -197,6 +198,10 @@ export function Inspector() {
             <AktionenSektion block={block} events={def.blockEvents ?? []} />
           </Gruppe>
         )}
+
+        {/* Zielbild-Reihenfolge: ... Aktionen -> Rechnung (nur Tabellen mit
+            Erfassungszeile). */}
+        {kannRechnen(block) && <RechnungSektion block={block} />}
 
         {generalProps.length === 0 && !showDataSection && !hatAktionen
           && !darfAuswahlFolgen(block) && (
