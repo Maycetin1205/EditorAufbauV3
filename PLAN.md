@@ -60,8 +60,12 @@
   einem Baustein gehört, ist nur woanders erreichbar.
 - **Am Ding** bleibt, was räumlich ist: verschieben, Größe ziehen, Spalten-
   breiten, Titel direkt umbenennen, Klick auf den Spaltenkopf öffnet den
-  Spalten-Picker. Plus- und Kreuz-Knöpfe am Baustein gibt es nur für Kinder
-  (Kanban-Spalte, Navi-Eintrag), und sie kommen alle aus dem BlockHost.
+  Spalten-Picker. Jeder Knopf am gewählten Baustein kommt aus EINER
+  Werkzeugleiste des Editors (`canvas/AuswahlLeiste.tsx`: Kind anlegen,
+  Eintrag anfügen, Entfernen); sie sucht sich ihren Platz (über, unter,
+  rechts, innen) und liegt nie über Inhalt. Kein Baustein zeichnet
+  Editor-Knöpfe oder Editor-Marken (Stift, Kreuz, Plus/Minus) in die Maske.
+  Der Kopf einer Spalte ist im Editor und in der Maske derselbe Text.
 - **Zwei Fenster-Arten, sonst keine.** Ein *Popover* für eine einzelne
   schnelle Wahl (Feld wählen, Farbe wählen): Klick = fertig, kein Speichern-
   Knopf. Ein *Fenster* (`Dialog`) für Listen mit Detail: Liste links, Detail
@@ -276,6 +280,23 @@ Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
   Editor-Knöpfe, Datei kleiner.
 - Hinweis: Dies ist der größte Schritt. Ein Chat, der ihn nicht in einem
   Zug sicher schafft, stoppt VOR dem ersten Commit und berichtet.
+
+### Schritt 10 — Editor-Durchgang: Gestaltung aus einer Hand
+Status: laufend (Fable). Nutzer-Ansage 2026-09-02: Es geht um Architektur,
+Gestaltung, Aussehen. Nichts liegt über Inhalt, kein Icon ohne Grund, keine
+Erklärtexte (die Bediener kennen SoftEngine), alle Teile teilen sich eine
+Gestaltung, und der Code trägt das.
+- Erledigt 2026-09-02: Stift-Marke, Spalten-Kreuz und Plus/Minus aus dem
+  Tabellenkopf; EINE Werkzeugleiste am gewählten Baustein statt zwei runder
+  Abzeichen; „Spalte entfernen" im Feld-Picker; Herkunfts-Zeile im Kopf weg;
+  Serifenschrift der Dialogtitel weg.
+- Regel für alles Weitere: Steuerelemente aus `src/ui/werkbank/`, Farben nur
+  aus der Werkbank-Palette (`index.css`, `--wb-*`), Größen aus der Tailwind-
+  Skala (`h-steuer`, `text-ui`, `text-dicht`), keine Inline-Stile außer für
+  Werte, die zur Laufzeit gerechnet werden (Gitterplatz, Maße).
+- Nächste Kandidaten: die Anfasser des BlockHost (Inline-Stile → Klassen),
+  Sichtprobe jedes Bausteins im gewählten und ungewählten Zustand, Popup-
+  Seite und Seitenleiste.
 
 ## 4. Teil C — Pflege
 
