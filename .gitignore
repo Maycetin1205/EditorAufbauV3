@@ -41,3 +41,6 @@ docs/chef-maske/*.log
 
 # persoenliche Claude-Einstellungen (lokal, nie einchecken)
 .claude/settings.local.json
+
+# Bilder der Sichtprobe (tools/sichtprobe.cjs)
+sichtprobe/

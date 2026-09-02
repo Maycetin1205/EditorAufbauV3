@@ -49,6 +49,9 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
   `</script>` ist Bündel, der Rest ist Maske.
 - Git: vor Arbeitsbeginn und vor jedem Push `git fetch`; nie force-push;
   Dateien namentlich stagen (kein `git add -A`); ein Thema = ein Commit.
+- Sichtprobe: `node tools/sichtprobe.cjs standard` bei laufendem Dev-Server
+  (Port 5300) macht neun Bilder des Editors nach `sichtprobe/`; Pflicht vor
+  jedem Commit, der Editor oder Bausteine berührt (`tools/SICHTPROBE.md`).
 - Vitest ist die einzige Testart. Bestehende Tests wachsen mit echten
   Änderungen; neue Test-Gattungen (Browser, Komponenten) nur nach Absprache.
 - Es gibt keinen Ordner `designsprache/`, keine `docs/ARCHI.md`. Echte

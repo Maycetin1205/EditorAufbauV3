@@ -38,6 +38,14 @@
      geändert hat (Prüfhilfe: alles zwischen der Zeile `window.FF_RELATIONS`
      und `</script>` in `src/export/referenz/referenz.html` ist Bündel, der
      Rest ist Maske). Ändert sich Maske, wo der Schritt es nicht sagt: stopp.
+4b. SICHTPROBE, Pflicht fuer jeden Schritt, der `src/editor/` oder
+   `src/blocks/` beruehrt: `npm run dev` (Hintergrund, Port 5300), dann
+   `node tools/sichtprobe.cjs standard`, und die neun Bilder in
+   `sichtprobe/` mit dem Read-Werkzeug ANSEHEN, jedes einzeln, gegen
+   Abschnitt 1a: nichts liegt ueber Inhalt, nichts ist abgeschnitten,
+   Groessen und Farben stimmen, kein Zeichen ohne Grund. Konsolen-Fehler
+   oder -Warnungen im Ausdruck des Werkzeugs sind Fehler. Wer etwas findet,
+   richtet es VOR dem Commit. Anleitung: `tools/SICHTPROBE.md`.
 5. Stopp-Regeln (aufhören, Stand beschreiben, NICHT reparieren):
    - Ein Test bricht, den der Schritt nicht als „ändert sich" nennt.
    - Du müsstest eine Datei anfassen, die der Schritt nicht nennt.
@@ -139,15 +147,9 @@ Grund und schreibt ihn in den Commit.
   sich nicht ein. Änderungen an der Maske sind bewusste Teil-B-Schritte mit
   Referenz-Erneuerung.
 
-**Was daran noch NICHT stimmt (Stand 2026-09-02, Reihenfolge = Gewicht)**
-1. Inspector-Wahlen mit Gedankenstrich-Leerwerten („— keins —", „— keinem
-   —") sind Notlösungen; Leerwert ist „Keine" bzw. der Name der Sache.
-2. Zwei Overlay-Idiome für Ja/Nein im Inspector (Kacheln bei der Tabelle,
-   `Schalter` im Picker) — eines davon.
-3. Kanban-Karten-Vorlage („Karte" mit Strich-Reiter) sieht im Editor aus
-   wie ein Fremdkörper; Sichtprobe und Angleich.
-4. Seitenleiste (Reiter) und Toolbar-Menü nach Opus-Umbau gegen dieses
-   Zielbild nachmessen (Nutzer-Befund: sah anders aus als gedacht).
+**Was daran noch nicht stimmt:** Schritte 10a bis 10c (unten). Die
+Kanban-Karten-Vorlage (Strich-Reiter im Editor) ist bewusst offen gelassen:
+sie braucht ein Urteil vor dem Bild, kein Rezept.
 
 ## 2. Teil A — eine Bedienlogik (Maske byte-gleich)
 
@@ -301,20 +303,39 @@ Status: erledigt 2026-09-02
 
 ### Schritt 7 — Spalten in der fertigen Maske ausblenden
 Status: offen
-Ausführung: nur Fable (aendert Maske und Aussehen).
-- Ziel: Eine Spalte kann „nur im Editor" sein (z. B. eine Hilfsspalte für
-  die Rechnung): im Editor sichtbar, aber gedämpft und gekennzeichnet; in der
-  exportierten Maske nicht vorhanden. Schalter im Spalten-Picker
-  („In der Maske ausblenden"), Kennzeichen in Kopf und Inspector-Liste.
-- Dateien: `src/blocks/tabelle/spalten.ts` (Feld `versteckt?: true`),
-  `src/blocks/tabelle/spaltenBearbeiten.ts`, `src/blocks/tabelle/
-  tabelleKoerper.ts`, `src/blocks/tabelle/tabelleStil.ts`, `src/blocks/
-  tabelle/TabelleBlock.ts` (Spalten filtern, wenn kein `data-ff-editor`),
-  `src/editor/inspector/SpaltenSektion.tsx`, Tests dazu.
-- Prüfung: Rahmen Punkt 4 (Teil B). Referenz: außerhalb des Bündels darf
-  sich NICHTS ändern (die Referenzmaske hat keine versteckte Spalte).
-- Klickprobe: Spalte ausblenden → Editor zeigt sie gedämpft; Export öffnen
-  → Spalte fehlt; Erfassungszeile hat eine Zelle weniger.
+Ausführung: Opus erlaubt — GENAU so, keine eigene Deutung.
+- Ziel: Eine Spalte kann „in der Maske ausgeblendet" sein (z. B. eine
+  Hilfsspalte, die nur die Rechnung braucht): im Editor sichtbar, aber
+  gedaempft; in der exportierten Maske nicht vorhanden.
+- Bau, in dieser Reihenfolge:
+  1. `src/blocks/tabelle/spalten.ts`: `Spalte` bekommt `versteckt?: true`;
+     `coerceSpalten` uebernimmt `versteckt === true` aus dem Rohwert und
+     laesst es sonst weg (kein `false` schreiben).
+  2. `src/blocks/tabelle/spaltenBindung.ts`: in `SPALTEN_BINDUNG.eintragsSchalter`
+     ein weiterer Schalter `{ key: 'versteckt', label: 'In der Maske
+     ausblenden', kurz: 'Ausgeblendet' }`. Mehr nicht — der Feld-Picker zeigt
+     ihn damit von selbst (bestehender Mechanismus).
+  3. `src/blocks/tabelle/TabelleBlock.ts`: eine Methode
+     `sichtbareSpalten(): Spalte[]` = `spaltenListe()` ohne versteckte, NUR
+     wenn das Element KEIN `data-ff-editor` traegt; im Editor alle. Ueberall,
+     wo der Baustein Spalten ZEICHNET oder Zellwerte je Spalte holt
+     (`render`, Kopf, Zeilen, Erfassungszeile, Fusszeile, Suche), benutzt er
+     `sichtbareSpalten()`. Wo er Spalten ueber die KENNUNG anspricht
+     (Rechnung, Ketten-Parameter), bleibt `spaltenListe()`.
+  4. Editor-Daempfung: in `tabelleKoerper.ts` bekommt eine versteckte
+     Spalte im Kopf UND in den Zellen die Klasse `versteckt`, nur wenn
+     `lage.imEditor`; in `tabelleStil.ts` eine Regel
+     `:host([data-ff-editor]) .versteckt { opacity: 0.45; }`. Sonst nichts.
+  5. Tests: in `spalten.test.ts` „coerceSpalten uebernimmt versteckt"; in
+     einem neuen `TabelleBlock`-nahen Test (falls es keinen Renderer-Test
+     gibt: in `spaltenBindung.test.ts`) „sichtbare Spalten ohne versteckte".
+- Verboten: Speicherformat aendern (nur das Feld ergaenzen), Export
+  (`exportMask.ts`) anfassen, andere Bausteine.
+- Prüfung: Rahmen 4 (Teil B) und 4b. Referenz: die Referenzmaske hat keine
+  versteckte Spalte, ausserhalb des Buendels darf sich NICHTS aendern.
+- Klickprobe: Spaltenkopf anklicken, Schalter „Ausgeblendet" an → Spalte
+  im Editor gedaempft; Export oeffnen → Spalte fehlt, Erfassungszeile hat
+  eine Zelle weniger, Rechnung rechnet weiter.
 
 ### Schritt 8 — Editor-Bedienung raus aus den Masken-Bytes
 Status: erledigt 2026-09-02
@@ -364,21 +385,50 @@ Status: erledigt 2026-09-02
   Zug sicher schafft, stoppt VOR dem ersten Commit und berichtet.
 
 ### Schritt 10 — Editor-Durchgang: Gestaltung aus einer Hand
-Status: laufend. Ausführung: nur Fable. Nutzer-Ansage 2026-09-02: Es geht um Architektur,
-Gestaltung, Aussehen. Nichts liegt über Inhalt, kein Icon ohne Grund, keine
-Erklärtexte (die Bediener kennen SoftEngine), alle Teile teilen sich eine
-Gestaltung, und der Code trägt das.
-- Erledigt 2026-09-02: Stift-Marke, Spalten-Kreuz und Plus/Minus aus dem
-  Tabellenkopf; EINE Werkzeugleiste am gewählten Baustein statt zwei runder
-  Abzeichen; „Spalte entfernen" im Feld-Picker; Herkunfts-Zeile im Kopf weg;
-  Serifenschrift der Dialogtitel weg.
-- Regel für alles Weitere: Steuerelemente aus `src/ui/werkbank/`, Farben nur
-  aus der Werkbank-Palette (`index.css`, `--wb-*`), Größen aus der Tailwind-
-  Skala (`h-steuer`, `text-ui`, `text-dicht`), keine Inline-Stile außer für
-  Werte, die zur Laufzeit gerechnet werden (Gitterplatz, Maße).
-- Nächste Kandidaten: die Anfasser des BlockHost (Inline-Stile → Klassen),
-  Sichtprobe jedes Bausteins im gewählten und ungewählten Zustand, Popup-
-  Seite und Seitenleiste.
+Erledigt 2026-09-02 (Fable): Stift-Marke, Spalten-Kreuz, Plus/Minus und
+Herkunfts-Zeile aus dem Tabellenkopf; EINE Werkzeugleiste am gewaehlten
+Baustein; „Spalte entfernen" im Feld-Picker; Spalten-Bedienung als Editor-
+Schicht; Serifenschrift weg; ein Anfasser statt vier. Der Rest sind drei
+kleine, mechanische Teilschritte:
+
+### Schritt 10a — Leerwerte ohne Gedankenstriche
+Status: offen
+Ausführung: Opus erlaubt.
+- Ziel: Kein Auswahlfeld im Editor zeigt „— keins —", „— keinem —",
+  „— keine —" oder „— nicht gebunden —". Der Leerwert ist ein Wort:
+  `Keine` (Quelle, Spalte), `Keiner` (Geber/Baustein), `Nicht gebunden`
+  (Feld). Nur Text, kein Verhalten.
+- Finden: `grep -rn "— " src/editor src/ui --include=*.tsx --include=*.ts`
+  und `grep -rn "leerText=" src/editor`.
+- Verboten: Werte (`wert: ''`) aendern, Bausteine (`src/blocks/`).
+- Prüfung: Rahmen 4 (Teil A) und 4b; der grep findet nichts mehr.
+
+### Schritt 10b — Ein Ja/Nein-Idiom je Ort
+Status: offen
+Ausführung: Opus erlaubt.
+- Regel: Im Inspector ist Ja/Nein eine `Kachel`; in Popover und Fenster
+  (Feld-Picker, Formulare) ein `Schalter`. Nichts anderes.
+- Finden: `grep -rn "<Schalter" src/editor/inspector` (muss leer werden,
+  Ausnahme: `controls/` fuer Bausteine, deren Registry das ausdruecklich
+  als Kachel-Gruppe fuehrt — dann Kachel) und
+  `grep -rn "<Kachel" src/editor/canvas src/editor/zentrale` (muss leer
+  werden). Ersetzen, ohne Verhalten zu aendern.
+- Prüfung: Rahmen 4 (Teil A) und 4b.
+
+### Schritt 10c — Seitenleiste und Menue nachmessen
+Status: offen
+Ausführung: Opus erlaubt.
+- Ziel: `src/ui/werkbank/Reiter.tsx`, `MenueZeile.tsx`, `Ankreuz.tsx` und
+  ihre Verwender (`canvas/SeitenLeiste.tsx`, `shell/Toolbar.tsx`,
+  `zentrale/DtkImportForm.tsx`) halten Abschnitt 1a: Reiter 24 px hoch,
+  `text-dicht`, aktiv `bg-akzent/15 font-medium text-tinte`; Menue-Zeilen
+  `h-steuer text-ui`, Zeichen 14 px links, gefaehrlich rot; Ankreuz 14 px
+  Kaestchen mit `accent-akzent`, Beschriftung `text-ui`. Abweichungen
+  angleichen, sonst nichts.
+- Prüfung: Rahmen 4 (Teil A) und 4b — Bilder 1 (Reiter), 8 (Menue) und ein
+  eigenes Bild des Import-Formulars (`click:[title^="Datencenter"]` →
+  `click:text=Aus SoftEngine-Datei` geht nicht ohne Datei; stattdessen die
+  Klassen im Code gegen die Zahlen pruefen).
 
 ## 4. Teil C — Pflege
 
