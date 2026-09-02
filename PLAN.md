@@ -92,7 +92,7 @@ Status: erledigt 2026-09-02
   bleibt gewählt, rechts sein Formular. Escape schließt ohne Verlust.
 
 ### Schritt 2 — Datencenter auf denselben Bausatz-Teil
-Status: offen
+Status: erledigt 2026-09-02
 - Ziel: Das Datencenter benutzt `ListeDetail` aus Schritt 1 (Bereichsleiste
   links, Liste, Detail) statt eigener Spalten-Markups. Optisch gleich wie
   heute, nur aus demselben Teil gebaut. Der Reiter „Rechnungen" bleibt in

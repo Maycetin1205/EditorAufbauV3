@@ -32,10 +32,11 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
     rechnungen: String(rechnungen),
   }
 
-  return (
-    <Dialog randlos titel="Datencenter" onClose={onClose}>
-      <nav className="flex w-44 shrink-0 flex-col gap-0.5 border-r border-linie bg-panel p-2">
-        {BEREICHE.map(({ key, name, icon: Icon }) => (
+  // Die Bereichsleiste geht als Slot in den gemeinsamen Fenster-Aufbau
+  // (ListeDetail) des jeweiligen Bereichs.
+  const bereichsleiste = (
+    <>
+      {BEREICHE.map(({ key, name, icon: Icon }) => (
           <button
             key={key}
             type="button"
@@ -51,10 +52,22 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
             <span className="shrink-0 text-dicht tabular-nums text-matt">{navZahl[key]}</span>
           </button>
         ))}
-      </nav>
-      {bereich === 'datenquellen' && <DatenquellenBereich />}
-      {bereich === 'relationen' && <RelationenBereich />}
-      {bereich === 'rechnungen' && <RechnungenBereich />}
+    </>
+  )
+
+  return (
+    <Dialog randlos titel="Datencenter" onClose={onClose}>
+      {bereich === 'datenquellen' && <DatenquellenBereich bereiche={bereichsleiste} />}
+      {bereich === 'relationen' && <RelationenBereich bereiche={bereichsleiste} />}
+      {/* Fliegt in Schritt 3 (Rechnung wandert in den Tabellen-Inspector). */}
+      {bereich === 'rechnungen' && (
+        <>
+          <nav className="flex w-44 shrink-0 flex-col gap-0.5 border-r border-linie bg-panel p-2">
+            {bereichsleiste}
+          </nav>
+          <RechnungenBereich />
+        </>
+      )}
     </Dialog>
   )
 }

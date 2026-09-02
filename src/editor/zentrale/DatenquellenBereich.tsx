@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { FileUp, Plus, TriangleAlert } from '@/ui/zeichen'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { ListeDetail } from '@/ui/werkbank/ListeDetail'
 import { Eintrag } from '@/ui/werkbank/Eintrag'
 import { Marke } from '@/ui/werkbank/Marke'
 import {
@@ -29,7 +30,7 @@ function kopieName(name: string, vergeben: readonly string[]): string {
   return `${name} (Kopie ${n})`
 }
 
-export function DatenquellenBereich() {
+export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
   const store = useDataSources()
   const ed = useEditor()
   const [frageKnoten, frage] = useFrage()
@@ -93,12 +94,15 @@ export function DatenquellenBereich() {
     setModus('lesen')
   }
 
+  // Derselbe Aufbau wie jedes Fenster mit Liste und Detail (ListeDetail):
+  // Bereiche links, Liste mit Kopf, Detail rechts.
   return (
-    <div className="flex min-h-0 min-w-0 flex-1">
+    <>
       {frageKnoten}
-
-      <div className="flex w-64 shrink-0 flex-col border-r border-linie">
-        <div className="flex flex-col gap-1 border-b border-linie p-2">
+      <ListeDetail
+        bereiche={bereiche}
+        listeKopf={(
+          <>
           <Knopf className="w-full" onClick={() => setModus('neu')}>
             <Plus size={14} /> Neue Datenquelle
           </Knopf>
@@ -120,8 +124,10 @@ export function DatenquellenBereich() {
               }
             }}
           />
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          </>
+        )}
+        liste={(
+          <>
           {store.list.map((s) => {
             const verwendet = verwendungFor(s.id).length
             const aktiv =
@@ -158,10 +164,10 @@ export function DatenquellenBereich() {
               Noch keine Datenquellen.
             </p>
           )}
-        </div>
-      </div>
-
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4">
+          </>
+        )}
+        detail={(
+          <>
         {modus === 'neu' && (
           <DataSourceForm onClose={() => setModus('lesen')} />
         )}
@@ -232,7 +238,9 @@ export function DatenquellenBereich() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+          </>
+        )}
+      />
+    </>
   )
 }

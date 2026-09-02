@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Plus, Search, Share2 } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { ListeDetail } from '@/ui/werkbank/ListeDetail'
 import { Eintrag } from '@/ui/werkbank/Eintrag'
 import { Marke } from '@/ui/werkbank/Marke'
 import { relationIdsVon } from '../../core/blocks/treeQuery'
@@ -22,7 +23,7 @@ import { RelationForm } from './RelationForm'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { loeschFrage, parameterBedeutung, RELATION_GRUPPEN, VERB_KURZ } from './helfer'
 
-export function RelationenBereich() {
+export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
   const store = useRelations()
   const ed = useEditor()
   const quellen = useDataSources().list
@@ -71,12 +72,15 @@ export function RelationenBereich() {
     setModus('lesen')
   }
 
+  // Derselbe Aufbau wie jedes Fenster mit Liste und Detail (ListeDetail):
+  // Bereiche links, Liste mit Kopf, Detail rechts.
   return (
-    <div className="flex min-h-0 min-w-0 flex-1">
+    <>
       {frageKnoten}
-
-      <div className="flex w-64 shrink-0 flex-col border-r border-linie">
-        <div className="flex flex-col gap-2 border-b border-linie p-2">
+      <ListeDetail
+        bereiche={bereiche}
+        listeKopf={(
+          <>
           <Knopf className="w-full" onClick={() => setModus('neu')}>
             <Plus size={14} /> Neue Relation
           </Knopf>
@@ -99,8 +103,10 @@ export function RelationenBereich() {
             options={filterOptionen}
             onChange={(value) => setFilter(value as RelationGroup)}
           />
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+          </>
+        )}
+        liste={(
+          <>
           {sichtbareRelationen.map((r) => {
             const aktiv = modus !== 'neu' && auswahl?.id === r.id
             return (
@@ -126,10 +132,10 @@ export function RelationenBereich() {
           {store.list.length > 0 && sichtbareRelationen.length === 0 && (
             <p className="px-1 py-2 text-dicht text-matt">Keine Treffer.</p>
           )}
-        </div>
-      </div>
-
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto p-4">
+          </>
+        )}
+        detail={(
+          <>
         {modus === 'neu' && <RelationForm onClose={() => setModus('lesen')} />}
         {modus === 'bearbeiten' && auswahl && (
           <RelationForm relation={auswahl} onClose={() => setModus('lesen')} />
@@ -196,7 +202,9 @@ export function RelationenBereich() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+          </>
+        )}
+      />
+    </>
   )
 }
