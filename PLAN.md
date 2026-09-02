@@ -10,9 +10,12 @@
 ## 0. Rahmen — für JEDEN Chat, der hier arbeitet (zuerst lesen)
 
 1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt, den
-   ersten mit `Status: offen`. Traegt ein Schritt den Vermerk
-   `Ausführung: nur Fable`, laesst jedes andere Modell ihn liegen und nimmt
-   den naechsten offenen. Nicht mehr. Kein Vorgriff, keine Zusatzideen,
+   ersten mit `Status: offen`, den du ausfuehren DARFST: Fable darf jeden;
+   jedes andere Modell (Opus, Sonnet) NUR Schritte mit dem Vermerk
+   `Ausführung: Opus erlaubt` — alles andere laesst es liegen und nimmt den
+   naechsten erlaubten, oder hoert auf und sagt das (Nutzer 2026-09-02:
+   ein Opus-Schritt hat Aussehen veraendert, das darf nicht wieder
+   passieren). Nicht mehr. Kein Vorgriff, keine Zusatzideen,
    keine „Verbesserungen" nebenbei. Was dir auffällt, schreibst du in den
    Chat-Bericht, nicht in den Code.
 2. Vor Beginn: `git fetch origin` und `git status` sauber. Es gibt EINEN
@@ -78,6 +81,75 @@
   `src/ui/werkbank/`. Rohe `<button>`, `<input>`, `<select>` gibt es im
   Editor nicht.
 - **Die Maske ist tabu** für Teil A. Sie ändert sich nur in Teil B, bewusst.
+
+## 1a. Gestaltungs-Zielbild — eine Hand, prüfbar
+
+Die Bediener kennen SoftEngine. Der Editor erklärt nichts, er ist ein
+Werkzeug. Alles unten gilt für JEDE Fläche; wer davon abweicht, hat einen
+Grund und schreibt ihn in den Commit.
+
+**Werkbank (Editor), Zahlen sind Vorgabe, nicht Vorschlag**
+- Grundgröße 13,5 px (`html`), Schrift Inter. Zwei Textgrößen: `text-ui`
+  (13 px, Normalfall) und `text-dicht` (12 px, Listen, Kennungen). Titel
+  sind `text-ui font-semibold`, nie größer. Kennungen/Codes in Mono als
+  `Marke`.
+- Eine Steuerhöhe: `h-steuer` (28 px) für Knopf, Feld, Wahl, Zeile. Kleiner
+  (24 px) nur in der Werkzeugleiste am Baustein und in Reitern.
+- Farben nur `--wb-*`: `grund` (Fläche), `panel` (Paneele, Fenster),
+  `control` (Felder), `linie`, `tinte`, `matt`, EIN Akzent (`akzent`:
+  Auswahl, Fokus, primärer Knopf), `fehler`, `vormerkung`. Auswahlrahmen
+  und Anfasser im Canvas: `--wb-auswahl`. Keine weitere Farbe, kein Hex im
+  Code, kein Verlauf, kein Schatten außer `shadow-overlay` für Schwebendes.
+- Ecken 2 px (`--radius`). Abstände aus der 4er-Skala (`gap-1`, `gap-2`,
+  `p-2`, `p-4`); Paneel-Innenabstand `p-2`, Fenster-Detail `p-4`.
+- Zustände überall gleich: Hover = `bg-control`/`border-matt`, aktiv =
+  `bg-akzent/15 text-tinte font-medium`, Fokus = Akzentring, deaktiviert =
+  `opacity-50`, gefährlich = `art="gefahr"` (rote Kontur, rot bei Hover).
+- Zeichen (Icons) nur aus `src/ui/zeichen`, 12–15 px, nie als einziger
+  Träger einer Bedeutung, nie „zur Zierde". Ein Zeichen im Kopf einer
+  Spalte oder an einem Baustein gibt es nicht.
+- Steuerelemente nur aus `src/ui/werkbank/`. Fehlt eines, wird es dort
+  gebaut, nie an der Stelle.
+
+**Flächen, was sie zeigen und was nicht**
+- Toolbar: Maskenname, Seiten (Reiter), Datencenter, Export, Undo/Redo, das
+  Menü (…). Sonst nichts.
+- Palette links: Bausteine in drei Gruppen, Suche. Keine Erklärtexte.
+- Canvas: die Maske, wie sie exportiert wird (WYSIWYG; Ausnahmen nur
+  Striche statt Daten und der Auswahlrahmen). Bedienung am Ding: Auswahl-
+  rahmen 2 px Akzent, Anfasser als Pillen an der Kante, EINE Werkzeugleiste
+  am gewählten Baustein (24 px, über/unter/rechts/innen nach Platz), Klick
+  auf Spaltenkopf = Picker, Ziehen = Umordnen, Griff = Breite. Der Baustein
+  selbst zeichnet nichts davon.
+- Inspector rechts: nur, was man am Ding nicht sieht, in fester Reihenfolge
+  (Eigenschaften, Datenquellen, Felder, Auswahl folgen, Aktionen, Rechnung).
+  Ja/Nein als Kacheln, Wahlen als `Wahl`, jede Gruppe mit `Gruppe`-Titel.
+  Keine Listen, die es am Ding schon gibt (Spalten), keine Hinweistexte.
+- Fenster (`Dialog randlos` + `ListeDetail`): Bereiche links (optional),
+  Liste mit Kopf (Anlegen, Suche, Filter), Detail rechts mit Titel und
+  `Gruppe`n, Speichern/Abbrechen unten rechts IM Detail. Datencenter und
+  Kettenfenster, sonst keins.
+- Popover (`Popover`, Feld-Picker): eine schnelle Wahl, Klick = fertig,
+  Suche ab 8 Einträgen, Gefährliches als klebende Fußzeile.
+- Meldungen: Fehler im Fehlerbalken (Klartext, was und warum), sonst nichts
+  Blinkendes.
+
+**Maske (Export) — unangetastet**
+- `--se-*` Tokens, Segoe UI, Türkis-Akzent, Navy-Leiste. Der Editor mischt
+  sich nicht ein. Änderungen an der Maske sind bewusste Teil-B-Schritte mit
+  Referenz-Erneuerung.
+
+**Was daran noch NICHT stimmt (Stand 2026-09-02, Reihenfolge = Gewicht)**
+1. Spalten-Bedienung (Kopf-Klick, Zug) steckt noch im Baustein → Schritt 8
+   Teil 2 (Patch in `docs/wip/`).
+2. Inspector-Wahlen mit Gedankenstrich-Leerwerten („— keins —", „— keinem
+   —") sind Notlösungen; Leerwert ist „Keine" bzw. der Name der Sache.
+3. Zwei Overlay-Idiome für Ja/Nein im Inspector (Kacheln bei der Tabelle,
+   `Schalter` im Picker) — eines davon.
+4. Kanban-Karten-Vorlage („Karte" mit Strich-Reiter) sieht im Editor aus
+   wie ein Fremdkörper; Sichtprobe und Angleich.
+5. Seitenleiste (Reiter) und Toolbar-Menü nach Opus-Umbau gegen dieses
+   Zielbild nachmessen (Nutzer-Befund: sah anders aus als gedacht).
 
 ## 2. Teil A — eine Bedienlogik (Maske byte-gleich)
 
@@ -231,6 +303,7 @@ Status: erledigt 2026-09-02
 
 ### Schritt 7 — Spalten in der fertigen Maske ausblenden
 Status: offen
+Ausführung: nur Fable (aendert Maske und Aussehen).
 - Ziel: Eine Spalte kann „nur im Editor" sein (z. B. eine Hilfsspalte für
   die Rechnung): im Editor sichtbar, aber gedämpft und gekennzeichnet; in der
   exportierten Maske nicht vorhanden. Schalter im Spalten-Picker
@@ -295,7 +368,7 @@ Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
   Zug sicher schafft, stoppt VOR dem ersten Commit und berichtet.
 
 ### Schritt 10 — Editor-Durchgang: Gestaltung aus einer Hand
-Status: laufend (Fable). Nutzer-Ansage 2026-09-02: Es geht um Architektur,
+Status: laufend. Ausführung: nur Fable. Nutzer-Ansage 2026-09-02: Es geht um Architektur,
 Gestaltung, Aussehen. Nichts liegt über Inhalt, kein Icon ohne Grund, keine
 Erklärtexte (die Bediener kennen SoftEngine), alle Teile teilen sich eine
 Gestaltung, und der Code trägt das.
@@ -315,6 +388,7 @@ Gestaltung, und der Code trägt das.
 
 ### Schritt 9 — Abhängigkeiten auf Stand (nur Nebenversionen)
 Status: offen
+Ausführung: Opus erlaubt (aendert weder Aussehen noch Verhalten; die Wächter entscheiden).
 - Ziel: `npm outdated` zeigt keine Nebenversions-Rückstände. Hauptversionen
   (Tailwind 4, TypeScript 7) bleiben, bis der Nutzer sie will.
 - Dateien: `package.json`, `package-lock.json`.
