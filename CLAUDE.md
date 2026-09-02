@@ -17,8 +17,9 @@
   sie den Auftrag betreffen oder der Nutzer fragt.
 - Der Agent darf den Dev-Server starten und Screenshots machen, wenn das dem
   Urteil dient (Nutzer 2026-09-02). Token-sparsam arbeiten (Nutzer 2026-09-01).
-- Pläne und Chroniken leben in Chat und git-Historie. `UMBAUPLAN.md` ist eine
-  unverbindliche KI-Ideenliste, kein Auftrag.
+- `PLAN.md` ist der EINE Plan: Zielbild, Rahmen für jeden Chat, Schritte mit
+  Prüfung und Klickprobe. Ein Chat arbeitet genau einen Schritt ab. Neue
+  Pläne gibt es nicht (Nutzer 2026-09-02). Chroniken leben in git.
 
 ## Ziel
 
