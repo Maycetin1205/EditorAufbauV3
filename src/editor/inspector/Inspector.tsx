@@ -15,7 +15,6 @@ import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
 import { PropControl } from './PropControl'
 import { QuellenListe } from './QuellenListe'
 import { RechnungSektion } from './RechnungSektion'
-import { SpaltenSektion } from './SpaltenSektion'
 
 interface InspectorZeile {
   row?: string
@@ -178,13 +177,6 @@ export function Inspector() {
         {showDataSection && (
           <div className="flex flex-col gap-4">
             {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
-            {/* Zielbild-Reihenfolge: Datenquellen -> Spalten -> Felder. Bei
-                einer Listen-Bindung mit eigener Quelle (Nachschlage-Feld) gibt
-                es Spalten erst, wenn die Quelle gesetzt ist. */}
-            {def.listenBindung !== undefined
-              && (def.listenBindung.quelleProp === undefined
-                || String(block.props[def.listenBindung.quelleProp] ?? '') !== '')
-              && <SpaltenSektion block={block} bindung={def.listenBindung} />}
             {/* Eigene Ueberschrift: ohne sie standen die Datenfelder optisch
                 INNERHALB der Gruppe „Datenquellen" und lasen sich wie deren
                 Einstellungen — beim Kanban sah der ganze Inspector nach
