@@ -10,7 +10,9 @@
 ## 0. Rahmen — für JEDEN Chat, der hier arbeitet (zuerst lesen)
 
 1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt, den
-   ersten mit `Status: offen`. Nicht mehr. Kein Vorgriff, keine Zusatzideen,
+   ersten mit `Status: offen`. Traegt ein Schritt den Vermerk
+   `Ausführung: nur Fable`, laesst jedes andere Modell ihn liegen und nimmt
+   den naechsten offenen. Nicht mehr. Kein Vorgriff, keine Zusatzideen,
    keine „Verbesserungen" nebenbei. Was dir auffällt, schreibst du in den
    Chat-Bericht, nicht in den Code.
 2. Vor Beginn: `git fetch origin` und `git status` sauber. Branch:
@@ -234,6 +236,16 @@ Status: offen
 
 ### Schritt 8 — Editor-Bedienung raus aus den Masken-Bytes
 Status: offen
+Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
+- Was das ist, in Klartext: Heute steckt der Code, mit dem man im EDITOR die
+  Tabellenspalten bedient (Kopf anklicken, umbenennen, Spalten ziehen,
+  Breite ziehen, Plus/Minus), IM Tabellen-Baustein selbst — und wandert
+  darum mit in die exportierte Maske, obwohl die Maske ihn nie benutzt.
+  Schritt 8 trennt das: der Baustein markiert nur noch die Stellen, der
+  Editor legt seine Bedienung darueber. Ergebnis: kleinere Maskendatei,
+  saubere Trennung, gleiche Bedienung. Schwer, weil es den Baustein anfasst
+  (Masken-Bytes), eine Ueberlagerung im Canvas braucht, die den Spalten
+  folgt, und jede heutige Bedienung unveraendert weiterlaufen muss.
 - Ziel: Was nur der Editor braucht (Spalten-Steuerung, Spalten-Zug,
   Umbenennen, Feld-Picker-Aufruf, Kopf-Griffe: `src/blocks/tabelle/
   spaltenBearbeiten.ts`, Teile von `spaltenBreite.ts`), wird nicht mehr in
