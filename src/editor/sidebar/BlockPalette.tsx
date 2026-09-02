@@ -2,13 +2,13 @@ import { Component, Plus, Search, type Zeichen } from '@/ui/zeichen'
 import { createElement, useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { ROOT_ID, ROOT_TYPE } from '../../core/blocks/BlockData'
 import { canContain, getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import type { BlockCategory, BlockDefinition } from '../../core/blocks/BlockDefinition'
 import { editorAngabenVon } from '../../core/blocks/editorAngaben'
 import { setNewBlockDrag } from '../canvas/dnd'
 import { useEditor } from '../../state/useEditor'
-import { cn } from '@/lib/utils'
 
 const ERSATZ_SYMBOL = Component
 
@@ -98,19 +98,14 @@ interface PaletteKarteProps {
 
 function PaletteKarte({ def, onAdd }: PaletteKarteProps) {
   return (
-    <button
-      type="button"
+    <Knopf
       onClick={onAdd}
       draggable
       onDragStart={(e) => {
         setNewBlockDrag(e.dataTransfer, def.type)
         e.dataTransfer.effectAllowed = 'copy'
       }}
-      className={cn(
-        'group grid h-steuer min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2',
-        'rounded border border-linie bg-control px-2 text-left text-ui text-tinte',
-        'transition-colors hover:border-akzent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
-      )}
+      className="group grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] gap-2 px-2 text-left hover:border-akzent"
     >
       <span className="flex shrink-0 items-center text-matt group-hover:text-tinte">
         {createElement(symbolVon(def.type), { size: 15 })}
@@ -119,6 +114,6 @@ function PaletteKarte({ def, onAdd }: PaletteKarteProps) {
       <span className="flex shrink-0 items-center text-matt opacity-0 transition-opacity group-hover:opacity-100">
         <Plus size={13} />
       </span>
-    </button>
+    </Knopf>
   )
 }

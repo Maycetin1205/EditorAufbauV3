@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { ChevronDown } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
 import { EINGABE_KANTE } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Popover } from '@/ui/werkbank/Popover'
 import { Zeile, type ZeileKind } from '@/ui/werkbank/Zeile'
@@ -62,9 +63,8 @@ export function PickerControl({
     : [treffer?.name, treffer?.kennung].filter((t) => t !== undefined && t !== '').join(' — ')
 
   const knopf = (kind?: ZeileKind) => (
-    <button
+    <Knopf
       ref={knopfRef}
-      type="button"
       id={kind?.id}
       aria-describedby={kind?.['aria-describedby']}
       aria-invalid={kind?.['aria-invalid']}
@@ -85,7 +85,7 @@ export function PickerControl({
         {gezeigt}
       </span>
       <ChevronDown size={13} aria-hidden className="shrink-0 text-matt" />
-    </button>
+    </Knopf>
   )
 
   return (

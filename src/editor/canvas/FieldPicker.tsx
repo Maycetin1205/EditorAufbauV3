@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { Marke } from '@/ui/werkbank/Marke'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
+import { MenueZeile } from '@/ui/werkbank/MenueZeile'
 import { Schalter } from '@/ui/werkbank/Schalter'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { bindungMitQuelle } from '../../core/blocks/BlockDefinition'
@@ -147,16 +148,12 @@ interface FeldZeileProps {
 // „woanders hin geklickt" liest.
 function FeldZeile({ label, hinweis, anzeige, aktiv, onAktiv }: FeldZeileProps) {
   return (
-    <button
-      type="button"
+    <MenueZeile
+      aktiv={aktiv}
       aria-pressed={aktiv}
       title={hinweis}
       onClick={onAktiv}
-      className={cn(
-        'flex h-steuer w-full min-w-0 items-center gap-2 rounded px-1.5 text-left transition-colors',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
-        aktiv ? 'bg-akzent/15' : 'hover:bg-control',
-      )}
+      className="px-1.5"
     >
       <span className="w-20 shrink-0 truncate text-ui text-matt">{label}</span>
       <span
@@ -171,7 +168,7 @@ function FeldZeile({ label, hinweis, anzeige, aktiv, onAktiv }: FeldZeileProps) 
       {anzeige.kennung !== undefined && anzeige.kennung !== '' && (
         <Marke className="max-w-[45%]">{anzeige.kennung}</Marke>
       )}
-    </button>
+    </MenueZeile>
   )
 }
 

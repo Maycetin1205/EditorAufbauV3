@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Search } from '@/ui/zeichen'
+import { Search, Share2 } from '@/ui/zeichen'
+import { Eintrag } from '@/ui/werkbank/Eintrag'
 import { Feld } from '@/ui/werkbank/Feld'
+import { Marke } from '@/ui/werkbank/Marke'
 import {
   formatRelationSyntax,
   relationGroup,
@@ -9,7 +11,7 @@ import {
 } from '../../core/data/relations'
 import { SegmentControl } from '../inspector/controls/SegmentControl'
 import { istUngetaufteVorlage, relationAnzeige } from './relationAnzeige'
-import { RELATION_GRUPPEN } from './helfer'
+import { RELATION_GRUPPEN, VERB_KURZ } from './helfer'
 
 export function RelationAuswahl({
   label,
@@ -67,26 +69,22 @@ export function RelationAuswahl({
         onChange={(value) => setTab(value as RelationGroup)}
       />
 
-      <div className="max-h-36 divide-y divide-linie overflow-y-auto border-y border-linie">
+      <div className="max-h-36 overflow-y-auto border-y border-linie p-1">
         {sichtbar.map((entry) => {
           const ungetauft = istUngetaufteVorlage(entry)
           return (
-            <button
+            <Eintrag
               key={entry.id}
-              type="button"
-              title={formatRelationSyntax(entry)}
+              icon={Share2}
+              name={relationAnzeige(entry)}
+              aktiv={entry.id === relationId}
               onClick={() => onSelect(entry.id)}
-              className={`w-full px-2 py-1.5 text-left text-dicht ${
-                entry.id === relationId ? 'bg-akzent/15 font-medium' : 'hover:bg-control'
-              }`}
-            >
-              <span className="block truncate">{relationAnzeige(entry)}</span>
-              {!ungetauft && (
-                <span className="block truncate text-dicht text-matt">
-                  {entry.verb} · Nr. {entry.nr}
-                </span>
+              rechts={ungetauft ? undefined : (
+                <Marke hinweis={formatRelationSyntax(entry)}>
+                  {VERB_KURZ[entry.verb]} {entry.nr}
+                </Marke>
               )}
-            </button>
+            />
           )
         })}
         {sichtbar.length === 0 && (

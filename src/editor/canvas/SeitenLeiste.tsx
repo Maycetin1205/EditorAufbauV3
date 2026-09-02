@@ -1,11 +1,10 @@
 import { Trash } from '@/ui/zeichen'
 import { Fragment, useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { Reiter } from '@/ui/werkbank/Reiter'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { useEditor } from '../../state/useEditor'
-import { cn } from '@/lib/utils'
-
-const REITER = 'h-6 shrink-0 whitespace-nowrap rounded px-2.5 text-ui transition-colors'
 
 export function SeitenLeiste() {
   const ed = useEditor()
@@ -44,46 +43,38 @@ export function SeitenLeiste() {
           />
         ) : (
           <Fragment key={p.id}>
-            <button
-              type="button"
+            <Reiter
+              aktiv={p.id === aktiv}
               onClick={() => ed.setActivePage(p.id)}
               onDoubleClick={() => {
                 if (!p.istHauptseite) setUmbenennen({ id: p.id, text: p.name })
               }}
               title={p.istHauptseite ? undefined : 'Doppelklick: umbenennen'}
-              className={cn(
-                REITER,
-                p.id === aktiv
-                  ? 'bg-akzent/20 font-medium text-tinte'
-                  : 'text-matt hover:text-tinte',
-              )}
             >
               {p.name}
-            </button>
+            </Reiter>
             {p.id === aktiv && !p.istHauptseite && (
-              <button
-                type="button"
+              <Knopf
+                nurZeichen
                 title="Seite löschen (Strg+Z stellt sie zurück)"
                 aria-label={`Seite ${p.name} löschen`}
                 onClick={() => ed.removeBlock(p.id)}
-                className="flex h-6 shrink-0 items-center rounded bg-akzent/20 pr-1.5 text-matt hover:text-fehler"
+                className="h-6 w-auto rounded-l-none bg-akzent/20 pr-1.5 hover:bg-akzent/20 hover:text-fehler"
               >
                 <Trash size={12} />
-              </button>
+              </Knopf>
             )}
           </Fragment>
         )
       ))}
       {seitenArten.map((def) => (
-        <button
+        <Reiter
           key={def.type}
-          type="button"
           onClick={() => ed.addSeite(def.type)}
           title={`Neue Seite anlegen: ${def.displayName}`}
-          className={cn(REITER, 'text-matt hover:text-tinte')}
         >
           ＋ {def.displayName}
-        </button>
+        </Reiter>
       ))}
     </div>
   )

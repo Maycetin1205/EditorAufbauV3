@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
+import { Ankreuz } from '@/ui/werkbank/Ankreuz'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { kennungAnzeige } from '../../core/data/dataSources'
 import type { DtkTabelle } from '../../core/data/dtkImport'
@@ -87,34 +89,29 @@ export function DtkImportForm({ dateiName, tabellen, pannenGrund, onClose }: Dtk
                 const gesperrt = vorhanden.has(t.kennung)
                 const zeile = hinweis(t)
                 return (
-                  <label
+                  <Ankreuz
                     key={t.kennung}
-                    className={`flex items-start gap-2 border-b border-linie px-2.5 py-1.5 last:border-b-0 ${
-                      gesperrt ? 'opacity-50' : 'cursor-pointer hover:bg-control'
-                    }`}
+                    checked={!gesperrt && angehakt.has(t.kennung)}
+                    disabled={gesperrt}
+                    onChange={() => umschalten(t.kennung)}
+                    className={cn(
+                      'border-b border-linie px-2.5 py-1.5 last:border-b-0',
+                      !gesperrt && 'hover:bg-control',
+                    )}
                   >
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 accent-akzent"
-                      checked={!gesperrt && angehakt.has(t.kennung)}
-                      disabled={gesperrt}
-                      onChange={() => umschalten(t.kennung)}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-baseline gap-1.5">
-                        <span className="truncate font-medium text-tinte">
-                          {t.name !== '' ? t.name : kennungAnzeige(t.kennung)}
-                        </span>
-                        <span className="shrink-0 font-mono text-dicht text-matt">
-                          {kennungAnzeige(t.kennung)}
-                        </span>
+                    <span className="flex items-baseline gap-1.5">
+                      <span className="truncate font-medium text-tinte">
+                        {t.name !== '' ? t.name : kennungAnzeige(t.kennung)}
                       </span>
-                      <span className="block text-dicht text-matt">
-                        {t.felder.length} Felder
-                        {zeile !== '' ? ` · ${zeile}` : ''}
+                      <span className="shrink-0 font-mono text-dicht text-matt">
+                        {kennungAnzeige(t.kennung)}
                       </span>
                     </span>
-                  </label>
+                    <span className="block text-dicht text-matt">
+                      {t.felder.length} Felder
+                      {zeile !== '' ? ` · ${zeile}` : ''}
+                    </span>
+                  </Ankreuz>
                 )
               })}
             </div>

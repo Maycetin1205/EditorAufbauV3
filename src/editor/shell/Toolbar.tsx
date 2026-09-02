@@ -23,6 +23,7 @@ import { relationStore } from '../../state/RelationStore'
 import { useEditor } from '../../state/useEditor'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { MenueZeile } from '@/ui/werkbank/MenueZeile'
 import { Popover } from '@/ui/werkbank/Popover'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
@@ -189,10 +190,6 @@ export function VerlaufKnoepfe() {
   )
 }
 
-const MENUEZEILE =
-  'flex h-steuer w-full items-center gap-2 rounded px-2 text-left text-ui text-tinte'
-  + ' transition-colors hover:bg-control disabled:pointer-events-none disabled:opacity-40'
-
 function WeitereAktionen({
   onClearAll,
   clearDisabled,
@@ -245,41 +242,39 @@ function WeitereAktionen({
           onClose={() => setOffen(false)}
         >
           <div role="menu" className="flex flex-col">
-            <button
+            <MenueZeile
               role="menuitem"
-              type="button"
+              zeichen={<Save size={13} />}
               onClick={() => {
                 setOffen(false)
                 onSpeichern()
               }}
-              className={MENUEZEILE}
             >
-              <Save size={13} /> Maske speichern…
-            </button>
-            <button
+              Maske speichern…
+            </MenueZeile>
+            <MenueZeile
               role="menuitem"
-              type="button"
+              zeichen={<FolderOpen size={13} />}
               onClick={() => {
                 setOffen(false)
                 dateiRef.current?.click()
               }}
-              className={MENUEZEILE}
             >
-              <FolderOpen size={13} /> Maske laden…
-            </button>
+              Maske laden…
+            </MenueZeile>
             <Trenner className="my-1" />
-            <button
+            <MenueZeile
               role="menuitem"
-              type="button"
+              art="gefahr"
+              zeichen={<Trash2 size={13} />}
               disabled={clearDisabled}
               onClick={() => {
                 setOffen(false)
                 onClearAll()
               }}
-              className={`${MENUEZEILE} text-fehler hover:bg-fehler/15`}
             >
-              <Trash2 size={13} /> Alle Bausteine löschen…
-            </button>
+              Alle Bausteine löschen…
+            </MenueZeile>
           </div>
         </Popover>
       )}

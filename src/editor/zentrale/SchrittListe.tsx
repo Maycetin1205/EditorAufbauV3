@@ -129,14 +129,16 @@ export function SchrittListe({
               <span className="w-6 shrink-0 text-right text-dicht tabular-nums text-matt">
                 {i + 1}.
               </span>
-              <button
-                type="button"
+              {/* Zweizeilig: `Knopf` ist eine Zeilen-Flexbox fester Hoehe, darum
+                  hier `flex-col` und `h-auto` — sonst stuenden Was und Naeheres
+                  nebeneinander statt uebereinander. */}
+              <Knopf
                 disabled={!onWaehle}
                 onClick={() => onWaehle?.(s)}
                 title={problem ?? undefined}
-                className="min-w-0 flex-[3] text-left disabled:cursor-default"
+                className="h-auto min-w-0 flex-[3] flex-col items-start justify-start py-1 text-left"
               >
-                <span className="block truncate text-dicht">
+                <span className="block w-full truncate text-dicht">
                   {zus.was}
                   {s.type === 'START_TOOL' && s.toolNr.trim() !== '' ? ` — Nr. ${s.toolNr}` : ''}
                   {s.type === 'BW_LINK' && s.befehl.trim() !== '' ? ` — ${s.befehl}` : ''}
@@ -144,11 +146,11 @@ export function SchrittListe({
                   {problem !== null ? ' — unvollständig' : ''}
                 </span>
                 {naeher !== '' && (
-                  <span className="block truncate text-dicht text-matt">
+                  <span className="block w-full truncate text-dicht text-matt">
                     {naeher}
                   </span>
                 )}
-              </button>
+              </Knopf>
 
               {/* Welche Relation der Schritt ruft — dieselbe Marke wie in der
                   Relationen-Liste des Datencenters (VERB + Nummer, voller

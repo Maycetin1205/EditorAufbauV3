@@ -155,7 +155,7 @@ Status: erledigt 2026-09-02
   wechseln → Kopf und Liste zeigen das neue Feld.
 
 ### Schritt 5 — Rohe Steuerelemente werden Bausatz-Teile
-Status: offen
+Status: erledigt 2026-09-02
 - Ziel: Kein rohes `<button>` und `<select>` mehr in `src/editor/`; rohe
   `<input>` nur noch als UNSICHTBARE Datei-Wahl (`type="file"`,
   `className="hidden"`). Gleiches Verhalten; Groesse und Farben kommen
@@ -185,6 +185,13 @@ Status: offen
   - `src/editor/zentrale/DtkImportForm.tsx`: Ankreuzfeld → neues Teil
     `src/ui/werkbank/Ankreuz.tsx` (Kaestchen mit Beschriftung, `checked`,
     `disabled`, `onChange`).
+  - `src/editor/canvas/FieldPicker.tsx`: die Feld-Zeile → `MenueZeile` (mit
+    `aktiv`; sie war dieselbe Zeile wie im Toolbar-Menue, Klasse fuer Klasse).
+  - `src/editor/inspector/controls/ColorTileControl.tsx`: die Farbkachel →
+    neues Teil `src/ui/werkbank/Farbfeld.tsx` (Farbfleck mit Haekchen:
+    `farbe`, `name`, `gewaehlt`, `onWaehle`).
+  - Die letzten beiden fehlten in der ersten Fassung dieser Zuordnung; die
+    Grep-Pruefung unten verlangte sie aber. Nachgetragen 2026-09-02.
   - AUSNAHME, bleibt roh: `src/editor/canvas/BlockHost.tsx` (zwei
     Canvas-Abzeichen mit Inline-Position: Entfernen, Kind anlegen) und die
     drei unsichtbaren Datei-Wahlen (`Toolbar.tsx`,

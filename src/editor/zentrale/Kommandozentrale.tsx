@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Database, Link2 } from '@/ui/zeichen'
 import { Dialog } from '@/ui/werkbank/Dialog'
+import { Eintrag } from '@/ui/werkbank/Eintrag'
 import { useDataSources } from '../../state/useDataSources'
 import { useRelations } from '../../state/useRelations'
 import { DatenquellenBereich } from './DatenquellenBereich'
@@ -27,22 +28,18 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
   // (ListeDetail) des jeweiligen Bereichs.
   const bereichsleiste = (
     <>
-      {BEREICHE.map(({ key, name, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setBereich(key)}
-            className={`flex h-steuer items-center gap-2 rounded px-2 text-left text-ui transition-colors ${
-              bereich === key
-                ? 'bg-akzent/15 font-medium text-tinte'
-                : 'text-matt hover:bg-control hover:text-tinte'
-            }`}
-          >
-            <Icon size={14} className="shrink-0" />
-            <span className="min-w-0 flex-1 truncate">{name}</span>
+      {BEREICHE.map(({ key, name, icon }) => (
+        <Eintrag
+          key={key}
+          icon={icon}
+          name={name}
+          aktiv={bereich === key}
+          onClick={() => setBereich(key)}
+          rechts={(
             <span className="shrink-0 text-dicht tabular-nums text-matt">{navZahl[key]}</span>
-          </button>
-        ))}
+          )}
+        />
+      ))}
     </>
   )
 
