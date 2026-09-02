@@ -133,9 +133,9 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
   Zeile in einem Ruf; Ende: 11_6 UND 18_25 leer. Immer seriell.
 - Nebenbeobachtung: `CONECT` wird zweimal gesendet, Empfang trotzdem ein Paket.
 
-## Offene Entscheidungen des Nutzers
+## Entscheidungen des Nutzers
 
-- „Rechnungen" im Datencenter (Abgabemenge = Anzahl × Dosis × Tage, fest
-  verdrahtet in `core/data/rechnung.ts` + `editor/zentrale/RechnungenBereich.tsx`):
-  behalten, verallgemeinern oder entfernen? Außen-Urteil 2026-09-02: in dieser
-  Form ein Fremdkörper im generischen Baukasten.
+- „Rechnung" (Abgabemenge = Anzahl × Dosis × Tage, `core/data/rechnung.ts` +
+  `editor/zentrale/RechnungenBereich.tsx`): **bleibt, ist dem Nutzer wichtig**
+  (Nutzer 2026-09-02). Offen ist nur der Ort ihrer Bedienung (heute ein
+  Datencenter-Reiter, obwohl sie die Erfassungszeile EINER Tabelle betrifft).
