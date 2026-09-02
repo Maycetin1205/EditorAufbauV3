@@ -330,8 +330,12 @@ export function FieldPicker({
           )}
         </p>
 
+        {/* Eigener Schluessel-Raum: das Hauptfeld hat den Schluessel '' — als
+            Geschwister der FeldZeile mit demselben Schluessel meldete React
+            doppelte Schluessel, und die Liste konnte beim Umschalten
+            verschwinden. */}
         <Liste
-          key={aktiv.key}
+          key={`liste:${aktiv.key}`}
           suchbar
           gruppen={listeGruppen(
             sichtbareGruppen.length === 1
