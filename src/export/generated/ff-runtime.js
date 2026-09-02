@@ -103,7 +103,6 @@
       overflow: hidden;
       color: var(--se-ink);
 
-      font-family: var(--se-font-schmuck);
       font-size: var(--se-fs-lg);
       font-weight: 600;
       text-overflow: ellipsis;
