@@ -227,13 +227,6 @@ export const tabelleStil = css`
         );
       }
 
-      /* Spalte am Kopf ziehen (nur Editor): die Einfuege-Stelle zeigt sich
-         als Strich an der Zellkante — links der Zelle, vor der eingefuegt
-         wird; hinter der letzten an deren rechter Kante. Die gezogene Spalte
-         wird blass. */
-      .kopf > div.zug-quelle { opacity: 0.4; }
-      .kopf > div.zug-slot { box-shadow: inset 3px 0 0 var(--se-accent); }
-      .kopf > div.zug-slot-ende { box-shadow: inset -3px 0 0 var(--se-accent); }
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
       .zeile > div { color: var(--se-ink); }

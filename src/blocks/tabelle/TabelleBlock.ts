@@ -29,12 +29,7 @@ import {
 } from './datenBesitz'
 import { connectTable, disconnectTable, hatSatzNummer } from './seRuntime'
 import { zeigtEchteDaten } from './suche'
-import {
-  feldPickerAbbestellen,
-  kopfGriffe,
-  rechnungNachSpalten,
-  starteSpaltenZug,
-} from './spaltenBearbeiten'
+import { rechnungNachSpalten } from './spaltenBearbeiten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 import { meldeVormerkungen } from '../shared/vormerkStand'
@@ -499,7 +494,6 @@ export class TabelleBlock extends BasicBlock {
   override disconnectedCallback(): void {
     super.disconnectedCallback()
     document.removeEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
-    feldPickerAbbestellen(this)
     this._ansicht.loese()
     schliesseNachschlagenFuer(this)
     disconnectTable(this)
@@ -576,21 +570,12 @@ export class TabelleBlock extends BasicBlock {
           : nothing,
       }, {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
-        breiten: this.breitenWirt(),        spaltenZug: (e, index) => starteSpaltenZug(e, index, {
-          editable: () => this.editable,
-          liste: () => this.spaltenListe(),
-          aendere: (l) => this.aendere(l),
-          vorZug: () => feldPickerAbbestellen(this),
-        }),
-        ...kopfGriffe({
-          baustein: this,
-          editable: () => this.editable,
-          prop: TabelleBlock.listenBindung.prop,
-          liste: () => this.spaltenListe(),
-          aendere: (l) => this.aendere(l),
-          sortiere: (i) => this._ansicht.klickSortiere(i),
-        }),
-        aktiviereZeile: (rohIndex, ansichtIndex) =>
+        breiten: this.breitenWirt(),
+        // Sortieren gehoert der Maske; im Editor liegt die Spalten-Bedienung
+        // des Editors ueber dem Kopf.
+        klickKopf: (i) => {
+          if (!this.editable) this._ansicht.klickSortiere(i)
+        },        aktiviereZeile: (rohIndex, ansichtIndex) =>
           aktiviereZeile(this, this.rohzeilen, rohIndex, ansichtIndex),
         zeileDoppelt: (rohIndex) => zeileDoppelt(this, this.rohzeilen, rohIndex),
         nimmErfassteZeile: (index) => {

@@ -102,12 +102,11 @@ export interface KoerperHandeln {
   // Feld-Picker noch Umbenennen.
   breiten: BreitenWirt
 
-  // Spaltenkopf angefasst: ab der Zug-Schwelle wird daraus das Verschieben
-  // der Spalte (spaltenBearbeiten/starteSpaltenZug). Nur im Editor.
-  spaltenZug: (e: PointerEvent, index: number) => void
-
-  dblklickKopf: (e: MouseEvent, index: number) => void
-  klickKopf: (e: MouseEvent, index: number) => void
+  // Kopf angeklickt: sortiert die Maske. Im Editor liegt die Bedienung der
+  // Spalten (Feld-Picker, Umordnen) als Schicht des Editors DARUEBER
+  // (editor/canvas/SpaltenBedienung); der Baustein markiert nur die Stellen
+  // (data-ff-eintrag) und zeichnet dafuer nichts.
+  klickKopf: (index: number) => void
 
   aktiviereZeile: (rohIndex: number | null, ansichtIndex: number) => void
 
@@ -164,10 +163,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           (s, i) => html`<div
             role="columnheader"
             data-ff-editable
+            data-ff-eintrag=${lage.imEditor ? i : nothing}
             style="grid-row: 1; grid-column: ${i + 1}"
-            @pointerdown=${(e: PointerEvent) => tun.spaltenZug(e, i)}
-            @dblclick=${(e: MouseEvent) => tun.dblklickKopf(e, i)}
-            @click=${(e: MouseEvent) => tun.klickKopf(e, i)}
+            @click=${() => tun.klickKopf(i)}
           >${s.titel}${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}</div>`,
@@ -266,7 +264,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               return html`<div
                 role="cell"
                 data-ff-editable=${kopfGriff ? '' : nothing}
-                @click=${kopfGriff ? (e: MouseEvent) => tun.klickKopf(e, i) : nothing}
+                data-ff-eintrag=${kopfGriff && ansichtIndex === 0 ? i : nothing}
               >${markiereTreffer(wert, lage.suchtext)}</div>`
             })}
             ${lage.loeschbar && rohIndex !== null && !lage.imEditor

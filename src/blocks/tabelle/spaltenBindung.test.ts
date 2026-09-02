@@ -34,3 +34,11 @@ test('eintragNeu fuegt eine Spalte mit Kennung an', () => {
   expect(spalten).toHaveLength(4)
   expect(spalten[3].kennung).toBe('s4')
 })
+
+test('eintragVerschieben setzt die Spalte an den neuen Platz', () => {
+  const verschieben = SPALTEN_BINDUNG.eintragVerschieben
+  if (!verschieben) throw new Error('eintragVerschieben fehlt')
+  const patch = verschieben({ spalten: drei() }, 0, 2)
+  expect((patch.spalten as { kennung: string }[]).map((s) => s.kennung)).toEqual(['s2', 's3', 's1'])
+  expect(verschieben({ spalten: drei() }, 1, 1)).toEqual({})
+})

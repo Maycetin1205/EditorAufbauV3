@@ -16,6 +16,7 @@ import { loescheBaustein } from '../../state/loescheBaustein'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
 import { AuswahlLeiste } from './AuswahlLeiste'
+import { SpaltenBedienung } from './SpaltenBedienung'
 import { useFeldBindung } from './FeldBindung'
 import { useBlockResize } from './useBlockResize'
 import { useLitElement } from './useLitElement'
@@ -134,6 +135,17 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
           : null}
       </div>
       {pickers}
+      {def?.listenBindung?.eintragStellen !== undefined && (
+        <SpaltenBedienung
+          block={block}
+          bindung={def.listenBindung}
+          selektor={def.listenBindung.eintragStellen}
+          element={element}
+          wirt={rootRef}
+          container={containerRef}
+          onSelect={onSelect}
+        />
+      )}
       {selected && !templateMark && (
         <AuswahlLeiste
           block={block}

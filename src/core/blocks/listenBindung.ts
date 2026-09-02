@@ -38,6 +38,17 @@ export interface ListenBindung {
   // keine eigenen Knoepfe mehr in die Maske.
   eintragNeu?: (props: Readonly<Record<string, unknown>>) => Record<string, unknown>
   eintragWeg?: (props: Readonly<Record<string, unknown>>, index: number) => Record<string, unknown>
+  eintragVerschieben?: (
+    props: Readonly<Record<string, unknown>>,
+    von: number,
+    nach: number,
+  ) => Record<string, unknown>
+
+  // CSS-Auswahl (im Schatten-DOM des Bausteins) der Stellen, an denen der
+  // Editor die Eintraege anfasst, in Listenreihenfolge. Der Editor legt seine
+  // Bedienung darueber (Klick = Feld-Picker, Ziehen = Umordnen); der Baustein
+  // zeichnet dafuer nichts und weiss nichts davon.
+  eintragStellen?: string
 }
 
 // Ein ZWEITES Feld je Eintrag, unabhaengig von der gewaehlten Darstellung.

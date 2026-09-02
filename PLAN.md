@@ -140,15 +140,13 @@ Grund und schreibt ihn in den Commit.
   Referenz-Erneuerung.
 
 **Was daran noch NICHT stimmt (Stand 2026-09-02, Reihenfolge = Gewicht)**
-1. Spalten-Bedienung (Kopf-Klick, Zug) steckt noch im Baustein → Schritt 8
-   Teil 2 (Patch in `docs/wip/`).
-2. Inspector-Wahlen mit Gedankenstrich-Leerwerten („— keins —", „— keinem
+1. Inspector-Wahlen mit Gedankenstrich-Leerwerten („— keins —", „— keinem
    —") sind Notlösungen; Leerwert ist „Keine" bzw. der Name der Sache.
-3. Zwei Overlay-Idiome für Ja/Nein im Inspector (Kacheln bei der Tabelle,
+2. Zwei Overlay-Idiome für Ja/Nein im Inspector (Kacheln bei der Tabelle,
    `Schalter` im Picker) — eines davon.
-4. Kanban-Karten-Vorlage („Karte" mit Strich-Reiter) sieht im Editor aus
+3. Kanban-Karten-Vorlage („Karte" mit Strich-Reiter) sieht im Editor aus
    wie ein Fremdkörper; Sichtprobe und Angleich.
-5. Seitenleiste (Reiter) und Toolbar-Menü nach Opus-Umbau gegen dieses
+4. Seitenleiste (Reiter) und Toolbar-Menü nach Opus-Umbau gegen dieses
    Zielbild nachmessen (Nutzer-Befund: sah anders aus als gedacht).
 
 ## 2. Teil A — eine Bedienlogik (Maske byte-gleich)
@@ -319,8 +317,7 @@ Ausführung: nur Fable (aendert Maske und Aussehen).
   → Spalte fehlt; Erfassungszeile hat eine Zelle weniger.
 
 ### Schritt 8 — Editor-Bedienung raus aus den Masken-Bytes
-Status: offen
-Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
+Status: erledigt 2026-09-02
 - Teil 1 erledigt 2026-09-02: Plus/Minus-Knoepfe, Spalten-Kreuz und
   Stift-Marke sind aus dem Baustein raus. Der Editor hat dafuer EINE
   Werkzeugleiste am gewaehlten Baustein (`canvas/AuswahlLeiste.tsx`: Kind
@@ -330,17 +327,16 @@ Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
   in den Editor. Die Breiten-Griffe BLEIBEN im Baustein: sie gelten auch in
   der Maske (Bediener zieht Spaltenbreiten, fluechtig). Umbenennen laeuft
   ueber das Titelfeld im Feld-Picker, ein Weg statt zwei.
-- Teil 2, Stand 2026-09-02: fertig gebaut und wieder ZURUECKGENOMMEN — die
-  Seite blieb im Editor mit blockiertem Hauptfaden haengen (Endlosschleife),
-  auch mit abgeschalteter Editor-Schicht. Der komplette Stand liegt als
-  `docs/wip/schritt-8-teil-2.patch` (Registry: `eintragVerschieben`,
-  `eintragStellen`; Baustein: Kopf ohne Editor-Handler, `data-ff-eintrag`;
-  Editor: `canvas/SpaltenBedienung.tsx` als Schicht ueber dem Kopf mit
-  Resize-/MutationObserver). Naechste Sitzung: Patch anwenden, den Haenger
-  eingrenzen — zuerst NUR die Baustein-Aenderungen ohne die Schicht laden
-  (der Verdacht liegt bei der Lit-Warnung „ff-tabelle scheduled an update
-  after an update completed" im Zusammenspiel mit `data-ff-eintrag`), dann
-  die Schicht dazu. Erst wenn die Seite antwortet, Sichtprobe und Commit.
+- Teil 2 erledigt 2026-09-02: Kopf-Klick (Feld-Picker) und Spalten-Zug
+  (Umordnen) sind eine Schicht des Editors (`canvas/SpaltenBedienung.tsx`)
+  ueber den Stellen, die der Baustein markiert (`data-ff-eintrag`, Registry:
+  `listenBindung.eintragStellen`); Umordnen laeuft ueber den reinen Vorgang
+  `eintragVerschieben`. Der Baustein sortiert im Kopf nur noch die Maske.
+  Umbenennen: Titelfeld im Picker. Buendel 229,9 -> 223,3 kB seit Beginn
+  von Schritt 8; Maske ausserhalb des Buendels byte-gleich. Lehre fuer alle:
+  CSS nie per Suchmuster ueber Kommentargrenzen loeschen — ein zu weites
+  Muster riss 232 Zeilen Tabellen-CSS mit, die Tabelle mass ihre Hoehe
+  jedes Mal anders und zeichnete endlos (Hauptfaden blockiert).
 - Was das ist, in Klartext: Heute steckt der Code, mit dem man im EDITOR die
   Tabellenspalten bedient (Kopf anklicken, umbenennen, Spalten ziehen,
   Breite ziehen, Plus/Minus), IM Tabellen-Baustein selbst — und wandert

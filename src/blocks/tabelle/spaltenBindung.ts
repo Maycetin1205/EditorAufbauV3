@@ -2,7 +2,12 @@ import type { ListenBindung } from '../../core/blocks/BlockDefinition'
 import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
 import type { Spalte } from './spalten'
 import { coerceSpalten, SPALTEN_MAX, STANDARD_TITEL } from './spalten'
-import { fuegeSpalteAn, ohneSpalte, rechnungNachSpalten } from './spaltenBearbeiten'
+import {
+  fuegeSpalteAn,
+  mitVerschobenerSpalte,
+  ohneSpalte,
+  rechnungNachSpalten,
+} from './spaltenBearbeiten'
 
 export const SPALTEN_BINDUNG: ListenBindung = {
   prop: 'spalten',
@@ -24,6 +29,15 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     const rechnung = rechnungNachSpalten(props.rechnung, alt, neu)
     return { spalten: [...neu], ...(rechnung === null ? {} : { rechnung }) }
   },
+  eintragVerschieben: (props, von, nach) => {
+    const alt = coerceSpalten(props.spalten)
+    const neu = mitVerschobenerSpalte(alt, von, nach)
+    return neu === alt ? {} : { spalten: [...neu] }
+  },
+
+  // Die Kopfzellen (ohne Kopfzeile: die Zellen der ersten Zeile) — dort legt
+  // der Editor Klick und Zug darueber.
+  eintragStellen: '[data-ff-eintrag]',
 
   eintragsSchalter: [
     {
