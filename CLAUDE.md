@@ -83,7 +83,9 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
 5. SE-Kontrakte nur aus Echttests. Installations-Individuelles (Relations-NRs,
    Werkzeug-Nummern, Felder) sind Daten, nie Code.
 6. Bedienung am Ding (Anfasser, Klick auf die Stelle, Inspector für
-   Unzeigbares). Der Editor erfindet keine Daten (Striche statt Demo-Werte).
+   Unzeigbares). Der Editor erfindet keine Daten (Striche statt Demo-Werte;
+   echte Nutzer-Entscheidung 2026-09-02: keine Beispieldaten, auch nicht als
+   Schalter).
 7. Neue Bezeichner deutsch; bestehende englische bleiben.
 
 ## SoftEngine-Kontrakte (aus Echttests des Nutzers — nie verlieren)
