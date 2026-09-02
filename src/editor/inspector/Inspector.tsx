@@ -3,7 +3,7 @@ import { Copy, MousePointer2 } from '@/ui/zeichen'
 import { bindingProp } from '../../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import { propertySichtbar, type PropertyDescription } from '../../core/blocks/PropertyDescription'
-import { darfAuswahlFolgen, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
+import { darfAuswahlFolgen, kannRechnen, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
@@ -14,7 +14,7 @@ import { AktionenSektion } from './AktionenSektion'
 import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
 import { PropControl } from './PropControl'
 import { QuellenListe } from './QuellenListe'
-import { kannRechnen, RechnungSektion } from './RechnungSektion'
+import { RechnungSektion } from './RechnungSektion'
 
 interface InspectorZeile {
   row?: string

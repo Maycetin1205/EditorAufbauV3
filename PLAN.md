@@ -19,7 +19,9 @@
    Dateien im genannten Ordner, plus die zugehörige `*.test.ts`). Alles
    andere ist verboten. Kein `git add -A`, Dateien namentlich stagen.
 4. Prüfung nach dem Bauen, in dieser Reihenfolge, alles muss grün sein:
-   - `npm run check` (Typen + Lint, keine Ausgabe = gut)
+   - `npm run check` (Typen + Lint). Es zaehlt der EXIT-CODE 0, nicht der
+     Blick auf die Ausgabe — ein Lint-Fehler steht sonst leicht unter dem
+     `tail`. In einer Befehlskette immer `set -o pipefail`.
    - `npm test` (alle Tests grün; Zahl der Tests darf nur steigen)
    - Teil A (Editor-Schritte): `git status --short src/export src/blocks
      src/softengine src/core/data` muss LEER sein. Der Referenzabzug

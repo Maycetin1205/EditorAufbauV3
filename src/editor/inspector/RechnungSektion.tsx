@@ -3,8 +3,6 @@ import { Knopf } from '@/ui/werkbank/Knopf'
 import { Wahl, type WahlOption } from '@/ui/werkbank/Wahl'
 import { Zahl } from '@/ui/werkbank/Zahl'
 import type { BlockNode } from '../../core/blocks/BlockData'
-import { getBlockDefinition } from '../../core/blocks/blockRegistry'
-import { propertySichtbar } from '../../core/blocks/PropertyDescription'
 import {
   leereRechnung,
   rechnungAlsAttribut,
@@ -28,15 +26,6 @@ const RICHTUNGEN: WahlOption[] = [
   { wert: 'ab', name: 'abrunden' },
   { wert: 'kfm', name: 'kaufmännisch' },
 ]
-
-// Rechnen kann, was gerade eine Erfassungszeile HAT: Listen-Baustein mit
-// kannErfassen (Registry-Frage, kein Typ-Name), dessen Bedingung erfuellt
-// ist. Ohne Erfassungszeile gibt es nichts zu rechnen — der Abschnitt fehlt.
-export function kannRechnen(node: BlockNode): boolean {
-  const def = getBlockDefinition(node.type)
-  if (!def?.listenBindung || !def.kannErfassen) return false
-  return propertySichtbar(def.kannErfassen.wenn, node.props)
-}
 
 // Die Spalten des Bausteins, so weit dieses Formular sie braucht: Titel als
 // Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das Belegfeld,

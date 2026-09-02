@@ -188,3 +188,12 @@ export function firstDescendantOfType(
   }
   return undefined
 }
+
+// Rechnen kann, was gerade eine Erfassungszeile HAT: Listen-Baustein mit
+// kannErfassen (Registry-Frage, kein Typ-Name), dessen Bedingung erfuellt
+// ist. Ohne Erfassungszeile gibt es nichts zu rechnen.
+export function kannRechnen(node: BlockNode): boolean {
+  const def = getBlockDefinition(node.type)
+  if (!def?.listenBindung || !def.kannErfassen) return false
+  return propertySichtbar(def.kannErfassen.wenn, node.props)
+}
