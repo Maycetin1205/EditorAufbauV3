@@ -31,8 +31,9 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
 
 ## Repo-Fakten (geprüft 2026-09-02)
 
-- Branch `master`. Arbeits-Branch der Sitzungen ab 2026-09-01:
-  `claude/level-mythos-improve-oa0rrh`.
+- EIN Branch: `master` (Nutzer 2026-09-02). Der Arbeits-Branch
+  `claude/level-mythos-improve-oa0rrh` ist in `master` aufgegangen.
+  Halbfertiges liegt nur als Patch unter `docs/wip/`, nie als Branch.
 - Scripts: `npm run check` (tsc -b + eslint), `npm test` (vitest),
   `npm run build:runtime` (baut `src/export/generated/ff-runtime.js`),
   `npm run dev`, `npm run build`. Andere Wächter-Scripts gibt es nicht.

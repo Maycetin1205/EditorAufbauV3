@@ -15,8 +15,8 @@
    den naechsten offenen. Nicht mehr. Kein Vorgriff, keine Zusatzideen,
    keine „Verbesserungen" nebenbei. Was dir auffällt, schreibst du in den
    Chat-Bericht, nicht in den Code.
-2. Vor Beginn: `git fetch origin` und `git status` sauber. Branch:
-   `claude/level-mythos-improve-oa0rrh` (bis der Nutzer anderes sagt).
+2. Vor Beginn: `git fetch origin` und `git status` sauber. Es gibt EINEN
+   Branch: `master` (Nutzer 2026-09-02). Dort wird gearbeitet und gepusht.
 3. Anfassen darfst du nur die Dateien, die der Schritt nennt (plus neue
    Dateien im genannten Ordner, plus die zugehörige `*.test.ts`). Alles
    andere ist verboten. Kein `git add -A`, Dateien namentlich stagen.
@@ -253,8 +253,21 @@ Ausführung: nur Fable (Nutzer 2026-09-02). Opus ueberspringt diesen Schritt.
   Werkzeugleiste am gewaehlten Baustein (`canvas/AuswahlLeiste.tsx`: Kind
   anlegen, Spalte anfuegen, Entfernen) und „Spalte entfernen" im Feld-Picker;
   beides laeuft ueber reine Registry-Vorgaenge (`listenBindung.eintragNeu/
-  eintragWeg`). Offen (Teil 2): Kopf-Klick, Umbenennen, Spalten-Zug und
-  Breiten-Griffe aus dem Buendel in den Editor.
+  eintragWeg`). Offen (Teil 2): Kopf-Klick und Spalten-Zug aus dem Buendel
+  in den Editor. Die Breiten-Griffe BLEIBEN im Baustein: sie gelten auch in
+  der Maske (Bediener zieht Spaltenbreiten, fluechtig). Umbenennen laeuft
+  ueber das Titelfeld im Feld-Picker, ein Weg statt zwei.
+- Teil 2, Stand 2026-09-02: fertig gebaut und wieder ZURUECKGENOMMEN — die
+  Seite blieb im Editor mit blockiertem Hauptfaden haengen (Endlosschleife),
+  auch mit abgeschalteter Editor-Schicht. Der komplette Stand liegt als
+  `docs/wip/schritt-8-teil-2.patch` (Registry: `eintragVerschieben`,
+  `eintragStellen`; Baustein: Kopf ohne Editor-Handler, `data-ff-eintrag`;
+  Editor: `canvas/SpaltenBedienung.tsx` als Schicht ueber dem Kopf mit
+  Resize-/MutationObserver). Naechste Sitzung: Patch anwenden, den Haenger
+  eingrenzen — zuerst NUR die Baustein-Aenderungen ohne die Schicht laden
+  (der Verdacht liegt bei der Lit-Warnung „ff-tabelle scheduled an update
+  after an update completed" im Zusammenspiel mit `data-ff-eintrag`), dann
+  die Schicht dazu. Erst wenn die Seite antwortet, Sichtprobe und Commit.
 - Was das ist, in Klartext: Heute steckt der Code, mit dem man im EDITOR die
   Tabellenspalten bedient (Kopf anklicken, umbenennen, Spalten ziehen,
   Breite ziehen, Plus/Minus), IM Tabellen-Baustein selbst — und wandert
