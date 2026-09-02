@@ -154,24 +154,49 @@ Status: erledigt 2026-09-02
 
 ### Schritt 5 — Rohe Steuerelemente werden Bausatz-Teile
 Status: offen
-- Ziel: Kein rohes `<button>`, `<input>`, `<select>` mehr in `src/editor/`.
-  Gleiches Verhalten, gleiche Größe, gleiche Farben (Bausatz-Vorgaben).
-- Dateien (Stand 2026-09-02): `src/editor/shell/Toolbar.tsx` (3 Knöpfe,
-  1 Feld), `src/editor/canvas/SeitenLeiste.tsx` (3), `src/editor/canvas/
-  BlockHost.tsx` (2), `src/editor/zentrale/SchrittListe.tsx` (1),
-  `src/editor/zentrale/RelationAuswahl.tsx` (1), `src/editor/zentrale/
-  Kommandozentrale.tsx` (1), `src/editor/sidebar/BlockPalette.tsx` (1),
-  `src/editor/inspector/controls/PickerControl.tsx` (1),
-  `src/editor/inspector/controls/BildControl.tsx`, `src/editor/inspector/
-  SchluesselPaarZeilen.tsx`, `src/editor/zentrale/DatenquellenBereich.tsx`,
-  `src/editor/zentrale/DtkImportForm.tsx` (Felder/Select). Fehlt dem Bausatz
-  ein Teil (z. B. Datei-Wahl, Select), kommt es nach `src/ui/werkbank/`.
-- Verboten: Verhalten ändern. Nur Ersetzen.
-- Prüfung: Rahmen Punkt 4 (Teil A) und
-  `grep -rn "<button\b\|<input\b\|<select\b" src/editor --include=*.tsx`
-  liefert nichts.
-- Klickprobe: Toolbar, Seitenleiste, Palette, Datencenter bedienen: alles
-  tut, was es vorher tat, und sieht aus wie die anderen Knöpfe.
+- Ziel: Kein rohes `<button>` und `<select>` mehr in `src/editor/`; rohe
+  `<input>` nur noch als UNSICHTBARE Datei-Wahl (`type="file"`,
+  `className="hidden"`). Gleiches Verhalten; Groesse und Farben kommen
+  vom Bausatz (kleine optische Angleichung ist gewollt).
+- Zuordnung je Stelle (Stand 2026-09-02, nach `grep`):
+  - `src/editor/shell/Toolbar.tsx`: drei Menue-Zeilen (`role="menuitem"`,
+    Klasse `MENUEZEILE`) → neues Teil `src/ui/werkbank/MenueZeile.tsx`
+    (eine Zeile eines Popover-Menues: Text, optional Zeichen, `disabled`,
+    `onClick`; Klassen aus `MENUEZEILE` uebernehmen, `MENUEZEILE` danach
+    loeschen). Die unsichtbare Datei-Wahl bleibt.
+  - `src/editor/canvas/SeitenLeiste.tsx`: zwei Seiten-Reiter → neues Teil
+    `src/ui/werkbank/Reiter.tsx` (Registerzunge: `aktiv`, `onClick`,
+    `onDoubleClick`, `title`, Kinder; Klassen aus `REITER` uebernehmen);
+    der Loesch-Knopf → `Knopf nurZeichen`.
+  - `src/editor/zentrale/Kommandozentrale.tsx`: Bereichs-Knopf → `Eintrag`
+    (icon, name, `rechts` = Zaehler, `aktiv`, `onClick`).
+  - `src/editor/zentrale/RelationAuswahl.tsx`: Listenzeile → `Eintrag`
+    (icon `Share2`, name, `rechts` = `Marke` mit Verb und Nummer wie in der
+    Relationen-Liste, `aktiv`, `onClick`).
+  - `src/editor/zentrale/SchrittListe.tsx`: Zeilen-Knopf → `Knopf` (Art
+    `still`, `className="min-w-0 flex-[3] justify-start text-left"`).
+  - `src/editor/sidebar/BlockPalette.tsx`: Palette-Kachel → `Knopf` mit
+    `draggable` und den Drag-Handlern (Knopf reicht alle Button-Attribute
+    durch); Klassen uebernehmen.
+  - `src/editor/inspector/controls/PickerControl.tsx`: Ausloeser → `Knopf`
+    (`ref` und `aria-*` gehen durch).
+  - `src/editor/zentrale/DtkImportForm.tsx`: Ankreuzfeld → neues Teil
+    `src/ui/werkbank/Ankreuz.tsx` (Kaestchen mit Beschriftung, `checked`,
+    `disabled`, `onChange`).
+  - AUSNAHME, bleibt roh: `src/editor/canvas/BlockHost.tsx` (zwei
+    Canvas-Abzeichen mit Inline-Position: Entfernen, Kind anlegen) und die
+    drei unsichtbaren Datei-Wahlen (`Toolbar.tsx`,
+    `inspector/controls/BildControl.tsx`, `zentrale/DatenquellenBereich.tsx`).
+- Verboten: Verhalten aendern, Tastatur-Bedienung aendern, `src/blocks/`.
+- Prüfung: Rahmen Punkt 4 (Teil A) und:
+  `grep -rn "<button\b" src/editor --include=*.tsx` nennt NUR
+  `canvas/BlockHost.tsx`; `grep -rn "<select\b" src/editor` nichts;
+  `grep -rn "<input\b" src/editor --include=*.tsx` nur Zeilen mit
+  `type="file"` in den drei genannten Dateien.
+- Klickprobe: Toolbar-Menue (…), Seitenreiter (Klick, Doppelklick
+  umbenennen, Loeschen), Palette (Klick und Ziehen), Datencenter-Bereiche,
+  Relation waehlen im Schritt-Formular, Import-Haekchen: alles tut, was es
+  vorher tat, und sieht aus wie die uebrigen Knoepfe.
 
 ### Schritt 6 — Inspector-Reihenfolge fest und für alle gleich
 Status: erledigt 2026-09-02
