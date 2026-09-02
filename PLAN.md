@@ -174,7 +174,7 @@ Status: offen
   tut, was es vorher tat, und sieht aus wie die anderen Knöpfe.
 
 ### Schritt 6 — Inspector-Reihenfolge fest und für alle gleich
-Status: offen
+Status: erledigt 2026-09-02
 - Ziel: Jeder Baustein zeigt seine Abschnitte in der Zielbild-Reihenfolge,
   mit denselben Überschriften (`Gruppe`), keine Ausnahmen. Leere Abschnitte
   fehlen ganz. Kind-Knöpfe (+/×) an Kanban-Spalte und Navi-Eintrag sind

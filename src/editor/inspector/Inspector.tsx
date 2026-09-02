@@ -178,6 +178,13 @@ export function Inspector() {
         {showDataSection && (
           <div className="flex flex-col gap-4">
             {traegtEigeneQuelle(block) && <QuellenListe block={block} />}
+            {/* Zielbild-Reihenfolge: Datenquellen -> Spalten -> Felder. Bei
+                einer Listen-Bindung mit eigener Quelle (Nachschlage-Feld) gibt
+                es Spalten erst, wenn die Quelle gesetzt ist. */}
+            {def.listenBindung !== undefined
+              && (def.listenBindung.quelleProp === undefined
+                || String(block.props[def.listenBindung.quelleProp] ?? '') !== '')
+              && <SpaltenSektion block={block} bindung={def.listenBindung} />}
             {/* Eigene Ueberschrift: ohne sie standen die Datenfelder optisch
                 INNERHALB der Gruppe „Datenquellen" und lasen sich wie deren
                 Einstellungen — beim Kanban sah der ganze Inspector nach
@@ -191,14 +198,6 @@ export function Inspector() {
             )}
           </div>
         )}
-
-        {/* Zielbild-Reihenfolge: Datenquellen -> Spalten -> Auswahl folgen.
-            Bei einer Listen-Bindung mit eigener Quelle (Nachschlage-Feld)
-            gibt es Spalten erst, wenn die Quelle gesetzt ist. */}
-        {def.listenBindung !== undefined
-          && (def.listenBindung.quelleProp === undefined
-            || String(block.props[def.listenBindung.quelleProp] ?? '') !== '')
-          && <SpaltenSektion block={block} bindung={def.listenBindung} />}
 
         {darfAuswahlFolgen(block) && <AuswahlFolgeSektion block={block} />}
 
