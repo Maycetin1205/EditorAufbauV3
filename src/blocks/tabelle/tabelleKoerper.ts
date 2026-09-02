@@ -47,10 +47,6 @@ export interface KoerperLage {
   // Sortieren per Titelklick entfaellt an der Maske.
   zeigeKopf: boolean
 
-  // Je Spalte der Klarname ihrer fremden Quelle — leer, wo alles aus der
-  // Hauptquelle kommt. Kommt vom Editor und wird NUR dort gezeigt.
-  herkunft: readonly string[]
-
   auswahlSemantik: boolean
   zeigeSuche: boolean
   suchtext: string
@@ -166,27 +162,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           // zweite Reihe.
           lage.spalten.map(
           (s, i) => html`<div
-            class=${
-              lage.imEditor && (lage.herkunft[i] ?? '') !== '' ? 'mit-herkunft' : nothing}
             role="columnheader"
             data-ff-editable
             style="grid-row: 1; grid-column: ${i + 1}"
             @pointerdown=${(e: PointerEvent) => tun.spaltenZug(e, i)}
             @dblclick=${(e: MouseEvent) => tun.dblklickKopf(e, i)}
             @click=${(e: MouseEvent) => tun.klickKopf(e, i)}
-          >${
-            // Woher diese Spalte ihren Wert nimmt, wenn er NICHT aus der
-            // Hauptquelle kommt. Nur im Editor: in der Maske waere es eine
-            // Auskunft ueber den Bau, die den Bediener nichts angeht. Dort
-            // bleibt der Titel darum ein nacktes Textstueck wie bisher —
-            // gleiche Bytes, gleiche Darstellung.
-            lage.imEditor && (lage.herkunft[i] ?? '') !== ''
-              ? html`<span class="kopf-titel">${s.titel}</span><span
-                  class="kopf-herkunft"
-                  title=${`Diese Spalte holt ihren Wert aus: ${lage.herkunft[i]}`}
-                >${lage.herkunft[i]}</span>`
-              : s.titel
-          }${!lage.editable && lage.sortSpalte === i
+          >${s.titel}${!lage.editable && lage.sortSpalte === i
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}</div>`,
         )}

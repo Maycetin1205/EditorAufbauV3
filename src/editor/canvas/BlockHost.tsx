@@ -137,8 +137,8 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
         <AuswahlLeiste
           block={block}
           def={def}
-          // Ganz oben auf der Flaeche gibt es kein „darueber" — dann innen.
-          innen={amRand || Number(block.props.rasterY ?? 1) === 0}
+          wirt={rootRef}
+          amRand={amRand}
           onEntfernen={() => loescheBaustein(editor, blockRef.current.id)}
         />
       )}
