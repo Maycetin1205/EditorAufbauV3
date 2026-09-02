@@ -131,7 +131,7 @@ Status: erledigt 2026-09-02
   vorher (leerer Platz wird gerechnet). Datencenter hat zwei Bereiche.
 
 ### Schritt 4 — Inspector-Abschnitt „Spalten" für die Tabelle
-Status: offen
+Status: erledigt 2026-09-02
 - Ziel: Wer eine Tabelle wählt, sieht im Inspector ihre Spalten als Liste:
   Titel, Feldcode klein rechts, Kennzeichen (✎ änderbar, Σ Summe). Klick auf
   eine Zeile öffnet DENSELBEN Spalten-Picker wie der Klick auf den Kopf.

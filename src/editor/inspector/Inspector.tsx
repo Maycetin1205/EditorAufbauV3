@@ -15,6 +15,7 @@ import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
 import { PropControl } from './PropControl'
 import { QuellenListe } from './QuellenListe'
 import { RechnungSektion } from './RechnungSektion'
+import { SpaltenSektion } from './SpaltenSektion'
 
 interface InspectorZeile {
   row?: string
@@ -190,6 +191,14 @@ export function Inspector() {
             )}
           </div>
         )}
+
+        {/* Zielbild-Reihenfolge: Datenquellen -> Spalten -> Auswahl folgen.
+            Bei einer Listen-Bindung mit eigener Quelle (Nachschlage-Feld)
+            gibt es Spalten erst, wenn die Quelle gesetzt ist. */}
+        {def.listenBindung !== undefined
+          && (def.listenBindung.quelleProp === undefined
+            || String(block.props[def.listenBindung.quelleProp] ?? '') !== '')
+          && <SpaltenSektion block={block} bindung={def.listenBindung} />}
 
         {darfAuswahlFolgen(block) && <AuswahlFolgeSektion block={block} />}
 
