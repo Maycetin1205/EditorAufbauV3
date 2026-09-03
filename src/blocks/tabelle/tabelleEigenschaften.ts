@@ -34,6 +34,13 @@ export const TABELLE_EIGENSCHAFTEN: PropertyDescription[] = [
     'Kopfzeile',
     'Aus: keine Titelzeile, kein Sortieren per Titelklick.',
   ),
+
+  jaNeinProperty(
+    'spaltenwahl',
+    'Spaltenwahl',
+    'In der Maske: Rechtsklick auf eine Spaltenüberschrift nimmt Spalten weg '
+      + 'und holt sie zurück. Braucht die Kopfzeile.',
+  ),
   {
     attributeName: 'tagField',
     name: 'Tag filtern nach',

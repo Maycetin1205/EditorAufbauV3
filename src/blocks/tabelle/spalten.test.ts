@@ -188,3 +188,21 @@ test('sind alle Spalten versteckt, bleibt die erste stehen', () => {
   expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1'])
   expect(sicht.plaetze).toEqual([0])
 })
+
+// Die Wahl des BEDIENERS (Rechtsklick in der Maske) filtert auf demselben
+// Weg — und aendert genauso wenig an den Plaetzen.
+test('spaltenSicht nimmt auch weg, was der Bediener weggenommen hat', () => {
+  const sicht = spaltenSicht(liste(false, false, false), false, new Set(['s2']))
+  expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1', 's3'])
+  expect(sicht.plaetze).toEqual([0, 2])
+})
+
+test('im Editor gilt die Wahl des Bedieners nicht', () => {
+  const sicht = spaltenSicht(liste(false, false), true, new Set(['s1']))
+  expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1', 's2'])
+})
+
+test('nimmt der Bediener alles weg, bleibt die erste Spalte stehen', () => {
+  const sicht = spaltenSicht(liste(false, false), false, new Set(['s1', 's2']))
+  expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1'])
+})

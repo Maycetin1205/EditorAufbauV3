@@ -233,6 +233,69 @@ export const tabelleStil = css`
          voll bedienbar — sie ist eine echte Spalte (Rechnung, Kette). */
       :host([data-ff-editor]) .versteckt { opacity: 0.45; }
 
+      /* Die Spaltenwahl des Bedieners (Rechtsklick am Kopf). Sie liegt IN der
+         Tabelle: die schneidet ihren Ueberhang ab (overflow: hidden), ein
+         Fenster ausserhalb waere also gar nicht zu sehen. Der Platz kommt
+         darum schon eingerechnet aus dem Baustein. */
+      .sw-schirm {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+      }
+      .spaltenwahl {
+        position: absolute;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        min-width: 160px;
+        max-width: 260px;
+        max-height: 70%;
+        overflow-y: auto;
+        padding: 3px;
+        background: var(--se-panel);
+        border: var(--se-border) solid var(--se-line);
+        border-radius: var(--se-r-md);
+        box-shadow: var(--se-schatten);
+      }
+      .sw-titel {
+        margin: 0;
+        padding: 3px 8px 5px;
+        font-size: var(--se-fs-sm);
+        font-weight: 600;
+        color: var(--se-muted);
+      }
+      .sw-zeile,
+      .sw-alle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        padding: 4px 8px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs);
+        text-align: left;
+        color: var(--se-ink);
+        background: none;
+        border: 0;
+        border-radius: var(--se-r-sm);
+        cursor: pointer;
+      }
+      .sw-zeile:hover:not(:disabled),
+      .sw-alle:hover { background: var(--se-hover); }
+      .sw-zeile:disabled { cursor: default; opacity: 0.55; }
+      .sw-zeile:not(.an) { color: var(--se-muted); }
+      .sw-haken {
+        flex: none;
+        width: 12px;
+        color: var(--se-accent);
+      }
+      .sw-alle {
+        margin-top: 3px;
+        padding-top: 6px;
+        border-top: var(--se-border) solid var(--se-line);
+        color: var(--se-accent);
+      }
+
       .zeile > div { color: var(--se-ink); }
 
 

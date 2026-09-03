@@ -342,6 +342,32 @@ Maske außerhalb des Bündels byte-gleich.
 Bewusst so: die **Suche** findet auch über ausgeblendete Spalten. Ihr Wert
 gehört zur Zeile; wer ihn kennt, darf danach suchen.
 
+#### Schritt 7b — Spaltenwahl des Bedieners (in SoftEngine)
+Status: erledigt 2026-09-03. Nutzer-Ansage: Ausblenden soll auch NACH dem
+Export eine Option sein — der Bediener räumt sich seine Ansicht selbst auf.
+
+- Neuer Schalter der Tabelle: **Spaltenwahl** (`spaltenwahl`, Vorgabe „nein",
+  wie Suchzeile und Blättern). Der Bauende entscheidet, ob eine Tabelle das
+  anbietet; er braucht dafür die Kopfzeile.
+- Aufruf: **Rechtsklick auf eine Spaltenüberschrift** (Nutzer-Entscheidung
+  2026-09-03 gegen einen sichtbaren Knopf — kein Platzverbrauch, klassisch
+  für ERP-Masken). Ein kleines Fenster IN der Tabelle listet die Spalten mit
+  Haken, dazu „Alle zeigen". Escape oder Klick daneben schließt.
+- Zur Wahl steht nur, was der BAUER zeigt: eine über `Spalte.versteckt`
+  ausgeblendete Hilfsspalte taucht dort nicht auf.
+- Die letzte sichtbare Spalte lässt sich nicht auch noch wegnehmen.
+- Die Wahl gilt je Maske und Tabelle und übersteht ein Neuladen, wenn der
+  Browser den Speicher hergibt; sonst hält sie die Sitzung (`spaltenWahl.ts`,
+  try/catch — ob SoftEngines eingebauter Browser localStorage kann, ist
+  unbelegt und wird darum nicht vorausgesetzt).
+- Gefiltert wird über denselben `spaltenSicht`-Weg: der Spalten-Kontrakt
+  unten gilt unverändert.
+
+Belegt an einer exportierten Maske: Rechtsklick öffnet die Liste (ohne die
+vom Bauer versteckte Spalte), Wegnehmen lässt die übrigen Werte unter der
+richtigen Überschrift stehen, Neuladen hält die Wahl, „Alle zeigen" holt
+alles zurück.
+
 #### Spalten-Kontrakt (gilt dauerhaft, nicht nur für Schritt 7)
 
 Jeder ZUSTAND und jeder ERP-Kontrakt hängt am **Platz der Spalte in der

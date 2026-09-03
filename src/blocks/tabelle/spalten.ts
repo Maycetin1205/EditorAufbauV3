@@ -58,14 +58,19 @@ export interface Spaltensicht {
 export function spaltenSicht(
   spalten: readonly Spalte[],
   alleZeigen: boolean,
+
+  // Was der BEDIENER in der fertigen Maske weggenommen hat (Kennungen,
+  // spaltenWahl.ts). Im Editor gilt es nicht — dort baut man die Maske.
+  wegDurchBediener: ReadonlySet<string> = new Set(),
 ): Spaltensicht {
-  if (alleZeigen || !spalten.some((s) => s.versteckt === true)) {
+  const weg = (s: Spalte): boolean => s.versteckt === true || wegDurchBediener.has(s.kennung)
+  if (alleZeigen || !spalten.some(weg)) {
     return { spalten, plaetze: spalten.map((_, i) => i) }
   }
   const gezeigt: Spalte[] = []
   const plaetze: number[] = []
   spalten.forEach((s, i) => {
-    if (s.versteckt === true) return
+    if (weg(s)) return
     gezeigt.push(s)
     plaetze.push(i)
   })

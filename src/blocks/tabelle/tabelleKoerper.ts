@@ -1,6 +1,11 @@
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
+import {
+  spaltenWahlTpl,
+  type SpaltenWahlHandeln,
+  type SpaltenWahlLage,
+} from './spaltenWahl'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
@@ -53,6 +58,12 @@ export interface KoerperLage {
   // Kopf-Griffe (Feld-Picker, Umbenennen) wandern im Editor auf die Zellen;
   // Sortieren per Titelklick entfaellt an der Maske.
   zeigeKopf: boolean
+
+  // Der Bediener darf Spalten wegnehmen (Rechtsklick am Kopf). Nur Maske.
+  spaltenwahlAn: boolean
+
+  // Das offene Spaltenwahl-Fenster, sonst null.
+  spaltenwahl: SpaltenWahlLage | null
 
   auswahlSemantik: boolean
   zeigeSuche: boolean
@@ -115,6 +126,10 @@ export interface KoerperHandeln {
   // (data-ff-eintrag) und zeichnet dafuer nichts.
   klickKopf: (index: number) => void
 
+  // Rechtsklick auf eine Spaltenueberschrift: das Spaltenwahl-Fenster.
+  oeffneSpaltenwahl: (e: MouseEvent) => void
+  spaltenwahl: SpaltenWahlHandeln
+
   aktiviereZeile: (rohIndex: number | null, ansichtIndex: number) => void
 
   zeileDoppelt: (rohIndex: number | null) => void
@@ -174,6 +189,9 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
             data-ff-eintrag=${lage.imEditor ? lage.plaetze[i] : nothing}
             style="grid-row: 1; grid-column: ${i + 1}"
             @click=${() => tun.klickKopf(lage.plaetze[i])}
+            @contextmenu=${lage.spaltenwahlAn
+              ? (e: MouseEvent) => tun.oeffneSpaltenwahl(e)
+              : nothing}
           >${s.titel}${!lage.editable && lage.sortSpalte === lage.plaetze[i]
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}</div>`,
@@ -333,5 +351,6 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
         ${lage.hatQuelle && lage.korrekturPlatz === null ? lage.erfassung : nothing}
         ${lineal(lage)}`}
       </div>
+      ${spaltenWahlTpl(lage.spaltenwahl, tun.spaltenwahl)}
     `
 }

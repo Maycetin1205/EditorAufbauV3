@@ -38,6 +38,7 @@ import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
 import type { BreitenAenderung, BreitenWirt } from './spaltenBreite'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
 import { spaltenSicht } from './spalten'
+import { ladeWahl, sichereWahl, wahlSchluessel } from './spaltenWahl'
 import { ZEILEN_HOEHE } from './seitengroesse'
 import { tabelleAnsicht } from './tabelleAnsicht'
 import { TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
@@ -52,6 +53,8 @@ import {
 } from './spalten'
 
 export { coerceSpalten, type Spalte } from './spalten'
+
+const LEERE_WAHL: ReadonlySet<string> = new Set()
 
 export class TabelleBlock extends BasicBlock {
   static readonly blockType = 'tabelle'
@@ -104,6 +107,8 @@ export class TabelleBlock extends BasicBlock {
 
     kopfzeile: 'ja',
 
+    spaltenwahl: 'nein',
+
     tagField: '',
 
     rechnung: '',
@@ -134,6 +139,8 @@ export class TabelleBlock extends BasicBlock {
   @property() loeschbar = 'nein'
 
   @property() kopfzeile = 'ja'
+
+  @property() spaltenwahl = 'nein'
 
   @property() leerText = LEER_TEXT_STANDARD
 
@@ -509,6 +516,7 @@ export class TabelleBlock extends BasicBlock {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback()
+    window.removeEventListener('keydown', this.nimmWahlTaste)
     document.removeEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
     this._ansicht.loese()
     schliesseNachschlagenFuer(this)
@@ -523,12 +531,67 @@ export class TabelleBlock extends BasicBlock {
     erfassungStil,
   ]
 
+  // Was der BEDIENER weggenommen hat (nur Maske). Erst beim ersten Zeichnen
+  // gelesen: `wahlSchluessel` braucht den Maskennamen und das fertige
+  // Dokument.
+  private _wahlWeg: Set<string> | null = null
+
+  private _wahlOffen: { links: number; oben: number } | null = null
+
+  private get spaltenwahlAn(): boolean {
+    return this.spaltenwahl === 'ja'
+      && this.kopfzeile === 'ja'
+      && !this.hasAttribute('data-ff-editor')
+  }
+
+  private wahlWeg(): ReadonlySet<string> {
+    if (!this.spaltenwahlAn) return LEERE_WAHL
+    if (this._wahlWeg === null) this._wahlWeg = ladeWahl(wahlSchluessel(this))
+    return this._wahlWeg
+  }
+
+  private readonly nimmWahlTaste = (e: KeyboardEvent): void => {
+    if (e.key !== 'Escape') return
+    this.schliesseSpaltenwahl()
+  }
+
+  private oeffneSpaltenwahl(e: MouseEvent): void {
+    // Das eigene Fenster statt des Browser-Menues — genau dafuer ist der
+    // Rechtsklick hier vergeben (Nutzer-Entscheidung 2026-09-03).
+    e.preventDefault()
+    e.stopPropagation()
+    const rahmen = this.shadowRoot?.querySelector('.tabelle')?.getBoundingClientRect()
+    if (!rahmen) return
+    this._wahlOffen = {
+      links: Math.max(4, Math.min(e.clientX - rahmen.left, Math.max(4, rahmen.width - 170))),
+      oben: Math.max(4, Math.min(e.clientY - rahmen.top, Math.max(4, rahmen.height - 60))),
+    }
+    window.addEventListener('keydown', this.nimmWahlTaste)
+    this.requestUpdate()
+  }
+
+  private schliesseSpaltenwahl(): void {
+    if (this._wahlOffen === null) return
+    this._wahlOffen = null
+    window.removeEventListener('keydown', this.nimmWahlTaste)
+    this.requestUpdate()
+  }
+
+  private merkeWahl(weg: Set<string>): void {
+    this._wahlWeg = weg
+    sichereWahl(wahlSchluessel(this), weg)
+    // Die fluechtigen Breiten haengen am Platz der gezeichneten Spalten; mit
+    // einer Spalte mehr oder weniger stimmen sie nicht mehr.
+    this._breiten.clear()
+    this.requestUpdate()
+  }
+
   override render(): TemplateResult {
     const spalten = this.spaltenListe()
 
     // Gezeichnet wird in der Maske ohne die ausgeblendeten Spalten; Werte,
     // Ketten und Rechnung laufen weiter ueber den vollen Platz (spalten.ts).
-    const sicht = spaltenSicht(spalten, this.hasAttribute('data-ff-editor'))
+    const sicht = spaltenSicht(spalten, this.hasAttribute('data-ff-editor'), this.wahlWeg())
 
     const ansicht = tabelleAnsicht({
       spalten,
@@ -559,6 +622,14 @@ export class TabelleBlock extends BasicBlock {
         editable: this.editable,
         imEditor: this.hasAttribute('data-ff-editor'),
         zeigeKopf: this.kopfzeile === 'ja',
+        spaltenwahlAn: this.spaltenwahlAn,
+        spaltenwahl: this._wahlOffen === null ? null : {
+          // Zur Wahl steht nur, was der BAUER zeigt.
+          waehlbar: spalten.filter((sp) => sp.versteckt !== true),
+          weg: this.wahlWeg(),
+          links: this._wahlOffen.links,
+          oben: this._wahlOffen.oben,
+        },
         auswahlSemantik: geberIdVon(this) !== '',
         zeigeSuche: this.suche === 'ja',
         suchtext: this._ansicht.suchtext,
@@ -594,6 +665,17 @@ export class TabelleBlock extends BasicBlock {
           : nothing,
       }, {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
+        oeffneSpaltenwahl: (e) => this.oeffneSpaltenwahl(e),
+        spaltenwahl: {
+          schalte: (kennung) => {
+            const weg = new Set(this.wahlWeg())
+            if (weg.has(kennung)) weg.delete(kennung)
+            else weg.add(kennung)
+            this.merkeWahl(weg)
+          },
+          alleZeigen: () => this.merkeWahl(new Set()),
+          schliesse: () => this.schliesseSpaltenwahl(),
+        },
         breiten: this.breitenWirt(),
         // Sortieren gehoert der Maske; im Editor liegt die Spalten-Bedienung
         // des Editors ueber dem Kopf.
