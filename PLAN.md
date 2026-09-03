@@ -786,7 +786,8 @@ Entwurfsfrage. Die wird im Chat beantwortet, bevor eine Zeile entsteht.
 Ueberholt seit 2026-09-03. Erledigt sind 17 (Abschnitt 3b, auf Ansage
 vorgezogen), 11 und 12. Dazwischen liegt jetzt Teil B3 (Abschnitt 3c),
 Nutzer-Ansage 2026-09-03. Die Reihenfolge lautet ab hier:
-18 -> (19 und 20, sobald entschieden) -> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
+18 -> 19 -> (20, sobald die Hoehe entschieden ist) -> 12b -> 13 -> 14 -> 15
+-> 16a -> 16b.
 Die Bedienung der Tabelle geht dem Buendel-Umbau vor, weil beide dieselben
 Dateien anfassen und sonst dieselbe Stelle zweimal drankommt.
 11 bis 14 sind unabhängig voneinander und je ein überschaubarer Chat. 12 legt
@@ -890,7 +891,7 @@ Herkunft: Nutzer-Entscheidung 2026-09-03, vorher Abschnitt 6, Punkt 2.
   an einem schmalen Formularfeld.
 
 ### Schritt 19 — Zeilen-Markierung: Maus, Tastatur, eine Marke
-Status: wartet auf EINE Entscheidung (unten), dann offen
+Status: offen
 Sorgfalt: normal.
 Herkunft: war Abschnitt 6, Punkt 7 („noch nicht untersucht"). Untersucht
 2026-09-03; Befund:
@@ -911,12 +912,15 @@ Herkunft: war Abschnitt 6, Punkt 7 („noch nicht untersucht"). Untersucht
   folgen" rühren sich nicht. Erst Enter aktiviert (`tabelleKoerper.ts:255`).
   Zwei verschiedene Marken für einen Zustand, den der Bediener als einen
   erlebt.
-- ENTSCHEIDUNG des Nutzers: Soll der Pfeil-Fokus die Zeile schon MARKIEREN,
-  mit derselben Marke wie ein Klick? Und wenn ja: soll er auch „Auswahl
-  folgen" und die Kette `onRowClick` auslösen? Zur Abwägung, nicht gebaut:
-  markieren ja, Kette nein — sonst feuert jede Pfeilbewegung einen
-  Relations-Lauf.
-- Dateien (erst nach der Entscheidung): `tabelle/zeilenAktivierung.ts`,
+- NUTZER-ENTSCHEIDUNG 2026-09-03: Der Pfeil-Fokus MARKIERT die Zeile, mit
+  derselben Marke wie ein Klick (Flaeche plus Balken links). Er loest die
+  Kette `onRowClick` NICHT aus und schreibt auch nicht in die Auswahl-Ablage:
+  sonst feuert jede Pfeilbewegung einen Relations-Lauf. Ausgeloest wird
+  weiterhin nur bei Enter und bei Klick.
+- Damit gibt es EINE Marke, `.gewaehlt`. Der Fokusrahmen darf bleiben, wo er
+  die Marke nicht doppelt; er ist nur nicht mehr die einzige Auskunft
+  darueber, wo man in der Liste steht.
+- Dateien: `tabelle/zeilenAktivierung.ts`,
   `tabelle/tabelleKoerper.ts`, `tabelle/tabelleStil.ts`, ggf.
   `shared/auswahl.ts`.
 - Verboten: die Kennfarben der Vormerkungen (`zeilenStatus.ts`) anfassen;
@@ -925,9 +929,11 @@ Herkunft: war Abschnitt 6, Punkt 7 („noch nicht untersucht"). Untersucht
   auf einen Blick zu sehen, dieselbe Marke wie nach einem Klick; eine
   vorgemerkte Zeile behält ihre Kennfarbe.
 
-### Schritt 20 — Höhe und Breite der Tabelle
-Status: wartet auf ZWEI Entscheidungen (unten), dann offen
-Sorgfalt: hoch. (Gerechnete Breiten sind hier zweimal gescheitert.)
+### Schritt 20 — Wie viele Zeilen zeigt die Tabelle
+Status: wartet auf EINE Entscheidung (Hoehe, unten). Die Breite ist
+entschieden und faellt aus dem Schritt heraus.
+Sorgfalt: hoch. (Die Zeilenzahl haengt an der Messung des Rumpfes; wer dort
+falsch rechnet, laesst die Tabelle ihre Hoehe jedes Mal anders messen.)
 Herkunft: Nutzer-Ansage 2026-09-03. Stand bisher NIRGENDS im Plan, auch nicht
 in Abschnitt 6.
 - Befund 2026-09-03: Die Zeilenzahl kommt heute allein aus der gemessenen
@@ -936,18 +942,22 @@ in Abschnitt 6.
   Zeilen" gibt es nicht; `tabelleEigenschaften.ts` kennt als einzige
   Eigenschaft `tagField`. Die Breite kommt aus dem Raster, die Spalten teilen
   sie unter sich auf.
-- ENTSCHEIDUNG 1, Höhe: (a) bleibt wie heute, die gezogene Box bestimmt die
-  Zeilenzahl; (b) die Zeilenzahl ist eine Eigenschaft und die Tabelle wächst
-  selbst mit; (c) wie heute, aber eine Höchstzahl deckelt die Box.
-- ENTSCHEIDUNG 2, Breite: Soll die Tabelle ihre Breite aus der Summe der
-  Spaltenbreiten nehmen (also mitschrumpfen), oder bleibt die gezogene Breite
-  der Rahmen, in dem sich die Spalten aufteilen?
+- OFFEN, Hoehe: (a) bleibt wie heute, die gezogene Box bestimmt die
+  Zeilenzahl; (b) wie heute, aber eine Hoechstzahl deckelt die Box; (c) die
+  Zeilenzahl ist eine Eigenschaft und die Tabelle waechst selbst mit. Der
+  Nutzer hat am 2026-09-03 gesagt, er weiss es noch nicht. Seine eigene
+  Ansage lautete „Zeilen max begrenzen" — das ist (b). Geraten wird es
+  trotzdem nicht: entschieden wird an einer echten Maske, kein Code vorher.
+- NUTZER-ENTSCHEIDUNG 2026-09-03, Breite: Die gezogene Breite BLEIBT der
+  Rahmen, in dem sich die Spalten aufteilen. Die Tabelle rechnet ihre Breite
+  nicht aus der Summe der Spalten. Damit ist die Breite erledigt, ohne eine
+  Zeile Code.
 - WARNUNG (aus `tabelle/spalten.ts`, Nutzer-Befund 2026-08-31): ZWEI Anläufe
   mit gerechneten Breiten sind gescheitert, rechts blieb Fläche leer. Eine
   gezogene Breite darf nie überschrieben werden.
-- Dateien (erst nach den Entscheidungen): `tabelle/seitengroesse.ts`,
-  `tabelle/rumpfMessung.ts`, `tabelle/tabelleEigenschaften.ts`,
-  `tabelle/spaltenBreite.ts`.
+- Dateien (erst nach der Entscheidung): `tabelle/seitengroesse.ts`,
+  `tabelle/rumpfMessung.ts`, `tabelle/tabelleEigenschaften.ts`.
+  `spaltenBreite.ts` faellt weg, seit die Breite entschieden ist.
 - Klickprobe steht, sobald die Entscheidungen da sind.
 
 ## 4. Teil C — Pflege
