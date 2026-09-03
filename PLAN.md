@@ -9,15 +9,18 @@
 
 ## 0. Rahmen — für JEDEN Chat, der hier arbeitet (zuerst lesen)
 
-1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt, den
-   ersten mit `Status: offen`, den du ausfuehren DARFST: Fable darf jeden;
-   jedes andere Modell (Opus, Sonnet) NUR Schritte mit dem Vermerk
-   `Ausführung: Opus erlaubt` — alles andere laesst es liegen und nimmt den
-   naechsten erlaubten, oder hoert auf und sagt das (Nutzer 2026-09-02:
-   ein Opus-Schritt hat Aussehen veraendert, das darf nicht wieder
-   passieren). Nicht mehr. Kein Vorgriff, keine Zusatzideen,
+1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt: den
+   ersten mit `Status: offen`. Nicht mehr. Kein Vorgriff, keine Zusatzideen,
    keine „Verbesserungen" nebenbei. Was dir auffällt, schreibst du in den
    Chat-Bericht, nicht in den Code.
+   Es gibt KEINE Modell-Sperre mehr (Nutzer-Entscheidung 2026-09-03). Grund:
+   der Nutzer hat keinen Fable-Zugriff mehr, und die alte Regel „nur Fable"
+   hätte fünf der acht offenen Schritte für immer stillgelegt — darunter 16b,
+   das Ziel des ganzen Pakets. Sie kam aus EINEM Vorfall (ein Schritt hat am
+   2026-09-02 das Aussehen verändert). Dagegen schützt kein Modellname,
+   sondern der Referenzabzug, die Sichtprobe und die Tests. An ihre Stelle
+   tritt die Beweispflicht in Punkt 4c. Alte `Ausführung:`-Zeilen in bereits
+   erledigten Schritten sind Historie und gelten nicht mehr.
 2. Vor Beginn: `git fetch origin` und `git status` sauber. Es gibt EINEN
    Branch: `master` (Nutzer 2026-09-02). Dort wird gearbeitet und gepusht.
 3. Anfassen darfst du nur die Dateien, die der Schritt nennt (plus neue
@@ -51,6 +54,36 @@
    seiner App am laufenden Dev-Server und sieht sie genauso an. Was er
    nicht sehen konnte, sagt er im Bericht. Stillschweigend ausfallen darf
    die Sichtprobe nie.
+   Stand 2026-09-03, am laufenden Werkzeug nachgeprüft: die Sichtprobe
+   LÄUFT, neun Bilder. Drei Dinge, die ein Chat sonst für kaputt hält:
+   - Der Browser ist eingerichtet (der Nutzer hat
+     `node node_modules/playwright-core/cli.js install chromium-headless-shell`
+     laufen lassen). Bricht es nach einem playwright-Update wieder ab, ist es
+     derselbe Befehl — der Rückfall in `tools/sichtprobe.cjs` sucht nur
+     Linux-Pfade und greift auf Windows nie.
+   - Vite bindet nur `::1`, das Werkzeug ruft fest `http://127.0.0.1:5300/`.
+     Deshalb IMMER `URL="http://localhost:5300/" node tools/sichtprobe.cjs standard`.
+     Läuft schon ein Dev-Server des Nutzers auf 5300, keinen zweiten starten —
+     der scheitert mit „Port 5300 is already in use", und das ist kein Fehler
+     im Code.
+   - Bekannte Warnung, schon auf `64d1db1` vorhanden, NICHT vom eigenen
+     Schritt verursacht: „Element ff-tabelle scheduled an update … after an
+     update completed" (Lit). Kommt sie unverändert, ist sie kein Stoppgrund;
+     kommt eine ANDERE oder eine zweite dazu, schon.
+4c. BEWEISPFLICHT — sie ersetzt die alte Modell-Sperre. Jeder offene Schritt
+   trägt eine `Sorgfalt:`-Zeile. Bei `Sorgfalt: normal` reichen Rahmen 4
+   und 4b. Bei `Sorgfalt: hoch` kommt dazu:
+   - VOR dem Bauen im Chat in zwei, drei Sätzen sagen, was am Aussehen oder
+     am Verhalten kippen könnte und woran man es sehen würde. Wer das nicht
+     sagen kann, hat den Schritt nicht verstanden und fängt nicht an.
+   - NACH dem Bauen die Sichtprobe-Bilder EINZELN ansehen und im Bericht je
+     Bild sagen, was geprüft wurde. „Sieht gut aus" ist kein Bericht.
+   - Über die Maske entscheidet der Referenzabzug, nicht das Auge: bei
+     Teil-A-Schritten grün OHNE `REFERENZ_ERNEUERN`; bei Teil-B-Schritten
+     steht im Commit, was sich AUSSERHALB des Bündels geändert hat.
+   - Was nicht geprüft werden konnte, steht im Bericht. Stillschweigen ist
+     ein Fehler, kein Ergebnis.
+
 5. Stopp-Regeln (aufhören, Stand beschreiben, NICHT reparieren):
    - Ein Test bricht, den der Schritt nicht als „ändert sich" nennt.
    - Du müsstest eine Datei anfassen, die der Schritt nicht nennt.
@@ -528,7 +561,7 @@ von selbst).
 
 ### Schritt 11 — Die Pfote raus aus dem Leerzustand
 Status: offen
-Ausführung: Opus erlaubt.
+Sorgfalt: normal.
 - Ziel: `leerZustand()` zeichnet kein Tier-Zeichen mehr. Eine leere Tabelle
   zeigt nur ihren Text. `shared/leerZustand.ts` rendert heute `pfoteIcon()`
   über „Keine Datensätze." — das trifft jede Tabelle und jede Liste, auch
@@ -544,7 +577,7 @@ Ausführung: Opus erlaubt.
 
 ### Schritt 12 — Die Trennstelle anlegen (Grundlage)
 Status: offen
-Ausführung: Opus erlaubt.
+Sorgfalt: normal.
 - Ziel: Die Anmeldung eines Bausteins zerfällt in zwei Hälften.
   `BasicBlock.defineAndRegister` wird zu `definiere(Klasse)` — nur
   `customElements.define`, für Maske und Editor — und `beschreibe(Klasse)` —
@@ -561,8 +594,10 @@ Ausführung: Opus erlaubt.
 
 ### Schritt 12b — Editor-Angaben aus den Bausteinen heraus
 Status: offen
-Ausführung: Fable. (Verschiebt genau die Angaben, aus denen Palette und
-Inspector ihr Aussehen ziehen — dafür gilt die Opus-Sperre.)
+Sorgfalt: hoch. (Verschiebt genau die Angaben, aus denen Palette und
+Inspector ihr Aussehen ziehen. Deshalb wird die Palette einmal ganz und der
+Inspector jedes Bausteins einzeln angesehen — nicht wegen des Modells,
+sondern wegen der Stelle.)
 - Ziel: `displayName`, `category`, `customProperties` samt Beschreibungstexten
   und `raster` sind Editor-Wissen und haben in der Maske nichts verloren.
   Sie ziehen in die Editor-Hälfte um.
@@ -585,7 +620,9 @@ Inspector ihr Aussehen ziehen — dafür gilt die Opus-Sperre.)
 
 ### Schritt 13 — Bauzeit-Weiche: Editor-Bedienung nicht mehr ins Maskenbündel
 Status: offen
-Ausführung: Fable. (Fasst Bausteinverhalten an.)
+Sorgfalt: hoch. (Hier laufen Editor-Code und Masken-Code zum ersten Mal
+auseinander — das findet kein Test. Der eigentliche Schutz ist die SPERRE
+unten: der Echttest des Nutzers in SoftEngine.)
 - Ziel: Eine Konstante `__FF_EDITOR__`, von Vite gesetzt: im Editor-Build
   `true`, im Maskenbau `false`. Der Minifizierer wirft `if (false)`-Blöcke
   weg, die dahinter liegenden Module fallen mit heraus. Damit verschwinden
@@ -620,7 +657,7 @@ verworfen (dient dem Ziel „nur was drauf liegt" nicht, weil Einrückung und
 Kommentare in CSS stecken, das die Maske wirklich braucht; riskantester
 Schritt im Paket; 16 KB ohne gemessenen Schmerz). Der Nutzer hat anders
 entschieden. Die Warnung unten bleibt trotzdem bindend.
-Ausführung: Fable. (Siehe Warnung.)
+Sorgfalt: hoch. (Der riskanteste Schritt im Paket — siehe Warnung unten.)
 - Ziel: Beim Bau des Maskenbündels werden aus den `css`-Blöcken die
   Einrückung und die Quelltextkommentare entfernt: 8,4 KB + 7,7 KB.
   `html`-Literale bleiben unangetastet — dort kann Leerraum sichtbar sein
@@ -646,7 +683,8 @@ Ausführung: Fable. (Siehe Warnung.)
 
 ### Schritt 15 — `nachschlagen.ts` auftrennen (Vorarbeit für 16b)
 Status: offen
-Ausführung: Fable.
+Sorgfalt: normal. (Importe umhängen; der Erfolg ist messbar, siehe
+Prüfung.)
 - Ziel: Tabelle und Formularfeld hängen nicht mehr an demselben Modul.
   Gemessen (Vorschlag 2026-09-03): Rollup steckt den kompletten `TabelleBlock`
   in dasselbe Stück wie `nachschlagen` (79,5 KB), und `formfeld.js` importiert
@@ -665,7 +703,7 @@ Ausführung: Fable.
 
 ### Schritt 16a — `exportMask` bekommt das Bündel hereingereicht
 Status: offen
-Ausführung: Opus erlaubt.
+Sorgfalt: normal.
 - Ziel: `exportMask` importiert das Laufzeitbündel nicht mehr selbst per
   `?raw` (`exportMask.ts:49`), sondern bekommt es als Parameter. Wer es
   beschafft, entscheidet der Aufrufer. Am Ergebnis ändert sich NICHTS — die
@@ -681,7 +719,8 @@ Ausführung: Opus erlaubt.
 
 ### Schritt 16b — Bausatz: nur was auf der Fläche liegt
 Status: offen
-Ausführung: Fable. Größter Schritt.
+Sorgfalt: hoch. Größter Schritt — und der einzige mit einer offenen
+Entwurfsfrage. Die wird im Chat beantwortet, bevor eine Zeile entsteht.
 - Ziel: `build:runtime` baut nicht mehr eine Datei, sondern einen Kern plus
   ein Stück je Baustein. `exportMask` bekommt (über 16a) das zusammengesetzte
   Bündel: Kern + genau die Stücke der Bausteine, die im Baum vorkommen, samt
@@ -762,3 +801,46 @@ Ausführung: Opus erlaubt (aendert weder Aussehen noch Verhalten; die Wächter e
 - Vorgebackene Buendel-Profile („mit/ohne Kanban“): gemessen nur 11 KB statt
   66 KB, weil Card, Datum, Navi, Bild, Popup und Text drin bleiben.
   Verworfen 2026-09-03.
+
+## 6. Wartet auf Entscheidung — NICHT bauen
+
+Hier aufgeschrieben 2026-09-03, damit es nicht verloren geht. Es ist KEIN
+Schritt: nichts hier hat `Status: offen`, kein Chat fängt damit an, bevor der
+Nutzer es in Teil A oder B einreiht. Herkunft: ein Vorschlag aus einem
+anderen Chat zu Tabelle und Erfassung; zwei Fragen darin sind offen.
+
+| # | Was | Fasst an | Bündel? |
+|---|---|---|---|
+| 1 | Dropdown geht wieder zu — Anker ist der Griff statt des ganzen Bausteins | `editor/canvas/FeldBindung.tsx` | nein |
+| 2 | Vorschlagsliste darf breiter sein als das Feld; Pfeil-runter öffnet das große Fenster statt ungefilterter acht | `shared/vorschlagListe.ts`, `tabelle/erfassungsLauf.ts` | ja |
+| 3 | Anzeigelänge je Feld im Datencenter; Spaltenbreite als Anteil daraus | `core/data/dataSources.ts`, Datencenter, `tabelle/spaltenBreite.ts` | ja |
+| 4 | Beizeile: je Spalte Hauptzeile / Beizeile / weglassen; grau, kleiner, nur anzeigen | Zeilen-Vorlage, `tabelle/seitengroesse.ts`, Spaltenkopf-Menü | ja |
+| 5 | Nachschlage-Fenster: eine Breiten-Regel statt zwei, Größe und Spalten auch an der Tabelle einstellbar | `shared/nachschlagen.ts`, `tabelle/erfassungsBedienung.ts` | ja |
+| 6 | Sortier-Vorgabe je Quelle, bleibt beim Öffnen | dieselbe Ablage wie 5 | ja |
+| 7 | Zeilen-Hervorhebung Maus und Tastatur | noch nicht untersucht | ja |
+
+Reihenfolge des Vorschlags: 3 muss vor 4 (die Beizeile braucht die
+Anzeigelänge), 5 und 6 gehören zusammen, 1 ist unabhängig von allem.
+
+Offen, bevor daraus Schritte werden:
+- Pfeil-runter (Punkt 2): öffnet er das große Fenster oder nicht? Der Nutzer
+  hat noch nicht geantwortet.
+- Punkt 7 ist nicht untersucht und kann so nicht eingereiht werden.
+- Kollision: 2, 3, 4 und 5 fassen dieselben Dateien an wie die Schritte 13,
+  15 und 16b (`tabelle/*`, `shared/nachschlagen.ts`, `core/data/dataSources.ts`).
+  Beides gleichzeitig gibt Konflikte. Der Nutzer entscheidet, was zuerst läuft.
+
+Drei Befunde aus dem Code, die gelten, sobald jemand 3 oder 4 baut
+(nachgesehen 2026-09-03):
+- `DataSourceField` ist heute `{ code, label }`. Eine dritte, OPTIONALE
+  Angabe passt dort hinein. Sie darf aber nie in die SEvariablen wandern —
+  die pos_len-Liste hängt am `code`, das ist SE-Kontrakt.
+- „Spaltenbreite als Anteil daraus": `tabelle/spalten.ts` hält fest, dass
+  ZWEI Anläufe mit gerechneten Breiten gescheitert sind (rechts blieb Fläche
+  leer, Nutzer-Befund 2026-08-31). Die Anzeigelänge darf nur die VORGABE
+  setzen, wo keine Breite gezogen wurde — nie eine gezogene Breite
+  überschreiben.
+- Punkt 4 fällt unter den Spalten-Kontrakt aus Schritt 7 und CLAUDE.md
+  Grundsatz 8: die Rolle Haupt/Bei/weg ist eine Angabe fürs ZEICHNEN und
+  gehört neben `spaltenSicht` — nicht in `datenzeilen`, nicht in die
+  Ketten-Parameter, nicht in den Export.
