@@ -324,9 +324,14 @@ Gebaut ist:
   ausgeblendete Spalten (`nachbarPlatz`, `naechsteLeere`); der Fokus findet
   die Zelle über `data-spalte` statt über die Zählung.
 - Editor: ausgeblendete Spalte gedämpft (`.versteckt`, nur `data-ff-editor`).
-- Die Rechnung nennt ausgeblendete Spalten im Wähler mit „(ausgeblendet)" —
-  wer einen GEGEBENEN Platz (Anzahl, Dosis, Tage) versteckt, könnte ihn nie
-  tippen und die Gleichung bliebe ewig offen.
+- Die Rechnung nennt ausgeblendete Spalten im Wähler mit „(ausgeblendet)".
+  Welche Spalte ausgeblendet wird, entscheidet allein der Bauende — der
+  Editor redet ihm nicht hinein. Er sagt nur, wenn sich zwei Einstellungen
+  gegenseitig blockieren: liegen ZWEI Rechnungs-Plätze auf ausgeblendeten
+  Spalten, kann in beide niemand tippen, gerechnet wird aber nur einer — die
+  Rechnung bliebe für immer leer. Dann steht eine rote Zeile im Abschnitt
+  „Rechnung" (Regel 4: nichts scheitert still). Ein einzelner ausgeblendeter
+  Platz ist der Normalfall und wird nicht kommentiert: genau er wird gerechnet.
 
 Belegt im Browser an einer echten exportierten Maske (drei Spalten, mittlere
 ausgeblendet, Daten hineingeschoben): Kopf zeigt zwei Spalten, die Werte

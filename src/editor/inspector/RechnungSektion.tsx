@@ -62,6 +62,20 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
   }))
   const gesetzt = typeof block.props.rechnung === 'string' && block.props.rechnung.trim() !== ''
 
+  // Eine ausgeblendete Spalte kann der Bediener nie tippen — sie kann also
+  // immer nur der GERECHNETE Platz sein. Sitzen zwei Plaetze auf
+  // ausgeblendeten Spalten, hat die Gleichung zwei Luecken, und die Rechnung
+  // rechnet nie: sie fuellt genau eine. Das faellt sonst erst in SoftEngine
+  // auf, an einer Zelle, die einfach leer bleibt (Regel 4: nichts scheitert
+  // still). Welche Spalten ausgeblendet sind, entscheidet der Bediener —
+  // gesagt bekommt er nur, wenn sich zwei davon gegenseitig blockieren.
+  const versteckteKennungen = new Set(
+    spaltenVon(block).filter((sp) => sp.versteckt).map((sp) => sp.kennung),
+  )
+  const blockiert = PLATZ_KEYS
+    .filter((key) => versteckteKennungen.has(stand[key].spalte))
+    .map((key) => PLATZ_NAMEN[key])
+
   const speichere = (neu: Rechnung): void => {
     ed.updateProperty(block.id, 'rechnung', rechnungAlsAttribut(neu))
   }
@@ -110,6 +124,14 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
             </div>
           </div>
         ))}
+
+        {blockiert.length > 1 && (
+          <p className="text-dicht text-fehler">
+            {blockiert.join(' und ')} liegen beide auf ausgeblendeten Spalten.
+            In die kann niemand tippen, und gerechnet wird nur eine — die
+            Rechnung bleibt leer. Eine der beiden muss sichtbar sein.
+          </p>
+        )}
 
         {gesetzt && (
           <div className="flex justify-end border-t border-linie pt-2">
