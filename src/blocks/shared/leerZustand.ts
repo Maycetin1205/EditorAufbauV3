@@ -1,6 +1,5 @@
 import { css, html, nothing, type TemplateResult } from 'lit'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
-import { pfoteIcon } from './pfote'
 
 export const LEER_TEXT_STANDARD = 'Keine Datensätze.'
 
@@ -17,7 +16,6 @@ export function leerTextProperty(): PropertyDescription {
 export function leerZustand(text: string, tafel = false): TemplateResult | typeof nothing {
   if (text.trim() === '') return nothing
   return html`<div class="leer${tafel ? ' leer--tafel' : ''}">
-    ${pfoteIcon()}
     <span>${text}</span>
   </div>`
 }
@@ -34,13 +32,6 @@ export const leerStil = css`
     font-size: var(--se-fs);
     line-height: 1.4;
     text-align: center;
-  }
-
-  .leer svg {
-    width: 22px;
-    height: 22px;
-    fill: var(--se-faint);
-    transform: rotate(-12deg);
   }
 
   .leer--tafel {

@@ -560,7 +560,16 @@ sollen nur nicht mitfahren, wo keine Karte liegt; das erledigt Schritt 16b
 von selbst).
 
 ### Schritt 11 — Die Pfote raus aus dem Leerzustand
-Status: offen
+Status: erledigt 2026-09-03. Rahmen 4 (Teil B) gruen: `npm run check`
+Exit 0, 321 Tests gruen, Buendel neu gebaut (232.215 -> 232.091 Bytes),
+Referenzabzug erneuert. Ausserhalb des Buendels ist `referenz.html`
+byte-gleich, `referenz.sevariablen.json` unveraendert. Sichtprobe 4b: neun
+Bilder neu gemacht und einzeln angesehen, nur die bekannte Lit-Warnung.
+Der Leerzustand kommt in keinem der neun Bilder vor (er braucht eine
+Quelle, die geliefert hat — im Editor gibt es das nicht), darum am
+laufenden Baustein nachgesehen: `.leer` enthaelt nur noch das `<span>`,
+kein `<svg>`; der Kasten misst jetzt 66 px hoch (das Zeichen mit
+seinen 22 px und der 7-px-Abstand darunter fallen weg).
 Sorgfalt: normal.
 - Ziel: `leerZustand()` zeichnet kein Tier-Zeichen mehr. Eine leere Tabelle
   zeigt nur ihren Text. `shared/leerZustand.ts` rendert heute `pfoteIcon()`
