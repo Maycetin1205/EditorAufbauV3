@@ -807,12 +807,13 @@ Ausführung: Opus erlaubt (aendert weder Aussehen noch Verhalten; die Wächter e
 Hier aufgeschrieben 2026-09-03, damit es nicht verloren geht. Es ist KEIN
 Schritt: nichts hier hat `Status: offen`, kein Chat fängt damit an, bevor der
 Nutzer es in Teil A oder B einreiht. Herkunft: ein Vorschlag aus einem
-anderen Chat zu Tabelle und Erfassung; zwei Fragen darin sind offen.
+anderen Chat zu Tabelle und Erfassung. Die Breite in Punkt 2 hat der Nutzer
+inzwischen entschieden (unten); die Pfeil-Frage und Punkt 7 sind offen.
 
 | # | Was | Fasst an | Bündel? |
 |---|---|---|---|
 | 1 | Dropdown geht wieder zu — Anker ist der Griff statt des ganzen Bausteins | `editor/canvas/FeldBindung.tsx` | nein |
-| 2 | Vorschlagsliste darf breiter sein als das Feld; Pfeil-runter öffnet das große Fenster statt ungefilterter acht | `shared/vorschlagListe.ts`, `tabelle/erfassungsLauf.ts` | ja |
+| 2 | Vorschlagsliste muss breiter werden dürfen als Spalte oder Feld (entschieden); was Pfeil-runter im leeren Feld tut, ist offen | `shared/vorschlagListe.ts`, `tabelle/erfassungsLauf.ts` | ja |
 | 3 | Anzeigelänge je Feld im Datencenter; Spaltenbreite als Anteil daraus | `core/data/dataSources.ts`, Datencenter, `tabelle/spaltenBreite.ts` | ja |
 | 4 | Beizeile: je Spalte Hauptzeile / Beizeile / weglassen; grau, kleiner, nur anzeigen | Zeilen-Vorlage, `tabelle/seitengroesse.ts`, Spaltenkopf-Menü | ja |
 | 5 | Nachschlage-Fenster: eine Breiten-Regel statt zwei, Größe und Spalten auch an der Tabelle einstellbar | `shared/nachschlagen.ts`, `tabelle/erfassungsBedienung.ts` | ja |
@@ -822,9 +823,32 @@ anderen Chat zu Tabelle und Erfassung; zwei Fragen darin sind offen.
 Reihenfolge des Vorschlags: 3 muss vor 4 (die Beizeile braucht die
 Anzeigelänge), 5 und 6 gehören zusammen, 1 ist unabhängig von allem.
 
+Nutzer-Entscheidung 2026-09-03 zu Punkt 2 — die BREITE der Vorschlagsliste:
+Sie muss breiter werden dürfen als die Spalte oder das Feld, unter dem sie
+hängt. Begründung des Nutzers: sonst erkennt man am Inhalt nichts — eine
+Liste in Spaltenbreite zeigt abgeschnittene Wortanfänge, und der Bediener
+wählt blind. Das ist eine Anforderung, kein Komfort, und sie gilt
+unabhängig davon, wie die Pfeil-Frage ausgeht. Heute steht die Breite in
+`vorschlagStil` (`shared/vorschlagListe.ts`) auf `left: 0; right: 0`, also
+exakt auf der Breite des Halters; dort liegt die Stelle.
+
 Offen, bevor daraus Schritte werden:
-- Pfeil-runter (Punkt 2): öffnet er das große Fenster oder nicht? Der Nutzer
-  hat noch nicht geantwortet.
+- Pfeil-runter im leeren Feld (Punkt 2): weiter OFFEN. Der Nutzer entscheidet
+  das an der Tastatur beim nächsten echten Erfassen, nicht am Schreibtisch.
+  Zwei Dinge sind dabei schon geklärt und werden nicht neu aufgekocht:
+  - Heute ist es UNGLEICH: in der Erfassungszeile macht Pfeil-runter die
+    Liste auf und zeigt die ERSTEN acht Sätze (`tabelle/erfassungsLauf.ts`,
+    bei `liste-auf` und `slice(0, VORSCHLAEGE_MAX)`); im Formularfeld tut
+    Pfeil-runter GAR NICHTS (`tastenFolge` gibt bei geschlossener Liste
+    `nichts`). Was entschieden wird, wird an der geteilten Stelle
+    entschieden, damit beide Orte danach dasselbe tun.
+  - VERWORFEN 2026-09-03: „bei wenigen Sätzen die Liste, bei vielen das große
+    Fenster." Dieselbe Taste täte dann zwei verschiedene Dinge, je nach
+    Datenmenge, und ein aufspringendes Fenster ist genau der Unfall, wegen
+    dem Tab heute nie mehr eines öffnet.
+  - Idee, NICHT entschieden: die Liste immer aufmachen und in der letzten
+    Zeile sagen, wie viele Sätze es noch gibt (F4 zum Suchen). Damit wäre die
+    willkürliche Auswahl „die ersten acht" wenigstens nicht mehr stumm.
 - Punkt 7 ist nicht untersucht und kann so nicht eingereiht werden.
 - Kollision: 2, 3, 4 und 5 fassen dieselben Dateien an wie die Schritte 13,
   15 und 16b (`tabelle/*`, `shared/nachschlagen.ts`, `core/data/dataSources.ts`).
