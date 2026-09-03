@@ -614,16 +614,35 @@ Ausführung: Fable. (Fasst Bausteinverhalten an.)
   auseinanderläuft, findet kein Test.
 
 ### Schritt 14 — CSS-Ballast beim Maskenbau
-Status: VERWORFEN 2026-09-03 (Chat-Urteil, vom Nutzer abgenommen).
-Der Vorschlag wollte beim Maskenbau Einrückung und Kommentare aus den
-`css`-Blöcken putzen (16,1 KB). Das dient dem Ziel dieser Schritte NICHT:
-Einrückung und Kommentare stecken in CSS, das die Maske wirklich braucht —
-es ist reines Kleinermachen von rechtmäßigem Inhalt. Dagegen steht das
-schlechteste Risiko im ganzen Bündel: „CSS nie per Suchmuster über
-Kommentargrenzen löschen — ein zu weites Muster riss 232 Zeilen Tabellen-CSS
-mit, die Tabelle maß ihre Höhe jedes Mal anders und zeichnete endlos"
-(Schritt 8). Kein Gegenwert. Die Nummer bleibt stehen, damit die Idee nicht
-in drei Chats als frischer Einfall wiederkommt.
+Status: offen
+Nutzer-Entscheidung 2026-09-03: Der Schritt BLEIBT. Der Chat hatte ihn
+verworfen (dient dem Ziel „nur was drauf liegt" nicht, weil Einrückung und
+Kommentare in CSS stecken, das die Maske wirklich braucht; riskantester
+Schritt im Paket; 16 KB ohne gemessenen Schmerz). Der Nutzer hat anders
+entschieden. Die Warnung unten bleibt trotzdem bindend.
+Ausführung: Fable. (Siehe Warnung.)
+- Ziel: Beim Bau des Maskenbündels werden aus den `css`-Blöcken die
+  Einrückung und die Quelltextkommentare entfernt: 8,4 KB + 7,7 KB.
+  `html`-Literale bleiben unangetastet — dort kann Leerraum sichtbar sein
+  (2,9 KB, die bleiben liegen).
+- Dateien: neues Modul `src/export/cssPutz.ts` + `cssPutz.test.ts`,
+  eingehängt als Plugin in `vite.runtime.config.ts`.
+- WARNUNG, aus Schritt 8 dieses Plans: „CSS nie per Suchmuster über
+  Kommentargrenzen löschen — ein zu weites Muster riss 232 Zeilen
+  Tabellen-CSS mit, die Tabelle maß ihre Höhe jedes Mal anders und zeichnete
+  endlos (Hauptfaden blockiert)." Der Putzer muss deshalb ein Zeichen-für-
+  Zeichen-Leser sein, der Literalgrenzen und `${…}` korrekt erkennt, nie
+  ein regulärer Ausdruck über den ganzen Quelltext.
+- Verboten: `html`-Templates anfassen; im Editor-Build putzen; Zeilen
+  zusammenziehen (Umbrüche bleiben, sonst ist das CSS im Browser-Debugger
+  der Maske nicht mehr lesbar).
+- Prüfung: Rahmen 4 (Teil B) und 4b. Der Test deckt ab: Kommentar weg,
+  Einrückung weg, `${…}` unverändert, `html`-Literal unverändert,
+  Zeichen in `content:` unverändert.
+- Klickprobe: Sichtprobe ansehen — Tabelle, Karte, Kanban, Formularfeld sehen
+  aus wie vorher. Nichts springt, nichts ist verschoben. Zeichnet eine
+  Tabelle endlos oder wandert ihre Höhe: sofort zurücknehmen, das ist der
+  Unfall aus Schritt 8.
 
 ### Schritt 15 — `nachschlagen.ts` auftrennen (Vorarbeit für 16b)
 Status: offen
@@ -703,8 +722,8 @@ Ausführung: Fable. Größter Schritt.
   bevor weitergebaut wird.
 
 ### Reihenfolge der Schritte 11 bis 16b
-11 -> 12 -> 12b -> 13 -> 15 -> 16a -> 16b. (14 ist verworfen.)
-11 bis 13 sind unabhängig voneinander und je ein überschaubarer Chat. 12 legt
+11 -> 12 -> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
+11 bis 14 sind unabhängig voneinander und je ein überschaubarer Chat. 12 legt
 nur die Trennstelle an, 12b geht damit durch die Bausteine. 15 ist reine
 Vorarbeit und muss vor 16b liegen, sonst ist 16b umsonst. 16a ändert nichts
 am Ergebnis und macht 16b möglich. 16b ist der große Schritt und der einzige
@@ -738,8 +757,6 @@ Ausführung: Opus erlaubt (aendert weder Aussehen noch Verhalten; die Wächter e
 - Neubau von Laufzeit (`src/softengine/`), Export, Store, Tabellen-
   Erfassung: funktioniert, getestet, durch Echttests belegt.
 - Neue Test-Gattungen (Browser, Komponenten): nur auf Ansage.
-- CSS beim Maskenbau putzen (Einrueckung, Kommentare): verworfen 2026-09-03,
-  siehe Schritt 14.
 - Ein Buendler beim Export (esbuild-Endpunkt, WASM): braucht Server oder
   10 MB, fuer ~66 KB. Verworfen 2026-09-03.
 - Vorgebackene Buendel-Profile („mit/ohne Kanban“): gemessen nur 11 KB statt
