@@ -500,7 +500,15 @@ Ausführung: Opus erlaubt.
 ## 4. Teil C — Pflege
 
 ### Schritt 9 — Abhängigkeiten auf Stand (nur Nebenversionen)
-Status: offen
+Status: erledigt 2026-09-03 — alle Nebenversionen sind auf Stand. Offen bleiben
+nur die Hauptversionen: Tailwind 4, TypeScript 7, @types/node 26.
+Abweichung, im Chat entschieden: vite 8.1.5 → 8.2.2 bringt einen neuen
+Minifizierer (rolldown 1.1.5 → 1.2.7). Der vergibt andere Kurznamen, das
+Runtime-Bündel schrumpft von 230063 auf 230003 Bytes. Der Nutzer hat
+„mitnehmen und Referenzabzug erneuern" gewählt; Maske ausserhalb des Bündels
+und SEvariablen sind byte-gleich geblieben.
+Für den nächsten Chat: playwright ist jetzt 1.62, die Sichtprobe braucht einmalig
+`node node_modules/playwright-core/cli.js install chromium-headless-shell`.
 Ausführung: Opus erlaubt (aendert weder Aussehen noch Verhalten; die Wächter entscheiden).
 - Ziel: `npm outdated` zeigt keine Nebenversions-Rückstände. Hauptversionen
   (Tailwind 4, TypeScript 7) bleiben, bis der Nutzer sie will.
