@@ -100,7 +100,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
         bezeichnung="Verbunden mit"
         gruppen={[{ key: 'partner', eintraege }]}
         wert={partnerVon(index)}
-        leerText="— keine —"
+        leerText="Keine"
         onWaehle={(v) => setzePartner(index, v)}
       />
     )
@@ -121,7 +121,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
         })),
       }]}
       wert={wert}
-      leerText="— keine —"
+      leerText="Keine"
       onWaehle={onWert}
     />
   )

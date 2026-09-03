@@ -97,7 +97,7 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
             <Wahl
               optionen={spaltenOptionen}
               wert={stand[key].spalte}
-              leerText="— nicht belegt —"
+              leerText="Keine"
               onWaehle={(spalte) => setzePlatz(key, { spalte })}
             />
             <div className="flex items-center gap-1.5">

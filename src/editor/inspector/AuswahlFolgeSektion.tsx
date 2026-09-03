@@ -68,7 +68,7 @@ export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
         bezeichnung="Folgt der Auswahl von"
         gruppen={[{ key: 'geber', eintraege: kandidaten.map(eintrag) }]}
         wert={folge?.geberId ?? ''}
-        leerText="— keinem —"
+        leerText="Keiner"
         onWaehle={setzeGeber}
       />
       {folge && (

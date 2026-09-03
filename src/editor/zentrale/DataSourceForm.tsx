@@ -149,7 +149,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   // Gewaehlt wird ein FELD der Quelle, nicht ein getippter Code (Regel 3):
   // der Klarname steht vorn, der Feldcode daneben.
   const satzNummerOptionen = [
-    { value: '', label: '— keine —' },
+    { value: '', label: 'Nicht gebunden' },
     ...zeilen
       .map((z, i) => ({ code: codes[i] ?? '', label: z.label.trim() }))
       .filter((e) => e.code !== '' && e.label !== '')

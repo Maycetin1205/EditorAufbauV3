@@ -104,7 +104,7 @@ interface FieldPickerProps {
 
 const HAUPTFELD = ''
 
-const NICHT_GEBUNDEN = '— nicht gebunden —'
+const NICHT_GEBUNDEN = 'Nicht gebunden'
 
 interface Anzeige {
   name: string

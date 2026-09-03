@@ -443,7 +443,7 @@ Schicht; Serifenschrift weg; ein Anfasser statt vier. Der Rest sind drei
 kleine, mechanische Teilschritte:
 
 ### Schritt 10a — Leerwerte ohne Gedankenstriche
-Status: offen
+Status: erledigt 2026-09-03
 Ausführung: Opus erlaubt.
 - Ziel: Kein Auswahlfeld im Editor zeigt „— keins —", „— keinem —",
   „— keine —" oder „— nicht gebunden —". Der Leerwert ist ein Wort:

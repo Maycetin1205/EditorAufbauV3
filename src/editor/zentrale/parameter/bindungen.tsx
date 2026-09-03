@@ -228,7 +228,7 @@ export function SchrittErgebnisBindung({ binding, wahlen, onChange }: BindungsPr
           bezeichnung="Feld des Ergebnisses"
           gruppen={[feldGruppe(felder, quelle)]}
           wert={feld}
-          leerText="— ganzes Ergebnis —"
+          leerText="Ganzes Ergebnis"
           onWaehle={setzeFeld}
         />
       ) : (

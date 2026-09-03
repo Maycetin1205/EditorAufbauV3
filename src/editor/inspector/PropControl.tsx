@@ -110,7 +110,7 @@ export function PropControl({
             })),
           }],
           wert: typeof value === 'string' && quellen.get(value) ? value : '',
-          leerText: '— keine —',
+          leerText: 'Keine',
           onWaehle: (neueId) => {
             if (neueId === String(value ?? '')) return
 
@@ -151,7 +151,7 @@ export function PropControl({
             })),
           }],
           wert: value == null ? '' : String(value),
-          leerText: '— keins —',
+          leerText: 'Nicht gebunden',
           onWaehle: (code) => {
             ed.transaktion(() => {
               set(code)
@@ -173,7 +173,7 @@ export function PropControl({
             eintraege: seiten.map((s) => ({ wert: s.id, name: s.name })),
           }],
           wert: seiten.some((s) => s.id === value) ? String(value) : '',
-          leerText: '— keine —',
+          leerText: 'Keine',
           onWaehle: (id) => {
             ed.transaktion(() => {
               set(id)
@@ -198,7 +198,7 @@ export function PropControl({
             })),
           }],
           wert: typeof value === 'string' && relations.get(value) ? value : '',
-          leerText: '— keine —',
+          leerText: 'Keine',
           onWaehle: set,
         }
 

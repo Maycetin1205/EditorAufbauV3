@@ -46,7 +46,7 @@ export function SchluesselPaarZeilen({
         eintraege: felder.map((f) => ({ wert: f.code, name: f.label, kennung: f.code })),
       }]}
       wert={wert}
-      leerText="— Feld —"
+      leerText="Nicht gebunden"
       onWaehle={onWaehle}
     />
   )
