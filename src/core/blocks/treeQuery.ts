@@ -3,6 +3,9 @@ import type { ActionValueSpot, BindableSpot } from './BlockDefinition'
 import { getBlockDefinition } from './blockRegistry'
 import { schalterAn, schalterFuer } from './listenBindung'
 import { propertySichtbar } from './PropertyDescription'
+import { QUELLE_PROP } from './quelleProp'
+
+export { QUELLE_PROP }
 
 export interface ActionValueTarget {
   node: BlockNode
@@ -20,8 +23,6 @@ export function actionValueTargets(tree: BlockTree): ActionValueTarget[] {
   visit(tree[ROOT_ID])
   return result
 }
-
-export const QUELLE_PROP = 'source'
 
 export function quellenIdsInKettenVon(node: BlockNode): string[] {
   const ids: string[] = []

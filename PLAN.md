@@ -585,7 +585,19 @@ Sorgfalt: normal.
   kein Zeichen darüber. Exportierte Maske: gleiches Bild.
 
 ### Schritt 12 — Die Trennstelle anlegen (Grundlage)
-Status: offen
+Status: erledigt 2026-09-03. Rahmen 4 (Teil B) gruen: `npm run check` Exit 0,
+321 Tests gruen, Buendel neu gebaut (232.091 -> 232.133 Bytes, die Trennstelle
+kostet 42 Bytes), Referenzabzug erneuert. Ausserhalb des Buendels ist
+`referenz.html` byte-gleich, `referenz.sevariablen.json` unveraendert.
+Sichtprobe 4b: neun Bilder neu gemacht und einzeln angesehen, nur die bekannte
+Lit-Warnung; Palette weiter neun Eintraege in drei Gruppen (sechs Bausteine
+haben `showInPalette = false`), Statuszeile weiter "Bausteine (alle Seiten) 15".
+`register.ts` und `registerEditorAngaben.ts` blieben unberuehrt: solange die
+Bausteindateien `BasicBlock.defineAndRegister` rufen (das ist Schritt 12b),
+gibt es dort nichts zu aendern, ohne das Verhalten zu aendern. Vier Tests
+(`exportSkripte`, `herkunft`, `kettenSpalten`, `spaltenAufraeumen`) importieren
+Bausteindateien direkt und brauchen die Registry — darum ruft
+`defineAndRegister` weiterhin beide Haelften.
 Sorgfalt: normal.
 - Ziel: Die Anmeldung eines Bausteins zerfällt in zwei Hälften.
   `BasicBlock.defineAndRegister` wird zu `definiere(Klasse)` — nur

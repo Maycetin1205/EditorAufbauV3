@@ -1,7 +1,7 @@
 import type { BlockDefinition } from '../../core/blocks/BlockDefinition'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { propertySichtbar } from '../../core/blocks/PropertyDescription'
-import { QUELLE_PROP } from '../../core/blocks/treeQuery'
+import { QUELLE_PROP } from '../../core/blocks/quelleProp'
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import { hasSeData, onSeDaten, seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, isRecord } from '../../softengine/data'

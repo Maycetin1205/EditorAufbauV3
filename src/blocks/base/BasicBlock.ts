@@ -9,6 +9,62 @@ import { AUSWAHL_FOLGE_DEFAULTS } from '../../core/data/auswahlFolge'
 import { QUELLEN_DEFAULTS } from '../../core/data/sourceLinks'
 import { starteUmbenennen } from '../shared/umbenennen'
 
+// Maskenhaelfte der Anmeldung: aus der Klasse wird ein Element.
+export function definiere(BlockClass: BlockComponentStatic): void {
+  if (!customElements.get(BlockClass.tagName)) {
+    customElements.define(
+      BlockClass.tagName,
+      BlockClass as unknown as CustomElementConstructor,
+    )
+  }
+}
+
+// Editorhaelfte der Anmeldung: der Bausteintyp steht in der Registry.
+export function beschreibe(BlockClass: BlockComponentStatic): void {
+  registerBlockType({
+    type: BlockClass.blockType,
+    tagName: BlockClass.tagName,
+    displayName: BlockClass.displayName,
+    category: BlockClass.category,
+
+    defaultProps: {
+      ...FLOW_DEFAULTS,
+      ...RASTER_DEFAULTS,
+      ...(BlockClass.acceptsDataSource ? QUELLEN_DEFAULTS : null),
+
+      ...(BlockClass.kannAuswahlFolgen ? AUSWAHL_FOLGE_DEFAULTS : null),
+      ...BlockClass.defaultProps,
+    },
+    customProperties: BlockClass.customProperties,
+    acceptsChildren: BlockClass.acceptsChildren ?? false,
+    resizableWidth: BlockClass.resizableWidth ?? true,
+    resizableHeight: BlockClass.resizableHeight ?? false,
+    allowedChildTypes: BlockClass.allowedChildTypes,
+    allowedParentTypes: BlockClass.allowedParentTypes,
+    lockedWidth: BlockClass.lockedWidth,
+    defaultChildren: BlockClass.defaultChildren,
+    childDirection: BlockClass.childDirection,
+    showInPalette: BlockClass.showInPalette,
+    templateChild: BlockClass.templateChild,
+    containerHint: BlockClass.containerHint,
+    addChildButton: BlockClass.addChildButton,
+    acceptsDataSource: BlockClass.acceptsDataSource,
+    satzWahl: BlockClass.satzWahl,
+    kannAuswahlFolgen: BlockClass.kannAuswahlFolgen,
+    kannErfassen: BlockClass.kannErfassen,
+    aenderungsSchluessel: BlockClass.aenderungsSchluessel,
+    kannLoeschen: BlockClass.kannLoeschen,
+    bindableSpots: BlockClass.bindableSpots,
+    actionValueSpots: BlockClass.actionValueSpots,
+    listenBindung: BlockClass.listenBindung,
+    blockEvents: BlockClass.blockEvents,
+    pageBlock: BlockClass.pageBlock,
+    flaechenSeite: BlockClass.flaechenSeite,
+    maskenRand: BlockClass.maskenRand,
+    raster: BlockClass.raster,
+  })
+}
+
 export abstract class BasicBlock extends LitElement implements BlockComponent {
   static override styles: CSSResultGroup = css`
     :host { display: block; }
@@ -58,54 +114,10 @@ export abstract class BasicBlock extends LitElement implements BlockComponent {
     })
   }
 
+  // Faellt mit Schritt 12b weg, sobald jeder Baustein selbst `definiere` und
+  // jede `editorAngaben.ts` selbst `beschreibe` ruft.
   static defineAndRegister(BlockClass: BlockComponentStatic): void {
-    if (!customElements.get(BlockClass.tagName)) {
-      customElements.define(
-        BlockClass.tagName,
-        BlockClass as unknown as CustomElementConstructor,
-      )
-    }
-    registerBlockType({
-      type: BlockClass.blockType,
-      tagName: BlockClass.tagName,
-      displayName: BlockClass.displayName,
-      category: BlockClass.category,
-
-      defaultProps: {
-        ...FLOW_DEFAULTS,
-        ...RASTER_DEFAULTS,
-        ...(BlockClass.acceptsDataSource ? QUELLEN_DEFAULTS : null),
-
-        ...(BlockClass.kannAuswahlFolgen ? AUSWAHL_FOLGE_DEFAULTS : null),
-        ...BlockClass.defaultProps,
-      },
-      customProperties: BlockClass.customProperties,
-      acceptsChildren: BlockClass.acceptsChildren ?? false,
-      resizableWidth: BlockClass.resizableWidth ?? true,
-      resizableHeight: BlockClass.resizableHeight ?? false,
-      allowedChildTypes: BlockClass.allowedChildTypes,
-      allowedParentTypes: BlockClass.allowedParentTypes,
-      lockedWidth: BlockClass.lockedWidth,
-      defaultChildren: BlockClass.defaultChildren,
-      childDirection: BlockClass.childDirection,
-      showInPalette: BlockClass.showInPalette,
-      templateChild: BlockClass.templateChild,
-      containerHint: BlockClass.containerHint,
-      addChildButton: BlockClass.addChildButton,
-      acceptsDataSource: BlockClass.acceptsDataSource,
-      satzWahl: BlockClass.satzWahl,
-      kannAuswahlFolgen: BlockClass.kannAuswahlFolgen,
-      kannErfassen: BlockClass.kannErfassen,
-      aenderungsSchluessel: BlockClass.aenderungsSchluessel,
-      kannLoeschen: BlockClass.kannLoeschen,
-      bindableSpots: BlockClass.bindableSpots,
-      actionValueSpots: BlockClass.actionValueSpots,
-      listenBindung: BlockClass.listenBindung,
-      blockEvents: BlockClass.blockEvents,
-      pageBlock: BlockClass.pageBlock,
-      flaechenSeite: BlockClass.flaechenSeite,
-      maskenRand: BlockClass.maskenRand,
-      raster: BlockClass.raster,
-    })
+    definiere(BlockClass)
+    beschreibe(BlockClass)
   }
 }
