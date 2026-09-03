@@ -455,7 +455,15 @@ Ausführung: Opus erlaubt.
 - Prüfung: Rahmen 4 (Teil A) und 4b; der grep findet nichts mehr.
 
 ### Schritt 10b — Ein Ja/Nein-Idiom je Ort
-Status: offen
+Status: erledigt 2026-09-03 — nichts zu ersetzen, die Regel galt schon.
+Beide Greps waren leer (laut `git log -S` waren sie es immer). Im ganzen
+`src/` gibt es genau EINE Kachel-Stelle (`inspector/controls/KachelControl`,
+aus `kind: 'jaNein'`) und EINE Schalter-Stelle (`canvas/FieldPicker`, die
+auch `FeldBindung` bedient) — beide am richtigen Ort; Bild 2 und 3 der
+Sichtprobe zeigen es. Nicht angefasst: das `Ankreuz` im DTK-Import (es hakt
+Tabellen einer Liste an, ist kein Ja/Nein einer Einstellung — Schritt 10c
+misst es nach) und die zweiwertigen Auswahlfelder der Formulare („Mehrere
+Sätze" gegen „Nur der offene Satz": zwei benannte Wege, kein Ja/Nein).
 Ausführung: Opus erlaubt.
 - Regel: Im Inspector ist Ja/Nein eine `Kachel`; in Popover und Fenster
   (Feld-Picker, Formulare) ein `Schalter`. Nichts anderes.
