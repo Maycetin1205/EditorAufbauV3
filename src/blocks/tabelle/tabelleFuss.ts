@@ -1,5 +1,4 @@
 import { html, nothing, type TemplateResult } from 'lit'
-import { vormerkText } from '../shared/vormerkStand'
 import { datensatzText } from './suche'
 
 export interface FussLage {
@@ -41,10 +40,8 @@ export function tabelleFuss(
   lage: FussLage,
   tun: FussHandeln,
 ): TemplateResult | typeof nothing {
-  const vorgemerkt = lage.erfasst + lage.geaendert + lage.geloescht
   const noetig = lage.seiten > 1
     || lage.summen.length > 0
-    || vorgemerkt > 0
     || lage.suchtAktiv
     || lage.auswahlAktiv
   if (lage.leer || !noetig) return nothing
@@ -56,9 +53,6 @@ export function tabelleFuss(
       suchtAktiv: lage.suchtAktiv,
       auswahlAktiv: lage.auswahlAktiv,
     })}</div>
-    ${vorgemerkt === 0 ? nothing : html`<div class="vorgemerkt">${
-      vormerkText(lage.erfasst, lage.geaendert, lage.geloescht)
-    }</div>`}
     ${lage.summen.length === 0 ? nothing : html`<div class="summen">
       ${lage.summen.map((s) => html`<span class="summe">
         <span class="summe-titel">${s.titel}</span>

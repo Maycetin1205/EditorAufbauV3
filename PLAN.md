@@ -9,12 +9,12 @@
 
 ## 0. Rahmen — für JEDEN Chat, der hier arbeitet (zuerst lesen)
 
-> **NÄCHSTER SCHRITT: 18 — Vorschlagsliste darf breiter sein als die Spalte**
+> **NÄCHSTER SCHRITT: 19 — Zeilen-Markierung: Maus, Tastatur, eine Marke**
 > (Abschnitt 3c). Diese Zeile ist die Wahrheit darüber, was dran ist, nicht
 > die Reihenfolge der Überschriften: Teil B3 steht weiter unten im Text, geht
 > den Schritten 12b bis 16b aber VOR (Nutzer-Ansage 2026-09-03). Wer einen
 > Schritt fertig hat, schreibt hier den nächsten hin und committet das mit.
-> Reihenfolge ab hier: 18 -> 19 -> (20, sobald die Höhe entschieden ist) ->
+> Reihenfolge ab hier: 19 -> (20, sobald die Höhe entschieden ist) ->
 > 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
 
 1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt: den,
@@ -879,7 +879,12 @@ erst das Bündel umbaut und danach die Bedienung ändert, fasst dieselbe Stelle
 zweimal an. 11, 12 und 12b stören nicht und können vorher laufen.
 
 ### Schritt 18 — Vorschlagsliste darf breiter sein als die Spalte
-Status: offen
+Status: erledigt 2026-09-03. Rahmen 4 (Teil B) gruen: `npm run check`
+Exit 0, 334 Tests gruen (9 neue Tests in `vorschlagListe.test.ts`),
+Buendel neu gebaut (232.215 -> 235.650 Bytes), Referenzabzug erneuert.
+Ausserhalb des Buendels ist `referenz.html` byte-gleich,
+`referenz.sevariablen.json` unveraendert. Sichtprobe 4b: neun Bilder
+neu gemacht und einzeln angesehen, nur die bekannte Lit-Warnung.
 Sorgfalt: normal.
 Herkunft: Nutzer-Entscheidung 2026-09-03, vorher Abschnitt 6, Punkt 2.
 - Ziel: Die Vorschlagsliste unter einer Erfassungszelle oder einem

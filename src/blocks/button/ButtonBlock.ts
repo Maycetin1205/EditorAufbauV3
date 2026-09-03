@@ -1,4 +1,4 @@
-import { css, html, nothing, type TemplateResult } from 'lit'
+import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
@@ -8,7 +8,6 @@ import {
   VORMERK_EVENT,
   vormerkStandVon,
   vormerkSumme,
-  vormerkText,
   type VormerkZahlen,
 } from '../shared/vormerkStand'
 
@@ -76,9 +75,6 @@ export class ButtonBlock extends BasicBlock {
     return html`<button
       data-ff-editable
       ?disabled=${zahlen !== undefined && offen === 0}
-      title=${zahlen === undefined || offen === 0
-        ? nothing
-        : vormerkText(zahlen.erfasst, zahlen.geaendert, zahlen.geloescht)}
       @dblclick=${(e: MouseEvent) => this.inlineEdit(e, 'label')}
     >${zahlen === undefined ? this.label : `${this.label} (${offen})`}</button>`
   }

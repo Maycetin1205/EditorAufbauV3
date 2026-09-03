@@ -147,12 +147,16 @@ export function zeilenNachAuswahl(
   for (const folge of folgenAusAttribut(el)) {
     const auswahl = auswahlFuer(folge.geberId)
     if (auswahl === undefined) continue
+
+    const aktivePaare = folge.keyPairs
+      .map((p) => ({ soll: getField(auswahl, p.fromField), toField: p.toField }))
+      .filter((p) => p.soll !== '')
+
+    if (aktivePaare.length === 0) continue
+
     gefiltert = true
     raus = raus.filter((row) =>
-      folge.keyPairs.every((p) => {
-        const soll = getField(auswahl, p.fromField)
-        return soll !== '' && soll === getField(row, p.toField)
-      }),
+      aktivePaare.every((p) => p.soll === getField(row, p.toField)),
     )
   }
   return { rows: raus, gefiltert }

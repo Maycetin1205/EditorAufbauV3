@@ -1,4 +1,5 @@
 import { css, html, nothing, type TemplateResult } from 'lit'
+import { ref } from 'lit/directives/ref.js'
 import { zeilePasst } from './textSuche'
 
 // Die Tipp-Vorschlagsliste. Sie entsteht EINMAL hier und wird geteilt: das
@@ -93,6 +94,85 @@ export function tastenFolge(taste: string, args: {
   return args.feldLeer ? 'fenster' : 'nichts'
 }
 
+// Schritt 18: Die Vorschlagsliste darf breiter werden als der Halter
+// (width: max-content, min-width: 100%), damit Artikelbezeichnungen bei
+// schmalen Spalten nicht mehr abgeschnitten werden.
+// Regeln: sie bleibt links verankert und waechst nach rechts; sie wird nie
+// schmaler als der Halter; tritt sie rechts ueber den Rand der Flaeche
+// hinaus, waechst sie nach links (.nach-links).
+export function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
+  let links = 0
+  let rechts = typeof window !== 'undefined' && window.innerWidth > 0
+    ? window.innerWidth
+    : (typeof document !== 'undefined' && document.documentElement?.clientWidth > 0
+        ? document.documentElement.clientWidth
+        : 10000)
+
+  // In einer Tabelle bildet der sichtbare Tabellenrahmen (.tabelle mit overflow: hidden)
+  // die aeussere Begrenzung:
+  const tabelle = el.closest?.('.tabelle')
+  if (tabelle instanceof (globalThis.HTMLElement ?? Object) && typeof tabelle.getBoundingClientRect === 'function') {
+    const tRect = tabelle.getBoundingClientRect()
+    if (tRect.width > 0) {
+      links = Math.max(links, tRect.left)
+      rechts = Math.min(rechts, tRect.right)
+    }
+    return { links, rechts }
+  }
+
+  // Ausserhalb der Tabelle (z. B. am Formularfeld): Begrenzung durch Wurzel-Container / Fenster
+  const wurzel = typeof el.getRootNode === 'function' ? el.getRootNode() : null
+  if (wurzel instanceof (globalThis.ShadowRoot ?? Object) && (wurzel as ShadowRoot).host instanceof (globalThis.HTMLElement ?? Object)) {
+    const eltern = (wurzel as ShadowRoot).host.parentElement
+    if (eltern && typeof eltern.getBoundingClientRect === 'function') {
+      const pRect = eltern.getBoundingClientRect()
+      if (pRect.width > 0) {
+        links = Math.max(links, pRect.left)
+        rechts = Math.min(rechts, pRect.right)
+      }
+    }
+  }
+
+  return { links, rechts }
+}
+
+export function richteVorschlaegeAus(el: HTMLElement): void {
+  if (!el || typeof el.getBoundingClientRect !== 'function') return
+  const eltern = el.parentElement
+  if (!eltern) return
+
+  // Vor der Messung eventuelle alte Breiten-Begrenzung aufheben:
+  el.style.maxWidth = ''
+
+  const halterRect = typeof eltern.getBoundingClientRect === 'function'
+    ? eltern.getBoundingClientRect()
+    : { left: 0, right: 0, width: 0 }
+  const halterBreite = eltern.offsetWidth || halterRect.width || 0
+  const halterLinks = halterRect.left || 0
+  const halterRechts = halterRect.right || (halterLinks + halterBreite)
+
+  const bedarf = el.offsetWidth || (typeof el.getBoundingClientRect === 'function' ? el.getBoundingClientRect().width : 0)
+  if (bedarf <= 0) return
+
+  const grenzen = flaecheGrenzen(el)
+  const waereRechts = halterLinks + bedarf
+
+  // Uebertritt die Liste am linken Rand verankert den rechten Rand der Flaeche,
+  // waechst sie nach links (rechts buendig am Halter verankert):
+  const nachLinks = waereRechts > grenzen.rechts
+  el.classList.toggle('nach-links', nachLinks)
+
+  // Sie wird nie schmaler als der Halter, darf aber auch nach links gewachsen
+  // nicht ueber die Flaeche treten:
+  const maxBreite = nachLinks
+    ? Math.max(halterBreite, halterRechts - grenzen.links)
+    : Math.max(halterBreite, grenzen.rechts - halterLinks)
+
+  if (maxBreite > 0 && Number.isFinite(maxBreite)) {
+    el.style.maxWidth = `${Math.floor(maxBreite)}px`
+  }
+}
+
 export function vorschlagListeTpl(args: {
   eintraege: readonly Vorschlag[]
 
@@ -107,6 +187,16 @@ export function vorschlagListeTpl(args: {
   // im Leeren.
   return html`<ul
     class="vorschlaege"
+    ${ref((el) => {
+      if (el && 'classList' in el && 'style' in el) {
+        richteVorschlaegeAus(el as HTMLElement)
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => {
+            if ((el as HTMLElement).isConnected) richteVorschlaegeAus(el as HTMLElement)
+          })
+        }
+      }
+    })}
     @mousedown=${(e: MouseEvent) => e.preventDefault()}
   >${args.eintraege.map((eintrag, i) => html`<li
       class=${i === args.marke ? 'vorschlag marke' : 'vorschlag'}
@@ -127,8 +217,10 @@ export const vorschlagStil = css`
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
     z-index: 3;
+    width: max-content;
+    min-width: 100%;
+    box-sizing: border-box;
     max-height: 240px;
     overflow: auto;
     margin: 2px 0 0;
@@ -140,6 +232,13 @@ export const vorschlagStil = css`
     font-family: var(--se-font);
     font-size: var(--se-fs);
     color: var(--se-ink);
+  }
+
+  /* Tritt die Liste ueber den rechten Rand der Flaeche hinaus, waechst sie
+     nach links statt weiter nach rechts (Schritt 18). */
+  .vorschlaege.nach-links {
+    left: auto;
+    right: 0;
   }
 
   .vorschlag {
