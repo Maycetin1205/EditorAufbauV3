@@ -162,7 +162,10 @@ function FeldZeile({ label, hinweis, anzeige, aktiv, onAktiv }: FeldZeileProps) 
       onClick={onAktiv}
       className="px-1.5"
     >
-      <span className="w-20 shrink-0 truncate text-ui text-matt">{label}</span>
+      {/* Feste Breite, damit die Beschriftungen der Zeilen an derselben Kante
+          stehen. 6rem, weil das laengste Wort sonst abgeschnitten wird:
+          „Nachschlagen" braucht 74 px bei 13,5 px Grundgroesse, 5rem gaben 68. */}
+      <span className="w-24 shrink-0 truncate text-ui text-matt">{label}</span>
       <span
         className={cn(
           'min-w-0 flex-1 truncate text-ui',
