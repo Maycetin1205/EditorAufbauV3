@@ -61,6 +61,11 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       // kommt, hat kein Schreibziel und ist darum nie aenderbar.
       nurEigeneQuelle: true,
     },
+    {
+      key: 'versteckt',
+      label: 'In der Maske ausblenden',
+      kurz: 'ausgeblendet',
+    },
   ],
 
   // Der gedimmte Quellname unter dem Spaltentitel — nur im Editor.

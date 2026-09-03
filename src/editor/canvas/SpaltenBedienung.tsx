@@ -10,6 +10,12 @@ interface Stelle {
   top: number
   width: number
   height: number
+
+  // Der Platz des Eintrags in der VOLLEN Liste des Bausteins — er steht im
+  // Attribut, nicht in der DOM-Reihenfolge. Heute zeichnet der Editor alle
+  // Eintraege, beides ist also gleich; zeichnete er je gefiltert (versteckte
+  // Spalten), traefe die Reihenfolge den falschen Eintrag.
+  platz: number
 }
 
 interface SpaltenBedienungProps {
@@ -38,9 +44,16 @@ function messe(element: HTMLElement, wirt: HTMLElement, selektor: string): Stell
   const root = element.shadowRoot
   if (!root) return []
   const bezug = wirt.getBoundingClientRect()
-  return Array.from(root.querySelectorAll<HTMLElement>(selektor)).map((el) => {
+  return Array.from(root.querySelectorAll<HTMLElement>(selektor)).map((el, i) => {
     const r = el.getBoundingClientRect()
-    return { left: r.left - bezug.left, top: r.top - bezug.top, width: r.width, height: r.height }
+    const roh = Number(el.getAttribute('data-ff-eintrag'))
+    return {
+      left: r.left - bezug.left,
+      top: r.top - bezug.top,
+      width: r.width,
+      height: r.height,
+      platz: Number.isInteger(roh) ? roh : i,
+    }
   })
 }
 
@@ -89,7 +102,7 @@ export function SpaltenBedienung({
     ziel.dispatchEvent(new CustomEvent('ff-listen-bind', {
       detail: {
         prop: bindung.prop,
-        index,
+        index: s.platz,
         top: bezug.top + s.top + s.height + 4,
         left: bezug.left + s.left,
       },
@@ -141,7 +154,11 @@ export function SpaltenBedienung({
       }
       const verschieben = bindung.eintragVerschieben
       if (!verschieben) return
-      wendeProps(editor, block.id, verschieben(block.props, index, s > index ? s - 1 : s))
+      // Beide Zahlen im selben Raum: der Platz in der vollen Liste. Hinter
+      // der letzten Stelle steht der Platz dahinter.
+      const von = stellen[index]?.platz ?? index
+      const nachRoh = stellen[s]?.platz ?? (stellen[stellen.length - 1]?.platz ?? 0) + 1
+      wendeProps(editor, block.id, verschieben(block.props, von, nachRoh > von ? nachRoh - 1 : nachRoh))
     }
     function beiAbbruch(): void {
       aufraeumen()

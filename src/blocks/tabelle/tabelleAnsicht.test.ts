@@ -59,3 +59,34 @@ test('ohne Vormerkung bleibt es bei den Rohwerten', () => {
   const roh = frage({ sortSpalte: 1, sortAuf: true, wertVon: (z, s) => DATEN[z][s] })
   expect(tabelleAnsicht(roh).zeilen.filter((z) => z !== null)).toEqual([0, 1, 2])
 })
+
+// Schritt 7: Ausgeblendete Spalten zeichnet die Maske nicht. Suche, Sortierung
+// und Summen bleiben trotzdem an der VOLLEN Liste — nur die Rasterspuren
+// zaehlen die gezeichneten, und die gezogene Breite steht unter dem vollen
+// Platz. Wer hier verwechselt, gibt der falschen Spalte die falsche Breite.
+test('das Raster zaehlt die gezeichneten Spalten, die Breite steht am vollen Platz', () => {
+  const ansicht = tabelleAnsicht(frage({
+    gezeichnet: [SPALTEN[1]],
+    plaetze: [1],
+    // Voller Platz 1 ist die Menge; Platz 0 (Artikel) ist ausgeblendet.
+    breiteVon: (i) => (i === 1 ? 250 : 40),
+  }))
+  const spuren = ansicht.cols.gridTemplateColumns.split(') ').length
+  expect(spuren).toBe(1)
+  expect(ansicht.cols.gridTemplateColumns).toContain('250fr')
+  expect(ansicht.cols.gridTemplateColumns).not.toContain('40fr')
+})
+
+test('Suche und Summe lesen weiter die volle Liste', () => {
+  const nurMenge = { gezeichnet: [SPALTEN[1]], plaetze: [1] }
+  // 'ART2' steht in der AUSGEBLENDETEN Spalte — die Zeile gehoert trotzdem
+  // zur Maske, ihr Wert ist echt.
+  expect(tabelleAnsicht(frage({ ...nurMenge, suchtext: 'ART2' })).gesamt).toBe(1)
+  const mitSumme = [SPALTEN[0], { ...SPALTEN[1], summe: true }]
+  const summen = tabelleAnsicht(frage({
+    ...nurMenge, spalten: mitSumme, gezeichnet: [mitSumme[1]],
+  })).summen
+  // 99 (vorgemerkt) + 7 + 9 — die Menge, nicht der Artikeltext.
+  expect(summen).toHaveLength(1)
+  expect(summen[0].titel).toBe('Menge')
+})

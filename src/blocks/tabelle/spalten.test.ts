@@ -1,6 +1,13 @@
 import { expect, test } from 'vitest'
 import { listeFuerExport } from '../../core/blocks/BlockDefinition'
-import { coerceSpalten, mitKennungen, spalteMitKennung, SPALTEN_MIN_BREITE } from './spalten'
+import {
+  coerceSpalten,
+  mitKennungen,
+  spalteMitKennung,
+  spaltenSicht,
+  SPALTEN_MIN_BREITE,
+  type Spalte,
+} from './spalten'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
 
 // Der Weg, den eine Spalte wirklich nimmt: Editor-Eigenschaft -> Export
@@ -138,4 +145,46 @@ test('spalteMitKennung findet den Platz, leer und unbekannt sind -1', () => {
 test('die Kennung ueberlebt Export und Einlesen', () => {
   expect(rundlauf({ kennung: 's3', titel: 'Menge', feld: '164_8' }))
     .toMatchObject({ kennung: 's3' })
+})
+
+// Ausgeblendet heisst: die Maske zeichnet die Spalte nicht. Ueberlebt der
+// Schalter den Weg in die Maske nicht, zeichnet sie sie doch.
+test('ein gesetztes "versteckt" ueberlebt Export und Einlesen', () => {
+  expect(rundlauf({ titel: 'Intern', feld: '930_3', versteckt: true }))
+    .toMatchObject({ versteckt: true })
+})
+
+function liste(...versteckt: boolean[]): Spalte[] {
+  return versteckt.map((v, i) => ({
+    kennung: `s${i + 1}`,
+    titel: `S${i + 1}`,
+    feld: `f${i}`,
+    ...(v ? { versteckt: true } : {}),
+  }))
+}
+
+// Der Kern von Schritt 7: JEDER Wert und jeder Ketten-Parameter haengt am
+// Platz in der VOLLEN Liste (datenzeilen, exportMask, Rechnung). Die Sicht
+// darf nur sagen, WAS gezeichnet wird — und wo das Gezeichnete voll steht.
+test('spaltenSicht laesst im Editor alles stehen', () => {
+  const alle = liste(false, true, false)
+  const sicht = spaltenSicht(alle, true)
+  expect(sicht.spalten).toBe(alle)
+  expect(sicht.plaetze).toEqual([0, 1, 2])
+})
+
+test('spaltenSicht nimmt in der Maske die versteckten heraus und merkt sich ihren Platz', () => {
+  const sicht = spaltenSicht(liste(true, false, false), false)
+  expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s2', 's3'])
+  // Die zweite gezeichnete Spalte ist die dritte der vollen Liste: genau
+  // diese Zahl adressiert Wert, Aenderung und Ketten-Parameter.
+  expect(sicht.plaetze).toEqual([1, 2])
+})
+
+// Ohne jede Spur haette die Maske kein Raster und keinen Kopf — der Bediener
+// haelt eine Tabelle ohne Spalten fuer kaputt.
+test('sind alle Spalten versteckt, bleibt die erste stehen', () => {
+  const sicht = spaltenSicht(liste(true, true), false)
+  expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1'])
+  expect(sicht.plaetze).toEqual([0])
 })

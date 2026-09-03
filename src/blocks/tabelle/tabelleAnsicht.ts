@@ -13,7 +13,14 @@ import { spaltenRaster, type Spalte } from './spalten'
 import { passendeIndizes, zeigtLeerzustand } from './suche'
 
 export interface AnsichtFrage {
+  // Die VOLLE Spaltenliste: Werte, Suche, Sortierung und Summen haengen an
+  // ihrem Platz (s. spalten.ts).
   spalten: readonly Spalte[]
+
+  // Die GEZEICHNETEN Spalten und ihr Platz in der vollen Liste — nur das
+  // Raster (cols) haengt daran. Fehlt beides, ist alles gezeichnet.
+  gezeichnet?: readonly Spalte[]
+  plaetze?: readonly number[]
 
   // Die gerade GEZOGENE Breite einer Spalte — sie schlaegt die gespeicherte.
   // Im Editor gilt sie nur waehrend des Zugs, in der exportierten Maske so
@@ -113,8 +120,12 @@ function sichtbareIndizes(frage: AnsichtFrage): number[] {
 }
 
 export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
+  // Die Spuren zaehlen die GEZEICHNETEN Spalten; die gezogene Breite steht
+  // aber unter dem vollen Platz.
+  const gezeichnet = frage.gezeichnet ?? frage.spalten
+  const plaetze = frage.plaetze ?? gezeichnet.map((_, i) => i)
   const cols = {
-    gridTemplateColumns: spaltenRaster(frage.spalten, frage.breiteVon),
+    gridTemplateColumns: spaltenRaster(gezeichnet, (j) => frage.breiteVon?.(plaetze[j] ?? j)),
   }
 
   const takt = ZEILEN_HOEHE

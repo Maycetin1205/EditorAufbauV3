@@ -302,40 +302,60 @@ Status: erledigt 2026-09-02
 ## 3. Teil B — Maske (Referenz ändert sich bewusst)
 
 ### Schritt 7 — Spalten in der fertigen Maske ausblenden
-Status: offen
-Ausführung: Opus erlaubt — GENAU so, keine eigene Deutung.
-- Ziel: Eine Spalte kann „in der Maske ausgeblendet" sein (z. B. eine
-  Hilfsspalte, die nur die Rechnung braucht): im Editor sichtbar, aber
-  gedaempft; in der exportierten Maske nicht vorhanden.
-- Bau, in dieser Reihenfolge:
-  1. `src/blocks/tabelle/spalten.ts`: `Spalte` bekommt `versteckt?: true`;
-     `coerceSpalten` uebernimmt `versteckt === true` aus dem Rohwert und
-     laesst es sonst weg (kein `false` schreiben).
-  2. `src/blocks/tabelle/spaltenBindung.ts`: in `SPALTEN_BINDUNG.eintragsSchalter`
-     ein weiterer Schalter `{ key: 'versteckt', label: 'In der Maske
-     ausblenden', kurz: 'Ausgeblendet' }`. Mehr nicht — der Feld-Picker zeigt
-     ihn damit von selbst (bestehender Mechanismus).
-  3. `src/blocks/tabelle/TabelleBlock.ts`: eine Methode
-     `sichtbareSpalten(): Spalte[]` = `spaltenListe()` ohne versteckte, NUR
-     wenn das Element KEIN `data-ff-editor` traegt; im Editor alle. Ueberall,
-     wo der Baustein Spalten ZEICHNET oder Zellwerte je Spalte holt
-     (`render`, Kopf, Zeilen, Erfassungszeile, Fusszeile, Suche), benutzt er
-     `sichtbareSpalten()`. Wo er Spalten ueber die KENNUNG anspricht
-     (Rechnung, Ketten-Parameter), bleibt `spaltenListe()`.
-  4. Editor-Daempfung: in `tabelleKoerper.ts` bekommt eine versteckte
-     Spalte im Kopf UND in den Zellen die Klasse `versteckt`, nur wenn
-     `lage.imEditor`; in `tabelleStil.ts` eine Regel
-     `:host([data-ff-editor]) .versteckt { opacity: 0.45; }`. Sonst nichts.
-  5. Tests: in `spalten.test.ts` „coerceSpalten uebernimmt versteckt"; in
-     einem neuen `TabelleBlock`-nahen Test (falls es keinen Renderer-Test
-     gibt: in `spaltenBindung.test.ts`) „sichtbare Spalten ohne versteckte".
-- Verboten: Speicherformat aendern (nur das Feld ergaenzen), Export
-  (`exportMask.ts`) anfassen, andere Bausteine.
-- Prüfung: Rahmen 4 (Teil B) und 4b. Referenz: die Referenzmaske hat keine
-  versteckte Spalte, ausserhalb des Buendels darf sich NICHTS aendern.
-- Klickprobe: Spaltenkopf anklicken, Schalter „Ausgeblendet" an → Spalte
-  im Editor gedaempft; Export oeffnen → Spalte fehlt, Erfassungszeile hat
-  eine Zelle weniger, Rechnung rechnet weiter.
+Status: erledigt 2026-09-03
+
+**Wichtig für alle: die erste Fassung dieses Schritts war FALSCH.** Sie ließ
+die Erfassungszeile und die Zellen über eine gefilterte Spaltenliste laufen.
+Ein Opus-Chat hat das am Code nachgemessen, den Fehler belegt und nach
+Stopp-Regel 5 aufgehört, statt zu bauen — genau richtig. Was daran falsch war
+und wie es jetzt steht, ist der **Spalten-Kontrakt** unten. Er gilt für jede
+weitere Arbeit an der Tabelle.
+
+Gebaut ist:
+- `Spalte.versteckt?: boolean` (`spalten.ts`), Schalter „In der Maske
+  ausblenden" im Feld-Picker (`spaltenBindung.ts`); der Wert übersteht
+  Export → Attribut → `coerceSpalten`.
+- `spaltenSicht(spalten, alleZeigen)` liefert `{ spalten, plaetze }`: was
+  gezeichnet wird, und wo das Gezeichnete in der vollen Liste steht. Im
+  Editor immer die Identität.
+- `tabelleKoerper` und `erfassungsZeile` bekommen `plaetze` und adressieren
+  jeden WERT darüber; nur Rasterspuren zählen die gezeichneten Spalten.
+- Tastatur der Erfassungszeile (Enter, Tab, Shift+Tab) überspringt
+  ausgeblendete Spalten (`nachbarPlatz`, `naechsteLeere`); der Fokus findet
+  die Zelle über `data-spalte` statt über die Zählung.
+- Editor: ausgeblendete Spalte gedämpft (`.versteckt`, nur `data-ff-editor`).
+- Die Rechnung nennt ausgeblendete Spalten im Wähler mit „(ausgeblendet)" —
+  wer einen GEGEBENEN Platz (Anzahl, Dosis, Tage) versteckt, könnte ihn nie
+  tippen und die Gleichung bliebe ewig offen.
+
+Belegt im Browser an einer echten exportierten Maske (drei Spalten, mittlere
+ausgeblendet, Daten hineingeschoben): Kopf zeigt zwei Spalten, die Werte
+stehen unter der richtigen Überschrift, Sortieren nach Menge sortiert die
+Menge, die Summe stimmt, der Wert der versteckten Spalte taucht nirgends auf.
+Maske außerhalb des Bündels byte-gleich.
+
+Bewusst so: die **Suche** findet auch über ausgeblendete Spalten. Ihr Wert
+gehört zur Zeile; wer ihn kennt, darf danach suchen.
+
+#### Spalten-Kontrakt (gilt dauerhaft, nicht nur für Schritt 7)
+
+Jeder ZUSTAND und jeder ERP-Kontrakt hängt am **Platz der Spalte in der
+vollen Liste** — der Liste im `spalten`-Attribut, versteckte eingeschlossen:
+- `seRuntime` baut `datenzeilen` über ALLE Spalten des Attributs.
+- Der Export friert Ketten-Parameter als Platznummer dieser Liste ein
+  (`exportMask.spaltenIndexFuer`), die Laufzeit liest `werte[spaltenIndex]`.
+- Die Rechnung löst ihre Kennungen in dieser Liste auf (`spalteMitKennung`).
+- Vormerkungen werden auf Satznummer + diesen Platz geschlüsselt.
+
+Daraus folgen drei Verbote:
+1. **Nie** die Spaltenliste beim Export, in `seRuntime` oder im
+   `erfassungsUmfeld` filtern. Wer das tut, verschiebt jeden Platz dahinter:
+   PUT_RELATION schreibt dann stumm in das falsche Feld — und PUT meldet
+   nichts zurück.
+2. Gefiltert wird **ausschließlich beim Zeichnen**, über `spaltenSicht`, und
+   jede gezeichnete Stelle führt ihren vollen Platz mit (`plaetze[j]`).
+3. `data-spalte` und der Index, mit dem eine Zelle meldet, dürfen nie
+   auseinanderlaufen — sonst findet die Tastatur die Nachbarzelle nicht.
 
 ### Schritt 8 — Editor-Bedienung raus aus den Masken-Bytes
 Status: erledigt 2026-09-02

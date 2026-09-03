@@ -31,16 +31,20 @@ const RICHTUNGEN: WahlOption[] = [
 // Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das Belegfeld,
 // das kann doppelt vergeben sein und traf dann stumm die falsche Spalte
 // (Nutzer-Vorfall 2026-09-01, zweimal 930_3).
-function spaltenVon(node: BlockNode): { titel: string; kennung: string }[] {
+function spaltenVon(node: BlockNode): { titel: string; kennung: string; versteckt: boolean }[] {
   const roh = node.props.spalten
   if (!Array.isArray(roh)) return []
-  const raus: { titel: string; kennung: string }[] = []
+  const raus: { titel: string; kennung: string; versteckt: boolean }[] = []
   for (const eintrag of roh) {
     if (!eintrag || typeof eintrag !== 'object') continue
     const o = eintrag as Record<string, unknown>
     const kennung = typeof o.kennung === 'string' ? o.kennung.trim() : ''
     if (kennung === '') continue
-    raus.push({ titel: typeof o.titel === 'string' ? o.titel : '', kennung })
+    raus.push({
+      titel: typeof o.titel === 'string' ? o.titel : '',
+      kennung,
+      versteckt: o.versteckt === true,
+    })
   }
   return raus
 }
@@ -48,9 +52,13 @@ function spaltenVon(node: BlockNode): { titel: string; kennung: string }[] {
 export function RechnungSektion({ block }: { block: BlockNode }) {
   const ed = useEditor()
   const stand = rechnungVonAttribut(block.props.rechnung) ?? leereRechnung()
+  // Eine ausgeblendete Spalte steht dabei — die Rechnung rechnet in sie
+  // hinein, und die Kette schreibt sie. Sie ist aber gekennzeichnet: was der
+  // Bediener nie sieht, kann er auch nie selbst tippen. Als GEGEBENER Platz
+  // (Anzahl, Dosis, Tage) bliebe die Gleichung darum ewig unvollstaendig.
   const spaltenOptionen: WahlOption[] = spaltenVon(block).map((s) => ({
     wert: s.kennung,
-    name: s.titel === '' ? s.kennung : s.titel,
+    name: (s.titel === '' ? s.kennung : s.titel) + (s.versteckt ? ' (ausgeblendet)' : ''),
   }))
   const gesetzt = typeof block.props.rechnung === 'string' && block.props.rechnung.trim() !== ''
 

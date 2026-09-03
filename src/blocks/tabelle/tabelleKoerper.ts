@@ -34,7 +34,14 @@ export interface ZeilenStand {
 }
 
 export interface KoerperLage {
+  // Die GEZEICHNETEN Spalten (in der Maske ohne die versteckten).
   spalten: readonly Spalte[]
+
+  // Wo die j-te gezeichnete Spalte in der VOLLEN Liste steht. Jeder WERT und
+  // jeder Zustand haengt am vollen Platz (datenzeilen, Aenderungen, Ketten);
+  // nur die Gitterspur haengt am gezeichneten. Wer das verwechselt, zeigt den
+  // Wert der einen Spalte unter dem Kopf der anderen — s. spalten.ts.
+  plaetze: readonly number[]
 
   cols: Readonly<Record<string, string>>
 
@@ -161,12 +168,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           // zweite Reihe.
           lage.spalten.map(
           (s, i) => html`<div
+            class=${s.versteckt === true ? 'versteckt' : nothing}
             role="columnheader"
             data-ff-editable
-            data-ff-eintrag=${lage.imEditor ? i : nothing}
+            data-ff-eintrag=${lage.imEditor ? lage.plaetze[i] : nothing}
             style="grid-row: 1; grid-column: ${i + 1}"
-            @click=${() => tun.klickKopf(i)}
-          >${s.titel}${!lage.editable && lage.sortSpalte === i
+            @click=${() => tun.klickKopf(lage.plaetze[i])}
+          >${s.titel}${!lage.editable && lage.sortSpalte === lage.plaetze[i]
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}</div>`,
         )}
@@ -233,8 +241,11 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           >
             ${ ''}
             ${lage.spalten.map((s, i) => {
+              // Der volle Platz DIESER Spalte: alles, was einen Wert oder
+              // einen Zustand adressiert, laeuft ueber ihn.
+              const platz = lage.plaetze[i]
               const wert = rohIndex !== null
-                ? (lage.datenzeilen[rohIndex]?.[i] ?? '')
+                ? (lage.datenzeilen[rohIndex]?.[platz] ?? '')
                 : ZELLE_PLATZHALTER
               // Ohne Kopfzeile uebernimmt die Zelle im Editor den Kopf-Griff:
               // Klick oeffnet den Feld-Picker der Spalte. Umbenennen laeuft
@@ -247,24 +258,25 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 const stand = lage.zeilenStand
                 return html`<div class="tippbar" role="cell">
                 <input
-                  class=${stand.istGeaendert(rohIndex, i) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
+                  class=${stand.istGeaendert(rohIndex, platz) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
                   type="text"
-                  data-spalte=${i}
+                  data-spalte=${platz}
                   aria-label=${s.titel}
-                  .value=${stand.zellWert(rohIndex, i)}
+                  .value=${stand.zellWert(rohIndex, platz)}
                   @input=${(e: Event) =>
-                    stand.tippeZelle(rohIndex, i, (e.target as HTMLInputElement).value)}
+                    stand.tippeZelle(rohIndex, platz, (e.target as HTMLInputElement).value)}
                   @blur=${(e: Event) =>
-                    stand.verlasseZelle(rohIndex, i, (e.target as HTMLInputElement).value)}
-                  @keydown=${(e: KeyboardEvent) => stand.tasteZelle(rohIndex, i, e)}
+                    stand.verlasseZelle(rohIndex, platz, (e.target as HTMLInputElement).value)}
+                  @keydown=${(e: KeyboardEvent) => stand.tasteZelle(rohIndex, platz, e)}
                 />
               </div>`
               }
               // Was die Suche gefunden hat, soll man auch SEHEN.
               return html`<div
+                class=${s.versteckt === true ? 'versteckt' : nothing}
                 role="cell"
                 data-ff-editable=${kopfGriff ? '' : nothing}
-                data-ff-eintrag=${kopfGriff && ansichtIndex === 0 ? i : nothing}
+                data-ff-eintrag=${kopfGriff && ansichtIndex === 0 ? platz : nothing}
               >${markiereTreffer(wert, lage.suchtext)}</div>`
             })}
             ${lage.loeschbar && rohIndex !== null && !lage.imEditor
@@ -297,7 +309,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           style=${styleMap(lage.cols)}
           @click=${lage.imEditor || fest ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
         >
-          ${lage.spalten.map((_s, i) => html`<div role="cell">${werte[i] ?? ''}</div>`)}
+          ${lage.spalten.map((_s, i) => html`<div role="cell">${werte[lage.plaetze[i]] ?? ''}</div>`)}
           ${lage.imEditor ? nothing : html`<button
               class="zeile-weg"
               type="button"

@@ -92,6 +92,11 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
    echte Nutzer-Entscheidung 2026-09-02: keine Beispieldaten, auch nicht als
    Schalter).
 7. Neue Bezeichner deutsch; bestehende englische bleiben.
+8. Tabellen-Spalten: jeder Zustand und jeder ERP-Kontrakt haengt am PLATZ in
+   der VOLLEN Spaltenliste (datenzeilen, Ketten-Parameter, Rechnung,
+   Vormerkungen). Gefiltert wird nur beim ZEICHNEN, ueber `spaltenSicht` —
+   nie im Export, nie in `seRuntime`, nie im Erfassungs-Umfeld. Der volle
+   Kontrakt steht in `PLAN.md`, Schritt 7.
 
 ## SoftEngine-Kontrakte (aus Echttests des Nutzers — nie verlieren)
 

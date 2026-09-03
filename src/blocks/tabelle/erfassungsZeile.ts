@@ -10,7 +10,12 @@ import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 // Zelle tut, leitet erfassungsZellen aus der Bindung der Spalte ab.
 
 export interface ErfassungsLage {
+  // Die GEZEICHNETEN Spalten; `plaetze[j]` ist der Platz der j-ten in der
+  // vollen Liste. Der Lauf haelt seine Werte an der VOLLEN Liste (dorthin
+  // rechnet die Rechnung, von dort schreibt die Kette) — gezeichnet wird in
+  // der Maske ohne die versteckten. Siehe spalten.ts, spaltenSicht.
   spalten: readonly Spalte[]
+  plaetze: readonly number[]
 
   // Die EINE Quelle der Tabelle — sie entscheidet, ob das Feld einer Spalte
   // ihr eigenes ist oder das einer verknüpften Quelle.
@@ -48,17 +53,23 @@ function eingabe(
   lage: ErfassungsLage,
   tun: ErfassungsHandeln,
   index: number,
+  platz: number,
 ): TemplateResult {
   // Der Spaltenname steht blass IN der leeren Zelle (G5): wer reinklickt,
   // sieht sofort, was reingehört — der Klarname ist die Vorschau.
+  //
+  // `data-spalte` traegt den VOLLEN Platz: daran findet der Baustein die
+  // Zelle wieder, wenn er den Fokus setzt (fokussiereErfassungsZelle) — die
+  // Zaehlung der gezeichneten Felder stimmte mit versteckten Spalten nicht.
   return html`<input
     class="erf-eingabe"
     type="text"
+    data-spalte=${platz}
     placeholder=${lage.spalten[index]?.titel ?? ''}
-    .value=${lage.wert(index)}
-    @input=${(e: Event) => tun.tippen(index, (e.target as HTMLInputElement).value)}
-    @keydown=${(e: KeyboardEvent) => tun.taste(index, e)}
-    @blur=${() => tun.verlassen(index)}
+    .value=${lage.wert(platz)}
+    @input=${(e: Event) => tun.tippen(platz, (e.target as HTMLInputElement).value)}
+    @keydown=${(e: KeyboardEvent) => tun.taste(platz, e)}
+    @blur=${() => tun.verlassen(platz)}
   />`
 }
 
@@ -70,16 +81,17 @@ function laufzeitZelle(
   lage: ErfassungsLage,
   tun: ErfassungsHandeln,
   index: number,
+  platz: number,
   frei: boolean,
 ): TemplateResult {
   if (frei) {
     return html`<div class="erf-halter">
-      ${eingabe(lage, tun, index)}
+      ${eingabe(lage, tun, index, platz)}
     </div>`
   }
-  const liste = lage.tippSpalte === index && lage.vorschlaege.length > 0
+  const liste = lage.tippSpalte === platz && lage.vorschlaege.length > 0
   return html`<div class=${lage.listeNachOben ? 'erf-halter nach-oben' : 'erf-halter'}>
-    ${eingabe(lage, tun, index)}
+    ${eingabe(lage, tun, index, platz)}
     ${liste ? vorschlagListeTpl({
       eintraege: lage.vorschlaege,
       marke: lage.marke,
@@ -98,10 +110,13 @@ export function erfassungsZeileTpl(
       // Im Editor gibt es keine Daten und keine Eingaben, sondern Striche —
       // der Editor erfindet nie Daten (Regel 7).
       if (lage.imEditor) {
-        return html`<div role="cell">${ZELLE_PLATZHALTER}</div>`
+        return html`<div
+          class=${spalte.versteckt === true ? 'versteckt' : nothing}
+          role="cell"
+        >${ZELLE_PLATZHALTER}</div>`
       }
       const frei = zellenzielVon(spalte, lage.quelleId).art === 'frei'
-      return html`<div role="cell">${laufzeitZelle(lage, tun, i, frei)}</div>`
+      return html`<div role="cell">${laufzeitZelle(lage, tun, i, lage.plaetze[i], frei)}</div>`
     })}
   </div>`
 }

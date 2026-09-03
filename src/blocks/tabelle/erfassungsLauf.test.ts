@@ -340,6 +340,21 @@ describe('Tastenentscheid', () => {
     expect(lauf.naechsteLeere(umfeld, 2)).toBe(3)
     expect(lauf.naechsteLeere(umfeld, 3)).toBe(-1)
   })
+
+  // Eine in der Maske ausgeblendete Spalte hat dort keine Zelle: der Fokus
+  // liefe ins Leere und der Bediener saesse fest. Gefuellt wird sie trotzdem
+  // — von der Rechnung.
+  test('die Tastatur ueberspringt ausgeblendete Spalten', () => {
+    const mitVersteckter = umfeldVon(
+      umfeld.spalten.map((s, i) => (i === 2 ? { ...s, versteckt: true } : s)),
+      {},
+    )
+    const lauf = new ErfassungsLauf()
+    expect(lauf.naechsteLeere(mitVersteckter, 1)).toBe(3)
+    expect(lauf.nachbarPlatz(mitVersteckter, 1, 1)).toBe(3)
+    expect(lauf.nachbarPlatz(mitVersteckter, 3, -1)).toBe(1)
+    expect(lauf.nachbarPlatz(mitVersteckter, 0, -1)).toBe(-1)
+  })
 })
 
 // P4: Eine erfasste Zeile zur Korrektur zurueckholen. In ihr steht ALLES

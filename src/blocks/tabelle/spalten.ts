@@ -31,6 +31,49 @@ export interface Spalte {
   // Hilfsquelle (mit Quellen-Vorsatz), statt aus `feld`. Die gebuchte Zeile
   // zeigt weiter `feld`, und dorthin schreibt auch die Kette.
   fuellFeld?: string
+
+  // Diese Spalte wird in der exportierten Maske NICHT gezeichnet — im Editor
+  // schon, gedaempft. Sie bleibt eine vollwertige Spalte: die Rechnung rechnet
+  // in sie hinein, die Kette schreibt sie ins ERP. Nur sehen soll der
+  // Bediener sie nicht (Hilfsspalte).
+  //
+  // WICHTIG: Versteckt heisst NICHT weg. Jeder Zustand und jeder ERP-Kontrakt
+  // haengt am PLATZ der Spalte in dieser vollen Liste — `datenzeilen`
+  // (seRuntime), die Ketten-Parameter (exportMask friert Kennung -> Platz ein)
+  // und die Rechnung (spalteMitKennung). Wer versteckte Spalten aus der Liste
+  // wirft, verschiebt alle Plaetze dahinter und schreibt stumm falsche Werte
+  // ins ERP. Gefiltert wird darum AUSSCHLIESSLICH beim Zeichnen, ueber
+  // `spaltenSicht` — mit einer Abbildung zurueck auf den vollen Platz.
+  versteckt?: boolean
+}
+
+// Was gezeichnet wird — und wo die gezeichnete Spalte in der VOLLEN Liste
+// steht. `plaetze[j]` ist der volle Platz der j-ten gezeichneten Spalte.
+// Im Editor ist alles gezeichnet, die Abbildung also die Identitaet.
+export interface Spaltensicht {
+  spalten: readonly Spalte[]
+  plaetze: readonly number[]
+}
+
+export function spaltenSicht(
+  spalten: readonly Spalte[],
+  alleZeigen: boolean,
+): Spaltensicht {
+  if (alleZeigen || !spalten.some((s) => s.versteckt === true)) {
+    return { spalten, plaetze: spalten.map((_, i) => i) }
+  }
+  const gezeigt: Spalte[] = []
+  const plaetze: number[] = []
+  spalten.forEach((s, i) => {
+    if (s.versteckt === true) return
+    gezeigt.push(s)
+    plaetze.push(i)
+  })
+  // Ganz ohne Spalte haette die Maske kein Raster und keinen Kopf. Sind alle
+  // versteckt, zeigt sie die erste — sonst stuende der Bediener vor einer
+  // Tabelle ohne jede Spur und haelte sie fuer kaputt.
+  if (gezeigt.length === 0 && spalten.length > 0) return { spalten: [spalten[0]], plaetze: [0] }
+  return { spalten: gezeigt, plaetze }
 }
 
 // Der Strich, den eine Zelle ohne Wert zeigt: der Editor erfindet nie Daten
@@ -117,6 +160,8 @@ function alsSpalte(x: unknown, index: number): Spalte {
       ...(typeof o.summe === 'boolean' ? { summe: o.summe } : {}),
 
       ...(typeof o.aenderbar === 'boolean' ? { aenderbar: o.aenderbar } : {}),
+
+      ...(typeof o.versteckt === 'boolean' ? { versteckt: o.versteckt } : {}),
 
       ...(typeof o.fuellFeld === 'string' && o.fuellFeld.trim() !== ''
         ? { fuellFeld: o.fuellFeld.trim() }

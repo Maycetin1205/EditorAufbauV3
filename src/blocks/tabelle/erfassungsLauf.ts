@@ -250,7 +250,20 @@ export class ErfassungsLauf {
   // erfasst).
   naechsteLeere(umfeld: ErfassungsUmfeld, ab: number): number {
     for (let i = ab + 1; i < umfeld.spalten.length; i++) {
+      // Eine in der Maske ausgeblendete Spalte hat dort keine Zelle: der
+      // Fokus liefe ins Leere. Sie wird gefuellt, aber nicht angesteuert —
+      // von der Rechnung oder gar nicht.
+      if (umfeld.spalten[i]?.versteckt === true) continue
       if (this.wertVon(umfeld, i) === '') return i
+    }
+    return -1
+  }
+
+  // Der naechste bzw. vorige PLATZ, den der Bediener ansteuern kann:
+  // ausgeblendete Spalten haben in der Maske keine Zelle. -1 = keiner mehr.
+  nachbarPlatz(umfeld: ErfassungsUmfeld, ab: number, richtung: 1 | -1): number {
+    for (let i = ab + richtung; i >= 0 && i < umfeld.spalten.length; i += richtung) {
+      if (umfeld.spalten[i]?.versteckt !== true) return i
     }
     return -1
   }

@@ -229,6 +229,10 @@ export const tabelleStil = css`
 
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
+      /* Nur im Editor: diese Spalte zeichnet die Maske nicht. Gedaempft, aber
+         voll bedienbar — sie ist eine echte Spalte (Rechnung, Kette). */
+      :host([data-ff-editor]) .versteckt { opacity: 0.45; }
+
       .zeile > div { color: var(--se-ink); }
 
 

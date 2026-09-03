@@ -37,6 +37,7 @@ import { AnsichtsStand } from './ansichtsStand'
 import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
 import type { BreitenAenderung, BreitenWirt } from './spaltenBreite'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
+import { spaltenSicht } from './spalten'
 import { ZEILEN_HOEHE } from './seitengroesse'
 import { tabelleAnsicht } from './tabelleAnsicht'
 import { TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
@@ -339,17 +340,28 @@ export class TabelleBlock extends BasicBlock {
   // verteileZug) — sie wandern zusammen, sonst waere das Loslassen im Editor
   // zwei Undo-Schritte fuer eine Handbewegung.
   private breitenWirt(): BreitenWirt {
+    // Die Griffe zaehlen die GEZEICHNETEN Spalten; gespeichert wird unter dem
+    // vollen Platz. Ohne die Uebersetzung landete die gezogene Breite hinter
+    // einer ausgeblendeten Spalte auf der falschen.
+    const vollerPlatz = (gezeichnet: number): number => {
+      const sicht = spaltenSicht(this.spaltenListe(), this.hasAttribute('data-ff-editor'))
+      return sicht.plaetze[gezeichnet] ?? gezeichnet
+    }
+    const voll = (aenderung: readonly BreitenAenderung[]): BreitenAenderung[] =>
+      aenderung.map((a) => ({ index: vollerPlatz(a.index), breite: a.breite }))
     const merkeVorZug = (aenderung: readonly BreitenAenderung[]): void => {
       if (this._breiteVorZug !== null) return
       this._breiteVorZug = new Map(aenderung.map((a) => [a.index, this._breiten.get(a.index)]))
     }
     return {
-      zeige: (aenderung) => {
+      zeige: (roh) => {
+        const aenderung = voll(roh)
         merkeVorZug(aenderung)
         for (const a of aenderung) this._breiten.set(a.index, a.breite)
         this.requestUpdate()
       },
-      uebernimm: (aenderung) => {
+      uebernimm: (roh) => {
+        const aenderung = voll(roh)
         this._breiteVorZug = null
         const liste = this.spaltenListe()
         if (!this.hasAttribute('data-ff-editor')) {
@@ -401,8 +413,12 @@ export class TabelleBlock extends BasicBlock {
   // Stand, und das Ziel existiert sicher.
   private fokussiereErfassungsZelle(index: number): void {
     void this.updateComplete.then(() => {
-      const felder = this.shadowRoot?.querySelectorAll<HTMLInputElement>('.zeile.erfassung .erf-eingabe')
-      const feld = felder?.[index]
+      // Ueber den VOLLEN Platz (data-spalte), nicht ueber die Zaehlung der
+      // gezeichneten Felder: mit einer ausgeblendeten Spalte davor traefe die
+      // Zaehlung die falsche Zelle.
+      const feld = this.shadowRoot?.querySelector<HTMLInputElement>(
+        `.zeile.erfassung .erf-eingabe[data-spalte="${index}"]`,
+      )
       if (!feld) return
       feld.focus()
       // Dasselbe wie in der gebuchten Zeile (zeilenBearbeitung): der Cursor
@@ -510,8 +526,14 @@ export class TabelleBlock extends BasicBlock {
   override render(): TemplateResult {
     const spalten = this.spaltenListe()
 
+    // Gezeichnet wird in der Maske ohne die ausgeblendeten Spalten; Werte,
+    // Ketten und Rechnung laufen weiter ueber den vollen Platz (spalten.ts).
+    const sicht = spaltenSicht(spalten, this.hasAttribute('data-ff-editor'))
+
     const ansicht = tabelleAnsicht({
       spalten,
+      gezeichnet: sicht.spalten,
+      plaetze: sicht.plaetze,
       breiteVon: (i) => this._breiten.get(i),
       hatQuelle: this.hatQuelle,
       datenGeliefert: this.datenGeliefert,
@@ -531,7 +553,8 @@ export class TabelleBlock extends BasicBlock {
       '--zeilen-hoehe': `${ansicht.zeilenHoehe}px`,
     })}>
       ${tabelleKoerper({
-        spalten,
+        spalten: sicht.spalten,
+        plaetze: sicht.plaetze,
         cols: ansicht.cols,
         editable: this.editable,
         imEditor: this.hasAttribute('data-ff-editor'),
@@ -566,6 +589,7 @@ export class TabelleBlock extends BasicBlock {
               // Rumpf, unter ihr ist kein Platz fuer die Liste. Eine Korrektur
               // mitten in der Liste hat dagegen Platz unter sich.
               this._erfassung.korrekturPlatz === null && (ansicht.linealTakte ?? 1) <= 0,
+              sicht,
             )
           : nothing,
       }, {

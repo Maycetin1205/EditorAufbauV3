@@ -11,6 +11,7 @@ import {
   type ErfassungsUmfeld,
 } from './erfassungsZellen'
 import { erfassungsZeileTpl } from './erfassungsZeile'
+import type { Spaltensicht } from './spalten'
 
 // Was die Zellen der Erfassungszeile tun. Getrennt vom Baustein, weil der
 // sonst über seinen Zeilen-Deckel liefe — und weil die Bedienung so nur über
@@ -96,8 +97,8 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
 export function springe(wirt: ErfassungsWirt, index: number, taste: string): boolean {
   const umfeld = wirt.umfeld()
   if (taste === 'Tab') {
-    const naechste = index + 1
-    if (naechste < umfeld.spalten.length) {
+    const naechste = wirt.lauf.nachbarPlatz(umfeld, index, 1)
+    if (naechste !== -1) {
       wirt.fokussiere(naechste)
       return true
     }
@@ -116,9 +117,10 @@ function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
   // die Schatten-Wurzeln war nicht verlässlich. Vor der ersten Zelle
   // gehört die Taste dem Browser: raus aus der Tabelle.
   if (e.key === 'Tab' && e.shiftKey) {
-    if (index === 0) return
+    const vorige = wirt.lauf.nachbarPlatz(wirt.umfeld(), index, -1)
+    if (vorige === -1) return
     e.preventDefault()
-    wirt.fokussiere(index - 1)
+    wirt.fokussiere(vorige)
     wirt.melde()
     return
   }
@@ -149,10 +151,15 @@ export function erfassungsZeileFuer(
   wirt: ErfassungsWirt,
   cols: Readonly<Record<string, string>>,
   listeNachOben: boolean,
+
+  // Was gezeichnet wird — in der Maske ohne die ausgeblendeten Spalten. Die
+  // WERTE holt der Lauf weiter ueber den vollen Platz.
+  sicht: Spaltensicht,
 ): TemplateResult {
   const umfeld = wirt.umfeld()
   return erfassungsZeileTpl({
-    spalten: umfeld.spalten,
+    spalten: sicht.spalten,
+    plaetze: sicht.plaetze,
     quelleId: umfeld.quelleId,
     cols,
     imEditor: wirt.baustein.hasAttribute('data-ff-editor'),
