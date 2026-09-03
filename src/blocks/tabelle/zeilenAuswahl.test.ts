@@ -35,16 +35,13 @@ test('zweiter Klick auf dieselbe Zeile hebt die Auswahl auf (ausklicken)', () =>
   expect(table.auswahlIndex).toBe(-1)
 })
 
-test('Klick ins Eingabefeld einer bereits gewaehlten Zeile deselektiert nicht', () => {
-  const table = dummyTable(0)
-  const rows = [{ id: 1 }, { id: 2 }]
-  aktiviereZeile(table, rows, 0, 0, true)
-  expect(table.auswahlIndex).toBe(0)
-})
-
-test('Klick ins Eingabefeld einer noch ungewaehlten Zeile markiert sie', () => {
+test('dritter Klick auf dieselbe Zeile markiert sie wieder', () => {
   const table = dummyTable(-1)
   const rows = [{ id: 1 }, { id: 2 }]
-  aktiviereZeile(table, rows, 1, 1, true)
-  expect(table.auswahlIndex).toBe(1)
+  aktiviereZeile(table, rows, 0, 0)
+  expect(table.auswahlIndex).toBe(0)
+  aktiviereZeile(table, rows, 0, 0)
+  expect(table.auswahlIndex).toBe(-1)
+  aktiviereZeile(table, rows, 0, 0)
+  expect(table.auswahlIndex).toBe(0)
 })

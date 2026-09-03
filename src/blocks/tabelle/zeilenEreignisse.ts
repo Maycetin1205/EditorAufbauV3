@@ -12,7 +12,6 @@ export function aktiviereZeile(
   rohzeilen: readonly unknown[],
   rohIndex: number | null,
   ansichtIndex: number,
-  imEingabefeld = false,
 ): void {
   if (rohIndex === null || el.hasAttribute('data-ff-editor')) return
   const rohzeile = rohzeilen[rohIndex]
@@ -20,10 +19,6 @@ export function aktiviereZeile(
 
   const table = el as RuntimeTableElement
   const istSchonGewaehlt = table.auswahlIndex === rohIndex
-
-  // Klick ins Eingabefeld einer bereits gewaehlten Zeile setzt nur die Schreibmarke
-  // und hebt die Markierung nicht auf.
-  if (imEingabefeld && istSchonGewaehlt) return
 
   const neuerIndex = istSchonGewaehlt ? -1 : rohIndex
   table.auswahlIndex = neuerIndex

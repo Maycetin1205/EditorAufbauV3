@@ -130,7 +130,7 @@ export interface KoerperHandeln {
   oeffneSpaltenwahl: (e: MouseEvent) => void
   spaltenwahl: SpaltenWahlHandeln
 
-  aktiviereZeile: (rohIndex: number | null, ansichtIndex: number, imEingabefeld?: boolean) => void
+  aktiviereZeile: (rohIndex: number | null, ansichtIndex: number) => void
 
   zeileDoppelt: (rohIndex: number | null) => void
 
@@ -221,9 +221,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               ? String(rohIndex === lage.auswahlIndex)
               : nothing}
             style=${styleMap(lage.cols)}
-            @click=${(e: MouseEvent) => {
-              const imEingabefeld = (e.target as HTMLElement).closest('.zell-eingabe') !== null
-              tun.aktiviereZeile(rohIndex, ansichtIndex, imEingabefeld)
+            @click=${() => {
+              tun.aktiviereZeile(rohIndex, ansichtIndex)
             }}
             @dblclick=${(e: MouseEvent) => {
               // In einer aenderbaren Zelle heisst Doppelklick „Wort markieren".
