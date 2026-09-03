@@ -783,8 +783,12 @@ Entwurfsfrage. Die wird im Chat beantwortet, bevor eine Zeile entsteht.
 
 ### Reihenfolge der Schritte 11 bis 16b
 11 -> 12 -> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
-Schritt 17 (Abschnitt 3b) lief auf Nutzer-Ansage VOR 11 und ist erledigt;
-damit ist Schritt 11 wieder der erste offene Schritt.
+Ueberholt seit 2026-09-03. Erledigt sind 17 (Abschnitt 3b, auf Ansage
+vorgezogen), 11 und 12. Dazwischen liegt jetzt Teil B3 (Abschnitt 3c),
+Nutzer-Ansage 2026-09-03. Die Reihenfolge lautet ab hier:
+18 -> (19 und 20, sobald entschieden) -> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
+Die Bedienung der Tabelle geht dem Buendel-Umbau vor, weil beide dieselben
+Dateien anfassen und sonst dieselbe Stelle zweimal drankommt.
 11 bis 14 sind unabhängig voneinander und je ein überschaubarer Chat. 12 legt
 nur die Trennstelle an, 12b geht damit durch die Bausteine. 15 ist reine
 Vorarbeit und muss vor 16b liegen, sonst ist 16b umsonst. 16a ändert nichts
@@ -855,6 +859,97 @@ eines Belegs und will sie in der Maske SEHEN.
   Daten). Exportieren, in SoftEngine öffnen: die Adressnummer der
   Statusleiste steht im Feld.
 
+## 3c. Teil B3 — Bedienung der Tabelle (Nutzer-Ansage 2026-09-03)
+
+Herkunft: Der Nutzer hat am 2026-09-03 gesagt, dass ihm diese Dinge beim
+Bedienen wirklich fehlen. Sie lagen bis dahin in Abschnitt 6 als geparkte
+Punkte 2 und 7 — oder, bei Schritt 20, gar nicht im Plan. Sie laufen VOR 13,
+15 und 16b: dieselben Dateien (`tabelle/*`, `shared/nachschlagen.ts`), und wer
+erst das Bündel umbaut und danach die Bedienung ändert, fasst dieselbe Stelle
+zweimal an. 11, 12 und 12b stören nicht und können vorher laufen.
+
+### Schritt 18 — Vorschlagsliste darf breiter sein als die Spalte
+Status: offen
+Sorgfalt: normal.
+Herkunft: Nutzer-Entscheidung 2026-09-03, vorher Abschnitt 6, Punkt 2.
+- Ziel: Die Vorschlagsliste unter einer Erfassungszelle oder einem
+  Formularfeld ist heute exakt so breit wie ihr Halter (`vorschlagStil`:
+  `left: 0; right: 0`). Bei schmalen Spalten (ArtNr, Matchcode) schneidet sie
+  die Bezeichnung ab, und der Bediener wählt blind. Sie darf breiter werden.
+- Dateien: `src/blocks/shared/vorschlagListe.ts` (+ Test).
+- Regeln: die Liste bleibt am linken Rand ihres Halters verankert und wächst
+  nach rechts; sie wird nie schmaler als der Halter; sie tritt nie über den
+  Rand der Fläche hinaus (dort wächst sie nach links statt weiter nach
+  rechts).
+- Verboten: an Pfeil-runter drehen (offene Frage, Abschnitt 6), an
+  `VORSCHLAEGE_MAX` drehen, das Nachschlage-Fenster anfassen (Punkt 5).
+- Prüfung: Rahmen 4 (Teil B) und 4b.
+- Klickprobe: Tabelle mit schmaler Spalte „ArtNr", in die Erfassungszeile
+  tippen — die Liste steht breiter als die Spalte, die Bezeichnungen sind
+  ganz zu lesen; am rechten Rand bleibt sie innerhalb der Fläche. Dasselbe
+  an einem schmalen Formularfeld.
+
+### Schritt 19 — Zeilen-Markierung: Maus, Tastatur, eine Marke
+Status: wartet auf EINE Entscheidung (unten), dann offen
+Sorgfalt: normal.
+Herkunft: war Abschnitt 6, Punkt 7 („noch nicht untersucht"). Untersucht
+2026-09-03; Befund:
+- Klick auf eine Datenzeile (`zeilenEreignisse.ts:10`, `aktiviereZeile`) tut
+  drei Dinge: Ereignis `ff-zeile-aktiviert` (Auswahl folgen), `waehleAuswahl()`
+  in die maskenweite Ablage, Kette `onRowClick`. Die Zeile trägt danach
+  `.gewaehlt`: Fläche `--se-auswahl` plus 3px Balken links
+  (`tabelleStil.ts:159`).
+- Maus über einer Zeile: `--se-hover`, aber nur bei Zeilen OHNE `data-status`
+  (`tabelleStil.ts:146`). Die Kennfarbe einer vorgemerkten Zeile schlägt den
+  Hover — bewusst, die Farbe IST die Auskunft.
+- Tastatur: Pfeil hoch/runter bewegen den FOKUS von Datenzeile zu Datenzeile
+  (`zeilenAktivierung.ts:37`), Pfeil-runter aus der Suchzeile springt in die
+  Liste. Der Fokus zeichnet nur einen dünnen Rahmen, und nach einem Mausklick
+  verschwindet er wieder (`:focus:not(:focus-visible)`).
+- DIE LÜCKE: Fokus ist nicht Auswahl. Wer mit den Pfeilen durch die Liste
+  geht, bewegt nur den Rahmen; `.gewaehlt`, die Auswahl-Ablage und „Auswahl
+  folgen" rühren sich nicht. Erst Enter aktiviert (`tabelleKoerper.ts:255`).
+  Zwei verschiedene Marken für einen Zustand, den der Bediener als einen
+  erlebt.
+- ENTSCHEIDUNG des Nutzers: Soll der Pfeil-Fokus die Zeile schon MARKIEREN,
+  mit derselben Marke wie ein Klick? Und wenn ja: soll er auch „Auswahl
+  folgen" und die Kette `onRowClick` auslösen? Zur Abwägung, nicht gebaut:
+  markieren ja, Kette nein — sonst feuert jede Pfeilbewegung einen
+  Relations-Lauf.
+- Dateien (erst nach der Entscheidung): `tabelle/zeilenAktivierung.ts`,
+  `tabelle/tabelleKoerper.ts`, `tabelle/tabelleStil.ts`, ggf.
+  `shared/auswahl.ts`.
+- Verboten: die Kennfarben der Vormerkungen (`zeilenStatus.ts`) anfassen;
+  Worte in die Zeile schreiben (Nutzer-Vorgabe: nur der Balken links).
+- Klickprobe: mit den Pfeilen durch eine Liste gehen — die markierte Zeile ist
+  auf einen Blick zu sehen, dieselbe Marke wie nach einem Klick; eine
+  vorgemerkte Zeile behält ihre Kennfarbe.
+
+### Schritt 20 — Höhe und Breite der Tabelle
+Status: wartet auf ZWEI Entscheidungen (unten), dann offen
+Sorgfalt: hoch. (Gerechnete Breiten sind hier zweimal gescheitert.)
+Herkunft: Nutzer-Ansage 2026-09-03. Stand bisher NIRGENDS im Plan, auch nicht
+in Abschnitt 6.
+- Befund 2026-09-03: Die Zeilenzahl kommt heute allein aus der gemessenen
+  Höhe — `seitengroesse.ts:11` rechnet `(Rumpfhöhe - Kopfhöhe) / Zeilenhöhe`.
+  Die Tabelle füllt also ihre gezogene Box. Eine Eigenschaft „höchstens N
+  Zeilen" gibt es nicht; `tabelleEigenschaften.ts` kennt als einzige
+  Eigenschaft `tagField`. Die Breite kommt aus dem Raster, die Spalten teilen
+  sie unter sich auf.
+- ENTSCHEIDUNG 1, Höhe: (a) bleibt wie heute, die gezogene Box bestimmt die
+  Zeilenzahl; (b) die Zeilenzahl ist eine Eigenschaft und die Tabelle wächst
+  selbst mit; (c) wie heute, aber eine Höchstzahl deckelt die Box.
+- ENTSCHEIDUNG 2, Breite: Soll die Tabelle ihre Breite aus der Summe der
+  Spaltenbreiten nehmen (also mitschrumpfen), oder bleibt die gezogene Breite
+  der Rahmen, in dem sich die Spalten aufteilen?
+- WARNUNG (aus `tabelle/spalten.ts`, Nutzer-Befund 2026-08-31): ZWEI Anläufe
+  mit gerechneten Breiten sind gescheitert, rechts blieb Fläche leer. Eine
+  gezogene Breite darf nie überschrieben werden.
+- Dateien (erst nach den Entscheidungen): `tabelle/seitengroesse.ts`,
+  `tabelle/rumpfMessung.ts`, `tabelle/tabelleEigenschaften.ts`,
+  `tabelle/spaltenBreite.ts`.
+- Klickprobe steht, sobald die Entscheidungen da sind.
+
 ## 4. Teil C — Pflege
 
 ### Schritt 9 — Abhängigkeiten auf Stand (nur Nebenversionen)
@@ -900,12 +995,12 @@ inzwischen entschieden (unten); die Pfeil-Frage und Punkt 7 sind offen.
 | # | Was | Fasst an | Bündel? |
 |---|---|---|---|
 | 1 | Dropdown geht wieder zu — Anker ist der Griff statt des ganzen Bausteins | `editor/canvas/FeldBindung.tsx` | nein |
-| 2 | Vorschlagsliste muss breiter werden dürfen als Spalte oder Feld (entschieden); was Pfeil-runter im leeren Feld tut, ist offen | `shared/vorschlagListe.ts`, `tabelle/erfassungsLauf.ts` | ja |
+| 2 | Vorschlagsliste breiter als Spalte oder Feld — **ist jetzt Schritt 18**; hier bleibt nur die offene Frage, was Pfeil-runter im leeren Feld tut | `shared/vorschlagListe.ts`, `tabelle/erfassungsLauf.ts` | ja |
 | 3 | Anzeigelänge je Feld im Datencenter; Spaltenbreite als Anteil daraus | `core/data/dataSources.ts`, Datencenter, `tabelle/spaltenBreite.ts` | ja |
 | 4 | Beizeile: je Spalte Hauptzeile / Beizeile / weglassen; grau, kleiner, nur anzeigen | Zeilen-Vorlage, `tabelle/seitengroesse.ts`, Spaltenkopf-Menü | ja |
 | 5 | Nachschlage-Fenster: eine Breiten-Regel statt zwei, Größe und Spalten auch an der Tabelle einstellbar | `shared/nachschlagen.ts`, `tabelle/erfassungsBedienung.ts` | ja |
 | 6 | Sortier-Vorgabe je Quelle, bleibt beim Öffnen | dieselbe Ablage wie 5 | ja |
-| 7 | Zeilen-Hervorhebung Maus und Tastatur | noch nicht untersucht | ja |
+| 7 | Zeilen-Hervorhebung Maus und Tastatur — **untersucht 2026-09-03, ist jetzt Schritt 19** | `tabelle/zeilenAktivierung.ts`, `tabelle/tabelleStil.ts` | ja |
 
 Reihenfolge des Vorschlags: 3 muss vor 4 (die Beizeile braucht die
 Anzeigelänge), 5 und 6 gehören zusammen, 1 ist unabhängig von allem.
@@ -936,7 +1031,6 @@ Offen, bevor daraus Schritte werden:
   - Idee, NICHT entschieden: die Liste immer aufmachen und in der letzten
     Zeile sagen, wie viele Sätze es noch gibt (F4 zum Suchen). Damit wäre die
     willkürliche Auswahl „die ersten acht" wenigstens nicht mehr stumm.
-- Punkt 7 ist nicht untersucht und kann so nicht eingereiht werden.
 - Kollision: 2, 3, 4 und 5 fassen dieselben Dateien an wie die Schritte 13,
   15 und 16b (`tabelle/*`, `shared/nachschlagen.ts`, `core/data/dataSources.ts`).
   Beides gleichzeitig gibt Konflikte. Der Nutzer entscheidet, was zuerst läuft.
