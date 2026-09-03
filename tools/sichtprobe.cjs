@@ -5,7 +5,7 @@
 //   node tools/sichtprobe.cjs click:ff-tabelle wait:400 shot:meins
 //
 // Bilder landen in ./sichtprobe/<name>.png. Anleitung: tools/SICHTPROBE.md.
-// Ohne Browser: einmal `npx playwright install chromium`.
+// Ohne Browser: einmal `node node_modules/playwright-core/cli.js install chromium-headless-shell`.
 const { chromium } = require('playwright-core')
 const fs = require('fs')
 const path = require('path')

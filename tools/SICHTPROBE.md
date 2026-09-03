@@ -11,7 +11,9 @@ richten, dann committen.
 
 - `npm install` (bringt `playwright-core` mit).
 - Ohne vorinstallierten Browser (nicht in der Cloud-Umgebung noetig):
-  `npx playwright install chromium`.
+  `node node_modules/playwright-core/cli.js install chromium-headless-shell`
+  (das Repo hat nur `playwright-core`, und `chromium.launch({headless:true})`
+  nimmt die Headless-Shell).
 
 ## Laufen lassen
 
