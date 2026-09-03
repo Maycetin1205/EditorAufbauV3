@@ -46,6 +46,11 @@
    Groessen und Farben stimmen, kein Zeichen ohne Grund. Konsolen-Fehler
    oder -Warnungen im Ausdruck des Werkzeugs sind Fehler. Wer etwas findet,
    richtet es VOR dem Commit. Anleitung: `tools/SICHTPROBE.md`.
+   Laeuft das Skript nicht (Playwright verlangt einen Browser-Bau, der
+   nicht installiert ist), macht der Agent die Bilder mit dem Browser
+   seiner App am laufenden Dev-Server und sieht sie genauso an. Was er
+   nicht sehen konnte, sagt er im Bericht. Stillschweigend ausfallen darf
+   die Sichtprobe nie.
 5. Stopp-Regeln (aufhören, Stand beschreiben, NICHT reparieren):
    - Ein Test bricht, den der Schritt nicht als „ändert sich" nennt.
    - Du müsstest eine Datei anfassen, die der Schritt nicht nennt.
@@ -147,7 +152,9 @@ Grund und schreibt ihn in den Commit.
   sich nicht ein. Änderungen an der Maske sind bewusste Teil-B-Schritte mit
   Referenz-Erneuerung.
 
-**Was daran noch nicht stimmt:** Schritte 10a bis 10c (unten). Die
+**Was daran noch nicht stimmt:** an der Gestaltung nichts mehr, 10a bis
+10c sind erledigt. Offen ist, was die Maske an Fremdem mitschleppt:
+Schritte 11 bis 16b. Die
 Kanban-Karten-Vorlage (Strich-Reiter im Editor) ist bewusst offen gelassen:
 sie braucht ein Urteil vor dem Bild, kein Rezept.
 
@@ -497,6 +504,212 @@ Ausführung: Opus erlaubt.
   `click:text=Aus SoftEngine-Datei` geht nicht ohne Datei; stattdessen die
   Klassen im Code gegen die Zahlen pruefen).
 
+### Ziel der Schritte 11 bis 16b — nur was drauf liegt, kommt in die Maske
+
+Nutzer-Ansage 2026-09-03: „was nicht auf der Fläche liegt, hat in der Maske
+nichts zu suchen." Das ist kein Byte-Sparen, sondern Ehrlichkeit der Datei:
+der Export soll enthalten, was gebaut wurde, und nichts weiter. Die
+Dateigröße ist eine Folge, nie die Begründung — wer einen dieser Schritte mit
+Kilobytes verteidigt, hat ihn falsch verstanden.
+
+Ausgangslage, gemessen 2026-09-03 gegen `84b9ab0`: Export 237.193 Bytes,
+davon 230.003 Bytes Laufzeitbündel. Rund 120 KB davon hat der Nutzer nie auf
+die Fläche gelegt. Selbst nachgemessen: `shared/tierBilder.ts` = 30.208 Bytes
+(zehn PNG, je 72x72, angezeigt bei 36x36), `displayName` steckt 15x im
+Bündel, `core/blocks/treeQuery.ts` hängt an EINER Konstante
+(`holendeQuellen.ts:4`), alle 15 Bausteine kommen bedingungslos über
+`register.ts`. Aus dem Vorschlag übernommen, NICHT selbst nachgemessen: die
+11 fremden Bausteine ~66 KB, das `nachschlagen`/`TabelleBlock`-Stück 79,5 KB.
+
+Nicht Teil dieser Schritte: `rechnung.ts` (bleibt, Nutzer 2026-09-02) und die
+Tierfotos als Funktion (bleiben im Card-Baustein, Nutzer 2026-09-03 — sie
+sollen nur nicht mitfahren, wo keine Karte liegt; das erledigt Schritt 16b
+von selbst).
+
+### Schritt 11 — Die Pfote raus aus dem Leerzustand
+Status: offen
+Ausführung: Opus erlaubt.
+- Ziel: `leerZustand()` zeichnet kein Tier-Zeichen mehr. Eine leere Tabelle
+  zeigt nur ihren Text. `shared/leerZustand.ts` rendert heute `pfoteIcon()`
+  über „Keine Datensätze." — das trifft jede Tabelle und jede Liste, auch
+  ohne Card, also auch eine reine Rechnungsmaske.
+- Dateien: `src/blocks/shared/leerZustand.ts` (Aufruf und die dazu gehörende
+  `.leer svg`-Regel in `leerStil`).
+- Verboten: `shared/pfote.ts` löschen (`tierIcon.ts` benutzt es weiter als
+  Rückfall für ein unbekanntes Tier), `tierIcon.ts` anfassen, am Text
+  „Keine Datensätze." drehen.
+- Prüfung: Rahmen 4 (Teil B) und 4b.
+- Klickprobe: Tabelle ohne Quelle auf die Fläche legen — der Text steht da,
+  kein Zeichen darüber. Exportierte Maske: gleiches Bild.
+
+### Schritt 12 — Die Trennstelle anlegen (Grundlage)
+Status: offen
+Ausführung: Opus erlaubt.
+- Ziel: Die Anmeldung eines Bausteins zerfällt in zwei Hälften.
+  `BasicBlock.defineAndRegister` wird zu `definiere(Klasse)` — nur
+  `customElements.define`, für Maske und Editor — und `beschreibe(Klasse)` —
+  das `registerBlockType(…)`, nur für den Editor. `register.ts` ruft
+  weiterhin beides, damit sich nichts verhält. Zusätzlich: `QUELLE_PROP`
+  bekommt ein eigenes Mini-Modul, damit `holendeQuellen.ts` nicht mehr das
+  ganze `core/blocks/treeQuery.ts` in die Maske zieht.
+- Dateien: `src/blocks/base/BasicBlock.ts`, `src/blocks/register.ts`,
+  `src/blocks/registerEditorAngaben.ts`, `src/core/blocks/treeQuery.ts` +
+  neues Konstanten-Modul, `src/blocks/shared/holendeQuellen.ts`.
+- Verboten: Bausteindateien anfassen. Das ist Schritt 12b.
+- Prüfung: Rahmen 4 (Teil B) und 4b.
+- Die Trennstelle selbst spart fast nichts — sie macht 12b möglich.
+
+### Schritt 12b — Editor-Angaben aus den Bausteinen heraus
+Status: offen
+Ausführung: Fable. (Verschiebt genau die Angaben, aus denen Palette und
+Inspector ihr Aussehen ziehen — dafür gilt die Opus-Sperre.)
+- Ziel: `displayName`, `category`, `customProperties` samt Beschreibungstexten
+  und `raster` sind Editor-Wissen und haben in der Maske nichts verloren.
+  Sie ziehen in die Editor-Hälfte um.
+- Der Weg EXISTIERT schon, es wird keine zweite Bauweise daneben gestellt:
+  `src/blocks/registerEditorAngaben.ts` sammelt elf `editorAngaben.ts`, und
+  diese Sammelstelle zieht NUR `src/main.tsx:3` herein, also nie die Maske.
+  Heute trägt sie bloß das Palettensymbol (`ergaenzeEditorAngaben`). Genau
+  dorthin gehören die übrigen Editor-Angaben. Bausteine ohne solche Datei
+  (`bild`) bekommen eine, gleich gebaut wie die anderen.
+- Dateien: je Baustein `src/blocks/<typ>/<Name>Block.ts` +
+  `src/blocks/<typ>/editorAngaben.ts`, `src/core/blocks/editorAngaben.ts`,
+  `src/blocks/registerEditorAngaben.ts`.
+- Achtung, Umfang: fünfzehn Bausteine. Wer merkt, dass das nicht in einen Zug
+  passt, macht Tabelle und Formularfeld zuerst und berichtet — die beiden
+  tragen den Großteil.
+- Verboten: Verhalten ändern, Eigenschaftsnamen ändern, Registry-Verträge
+  ändern. Palette und Inspector müssen exakt gleich aussehen wie vorher.
+- Prüfung: Rahmen 4 (Teil B) und 4b. Zusätzlich: Palette und Inspector jedes
+  Bausteins einmal öffnen.
+
+### Schritt 13 — Bauzeit-Weiche: Editor-Bedienung nicht mehr ins Maskenbündel
+Status: offen
+Ausführung: Fable. (Fasst Bausteinverhalten an.)
+- Ziel: Eine Konstante `__FF_EDITOR__`, von Vite gesetzt: im Editor-Build
+  `true`, im Maskenbau `false`. Der Minifizierer wirft `if (false)`-Blöcke
+  weg, die dahinter liegenden Module fallen mit heraus. Damit verschwinden
+  aus der Maske: `shared/umbenennen.ts`, die `ff-prop-change`-Sendestellen,
+  die `data-editable`-CSS-Regeln und die `imEditor`-Zweige. Begründung ist
+  nicht die Größe (geschätzt 8–12 KB, das Einzige in diesen Schritten, das
+  niemand gemessen hat), sondern dass Editor-Bedienung in der Maske nie
+  läuft und deshalb nicht drinstehen soll.
+- Dateien: `vite.config.ts`, `vite.runtime.config.ts` (`define`), eine
+  Typdeklaration für die Konstante, `src/blocks/base/BasicBlock.ts`,
+  `src/blocks/formfeld/FormFeldBlock.ts`, `src/blocks/tabelle/TabelleBlock.ts`,
+  `src/blocks/tabelle/erfassungsZeile.ts`, `src/blocks/tabelle/suche.ts`,
+  `src/blocks/tabelle/tabelleKoerper.ts`.
+- Verboten: die Breiten-Griffe anfassen — die gelten AUCH in der Maske
+  (Schritt 8). Bedienung im Editor verändern.
+- Pflicht, nicht Vorsatz: jede abgeschaltete Stelle wird einzeln gegen die
+  Frage geprüft „läuft das in der Maske?". Keine pauschale Klammer.
+- Prüfung: Rahmen 4 (Teil B) und 4b. Zusätzlich im gebauten Bündel nachsehen,
+  dass `umbenennen` und `data-editable` nicht mehr vorkommen.
+- Klickprobe: Im Editor tut alles wie vorher — Umbenennen im Feld-Picker,
+  Spalten ziehen, Breite ziehen. In der exportierten Maske: Tabelle sieht
+  gleich aus, nichts ist anklickbar, was es vorher nicht war.
+- SPERRE: Nach diesem Schritt lädt der Nutzer eine echte Maske in SoftEngine,
+  bevor der nächste Schritt anfängt. Dies ist der einzige Schritt, nach dem
+  Editor-Code und Masken-Code nicht mehr dieselbe Datei sind; was hier
+  auseinanderläuft, findet kein Test.
+
+### Schritt 14 — CSS-Ballast beim Maskenbau
+Status: VERWORFEN 2026-09-03 (Chat-Urteil, vom Nutzer abgenommen).
+Der Vorschlag wollte beim Maskenbau Einrückung und Kommentare aus den
+`css`-Blöcken putzen (16,1 KB). Das dient dem Ziel dieser Schritte NICHT:
+Einrückung und Kommentare stecken in CSS, das die Maske wirklich braucht —
+es ist reines Kleinermachen von rechtmäßigem Inhalt. Dagegen steht das
+schlechteste Risiko im ganzen Bündel: „CSS nie per Suchmuster über
+Kommentargrenzen löschen — ein zu weites Muster riss 232 Zeilen Tabellen-CSS
+mit, die Tabelle maß ihre Höhe jedes Mal anders und zeichnete endlos"
+(Schritt 8). Kein Gegenwert. Die Nummer bleibt stehen, damit die Idee nicht
+in drei Chats als frischer Einfall wiederkommt.
+
+### Schritt 15 — `nachschlagen.ts` auftrennen (Vorarbeit für 16b)
+Status: offen
+Ausführung: Fable.
+- Ziel: Tabelle und Formularfeld hängen nicht mehr an demselben Modul.
+  Gemessen (Vorschlag 2026-09-03): Rollup steckt den kompletten `TabelleBlock`
+  in dasselbe Stück wie `nachschlagen` (79,5 KB), und `formfeld.js` importiert
+  dieses Stück. Ohne diese Trennung bekommt eine Maske mit nur einem
+  Formularfeld die ganze Tabelle mit — Schritt 16b hielte sein Versprechen
+  dann nicht.
+- Dateien: `src/blocks/shared/nachschlagen.ts` und die daraus entstehenden
+  Teile; `src/blocks/tabelle/*` und `src/blocks/formfeld/*` nur so weit, wie
+  die Importe umzuhängen sind.
+- Verboten: Verhalten des Nachschlagfensters ändern.
+- Prüfung: Rahmen 4 (Teil B) und 4b. Zusätzlich: ein Mehrfach-Einstieg-Bau
+  zeigt, dass `ff-tabelle` in keinem Stück mehr steht, das `formfeld`
+  importiert.
+- Klickprobe: Nachschlagfenster aus der Tabelle und aus dem Formularfeld
+  öffnen — beide verhalten sich wie vorher.
+
+### Schritt 16a — `exportMask` bekommt das Bündel hereingereicht
+Status: offen
+Ausführung: Opus erlaubt.
+- Ziel: `exportMask` importiert das Laufzeitbündel nicht mehr selbst per
+  `?raw` (`exportMask.ts:49`), sondern bekommt es als Parameter. Wer es
+  beschafft, entscheidet der Aufrufer. Am Ergebnis ändert sich NICHTS — die
+  Maske bleibt byte-gleich, es wird weiterhin das eine Vollbündel gereicht.
+  Der Schritt macht nur 16b möglich und die Exportfunktion ehrlich testbar.
+- Dateien: `src/export/exportMask.ts`, `src/editor/shell/Toolbar.tsx`, und
+  die Tests, die `exportMask` rufen (`referenzabzug.test.ts`,
+  `exportSkripte.test.ts`, `herkunft.test.ts`, `kettenSpalten.test.ts`).
+- Verboten: am erzeugten HTML irgendetwas ändern.
+- Prüfung: Rahmen 4 — hier ausnahmsweise nach TEIL A: der Referenzabzug muss
+  grün sein OHNE `REFERENZ_ERNEUERN`. Ist er rot, hast du aus Versehen die
+  Maske verändert.
+
+### Schritt 16b — Bausatz: nur was auf der Fläche liegt
+Status: offen
+Ausführung: Fable. Größter Schritt.
+- Ziel: `build:runtime` baut nicht mehr eine Datei, sondern einen Kern plus
+  ein Stück je Baustein. `exportMask` bekommt (über 16a) das zusammengesetzte
+  Bündel: Kern + genau die Stücke der Bausteine, die im Baum vorkommen, samt
+  transitiver Hülle über `laufzeitBraucht`. Damit fallen die 11 fremden
+  Bausteine und die Tierfotos von selbst weg — die Fotos fahren dann nur noch
+  mit, wenn eine Karte auf der Fläche liegt (Nutzer 2026-09-03).
+- Randbedingung: Der Export läuft im BROWSER (`Toolbar.tsx` → `exportMask()`
+  → `downloadFile()`). Zur Exportzeit gibt es kein Node. Es wird deshalb
+  vorgebaut und verkettet, nicht beim Export gebündelt. Kein Server, kein
+  Netzwerkaufruf.
+- Die Entwurfsfrage, ZUERST im Chat beantworten, kein Code vorher: die Teile
+  sind getrennte Skripte und können sich nicht per `import` finden. Der Kern
+  muss das, was die Blockstücke brauchen (Lit, `BasicBlock`, die geteilten
+  Module), an EINEM Ort ablegen, den die Stücke lesen — praktisch ein
+  Namensraum-Objekt, das der Kern anlegt und jedes Blockstück abruft. Wie es
+  heißt, was drin liegt und wie Rollup die Stücke darauf ausrichtet
+  (`external` + `output.globals`, oder ein anderer Weg), ist die eigentliche
+  Frage. Wer sie nicht sicher beantworten kann, stoppt VOR dem ersten Commit
+  und berichtet.
+- Dateien: `vite.runtime.config.ts` (mehrere Einstiege),
+  `src/export/generated/*` (mehrere Dateien), `src/export/exportMask.ts`,
+  `src/editor/shell/Toolbar.tsx`, neue `src/export/benutzteBlocktypen.ts` +
+  Test, `laufzeitBraucht` an den Bausteinen, `runtimeBuendel.test.ts`
+  (Wächter umhängen).
+- Zwei Fallstricke:
+  1. Nicht „welche Tags stehen im Markup" nehmen. Was eine Aktion zur
+     Laufzeit öffnet (typisch `popup`), steht in keinem Markup. Dafür die
+     Liste `laufzeitBraucht` je Baustein, plus ein Test, der prüft, dass jedes
+     `ff-*`-Tag aus den Templates eines Bausteins entweder sein eigenes,
+     statisch erreichbar oder in der Liste ist.
+  2. Die Bausteinliste muss sortiert sein, sonst ergeben zwei gleiche Masken
+     zwei verschiedene Bündel und der Determinismus-Wächter kippt.
+- Prüfung: Rahmen 4 (Teil B) und 4b. Zusätzlich: zweimal bauen für dieselbe
+  Bausteinmenge muss byte-gleich sein.
+- Klickprobe: Eine Maske nur mit Tabelle und Knopf exportieren, in SoftEngine
+  laden — alles tut. Datei nach `welpe` durchsuchen: kein Treffer.
+- SPERRE: Nach diesem Schritt lädt der Nutzer eine echte Maske in SoftEngine,
+  bevor weitergebaut wird.
+
+### Reihenfolge der Schritte 11 bis 16b
+11 -> 12 -> 12b -> 13 -> 15 -> 16a -> 16b. (14 ist verworfen.)
+11 bis 13 sind unabhängig voneinander und je ein überschaubarer Chat. 12 legt
+nur die Trennstelle an, 12b geht damit durch die Bausteine. 15 ist reine
+Vorarbeit und muss vor 16b liegen, sonst ist 16b umsonst. 16a ändert nichts
+am Ergebnis und macht 16b möglich. 16b ist der große Schritt und der einzige
+mit einer offenen Entwurfsfrage.
+
 ## 4. Teil C — Pflege
 
 ### Schritt 9 — Abhängigkeiten auf Stand (nur Nebenversionen)
@@ -525,3 +738,10 @@ Ausführung: Opus erlaubt (aendert weder Aussehen noch Verhalten; die Wächter e
 - Neubau von Laufzeit (`src/softengine/`), Export, Store, Tabellen-
   Erfassung: funktioniert, getestet, durch Echttests belegt.
 - Neue Test-Gattungen (Browser, Komponenten): nur auf Ansage.
+- CSS beim Maskenbau putzen (Einrueckung, Kommentare): verworfen 2026-09-03,
+  siehe Schritt 14.
+- Ein Buendler beim Export (esbuild-Endpunkt, WASM): braucht Server oder
+  10 MB, fuer ~66 KB. Verworfen 2026-09-03.
+- Vorgebackene Buendel-Profile („mit/ohne Kanban“): gemessen nur 11 KB statt
+  66 KB, weil Card, Datum, Navi, Bild, Popup und Text drin bleiben.
+  Verworfen 2026-09-03.
