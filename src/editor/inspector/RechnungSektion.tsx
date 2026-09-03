@@ -14,6 +14,7 @@ import {
   type RundungsRichtung,
 } from '../../core/data/rechnung'
 import { useEditor } from '../../state/useEditor'
+import { useAbschnitt } from './abschnittStand'
 
 // Die Rechnung (Abgabemenge = Anzahl x Dosis x Tage) gehoert zur Tabelle,
 // deren Erfassungszeile sie rechnet — und wird darum HIER bedient, im
@@ -50,6 +51,7 @@ function spaltenVon(node: BlockNode): { titel: string; kennung: string; versteck
 }
 
 export function RechnungSektion({ block }: { block: BlockNode }) {
+  const [offen, schalte] = useAbschnitt('rechnung')
   const ed = useEditor()
   const stand = rechnungVonAttribut(block.props.rechnung) ?? leereRechnung()
   // Eine ausgeblendete Spalte steht dabei — die Rechnung rechnet in sie
@@ -84,7 +86,7 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
   }
 
   return (
-    <Gruppe titel="Rechnung">
+    <Gruppe titel="Rechnung" offen={offen} onSchalte={schalte}>
       <div className="flex flex-col gap-3">
         <p className="text-dicht text-matt">
           Abgabemenge = Anzahl × Dosis × Tage. Gerechnet wird der eine leere

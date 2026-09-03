@@ -23,7 +23,11 @@ const STANDARD = [
   'click:ff-formfeld', 'wait:300', 'shot:4-formularfeld',
   'click:ff-kanban-spalte', 'wait:300', 'shot:5-kanban-spalte',
   'click:[title^="Datencenter"]', 'wait:500', 'shot:6-datencenter', 'key:Escape', 'wait:200',
-  'click:ff-tabelle', 'wait:300', 'click:text=Schritt anlegen', 'wait:500', 'shot:7-kettenfenster', 'key:Escape',
+  // Die Inspector-Abschnitte starten zugeklappt (inspector/abschnittStand.ts),
+  // darum erst „Aktionen" aufklappen — sonst gibt es kein „Schritt anlegen".
+  'click:ff-tabelle', 'wait:300',
+  'click:button[aria-expanded]:has-text("Aktionen")', 'wait:200',
+  'click:text=Schritt anlegen', 'wait:500', 'shot:7-kettenfenster', 'key:Escape',
   'click:[aria-label="Weitere Aktionen"]', 'wait:300', 'shot:8-menue', 'key:Escape',
   'click:text=Hinweis', 'wait:400', 'shot:9-popup-seite',
 ]

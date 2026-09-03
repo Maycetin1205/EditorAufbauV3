@@ -12,6 +12,7 @@ import { quellenKennung } from '../../core/data/dataSources'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { bausteinName } from '../../core/blocks/bausteinName'
+import { useAbschnitt } from './abschnittStand'
 import { PickerControl } from './controls/PickerControl'
 import { SchluesselPaarZeilen } from './SchluesselPaarZeilen'
 
@@ -20,6 +21,7 @@ interface AuswahlFolgeSektionProps {
 }
 
 export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
+  const [offen, schalte] = useAbschnitt('auswahlFolgen')
   const ed = useEditor()
   const bibliothek = useDataSources().list
 
@@ -60,7 +62,7 @@ export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
     }])
   }
   return (
-    <Gruppe titel="Auswahl folgen">
+    <Gruppe titel="Auswahl folgen" offen={offen} onSchalte={schalte}>
       {/* Ein geloeschter Geber braucht keine Kunst-Option: der Waehler zeigt
           einen Wert, den er nicht kennt, von sich aus rot. */}
       <PickerControl

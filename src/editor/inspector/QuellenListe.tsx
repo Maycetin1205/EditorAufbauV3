@@ -10,6 +10,7 @@ import {
 } from '../../core/data/sourceLinks'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
+import { useAbschnitt } from './abschnittStand'
 import { PickerControl } from './controls/PickerControl'
 import { SchluesselPaarZeilen } from './SchluesselPaarZeilen'
 
@@ -18,6 +19,7 @@ interface QuellenListeProps {
 }
 
 export function QuellenListe({ block }: QuellenListeProps) {
+  const [offen, schalte] = useAbschnitt('datenquellen')
   const ed = useEditor()
   const bibliothek = useDataSources().list
 
@@ -127,7 +129,7 @@ export function QuellenListe({ block }: QuellenListeProps) {
   )
 
   return (
-    <Gruppe titel="Datenquellen">
+    <Gruppe titel="Datenquellen" offen={offen} onSchalte={schalte}>
       {quellenAuswahl(erste, 'Datenquelle 1', (v) => ed.updateProperty(block.id, 'source', v))}
       {fehlt(erste) && (
         <p className="text-dicht text-fehler">Diese Datenquelle fehlt in der Bibliothek.</p>

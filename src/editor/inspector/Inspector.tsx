@@ -10,6 +10,7 @@ import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Zeile } from '@/ui/werkbank/Zeile'
 import { bausteinName } from '../../core/blocks/bausteinName'
+import { useAbschnitt } from './abschnittStand'
 import { AktionenSektion } from './AktionenSektion'
 import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
 import { PropControl } from './PropControl'
@@ -48,6 +49,9 @@ function Panel({ titel, aktionen, children }: {
 }
 
 export function Inspector() {
+  // Vor jedem fruehen `return`: Hooks laufen in jedem Durchgang gleich oft.
+  const [felderOffen, schalteFelder] = useAbschnitt('felder')
+  const [aktionenOffen, schalteAktionen] = useAbschnitt('aktionen')
   const ed = useEditor()
 
   const quellen = useDataSources()
@@ -182,7 +186,7 @@ export function Inspector() {
                 Einstellungen — beim Kanban sah der ganze Inspector nach
                 Datenquelle aus. */}
             {dataProps.length > 0 && (
-              <Gruppe titel="Felder">
+              <Gruppe titel="Felder" offen={felderOffen} onSchalte={schalteFelder}>
                 <div className="inspektor-werte">
                   {dataProps.map((p) => propControl(p))}
                 </div>
@@ -194,7 +198,7 @@ export function Inspector() {
         {darfAuswahlFolgen(block) && <AuswahlFolgeSektion block={block} />}
 
         {hatAktionen && (
-          <Gruppe titel="Aktionen">
+          <Gruppe titel="Aktionen" offen={aktionenOffen} onSchalte={schalteAktionen}>
             <AktionenSektion block={block} events={def.blockEvents ?? []} />
           </Gruppe>
         )}
