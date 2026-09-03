@@ -681,8 +681,9 @@ export class TabelleBlock extends BasicBlock {
         // des Editors ueber dem Kopf.
         klickKopf: (i) => {
           if (!this.editable) this._ansicht.klickSortiere(i)
-        },        aktiviereZeile: (rohIndex, ansichtIndex) =>
-          aktiviereZeile(this, this.rohzeilen, rohIndex, ansichtIndex),
+        },
+        aktiviereZeile: (rohIndex, ansichtIndex, imEingabefeld) =>
+          aktiviereZeile(this, this.rohzeilen, rohIndex, ansichtIndex, imEingabefeld),
         zeileDoppelt: (rohIndex) => zeileDoppelt(this, this.rohzeilen, rohIndex),
         nimmErfassteZeile: (index) => {
           if (this._erfassung.entferne(index)) this.requestUpdate()

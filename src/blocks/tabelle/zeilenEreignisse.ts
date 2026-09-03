@@ -1,6 +1,6 @@
-import { geberIdVon, waehleAuswahl } from '../shared/auswahl'
+import { geberIdVon, klareAuswahl, setzeAuswahl as globalSetzeAuswahl } from '../shared/auswahl'
 import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
-import { zeilenIndexVon } from './seRuntime'
+import { type RuntimeTableElement, zeilenIndexVon } from './seRuntime'
 import { sendeZeileAktiviert } from './zeilenAktivierung'
 
 // Was ein Klick auf eine Datenzeile ausloest: die Zeile weitergeben (Auswahl
@@ -12,14 +12,32 @@ export function aktiviereZeile(
   rohzeilen: readonly unknown[],
   rohIndex: number | null,
   ansichtIndex: number,
+  imEingabefeld = false,
 ): void {
   if (rohIndex === null || el.hasAttribute('data-ff-editor')) return
   const rohzeile = rohzeilen[rohIndex]
   if (rohzeile === undefined) return
-  sendeZeileAktiviert(el, { rohzeile, rohIndex, ansichtIndex })
-  setzeAuswahl(el, rohzeile)
-  runEvent(el, 'onRowClick', { PINDEX: zeilenIndexVon(el, rohzeile) })
-    .catch(meldeKettenFehler)
+
+  const table = el as RuntimeTableElement
+  const istSchonGewaehlt = table.auswahlIndex === rohIndex
+
+  // Klick ins Eingabefeld einer bereits gewaehlten Zeile setzt nur die Schreibmarke
+  // und hebt die Markierung nicht auf.
+  if (imEingabefeld && istSchonGewaehlt) return
+
+  const neuerIndex = istSchonGewaehlt ? -1 : rohIndex
+  table.auswahlIndex = neuerIndex
+
+  const geberId = geberIdVon(el)
+  if (istSchonGewaehlt) {
+    if (geberId !== '') klareAuswahl(geberId)
+    sendeZeileAktiviert(el, { rohzeile, rohIndex: -1, ansichtIndex })
+  } else {
+    if (geberId !== '') globalSetzeAuswahl(geberId, rohzeile, true)
+    sendeZeileAktiviert(el, { rohzeile, rohIndex, ansichtIndex })
+    runEvent(el, 'onRowClick', { PINDEX: zeilenIndexVon(el, rohzeile) })
+      .catch(meldeKettenFehler)
+  }
 }
 
 export function zeileDoppelt(
@@ -32,10 +50,4 @@ export function zeileDoppelt(
   if (rohzeile === undefined) return
   runEvent(el, 'onRowDblClick', { PINDEX: zeilenIndexVon(el, rohzeile) })
     .catch(meldeKettenFehler)
-}
-
-function setzeAuswahl(el: HTMLElement, rohzeile: unknown): void {
-  const geberId = geberIdVon(el)
-  if (geberId === '') return
-  waehleAuswahl(geberId, rohzeile)
 }
