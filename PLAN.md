@@ -9,7 +9,16 @@
 
 ## 0. Rahmen — für JEDEN Chat, der hier arbeitet (zuerst lesen)
 
-1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt: den
+> **NÄCHSTER SCHRITT: 18 — Vorschlagsliste darf breiter sein als die Spalte**
+> (Abschnitt 3c). Diese Zeile ist die Wahrheit darüber, was dran ist, nicht
+> die Reihenfolge der Überschriften: Teil B3 steht weiter unten im Text, geht
+> den Schritten 12b bis 16b aber VOR (Nutzer-Ansage 2026-09-03). Wer einen
+> Schritt fertig hat, schreibt hier den nächsten hin und committet das mit.
+> Reihenfolge ab hier: 18 -> 19 -> (20, sobald die Höhe entschieden ist) ->
+> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
+
+1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt: den,
+   den die Zeile „NÄCHSTER SCHRITT" oben nennt. Steht dort nichts, nimm den
    ersten mit `Status: offen`. Nicht mehr. Kein Vorgriff, keine Zusatzideen,
    keine „Verbesserungen" nebenbei. Was dir auffällt, schreibst du in den
    Chat-Bericht, nicht in den Code.
