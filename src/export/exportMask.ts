@@ -17,6 +17,7 @@ import { AUSWAHL_FOLGE_PROP } from '../core/data/auswahlFolge'
 import {
   felderHinterSchnitt,
   istOffenerSatz,
+  holWertFor,
   ladeRelationFor,
   mitEindeutigenNamen,
   satzNummerVon,
@@ -234,7 +235,7 @@ export function exportMask(
   const benutzteFelder = benutzteFelderJeQuelle(tree, sources)
 
   const holSchluessel = holSchluesselJeGeber(used)
-  const usedRelations = collectRelations(tree, relations)
+  const usedRelations = collectRelations(tree, relations, used)
 
   const tokensCss = stripCssComments(tokensCssRaw)
   const runtimeJs = guardScriptContent(escapeNonAsciiJs(runtimeJsRaw.trim()))
@@ -242,6 +243,7 @@ export function exportMask(
   const sourcesJs = guardJsonScript(escapeNonAsciiJs(
     'window.FF_DATA_SOURCES = ' + JSON.stringify(used.map((s) => {
       const lade = ladeRelationFor(s)
+      const hol = holWertFor(s)
       return {
         id: s.id,
         name: s.name,
@@ -251,6 +253,9 @@ export function exportMask(
         ...(lade
           ? { ladeRelation: { ...lade, zusatzFelder: felderHinterSchnitt(benutzteFelder.get(s.id)) } }
           : {}),
+        // Die Feldnamen reisen mit: nur so weiss der Wert-Lader, unter
+        // welchem Namen die Antwort abzulegen ist.
+        ...(hol ? { holWert: { ...hol, felder: s.fields.map((f) => f.code) } } : {}),
       }
     })) + ';',
   ))

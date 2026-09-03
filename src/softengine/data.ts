@@ -1,3 +1,4 @@
+import { pruefeHolWert, type HolWert } from '../core/data/holWert'
 import { POS_LEN, pruefeLadeRelation, type LadeRelation } from '../core/data/ladeRelation'
 import { geholteZeilenFuer } from './geholteZeilen'
 
@@ -9,6 +10,11 @@ export function isRecord(v: unknown): v is UnknownRecord {
 
 export type RuntimeLadeRelation = LadeRelation & { zusatzFelder: readonly string[] }
 
+// Die Feldnamen reisen MIT: FF_DATA_SOURCES traegt sonst keine Felder, und
+// ohne sie wuesste der Wert-Lader nicht, unter welchem Namen er die Antwort
+// ablegen soll.
+export type RuntimeHolWert = HolWert & { felder: readonly string[] }
+
 export interface RuntimeDataSource {
   id: string
   name: string
@@ -19,6 +25,7 @@ export interface RuntimeDataSource {
   // ist. SoftEngine liefert ihn im VAR-Abschnitt statt als Zeilenschleife.
   offenerSatz: boolean
   ladeRelation?: RuntimeLadeRelation
+  holWert?: RuntimeHolWert
 }
 
 export function findRuntimeDataSource(list: unknown, id: string): RuntimeDataSource | undefined {
@@ -36,6 +43,16 @@ export function findRuntimeDataSource(list: unknown, id: string): RuntimeDataSou
         : []
       ladeRelation = { ...geprueft, zusatzFelder }
     }
+
+    let holWert: RuntimeHolWert | undefined
+    const gepruefterWert = pruefeHolWert(entry.holWert)
+    if (gepruefterWert && isRecord(entry.holWert)) {
+      const roh = entry.holWert.felder
+      const felder = Array.isArray(roh)
+        ? roh.filter((f): f is string => typeof f === 'string' && f !== '')
+        : []
+      holWert = { ...gepruefterWert, felder }
+    }
     return {
       id,
       name: entry.name,
@@ -43,6 +60,7 @@ export function findRuntimeDataSource(list: unknown, id: string): RuntimeDataSou
       indexField: typeof entry.indexField === 'string' ? entry.indexField : '',
       offenerSatz: entry.offenerSatz === true,
       ...(ladeRelation ? { ladeRelation } : {}),
+      ...(holWert ? { holWert } : {}),
     }
   }
   return undefined

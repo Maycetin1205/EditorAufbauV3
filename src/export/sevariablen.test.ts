@@ -157,3 +157,21 @@ test('eine Lesequelle bestellt keine Satznummer', () => {
   const raus = bestellung([lesequelle], new Map([['q-lese', new Set(['ART_51_60'])]]))
   expect(raus.ERPAPICALL[0]?.FELDER).toBe('ART_51_60')
 })
+
+// Eine Quelle, die ihren Wert selbst per Relation holt, wartet auf keine
+// Lieferung — sie darf deshalb in keinem Abschnitt der Bestellung stehen.
+// Stuende sie im SEFILELOOP, bestellte die Maske eine Tabelle, die es nicht
+// gibt (ID:""), und SoftEngine braeche laut Kontrakt die ganze Loop-Liste ab.
+test('„Wert per Relation" wird nicht bestellt', () => {
+  const adressnummer: DataSource = {
+    id: 'q-adrnr',
+    name: 'Adressnummer',
+    kind: 'relationswert',
+    holWert: { relationId: 'r-408', params: [] },
+    fields: [{ code: 'NUMMER', label: 'Nummer' }],
+  }
+  const raus = bestellung([adressnummer, artikel])
+  expect(raus.SEFILELOOP.map((e) => e.ALIAS)).toEqual(['ART'])
+  expect(raus.ERPAPICALL).toEqual([])
+  expect(raus.VAR).toBeUndefined()
+})

@@ -192,7 +192,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
-function bindingFields(raw: unknown): ActionParamBinding | null {
+export function pruefeParameterBindung(raw: unknown): ActionParamBinding | null {
   if (!isRecord(raw)) return null
   if (
     typeof raw.source !== 'string'
@@ -253,14 +253,14 @@ function stepFields(raw: unknown): RuntimeStep | null {
     if (!Array.isArray(raw.params)) return null
     const params: ActionParamBinding[] = []
     for (const value of raw.params) {
-      const binding = bindingFields(value)
+      const binding = pruefeParameterBindung(value)
       if (!binding) return null
       params.push(binding)
     }
 
     const extraParams: ActionParamBinding[] = []
     for (const value of raw.extraParams) {
-      const binding = bindingFields(value)
+      const binding = pruefeParameterBindung(value)
       if (!binding) return null
       extraParams.push(binding)
     }

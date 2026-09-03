@@ -1,9 +1,9 @@
 import {
   artFuer,
   felderFor,
+  holtSelbst,
   istOffenerSatz,
   kopfsatzFor,
-  ladeRelationFor,
   loopReihenfolge,
   tableIdFor,
   varAusKopfsaetzen,
@@ -40,7 +40,7 @@ export function baueSevariablen(
 
   holSchluessel: ReadonlyMap<string, string[]>,
 ): string {
-  const bestellbar = used.filter((s) => ladeRelationFor(s) === null)
+  const bestellbar = used.filter((s) => !holtSelbst(s))
   const perApi = bestellbar.filter((s) => artFuer(s.kind).bestellBlock === 'erpapicall')
   const perDataSet = bestellbar.filter((s) => artFuer(s.kind).bestellBlock === 'dataset')
 

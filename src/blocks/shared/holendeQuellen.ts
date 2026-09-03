@@ -3,9 +3,10 @@ import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { propertySichtbar } from '../../core/blocks/PropertyDescription'
 import { QUELLE_PROP } from '../../core/blocks/treeQuery'
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
-import { seGlobal } from '../../softengine/bridge'
+import { hasSeData, onSeDaten, seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, isRecord } from '../../softengine/data'
 import { ladeZeilenPerRelation } from '../../softengine/relationLader'
+import { holeWertQuelle } from '../../softengine/wertLader'
 import {
   aufAuswahlHoeren,
   auswahlFuer,
@@ -118,10 +119,33 @@ function pruefeHolendeQuellen(durchBedienung: boolean): void {
   }
 }
 
+// Die Quellen, die EINEN Wert holen (Art „Wert per Relation"). Sie haengen an
+// keiner Auswahl: ihr Anlass ist eine neue Lieferung von SoftEngine.
+export function holeWertQuellen(): void {
+  const liste: unknown = seGlobal().FF_DATA_SOURCES
+  if (!Array.isArray(liste)) return
+  for (const eintrag of liste) {
+    if (!isRecord(eintrag) || typeof eintrag.id !== 'string') continue
+    const quelle = findRuntimeDataSource(liste, eintrag.id)
+    if (!quelle?.holWert) continue
+    holeWertQuelle(quelle, quelle.holWert)
+  }
+}
+
 export function verdrahteHolendeQuellen(): void {
   if (verdrahtet) return
   verdrahtet = true
   aufAuswahlHoeren(pruefeHolendeQuellen)
+
+  // NUR bei einer echten Lieferung. Das Ablegen der Antwort stoesst selbst an
+  // (meldeAnstoss), und ein Anstoss, der wieder holt, ist genau der Kreis vom
+  // 2026-09-01 — hier waere er sogar unbremsbar, weil der Ruf keine Auswahl
+  // hat, an der ein Abdruck haengen koennte.
+  onSeDaten((lieferung) => { if (lieferung) holeWertQuellen() })
+
+  // Stand die Lieferung schon, als der erste Baustein sich anschloss, kommt
+  // fuer sie kein `lieferung`-Ruf mehr.
+  if (hasSeData()) holeWertQuellen()
   // Faellt die Auswahl komplett weg, muss der Abdruck mit weg: sonst gilt der
   // alte Stand weiter als "schon geholt" und es wird nichts mehr neu geholt.
   beimAuswahlZuruecksetzen(setzeLadeSpurZurueck)

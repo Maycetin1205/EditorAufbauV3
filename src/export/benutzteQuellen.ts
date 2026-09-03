@@ -15,7 +15,7 @@ import {
   traegtEigeneQuelle,
 } from '../core/blocks/treeQuery'
 import { AUSWAHL_FOLGE_PROP, auswahlFolgenAus, folgeBrauchbar } from '../core/data/auswahlFolge'
-import { ladeRelationFor, type DataSource } from '../core/data/dataSources'
+import { ladeRelationFor, quellenAusHolWert, type DataSource } from '../core/data/dataSources'
 import {
   quelleBrauchbar,
   vollstaendigePaare,
@@ -60,6 +60,14 @@ export function collectDataSources(
     node.childIds.forEach((id) => visit(tree[id]))
   }
   visit(tree[ROOT_ID])
+
+  // Eine holende Quelle kann ihre Parameter aus einer ANDEREN Quelle ziehen.
+  // Die muss mit in die Maske, sonst faende die Laufzeit sie nicht und der
+  // Parameter ginge still leer hinaus. Der Index-Lauf schliesst mit ein, was
+  // dabei selbst noch dazukommt.
+  for (let i = 0; i < acc.length; i++) {
+    for (const { quelleId } of quellenAusHolWert(acc[i])) add(quelleId)
+  }
   return acc
 }
 
@@ -177,6 +185,13 @@ export function benutzteFelderJeQuelle(
     node.childIds.forEach((id) => visit(tree[id]))
   }
   visit(tree[ROOT_ID])
+
+  // Woraus eine holende Quelle ihre Parameter zieht, steht an der QUELLE und
+  // nicht im Baum. Ohne diese Runde bestellte der Export das Feld nicht, und
+  // der Parameter ginge in SoftEngine leer hinaus.
+  for (const source of sources) {
+    for (const { quelleId, code } of quellenAusHolWert(source)) merke(quelleId, code)
+  }
   return felder
 }
 

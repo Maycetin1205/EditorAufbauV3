@@ -1,14 +1,23 @@
 import { QUELLEN_TRENNER, zerlegeBindung } from '../blocks/BlockDefinition'
+import { holWertFor, pruefeHolWert, type HolWert } from './holWert'
 import type { EintragProblem } from './ladeProblem'
-import { POS_LEN, pruefeLadeRelation, type LadeRelation } from './ladeRelation'
+import { ladeRelationFor, POS_LEN, pruefeLadeRelation, type LadeRelation } from './ladeRelation'
 import {
   artFuer,
   DATA_SOURCE_KINDS,
   QUELLEN_ARTEN,
+  tabellenKennungNoetig,
   type DataSourceKind,
 } from './quellenArten'
 
-export { artFuer, DATA_SOURCE_KINDS, QUELLEN_ARTEN, type DataSourceKind }
+export { artFuer, DATA_SOURCE_KINDS, QUELLEN_ARTEN, tabellenKennungNoetig, type DataSourceKind }
+export {
+  holWertFor,
+  HOL_WERT_QUELLEN,
+  holWertQuelleErlaubt,
+  quellenAusHolWert,
+  type HolWert,
+} from './holWert'
 export {
   felderHinterSchnitt,
   LADE_RELATION_STANDARD,
@@ -49,9 +58,19 @@ export interface DataSource {
 
   ladeRelation?: LadeRelation
 
+  // Die Quelle holt ihren Wert selbst, mit EINEM Relations-Ruf.
+  holWert?: HolWert
+
   feldVorsatz?: string
 
   fields: readonly DataSourceField[]
+}
+
+// Diese Quelle wartet auf keine Lieferung — sie fragt selbst. Beide Wege
+// (Relation 69 fuer Positionen, EIN Ruf fuer einen Wert) stehen darum nicht
+// in der SEvariablen-Bestellung.
+export function holtSelbst(source: DataSource): boolean {
+  return ladeRelationFor(source) !== null || holWertFor(source) !== null
 }
 
 export function feldKlarname(
@@ -240,7 +259,7 @@ export function pruefeDatenquellen(
     // sie, bestellte der Export einen SEFILELOOP-Eintrag mit ID:"" — SoftEngine
     // findet dazu nichts und bricht laut Kontrakt die ganze Loop-Liste ab.
     // Lieber hier melden als still eine unbrauchbare Bestellung schreiben.
-    if (artFuer(e.kind as DataSourceKind).tabellenId === ''
+    if (tabellenKennungNoetig(artFuer(e.kind as DataSourceKind))
       && (typeof e.idbId !== 'string' || e.idbId.trim() === '')) {
       weg('die Tabellen-Kennung fehlt (z. B. IDB0001)')
       continue
@@ -278,6 +297,10 @@ export function pruefeDatenquellen(
     if (e.ladeRelation !== undefined && ladeRelation === null) {
       probleme.push({ stelle, grund: 'die Hol-Relation ist unvollständig und wurde verworfen' })
     }
+    const holWert = e.holWert === undefined ? null : pruefeHolWert(e.holWert)
+    if (e.holWert !== undefined && holWert === null) {
+      probleme.push({ stelle, grund: 'die Wert-Relation ist unvollständig und wurde verworfen' })
+    }
     seen.add(e.id)
     acc.push({
       id: e.id,
@@ -293,6 +316,7 @@ export function pruefeDatenquellen(
         ? { feldVorsatz: e.feldVorsatz }
         : {}),
       ...(ladeRelation ? { ladeRelation } : {}),
+      ...(holWert ? { holWert } : {}),
       fields,
     })
   }

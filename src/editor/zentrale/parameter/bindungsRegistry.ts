@@ -108,11 +108,13 @@ export function herkunftsEintraege(
   binding: ActionParamBinding,
   wahlen: ParameterWahlen,
 ): ListeEintrag[] {
-  const eintraege: ListeEintrag[] = ACTION_PARAM_SOURCES.map((source) => ({
-    wert: source,
-    name: PARAM_QUELLEN[source].name,
-    deaktiviert: PARAM_QUELLEN[source].leer?.(wahlen) ?? false,
-  }))
+  const eintraege: ListeEintrag[] = ACTION_PARAM_SOURCES
+    .filter((source) => wahlen.erlaubt === undefined || wahlen.erlaubt.includes(source))
+    .map((source) => ({
+      wert: source,
+      name: PARAM_QUELLEN[source].name,
+      deaktiviert: PARAM_QUELLEN[source].leer?.(wahlen) ?? false,
+    }))
   if (binding.source === 'aus') {
     eintraege.push({ wert: 'aus', name: PARAM_QUELLEN.aus.name, deaktiviert: true })
   }

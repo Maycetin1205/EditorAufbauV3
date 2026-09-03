@@ -1,5 +1,9 @@
 import type { ReactElement } from 'react'
-import type { ActionParamBinding, ErgebnisSchritt } from '../../../core/data/aktionen'
+import type {
+  ActionParamBinding,
+  ActionParamSource,
+  ErgebnisSchritt,
+} from '../../../core/data/aktionen'
 import type { DataSource } from '../../../core/data/dataSources'
 import type {
   AuswahlGeberOption,
@@ -18,6 +22,11 @@ export interface ParameterWahlen {
   aenderungen: readonly ErfassungsOption[]
   loeschungen: readonly ErfassungsOption[]
   schritte: readonly ErgebnisSchritt[]
+
+  // Wenn gesetzt: nur diese Herkuenfte stehen zur Wahl. Eine Datenquelle holt
+  // ohne Baustein und ohne laufende Kette — dort waere „Gewaehlte Zeile" oder
+  // „Ergebnis von Schritt" kein gesperrter Eintrag, sondern ein sinnloser.
+  erlaubt?: readonly ActionParamSource[]
 }
 
 export interface BindungsProps {

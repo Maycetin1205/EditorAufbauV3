@@ -762,11 +762,77 @@ Entwurfsfrage. Die wird im Chat beantwortet, bevor eine Zeile entsteht.
 
 ### Reihenfolge der Schritte 11 bis 16b
 11 -> 12 -> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
+Schritt 17 (Abschnitt 3b) lief auf Nutzer-Ansage VOR 11 und ist erledigt;
+damit ist Schritt 11 wieder der erste offene Schritt.
 11 bis 14 sind unabhängig voneinander und je ein überschaubarer Chat. 12 legt
 nur die Trennstelle an, 12b geht damit durch die Bausteine. 15 ist reine
 Vorarbeit und muss vor 16b liegen, sonst ist 16b umsonst. 16a ändert nichts
 am Ergebnis und macht 16b möglich. 16b ist der große Schritt und der einzige
 mit einer offenen Entwurfsfrage.
+
+## 3b. Teil B2 — neue Fähigkeit auf Nutzer-Ansage
+
+### Schritt 17 — Quelle „Wert per Relation"
+Status: erledigt 2026-09-03. Rahmen 4 (Teil B) gruen: `npm run check`
+Exit 0, 321 Tests gruen, Buendel neu gebaut, Referenzabzug gruen OHNE
+`REFERENZ_ERNEUERN`. Ausserhalb des Buendels ist `referenz.html` byte-gleich
+(alle geaenderten Zeilen liegen zwischen 114 und 1994, also im Buendel),
+`referenz.sevariablen.json` unveraendert. Sichtprobe 4b: neun Bilder neu
+gemacht und einzeln angesehen, nur die bekannte Lit-Warnung. OFFEN beim
+Nutzer: die Klickprobe in SoftEngine (unten).
+Sorgfalt: normal. (Neben dem Bestehenden, nicht darin: die Beleg-Positionen
+mit Relation 69 werden nicht angefasst. Kippen könnte allein die neue Art im
+Datencenter-Formular — daran hängt kein Aussehen der Fläche.)
+Herkunft: Nutzer-Ansage 2026-09-03 im Chat. Vorgezogen vor 11–16b, ausdrücklich
+auf Ansage („ok bau das ein"). Auslöser: `GET_RELATION[408]` liefert die
+Adressnummer aus der Statusleiste; der Nutzer braucht sie für das Anlegen
+eines Belegs und will sie in der Maske SEHEN.
+- Ziel: eine Datenquelle kann ihren Wert selbst per Relation holen, statt auf
+  eine Lieferung von SoftEngine zu warten. Neue Art „Wert per Relation":
+  Relation aus der Bibliothek wählen, Parameter wie in den Ketten belegen,
+  Felder mit Klarnamen. Die Antwort landet als EINE Zeile unter dem
+  Quellennamen — also da, wo `rowsFor` sie ohnehin sucht
+  (`data.ts`, Rückfall auf `geholteZeilenFuer`). Damit zeigt jedes gebundene
+  Formularfeld sie an, ohne dass ein neuer Anzeigeweg entsteht.
+- Auslöser: jede ECHTE Lieferung von SoftEngine (`onSeDaten(lieferung=true)`),
+  dazu einmal beim Verdrahten, wenn schon Daten da sind. Nicht am blossen
+  Anstoss: das Ablegen der Antwort stösst selbst an, und ein Anstoss, der
+  wieder holt, ist genau der Kreis vom 2026-09-01.
+- Nur EIN Ruf, keine Liste. Wie eine Liste per beliebiger Relation endet, ist
+  an keiner echten Maske belegt — Relation 69 kann es nur, weil ihr Ende aus
+  Echttests bekannt ist (`11_6` und `18_25` leer). Raten ist verboten.
+- Parameter-Herkünfte: nur `Fest`, `Datenfeld` und `SE VAR-Array`. Alles
+  andere (Ereigniswert, Baustein, gewählte Zeile, Zellen, Schritt-Ergebnisse)
+  hat ohne laufende Kette und ohne Baustein keinen Wert und ginge still leer
+  hinaus.
+- Dateien: `src/core/data/holWert.ts` (neu), `src/core/data/quellenArten.ts`,
+  `src/core/data/dataSources.ts`, `src/core/data/aktionen.ts` (die vorhandene
+  Parameter-Prüfung wird exportiert), `src/softengine/wertLader.ts` (neu),
+  `src/softengine/data.ts`, `src/blocks/shared/holendeQuellen.ts`,
+  `src/export/exportMask.ts`, `src/export/benutzteQuellen.ts`,
+  `src/export/benutzteRelationen.ts`, `src/export/sevariablen.ts`,
+  `src/editor/zentrale/DataSourceForm.tsx`,
+  `src/editor/zentrale/parameter/wahlen.ts`,
+  `src/editor/zentrale/parameter/bindungsRegistry.ts`,
+  `src/editor/zentrale/FeldListe.tsx`, dazu die zugehörigen
+  `*.test.ts`.
+- Verboten: `ladeRelation.ts` und `relationLader.ts` anfassen (das ist der
+  69er-Weg und er läuft), an `rowsFor` drehen, eine zweite Anzeige-Bahn in
+  die Bausteine bauen.
+- Prüfung: Rahmen 4 (Teil B) und 4b. Der Referenzabzug ändert sich NUR im
+  Bündel (neuer Laufzeit-Code); ausserhalb des Bündels und in den
+  SEvariablen muss die Referenzmaske byte-gleich bleiben — sie benutzt keine
+  solche Quelle.
+- Nebenbefund beim Bauen, mit erledigt: die Feldliste beschriftete ihre
+  Namensspalte fest mit „Spalte im DataSet". Ueber einer Relations-Antwort
+  ist das falsch; die Wortwahl gehoert jetzt der Art (`spaltenLabel`).
+- Klickprobe: Datencenter → Relationen → neue Relation `GET_RELATION[408]`,
+  Name „Adressnummer Statusleiste". Dann Datenquellen → neue Quelle, Art
+  „Wert per Relation", diese Relation wählen, ein Feld „Nummer" anlegen,
+  speichern. Formularfeld auf die Fläche, Quelle = diese Quelle, Wert an
+  „Nummer" binden. Im Editor bleibt das Feld leer (der Editor erfindet keine
+  Daten). Exportieren, in SoftEngine öffnen: die Adressnummer der
+  Statusleiste steht im Feld.
 
 ## 4. Teil C — Pflege
 

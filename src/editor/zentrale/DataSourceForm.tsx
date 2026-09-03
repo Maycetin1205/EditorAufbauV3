@@ -1,11 +1,18 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'
+import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Zeile } from '@/ui/werkbank/Zeile'
+import {
+  defaultRelationParams,
+  type ActionParamBinding,
+} from '../../core/data/aktionen'
 import {
   alias,
   artFuer,
   feldVorsatzFromInput,
+  HOL_WERT_QUELLEN,
+  holWertQuelleErlaubt,
   kennungAnzeige,
   kennungFromInput,
   kopfsatzFromInput,
@@ -13,10 +20,16 @@ import {
   QUELLEN_ARTEN,
   quellenKennung,
   relationNrFromInput,
+  tabellenKennungNoetig,
   type DataSource,
   type DataSourceKind,
 } from '../../core/data/dataSources'
+import { relationMatchesSearch } from '../../core/data/relations'
 import { useDataSources } from '../../state/useDataSources'
+import { useRelations } from '../../state/useRelations'
+import { ParameterZeile } from './ParameterZeile'
+import type { ParameterWahlen } from './parameter/wahlen'
+import { RelationAuswahl } from './RelationAuswahl'
 import { PickerControl } from '../inspector/controls/PickerControl'
 import { SelectControl } from '../inspector/controls/SelectControl'
 import { FeldListe } from './FeldListe'
@@ -73,8 +86,16 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
 
   const [zeigeFehler, setZeigeFehler] = useState(false)
 
+  const relationen = useRelations()
+  const holVorlagen = relationen.list
+  const [holRelationId, setHolRelationId] = useState(source?.holWert?.relationId ?? '')
+  const [holParams, setHolParams] = useState<ActionParamBinding[]>(
+    source?.holWert ? [...source.holWert.params] : [],
+  )
+  const [holSuche, setHolSuche] = useState('')
+
   const art = artFuer(kind)
-  const kennungEingeben = art.tabellenId === ''
+  const kennungEingeben = tabellenKennungNoetig(art)
 
   const kopfsatzEingeben = art.kopfsatzMoeglich
 
@@ -96,6 +117,44 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   const offenerSatz = lieferungWaehlbar && lieferung === 'offenerSatz'
 
   const geberOptionen = store.list.filter((s) => s.id !== source?.id)
+
+  const holtWert = art.holWertMoeglich
+  const holRelation = holVorlagen.find((r) => r.id === holRelationId)
+  const sichtbareRelationen = useMemo(
+    () => holVorlagen.filter((eintrag) => relationMatchesSearch(eintrag, holSuche)),
+    [holVorlagen, holSuche],
+  )
+
+  // Eine Quelle holt ohne Baustein und ohne laufende Kette — die uebrigen
+  // Herkuenfte haetten hier gar keinen Wert (s. HOL_WERT_QUELLEN). Die
+  // Baustein-Listen bleiben deshalb leer und werden nicht angeboten.
+  const holWahlen: ParameterWahlen = {
+    dataSources: geberOptionen,
+    blockValues: [],
+    geber: [],
+    erfassungen: [],
+    aenderungen: [],
+    loeschungen: [],
+    schritte: [],
+    erlaubt: HOL_WERT_QUELLEN,
+  }
+
+  function waehleHolRelation(id: string): void {
+    setHolRelationId(id)
+    const vorlage = holVorlagen.find((r) => r.id === id)
+    setHolParams(vorlage
+      ? defaultRelationParams(vorlage).map((binding) =>
+          holWertQuelleErlaubt(binding.source)
+            ? binding
+            : { source: 'fixed' as const, value: '' })
+      : [])
+  }
+
+  let holFehler = ''
+  if (holtWert && holRelationId === '') holFehler = 'Wähle die Relation, die den Wert holt.'
+  else if (holtWert && holRelation !== undefined && holRelation.verb !== 'GET_RELATION') {
+    holFehler = 'Nur eine lesende Relation (GET) liefert einen Wert zurück.'
+  }
 
   function waehleArt(neu: DataSourceKind): void {
     setKind(neu)
@@ -171,7 +230,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
     : ''
   const alleFehler = [
     nameFehler, kennungFehler, kopfsatzFehler, doppeltFehler,
-    relationNrFehler, geberFehler,
+    relationNrFehler, geberFehler, holFehler,
     ...zeilenFehler,
   ]
 
@@ -205,6 +264,10 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
               ...feldZuordnung,
             },
           }
+        : {}),
+
+      ...(holtWert && holRelationId !== ''
+        ? { holWert: { relationId: holRelationId, params: holParams } }
         : {}),
       fields: zeilen.map((z) => ({
         code: zeilenCode(z, vorsatz, art.spaltenNamen),
@@ -341,8 +404,48 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
           </Zeile>
         )}
 
+        {holtWert && (
+          <>
+            <RelationAuswahl
+              label="Relation"
+              eintraege={sichtbareRelationen}
+              relationId={holRelationId}
+              suche={holSuche}
+              onSuche={setHolSuche}
+              onSelect={waehleHolRelation}
+            />
+            {zeigeFehler && holFehler !== '' && (
+              <p className="break-words text-dicht text-fehler">{holFehler}</p>
+            )}
+            {holRelation && (
+              <Gruppe titel="Parameter">
+                {holRelation.params.map((raw, index) => (
+                  <ParameterZeile
+                    key={index}
+                    nummer={index + 1}
+                    kennung={raw === '' ? '(leer)' : raw}
+                    binding={holParams[index] ?? { source: 'fixed', value: '' }}
+                    wahlen={holWahlen}
+                    platzhalter={raw === '' ? '(leer)' : raw}
+                    onChange={(naechste) => setHolParams((alt) => {
+                      const neu = [...alt]
+                      neu[index] = naechste
+                      return neu
+                    })}
+                  />
+                ))}
+                {holRelation.params.length === 0 && (
+                  <p className="text-ui text-matt">Keine Parameter.</p>
+                )}
+              </Gruppe>
+            )}
+          </>
+        )}
+
         <FeldListe
           spaltenNamen={art.spaltenNamen}
+          spaltenLabel={art.spaltenLabel}
+          spaltenBeispiel={art.spaltenBeispiel}
           zeilen={zeilen}
           setZeilen={setZeilen}
           zeilenFehler={zeilenFehler}

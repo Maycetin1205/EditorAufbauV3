@@ -13,13 +13,18 @@ interface FeldListeProps {
   doppeltFehler: string
   zeigeFehler: boolean
 
-  // DataSet-Quellen sprechen ihre Spalten mit Namen an — dann steht hier
-  // ein Namensfeld statt der zwei Zahlenfelder.
+  // Quellen mit Klarnamen-Feldern (DataSet, Wert per Relation) sprechen ihre
+  // Spalten mit Namen an — dann steht hier ein Namensfeld statt der zwei
+  // Zahlenfelder. Wie die Spalte HEISST, sagt die Art (QuellenArt): „Spalte
+  // im DataSet" ueber einer Relations-Antwort war schlicht falsch.
   spaltenNamen?: boolean
+  spaltenLabel?: string
+  spaltenBeispiel?: string
 }
 
 export function FeldListe({
   zeilen, setZeilen, zeilenFehler, doppeltFehler, zeigeFehler, spaltenNamen = false,
+  spaltenLabel = 'Spalte im DataSet', spaltenBeispiel = 'z. B. Chargennummer',
 }: FeldListeProps) {
   const raster = spaltenNamen ? SPALTEN_NAMEN : SPALTEN
   const setZeile = (at: number, patch: Partial<FeldZeile>) =>
@@ -37,7 +42,7 @@ export function FeldListe({
       <div className={`${raster} text-dicht text-matt`}>
         <span>Klarname</span>
         {spaltenNamen
-          ? <span>Spalte im DataSet</span>
+          ? <span>{spaltenLabel}</span>
           : <><span>Position</span><span>Länge</span></>}
         <span />
       </div>
@@ -52,9 +57,9 @@ export function FeldListe({
             />
             {spaltenNamen ? (
               <Feld
-                aria-label={`Feld ${i + 1}: Spalte im DataSet`}
+                aria-label={`Feld ${i + 1}: ${spaltenLabel}`}
                 value={z.rawCode}
-                placeholder="z. B. Chargennummer"
+                placeholder={spaltenBeispiel}
                 onChange={(e) => setZeile(i, { rawCode: e.target.value })}
               />
             ) : (
