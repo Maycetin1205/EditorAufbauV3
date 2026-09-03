@@ -244,7 +244,7 @@ function WeitereAktionen({
           <div role="menu" className="flex flex-col">
             <MenueZeile
               role="menuitem"
-              zeichen={<Save size={13} />}
+              zeichen={<Save size={14} />}
               onClick={() => {
                 setOffen(false)
                 onSpeichern()
@@ -254,7 +254,7 @@ function WeitereAktionen({
             </MenueZeile>
             <MenueZeile
               role="menuitem"
-              zeichen={<FolderOpen size={13} />}
+              zeichen={<FolderOpen size={14} />}
               onClick={() => {
                 setOffen(false)
                 dateiRef.current?.click()
@@ -266,7 +266,7 @@ function WeitereAktionen({
             <MenueZeile
               role="menuitem"
               art="gefahr"
-              zeichen={<Trash2 size={13} />}
+              zeichen={<Trash2 size={14} />}
               disabled={clearDisabled}
               onClick={() => {
                 setOffen(false)

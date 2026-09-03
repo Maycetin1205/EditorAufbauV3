@@ -37,9 +37,9 @@ export function Reiter({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'h-6 shrink-0 whitespace-nowrap rounded px-2.5 text-ui transition-colors',
+        'h-6 shrink-0 whitespace-nowrap rounded px-2.5 text-dicht transition-colors',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-akzent',
-        aktiv ? 'bg-akzent/20 font-medium text-tinte' : 'text-matt hover:text-tinte',
+        aktiv ? 'bg-akzent/15 font-medium text-tinte' : 'text-matt hover:text-tinte',
         className,
       )}
     >

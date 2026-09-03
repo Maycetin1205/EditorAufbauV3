@@ -59,7 +59,7 @@ export function SeitenLeiste() {
                 title="Seite löschen (Strg+Z stellt sie zurück)"
                 aria-label={`Seite ${p.name} löschen`}
                 onClick={() => ed.removeBlock(p.id)}
-                className="h-6 w-auto rounded-l-none bg-akzent/20 pr-1.5 hover:bg-akzent/20 hover:text-fehler"
+                className="h-6 w-auto rounded-l-none bg-akzent/15 pr-1.5 hover:bg-akzent/15 hover:text-fehler"
               >
                 <Trash size={12} />
               </Knopf>

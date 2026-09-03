@@ -26,14 +26,14 @@ export function Ankreuz({ checked, disabled = false, onChange, className, childr
   return (
     <label
       className={cn(
-        'flex items-start gap-2',
+        'flex items-start gap-2 text-ui',
         disabled ? 'opacity-50' : 'cursor-pointer',
         className,
       )}
     >
       <input
         type="checkbox"
-        className="mt-0.5 shrink-0 accent-akzent"
+        className="mt-0.5 h-[14px] w-[14px] shrink-0 accent-akzent"
         checked={checked}
         disabled={disabled}
         onChange={onChange}

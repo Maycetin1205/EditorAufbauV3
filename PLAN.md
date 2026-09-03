@@ -475,7 +475,15 @@ Ausführung: Opus erlaubt.
 - Prüfung: Rahmen 4 (Teil A) und 4b.
 
 ### Schritt 10c — Seitenleiste und Menue nachmessen
-Status: offen
+Status: erledigt 2026-09-03 — vier Klassen angeglichen, sonst nichts.
+Reiter: `text-ui` -> `text-dicht`, aktiv `bg-akzent/20` -> `bg-akzent/15`;
+in `SeitenLeiste.tsx` derselbe Wechsel am angehaengten Loesch-Knopf, sonst
+haette der aktive Reiter eine Naht gehabt. Menue-Zeilen hielten `h-steuer
+text-ui` und Rot schon; nur die drei Zeichen in `Toolbar.tsx` standen auf
+13 und stehen jetzt auf 14. Ankreuz: Kaestchen fest auf 14 px (`h-[14px]
+w-[14px]`; die rem-Klassen haengen an der Grundgroesse 13,5 px und haetten
+11,8 px ergeben), Beschriftung traegt `text-ui` jetzt selbst statt es vom
+Formular zu erben. `MenueZeile.tsx` selbst blieb unveraendert.
 Ausführung: Opus erlaubt.
 - Ziel: `src/ui/werkbank/Reiter.tsx`, `MenueZeile.tsx`, `Ankreuz.tsx` und
   ihre Verwender (`canvas/SeitenLeiste.tsx`, `shell/Toolbar.tsx`,
