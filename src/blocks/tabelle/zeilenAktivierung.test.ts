@@ -7,6 +7,18 @@ import {
   ROH_ATTR,
 } from './zeilenAktivierung'
 
+// Aufwaerts durch die Elternkette suchen. Steht ausserhalb der Klasse, damit
+// `this` nicht in eine lokale Variable wandern muss (eslint no-this-alias).
+function sucheAufwaerts(start: FakeElement, selector: string): FakeElement | null {
+  let curr: FakeElement | null = start
+  while (curr) {
+    if (selector === '.zeile' && curr.className.includes('zeile')) return curr
+    if (selector === '.tabelle' && curr.className.includes('tabelle')) return curr
+    curr = curr.parentElement
+  }
+  return null
+}
+
 class FakeElement {
   className = ''
   parentElement: FakeElement | null = null
@@ -34,13 +46,7 @@ class FakeElement {
   scrollIntoView(): void {}
 
   closest<T>(selector: string): T | null {
-    let curr: FakeElement | null = this
-    while (curr) {
-      if (selector === '.zeile' && curr.className.includes('zeile')) return curr as unknown as T
-      if (selector === '.tabelle' && curr.className.includes('tabelle')) return curr as unknown as T
-      curr = curr.parentElement
-    }
-    return null
+    return sucheAufwaerts(this, selector) as unknown as T | null
   }
 
   querySelector<T>(selector: string): T | null {
