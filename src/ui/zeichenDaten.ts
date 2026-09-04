@@ -163,6 +163,9 @@ export const KNOTEN = {
     }
   ],
   ],
+  Minus: [
+    ["path", { d: "M5 12h14" }],
+  ],
   Plus: [
     ["path", { d: "M5 12h14" }],
     ["path", { d: "M12 5v14" }],

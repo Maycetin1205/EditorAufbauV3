@@ -61,4 +61,15 @@ export const FELD_EIGENSCHAFTEN: PropertyDescription[] = [
     // unbindbar, bis der SE-Wert-Kontrakt (J/N? 1/0?) belegt ist.
     visibleWhen: { attributeName: 'fieldType', keinesVon: ['checkbox', 'nachschlagen'] },
   },
+  {
+    attributeName: 'darstellung',
+    name: 'Darstellung',
+    description: 'Kasten oder dezente Linie (z. B. Unterschriftsbereich).',
+    kind: 'select',
+    options: [
+      { value: 'standard', label: 'Standard (Kasten)' },
+      { value: 'linie', label: 'Linie (Unterstrichen)' },
+    ],
+    visibleWhen: { attributeName: 'fieldType', keinesVon: ['checkbox'] },
+  },
 ]

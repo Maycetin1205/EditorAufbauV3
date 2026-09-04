@@ -106,6 +106,7 @@ export class FormFeldBlock extends BasicBlock {
     fensterHoehe: FENSTER_HOEHE,
 
     einzigerTreffer: 'nein',
+    darstellung: 'standard',
   }
 
   static readonly raster = { startW: 6, startH: 2, minW: 2, minH: 2 }
@@ -133,6 +134,7 @@ export class FormFeldBlock extends BasicBlock {
   @property({ type: Number }) fensterBreite = FENSTER_BREITE
   @property({ type: Number }) fensterHoehe = FENSTER_HOEHE
   @property() einzigerTreffer = 'nein'
+  @property() darstellung = 'standard'
 
   @state() private spaltenDialog = false
 
@@ -487,7 +489,8 @@ export class FormFeldBlock extends BasicBlock {
     const leer = imFeld === ''
 
     const huelleKlassen = `huelle${leer ? ' leer' : ''}${this.imSteuerelement ? ' tippt' : ''}`
-    return html`<div class="feld">
+    const feldKlassen = `feld${this.darstellung === 'linie' ? ' linie' : ''}`
+    return html`<div class=${feldKlassen}>
       <div
         class=${huelleKlassen}
         data-ff-spot=${wertBindbar ? 'value' : nothing}

@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react'
-import { Plus, X } from '@/ui/zeichen'
+import { Minus, Plus } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import type { BlockNode } from '../../core/blocks/BlockData'
-import type { BlockDefinition } from '../../core/blocks/BlockDefinition'
+import { listeLesen, type BlockDefinition } from '../../core/blocks/BlockDefinition'
 import { useEditorInstance } from '../../state/EditorContext'
 import { wendeProps } from '../../state/propsPatch'
 
@@ -15,7 +15,7 @@ interface AuswahlLeisteProps {
 
   // Randbausteine (Navi) fuellen die Hoehe: dort liegt die Leiste innen.
   amRand: boolean
-  onEntfernen: () => void
+  onEntfernen?: () => void
 }
 
 type Lage = 'oben' | 'unten' | 'rechts' | 'innen'
@@ -65,7 +65,7 @@ const halt = (e: { stopPropagation: () => void }): void => e.stopPropagation()
 // (Spalte) anfuegen, Baustein entfernen. Vorher lagen zwei runde Abzeichen am
 // Rahmen, und die Tabelle zeichnete eigene Plus/Minus-Knoepfe und ein Kreuz
 // in die Maske — bei schmalen Spalten standen sie ueber den Titeln.
-export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: AuswahlLeisteProps) {
+export function AuswahlLeiste({ block, def, wirt, amRand }: AuswahlLeisteProps) {
   const editor = useEditorInstance()
   // Die Lage wird gemessen und direkt ans Element geschrieben — kein
   // Zustand, kein zweiter Render.
@@ -77,8 +77,16 @@ export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: Auswahl
   const kind = def?.addChildButton
   const liste = def?.listenBindung
   const neu = liste?.eintragNeu
+  const weg = liste?.eintragWeg
   const eintragName = liste?.standardTitel.replace(/\s*\{n\}/, '') ?? 'Eintrag'
   const neuMoeglich = neu !== undefined && Object.keys(neu(block.props)).length > 0
+  const eintraege = liste ? listeLesen(block.props[liste.prop], liste) : []
+  const wegMoeglich = weg !== undefined && eintraege.length > 1
+
+  if (!kind && !neu && !weg) {
+    return null
+  }
+
   return (
     <div
       ref={leisteRef}
@@ -109,15 +117,21 @@ export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: Auswahl
           <Plus size={12} /> {eintragName}
         </Knopf>
       )}
-      <Knopf
-        nurZeichen
-        aria-label="Baustein entfernen"
-        title="Entfernen"
-        className="h-6 w-6"
-        onClick={onEntfernen}
-      >
-        <X size={12} />
-      </Knopf>
+      {weg && (
+        <Knopf
+          className="h-6 px-1.5 text-dicht"
+          title={`${eintragName} entfernen`}
+          disabled={!wegMoeglich}
+          onClick={() => {
+            const index = eintraege.length - 1
+            if (index >= 0) {
+              wendeProps(editor, block.id, weg(block.props, index))
+            }
+          }}
+        >
+          <Minus size={12} /> {eintragName}
+        </Knopf>
+      )}
     </div>
   )
 }

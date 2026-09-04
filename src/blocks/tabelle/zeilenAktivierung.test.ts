@@ -34,6 +34,7 @@ class FakeElement {
   scrollIntoView(): void {}
 
   closest<T>(selector: string): T | null {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let curr: FakeElement | null = this
     while (curr) {
       if (selector === '.zeile' && curr.className.includes('zeile')) return curr as unknown as T
