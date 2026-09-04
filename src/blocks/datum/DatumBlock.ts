@@ -140,7 +140,7 @@ export class DatumBlock extends BasicBlock {
     super.connectedCallback()
 
     this.tag = gewaehlterTag() || heuteSchluessel(new Date())
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     this.setzeTag(this.tag)
 
     this.tagAbmelden?.()

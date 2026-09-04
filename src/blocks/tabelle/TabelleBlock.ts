@@ -330,7 +330,7 @@ export class TabelleBlock extends BasicBlock {
   private get hatQuelle(): boolean {
     return this._besitz === 'provided'
       ? true
-      : zeigtEchteDaten(this.hasAttribute('data-ff-editor'), this.source)
+      : zeigtEchteDaten(this.imEditor, this.source)
   }
 
   private spaltenListe(): Spalte[] {
@@ -351,7 +351,7 @@ export class TabelleBlock extends BasicBlock {
     // vollen Platz. Ohne die Uebersetzung landete die gezogene Breite hinter
     // einer ausgeblendeten Spalte auf der falschen.
     const vollerPlatz = (gezeichnet: number): number => {
-      const sicht = spaltenSicht(this.spaltenListe(), this.hasAttribute('data-ff-editor'))
+      const sicht = spaltenSicht(this.spaltenListe(), this.imEditor)
       return sicht.plaetze[gezeichnet] ?? gezeichnet
     }
     const voll = (aenderung: readonly BreitenAenderung[]): BreitenAenderung[] =>
@@ -371,7 +371,7 @@ export class TabelleBlock extends BasicBlock {
         const aenderung = voll(roh)
         this._breiteVorZug = null
         const liste = this.spaltenListe()
-        if (!this.hasAttribute('data-ff-editor')) {
+        if (!this.imEditor) {
           for (const a of aenderung) this._breiten.set(a.index, a.breite)
           this.requestUpdate()
           return
@@ -475,7 +475,7 @@ export class TabelleBlock extends BasicBlock {
   // Bruecke weiter.
   private readonly nimmSeFokus = (ereignis: Event): void => {
     if (ereignis.defaultPrevented || !this.erfassungAn) return
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     ereignis.preventDefault()
     this.fokussiereErfassungsZelle(0)
   }
@@ -502,7 +502,7 @@ export class TabelleBlock extends BasicBlock {
     // Raster. Waehrend eines Zugs passiert das nicht: dort aendert sich
     // `spalten` erst beim Loslassen, und da sind die Eintraege schon weg.
     if (changed.has('spalten')) this._breiten.clear()
-    if (!this.erfassungAn || this.hasAttribute('data-ff-editor')) return
+    if (!this.erfassungAn || this.imEditor) return
     this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())
   }
 
@@ -541,7 +541,7 @@ export class TabelleBlock extends BasicBlock {
   private get spaltenwahlAn(): boolean {
     return this.spaltenwahl === 'ja'
       && this.kopfzeile === 'ja'
-      && !this.hasAttribute('data-ff-editor')
+      && !this.imEditor
   }
 
   private wahlWeg(): ReadonlySet<string> {
@@ -591,7 +591,7 @@ export class TabelleBlock extends BasicBlock {
 
     // Gezeichnet wird in der Maske ohne die ausgeblendeten Spalten; Werte,
     // Ketten und Rechnung laufen weiter ueber den vollen Platz (spalten.ts).
-    const sicht = spaltenSicht(spalten, this.hasAttribute('data-ff-editor'), this.wahlWeg())
+    const sicht = spaltenSicht(spalten, this.imEditor, this.wahlWeg())
 
     const ansicht = tabelleAnsicht({
       spalten,
@@ -620,7 +620,7 @@ export class TabelleBlock extends BasicBlock {
         plaetze: sicht.plaetze,
         cols: ansicht.cols,
         editable: this.editable,
-        imEditor: this.hasAttribute('data-ff-editor'),
+        imEditor: this.imEditor,
         zeigeKopf: this.kopfzeile === 'ja',
         spaltenwahlAn: this.spaltenwahlAn,
         spaltenwahl: this._wahlOffen === null ? null : {
@@ -640,10 +640,9 @@ export class TabelleBlock extends BasicBlock {
         datenzeilen: this.datenzeilen,
         hatQuelle: ansicht.hatQuelle,
         auswahlIndex: this.auswahlIndex,
-        aendernMoeglich: !this.hasAttribute('data-ff-editor')
-          && ansicht.hatQuelle
-          && hatSatzNummer(this),        loeschbar: this.loeschbar === 'ja'
-          && !this.hasAttribute('data-ff-editor')
+        aendernMoeglich: !this.imEditor && ansicht.hatQuelle && hatSatzNummer(this),
+        loeschbar: this.loeschbar === 'ja'
+          && !this.imEditor
           && ansicht.hatQuelle
           && hatSatzNummer(this),
         zeilenStand: this._zeilen,

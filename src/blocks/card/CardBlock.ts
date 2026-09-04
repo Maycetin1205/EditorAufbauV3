@@ -98,7 +98,7 @@ export class CardBlock extends BasicBlock {
   }
 
   private hatReiter(): boolean {
-    return this.hasAttribute('data-ff-editor') || this.date.trim() !== '' || this.time.trim() !== ''
+    return this.imEditor || this.date.trim() !== '' || this.time.trim() !== ''
   }
 
   override updated(changed: PropertyValues): void {
@@ -109,7 +109,7 @@ export class CardBlock extends BasicBlock {
   override render(): TemplateResult {
     const v = coerceStatusVariant(this.chipVariant)
 
-    const editor = this.hasAttribute('data-ff-editor')
+    const editor = this.imEditor
     const zeigt = (wert: string) => editor || wert.trim() !== ''
 
     const reiter = this.hatReiter()
