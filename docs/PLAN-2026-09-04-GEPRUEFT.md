@@ -10,8 +10,8 @@ des Vorgaengers wurde einzeln nachgemessen. Das Ergebnis steht in Abschnitt 1
 diesem Dokument. Wo "NICHT GELESEN" steht, ist die Datei nicht geoeffnet
 worden — dort gilt kein Urteil, weder gut noch schlecht.
 
-**Umfang der Pruefung, ehrlich.** Gelesen wurden rund 8.000 von 34.888 Zeilen
-(23 %). Dazu maschinelle Vollpruefung **aller 385 Dateien** auf
+**Umfang der Pruefung, ehrlich.** Gelesen wurden rund 10.400 von 34.888 Zeilen
+(30 %). Dazu maschinelle Vollpruefung **aller 385 Dateien** auf
 Risikomuster (stille Fehlerschlucker, ungeprueftes `localStorage`,
 `JSON.parse` ohne Netz, Listener ohne Abmeldung, Timer ohne Aufraeumen,
 Typ-Bruecken, Dateigroessen, Zeilenlaengen, Abhaengigkeitsrichtungen,
@@ -595,6 +595,108 @@ weitergetragen wird.
 
 ---
 
+## 3d. DAS DATENCENTER — `src/editor/zentrale/`, 3.123 Zeilen
+
+Der Bereich, in dem Datenquellen, Relationen und Aktionsketten gebaut werden.
+Jetzt gelesen: `DataSourceForm` (473), `StepForm` (386), `DatenquellenBereich`
+(246), `schrittEntwurf` (243), `SchrittListe` (228), `RelationenBereich` (210),
+`helfer` (168), `schrittZusammenfassung` (166), `feldUebernahme` (126),
+`KettenFenster` (103), dazu `VorlagenStore` (164).
+
+### Z1 · Strg+Z gilt hier NICHT — der wichtigste Fund des Tages
+
+Der Baustein-Baum (`Editor.ts`) hat eine Historie: 20 Stellen rufen
+`pushHistory()`, es gibt `undo()`, `redo()`, `transaktion()`.
+
+`VorlagenStore` — die Grundlage von **Datenquellen und Relationen** — hat
+**nichts davon.** `add`, `update`, `ersetzeAlle`, `remove`: jede Methode
+schreibt direkt in `_eintraege` und meldet. Keine Historie, kein Rueckweg.
+
+**Im Klartext:** Loeschst du einen Baustein, holt Strg+Z ihn zurueck. Loeschst
+du eine **Datenquelle mit 40 Feldern**, ist sie weg. Fuer immer. Strg+Z tut
+nichts. Dasselbe gilt fuer eine Relation und fuer jede Bearbeitung: wer eine
+Quelle oeffnet, ein Feld ueberschreibt und speichert, hat den alten Wert
+verloren.
+
+**Das erklaert und rechtfertigt die Rueckfragen dort.** `helfer.ts:26`
+`loeschFrage` fragt vor jedem Loeschen einer Quelle oder Relation — und sagt
+sogar dazu, ob sie gerade benutzt wird. Das ist **keine Bevormundung**,
+sondern die einzige Bremse, die es gibt.
+
+**Wichtig fuer die Entscheidung "keine Rueckfragen":** Schritt 42 bleibt
+gestrichen, richtig so — bei Seiten und Bausteinen **gibt es** Strg+Z. Diese
+zwei Rueckfragen im Datencenter wuerde ich **stehen lassen**, solange es dort
+kein Strg+Z gibt. Sollen sie auch weg, gehoert vorher eine Historie in den
+`VorlagenStore`. **Neuer Schritt 45.**
+
+### Z2 · Kein einziger Test auf 10.440 Zeilen Bedienoberflaeche
+```
+src/editor/   8.588 Zeilen   0 Tests
+src/ui/       1.852 Zeilen   0 Tests
+```
+Alle 40 Testdateien des Projekts liegen im Kern und in den Bausteinen. Die
+gesamte Oberflaeche — Datencenter, Inspector, Leinwand, Werkbank — ist
+ungeprueft. `npm test` kann gruen sein, waehrend kein Formular mehr aufgeht.
+**Das ist der eigentliche Inhalt von N6**, den der Vorgaengerplan mit "91
+Dateien ohne Test" nur zahlenmaessig streift.
+**Empfehlung: nicht flaechendeckend nachruesten** — das sind Wochen. Aber die
+reinen Rechenteile sind sofort testbar und tragen das meiste Risiko:
+`schrittEntwurf.ts` (der Reducer, 14 Faelle), `feldUebernahme.ts`,
+`schrittZusammenfassung.ts`, `helfer.ts`. Zusammen 703 Zeilen ohne React.
+**Neuer Schritt 46.**
+
+### Z3 · `DataSourceForm` ist ein 473-Zeilen-Formular mit 12 Zustaenden
+Zwoelf `useState` nebeneinander, dazu rund 20 abgeleitete Werte und neun
+Fehlertexte, die am Ende zu `alleFehler` zusammenlaufen. Es funktioniert und
+ist sorgfaeltig gebaut — die Kommentare erklaeren jede Entscheidung, oft mit
+Datum und Grund.
+**Der Vergleich macht es deutlich:** `StepForm` (386 Zeilen) loest dasselbe
+Problem mit **einem** `useReducer` und ausgelagerter Logik in
+`schrittEntwurf.ts`. Deshalb ist `StepForm` trotz aehnlicher Groesse leichter
+zu lesen — und testbar, weil der Reducer eine reine Funktion ist.
+**Das ist die Blaupause.** Wenn `DataSourceForm` je angefasst wird, dann in
+diese Richtung. **Kein Schritt jetzt** — der Umbau ist gross, das Formular
+laeuft, und Z2 (Tests) muss zuerst kommen, sonst baut man ohne Netz.
+
+### Z4 · Abbrechen wirft Getipptes wortlos weg
+`DataSourceForm` und `StepForm` haben beide einen "Abbrechen"-Knopf, der
+`onClose()` ruft — ohne zu pruefen, ob etwas geaendert wurde. Zwanzig Minuten
+Feldarbeit sind mit einem Fehlklick weg, und **hier hilft Strg+Z auch nicht**
+(siehe Z1).
+**Das ist der eine Fall, wo eine Rueckfrage sich nicht ersetzen laesst** —
+ausser durch echtes Rueckgaengigmachen. Erst Z1 loesen, dann ist Z4 von
+selbst erledigt. Kein eigener Schritt.
+
+### Z5 · Verwendungssuche laeuft mehrfach pro Bild durch den ganzen Baum
+`DatenquellenBereich.tsx:63` `verwendungFor` durchsucht alle Bausteine. Es
+wird gerufen: einmal je Listeneintrag (`:141`) und dreimal fuer die
+Detailansicht (`:213`, `:215`, `:218`). Bei 20 Quellen sind das 23
+Baumdurchlaeufe pro Neuzeichnen. Dasselbe in `RelationenBereich.tsx:57`.
+**Bewertung: heute unmerklich**, Masken haben Dutzende Bausteine, nicht
+Tausende. **Genannt, nicht eingeplant.** `StepForm` macht es uebrigens
+richtig — dort steht ausdruecklich ein `useMemo` mit der Begruendung "ohne
+Memo laeuft jeder Tastendruck durch den ganzen Baum".
+
+### Z6 · Gut geloest — nicht anfassen
+- **`schrittEntwurf.ts`** ist die sauberste Datei im Projekt: reiner Reducer,
+  jeder Sonderfall kommentiert mit dem Fehler, den er verhindert ("Frueher zog
+  jeder Render eine neue UUID, also pruefte die Anzeige einen anderen Schritt,
+  als Speichern schrieb").
+- **`aufLaenge`** faengt den Fall ab, dass sich eine Relation aendert, waehrend
+  das Formular offen steht — daran denkt man normalerweise erst nach dem
+  ersten Datenverlust.
+- **`kandidatAus`** bewahrt `toolParams` und `resultKey`, die das Formular gar
+  nicht anzeigt, statt sie beim Speichern zu verlieren.
+- **Ein Fensteraufbau fuer alles:** `ListeDetail` traegt Datencenter,
+  Relationen und Kettenfenster. Drei Bereiche, ein Bedienmuster.
+- **`loeschFrage`** sagt nicht nur "wirklich loeschen?", sondern **ob das Ding
+  gerade benutzt wird und was danach passiert**.
+- **Namenspruefung mit Begruendung** (`DataSourceForm:167`): zwei gleich
+  benannte Quellen zeigten stumm dieselben Daten, weil SoftEngine ueber den
+  Namen sucht. Der Fehler ist dokumentiert, wo er verhindert wird.
+
+---
+
 ## 4. ARBEITSREGELN — uebernommen, gekuerzt, korrigiert
 
 1. **Branch.** Der Vorgaengerplan sagt "`master` ist der einzige Branch".
@@ -909,6 +1011,41 @@ beim ersten Start: die Maske liegt im Browser-Speicher dieses Rechners; wer
 sie behalten will, speichert sie als Datei.
 **Export:** neutral. **Risiko:** minimal.
 
+#### SCHRITT 45 — Strg+Z gilt auch fuer Quellen und Relationen · Z1
+**Der wichtigste neue Schritt.** Heute ist eine geloeschte oder
+ueberschriebene Datenquelle endgueltig weg — die Historie kennt nur den
+Baustein-Baum.
+**Aenderung:** `VorlagenStore` bekommt dieselbe Historie, die `Editor.ts`
+schon hat (`history.ts` ist fertig und getestet, es muss nur angeschlossen
+werden). `add`, `update`, `remove`, `ersetzeAlle` schreiben je einen
+Stand fort.
+**Danach koennen die beiden Rueckfragen im Datencenter verschwinden** — dann
+gilt ueberall dieselbe Regel: nichts fragt, alles laesst sich zuruecknehmen.
+**Setzt Schritt 46 voraus** (ohne Tests ist der Umbau am Speicher blind).
+**Test:** Quelle anlegen, loeschen, `undo` -> sie ist wieder da, mit allen
+Feldern.
+**Klickprobe:** Datenquelle loeschen, Strg+Z -> steht wieder in der Liste.
+**Export:** neutral. **Risiko:** mittel — der Store speichert auch nach
+`localStorage`, Historie und Speicherplaner duerfen sich nicht in die Quere
+kommen.
+
+#### SCHRITT 46 — Die rechnenden Teile des Datencenters testen · Z2
+Null Tests auf 10.440 Zeilen Oberflaeche. Flaechendeckend nachruesten waere
+verschwendete Zeit; **diese vier Dateien sind reine Rechnung, ohne React,
+und tragen das meiste Risiko:**
+```
+schrittEntwurf.ts      243 Z.  Reducer mit 14 Faellen — Herz des Schrittformulars
+feldUebernahme.ts      126 Z.  Feldcodes zerlegen, POS/LEN/RELID setzen
+schrittZusammenfassung 166 Z.  Zeilentext der Kette
+helfer.ts              168 Z.  Spalten- und Geber-Listen aus dem Baum
+```
+Sie lassen sich ohne Browser pruefen, wie die 40 bestehenden Tests.
+**Wichtigster Fall:** `aufLaenge` — Relation aendert sich, waehrend das
+Formular offen steht.
+**Klickprobe:** keine, `npm test` zaehlt mehr Tests.
+**Export:** neutral. **Risiko:** null — es wird nur geprueft, nichts
+geaendert. **Das ist der richtige erste Schritt der ganzen Phase.**
+
 ---
 
 ## 6. WAS NICHT GELESEN WURDE — hier gilt kein Urteil
@@ -916,16 +1053,12 @@ sie behalten will, speichert sie als Datei.
 Diese Dateien wurden **nicht geoeffnet**. Weder "gut" noch "schlecht" ist
 ueber sie belegt:
 
-**`src/editor/zentrale/` — 23 Dateien, 3.544 Zeilen, fast komplett ungelesen.**
-Das ist das **Datencenter**: Datenquellen anlegen, Relationen bauen,
-Aktionsketten zusammenstecken, Felder uebernehmen, DTK-Dateien einlesen.
-Gelesen wurden nur `Kommandozentrale.tsx` (52) und der Kopf von
-`DatenquellenBereich.tsx`. Ungelesen: `DataSourceForm.tsx` (473),
-`StepForm.tsx` (386), `KettenFenster.tsx`, `RelationForm.tsx`,
-`SchrittListe.tsx`, `ParameterZeile.tsx`, `FeldUebernahmePicker.tsx`,
-`schrittEntwurf.ts`, `bindungen.tsx` und weitere.
-**Das ist die groesste ungelesene Flaeche und zugleich die, an der der
-Besitzer die meiste Zeit verbringt.** Hier gilt bislang kein Urteil.
+**`src/editor/zentrale/` — jetzt zu rund 75 % gelesen, siehe Abschnitt 3d.**
+Ungelesen bleiben hier nur noch: `DtkImportForm.tsx` (131),
+`FeldUebernahmePicker.tsx` (101), `FeldListe.tsx` (99),
+`RelationAuswahl.tsx` (96), `ParameterZeile.tsx` (93), `RelationForm.tsx`
+(108), `feldZeile.ts` (46), `FormularKarte.tsx` (36) und der Unterordner
+`parameter/`. Zusammen rund 800 Zeilen, ueberwiegend Anzeige.
 
 **`src/editor/canvas/` — teilweise.** Gelesen: `Canvas.tsx`, `BlockHost.tsx`,
 `AuswahlLeiste.tsx`, `SeitenLeiste.tsx`, Ausschnitte aus `CanvasNode.tsx` und
