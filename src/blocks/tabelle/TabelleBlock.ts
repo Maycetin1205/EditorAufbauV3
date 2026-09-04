@@ -174,6 +174,8 @@ export class TabelleBlock extends BasicBlock {
     editable: () => this.editable,
     zeilenHoehe: () => this.zeilenHoehe,
     melde: () => this.requestUpdate(),
+    spalten: () => this.spaltenListe(),
+    merktSortierung: () => !this.imEditor,
   })
 
   // Tipp-Zustand + erfasste Zeilen; sie ueberleben jeden Daten-Push und

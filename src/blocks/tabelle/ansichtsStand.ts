@@ -8,6 +8,7 @@ import {
 } from './rumpfMessung'
 import type { Zeilenmass } from './seitengroesse'
 import { fokussierterRohIndex, stelleZeilenFokusHer } from './zeilenAktivierung'
+import { leseSortierung, sichereSortierung, sortierSchluessel } from './sortierungMerken'
 
 // Der Stand, in dem die Tabelle gerade DASTEHT: Suchtext, Sortierung, Seite,
 // die Rumpf-Messung und der Zeilenfokus. Nichts davon ist eine Einstellung
@@ -23,6 +24,14 @@ export interface AnsichtsWirt {
   zeilenHoehe: () => number
 
   melde: () => void
+
+  // Die Spalten in der VOLLEN Liste — die gemerkte Sortierung haengt an der
+  // Kennung, nicht am Platz, und muss beim Lesen zurueckuebersetzt werden.
+  spalten: () => readonly { kennung: string }[]
+
+  // Nur in der fertigen Maske merken. Im Editor waere es sinnlos (dort wird
+  // nicht sortiert) und stoerend (der Bauer sieht fremde Bediener-Staende).
+  merktSortierung: () => boolean
 }
 
 export class AnsichtsStand {
@@ -32,6 +41,7 @@ export class AnsichtsStand {
 
   private _sortSpalte = -1
   private _sortAuf = true
+  private _gemerkteGelesen = false
 
   private _seite = 0
 
@@ -59,11 +69,40 @@ export class AnsichtsStand {
     return this._suchtext.trim() !== ''
   }
 
+  // Erst beim ersten Lesen aus dem Speicher geholt: der Schluessel braucht
+  // den Maskennamen und das fertige Dokument, beides steht im Konstruktor
+  // noch nicht. Danach gilt der Stand im Arbeitsspeicher.
+  private holeGemerkte(): void {
+    if (this._gemerkteGelesen) return
+    this._gemerkteGelesen = true
+    if (!this.wirt.merktSortierung()) return
+    const stand = leseSortierung(sortierSchluessel(this.wirt.baustein))
+    if (stand === null) return
+    // Die gemerkte Spalte kann es nicht mehr geben (der Bauer hat sie
+    // geloescht). Dann bleibt die Tabelle unsortiert, statt auf gut Glueck
+    // eine andere zu nehmen.
+    const platz = this.wirt.spalten().findIndex((s) => s.kennung === stand.kennung)
+    if (platz < 0) return
+    this._sortSpalte = platz
+    this._sortAuf = stand.auf
+  }
+
+  private merkeSortierung(): void {
+    if (!this.wirt.merktSortierung()) return
+    const kennung = this.wirt.spalten()[this._sortSpalte]?.kennung ?? ''
+    sichereSortierung(
+      sortierSchluessel(this.wirt.baustein),
+      this._sortSpalte < 0 || kennung === '' ? null : { kennung, auf: this._sortAuf },
+    )
+  }
+
   get sortSpalte(): number {
+    this.holeGemerkte()
     return this._sortSpalte
   }
 
   get sortAuf(): boolean {
+    this.holeGemerkte()
     return this._sortAuf
   }
 
@@ -85,6 +124,9 @@ export class AnsichtsStand {
   klickSortiere(index: number): void {
     if (this.wirt.editable()) return
     this.merkeZeilenFokus()
+    // Erst den gemerkten Stand holen, sonst faenge der erste Klick nach dem
+    // Laden bei "unsortiert" an und drehte die Richtung nicht um.
+    this.holeGemerkte()
     if (this._sortSpalte === index) {
       this._sortAuf = !this._sortAuf
     } else {
@@ -92,6 +134,7 @@ export class AnsichtsStand {
       this._sortAuf = true
     }
     this._seite = 0
+    this.merkeSortierung()
     this.wirt.melde()
   }
 
@@ -164,10 +207,14 @@ export class AnsichtsStand {
     this._kopfGemessen = 0
   }
 
+  // Zweckwechsel: die Tabelle zeigt etwas ANDERES. Dann muss auch die
+  // gemerkte Sortierung fallen — sie zeigte auf Spalten der alten Quelle.
   zuruecksetzen(): void {
     this._suchtext = ''
     this._sortSpalte = -1
     this._sortAuf = true
+    this._gemerkteGelesen = true
+    this.merkeSortierung()
     this.nachPush()
     this._fokusZeile = null
     this._fokusHolen = false

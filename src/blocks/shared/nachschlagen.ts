@@ -320,9 +320,14 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
     anzeigeFeldVon(eigene, args.speicherFeld),
     args.speicherFeld,
   )
+  // Das Nachschlage-Fenster IST eine Tabelle — also kann der Bediener sich
+  // hier dasselbe einrichten wie ueberall: Rechtsklick auf den Spaltenkopf
+  // nimmt Spalten weg, ein Klick sortiert, und beides ueberlebt das
+  // Schliessen (Nutzer-Entscheidung 2026-09-04).
   return html`<ff-tabelle
     fuellt
     suche="ja"
+    spaltenwahl="ja"
     style="--se-r-lg:0px"
     .besitz=${'provided'}
     .spalten=${eigene.length > 0 ? eigene : automatikSpalten(args)}
