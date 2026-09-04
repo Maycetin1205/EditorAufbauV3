@@ -10,18 +10,24 @@ des Vorgaengers wurde einzeln nachgemessen. Das Ergebnis steht in Abschnitt 1
 diesem Dokument. Wo "NICHT GELESEN" steht, ist die Datei nicht geoeffnet
 worden — dort gilt kein Urteil, weder gut noch schlecht.
 
-**Umfang der Pruefung, ehrlich.** Gelesen wurden rund 5.000 von 34.888 Zeilen
-(14 %).
-Ganz gelesen: `relations.ts`, `seAktionen.ts`, `bridge.ts`, `Editor.ts`,
-`persistence.ts`, `history.ts`, `speicherPlaner.ts`, `spaltenAufraeumen.ts`,
-`datenAnschluss.ts`, `providers.tsx`, `notfallkopie.ts`, `blockRegistry.ts`,
-`BasicBlock.ts`, `maskeUebernehmen.ts`, `meldungen.ts`, `loescheBaustein.ts`,
-`useKeyboardShortcuts.ts`, `Toolbar.tsx`, `EditorShell.tsx`, `StatusBar.tsx`,
-`Meldungen.tsx`, `Frage.tsx`, `Sidebar.tsx`, `Inspector.tsx`, `Canvas.tsx`,
-`BlockHost.tsx`, `AuswahlLeiste.tsx`, `SeitenLeiste.tsx` (Hauptteil),
-`erfassungsLauf.ts` (teilweise), sowie alle im Vorgaengerplan genannten
-Fundstellen. Dazu maschinelle Vollpruefung aller 385 Dateien auf
-Risikomuster. Abschnitt 6 nennt, was ungelesen blieb.
+**Umfang der Pruefung, ehrlich.** Gelesen wurden rund 8.000 von 34.888 Zeilen
+(23 %). Dazu maschinelle Vollpruefung **aller 385 Dateien** auf
+Risikomuster (stille Fehlerschlucker, ungeprueftes `localStorage`,
+`JSON.parse` ohne Netz, Listener ohne Abmeldung, Timer ohne Aufraeumen,
+Typ-Bruecken, Dateigroessen, Zeilenlaengen, Abhaengigkeitsrichtungen,
+Testabdeckung je Bereich).
+Ganz gelesen: `TabelleBlock.ts` (722), `relations.ts`, `seAktionen.ts`,
+`bridge.ts`, `Editor.ts`, `persistence.ts`, `history.ts`, `speicherPlaner.ts`,
+`spaltenAufraeumen.ts`, `datenAnschluss.ts`, `providers.tsx`,
+`notfallkopie.ts`, `blockRegistry.ts`, `BasicBlock.ts`, `maskeUebernehmen.ts`,
+`meldungen.ts`, `loescheBaustein.ts`, `useKeyboardShortcuts.ts`,
+`Toolbar.tsx`, `EditorShell.tsx`, `StatusBar.tsx`, `Meldungen.tsx`,
+`Frage.tsx`, `Sidebar.tsx`, `Inspector.tsx`, `Canvas.tsx`, `BlockHost.tsx`,
+`AuswahlLeiste.tsx`, `SeitenLeiste.tsx`, `Kommandozentrale.tsx`,
+`DataSourceStore.ts`, `Knopf.tsx`, `Feld.tsx`, `spaltenBearbeiten.ts`,
+`DatenquellenBereich.tsx` (Hauptteil), `erfassungsLauf.ts` (teilweise),
+sowie alle im Vorgaengerplan genannten Fundstellen.
+Abschnitt 6 nennt, was ungelesen blieb.
 
 **Zwei eigene Irrtuemer stehen in diesem Dokument** (N1-Korrektur, N7). Sie
 sind nicht stillschweigend berichtigt, sondern benannt — damit sichtbar
@@ -406,6 +412,108 @@ geloest ist, als was fehlt. Das gehoert in die Schutzliste:
 Das ist keine Gefaelligkeit: Wer hier "vereinfacht", macht die Bedienung
 schlechter.
 
+---
+
+## 3c. UNSAUBERES — Dinge, die funktionieren, aber nicht stimmen
+
+Kein Fehler, kein Datenverlust. Stellen, an denen der Code seine eigene
+Ordnung verletzt. Sie kosten nichts, solange niemand hinsieht — und Zeit,
+sobald jemand dort arbeiten muss.
+
+### U1 · Eine zerbrochene Zeile mitten im Tabellen-Baustein
+`TabelleBlock.ts:645`:
+```
+&& hatSatzNummer(this),        loeschbar: this.loeschbar === 'ja'
+```
+Zwei Eigenschaften auf einer Zeile, durch acht Leerzeichen getrennt. Der
+Vorgaengerplan nennt es (F13) und hat recht. Es ist die einzige Stelle dieser
+Art im ganzen Projekt. **Ein Zeilenumbruch, kein Risiko.**
+
+### U2 · Derselbe Kommentar zwei Mal, fast wortgleich
+`spaltenBearbeiten.ts:64-67` und `:69-72`. Beide erklaeren
+`mitVerschobenerSpalte`, beide sagen dasselbe mit anderen Worten. Der erste
+ist die aeltere Fassung, die beim Umschreiben stehenblieb.
+**Loeschen: der erste Block.**
+
+### U3 · Acht Dateien ueber 400 Zeilen
+```
+722  TabelleBlock.ts        <- doppelt so gross wie der naechste
+519  FormFeldBlock.ts
+518  erfassungsLauf.ts
+479  tabelleStil.ts
+473  DataSourceForm.tsx
+453  seAktionen.ts
+451  nachschlagen.ts
+409  relations.ts
+```
+`TabelleBlock.ts` ist der Ort, an dem kuenftige Fehler entstehen — und
+Schritt 31 und 32 fassen genau dort an. Das ist der eigentliche Grund fuer
+die Risikobewertung "hoch" bei diesen beiden Schritten.
+**Kein Handlungsbedarf jetzt.** Aufteilen waere ein eigenes Vorhaben mit
+eigenem Risiko, und der Baustein ist gut geordnet (Stand oben, Bedienung
+delegiert an `erfassungsBedienung`, `ansichtsStand`, `zeilenBearbeitung`).
+**Genannt, damit es niemand nebenbei anfasst.**
+
+### U4 · 170 Zeilen laenger als 100 Zeichen
+Kein Formatierwerkzeug im Projekt (kein Prettier, keine
+`.editorconfig`-Zeilenbreite). Die Grenze ist Gewohnheit, nicht Regel — und
+wird an 170 Stellen ueberschritten. **Bewertung: kosmetisch.** Ein
+Formatierlauf ueber 385 Dateien wuerde jeden `git blame` unbrauchbar machen.
+**Nicht anfassen.**
+
+### U5 · Sechs `as unknown as` — der haerteste Typ-Bruch, den TypeScript kennt
+```
+BasicBlock.ts:17          BlockClass as unknown as CustomElementConstructor
+kanban/seRuntime.ts:59    (el as unknown as { leerHinweis: string })
+kanban/seRuntime.ts:136   (card as unknown as Record<string, unknown>)
+spaltenBindung.ts:93      spalte as unknown as Record<string, unknown>
+useLitElement.ts:113      el as unknown as Record<string, unknown>
+relations.ts:358          (element as unknown as Record<string, unknown>)
+```
+Alle sechs stehen an der Grenze zwischen typisiertem Code und untypisierten
+Fremdwelten (Custom-Element-Registrierung, Lit-Elemente, SoftEngine-Globals).
+Dort ist das die uebliche und richtige Loesung.
+**Kein Handlungsbedarf.** Genannt, weil sie bei einer Suche nach "unsauber"
+auffallen und sonst jemand daran herumbastelt.
+
+### U6 · Drei Ausrufezeichen (Non-null-Assertion)
+`serializer.ts:3` und `validator.ts:30` (`codePointAt()!`) sind sicher — der
+Aufrufer hat gerade geprueft, dass das Zeichen existiert.
+`relations.ts:232` `getQueue.shift()!` ist ebenfalls sicher: zwei Zeilen
+darueber steht `if (getQueue.length === 0) return`.
+**Kein Handlungsbedarf.**
+
+### U7 · Zwei getestete Funktionen, die niemand ruft
+`spaltenBearbeiten.ts:45` `entferneSpalte` und `:87` `verschiebeSpalteAn`.
+Beide sind duenne Huellen um `ohneSpalte` bzw. `mitVerschobenerSpalte`, beide
+haben Tests, beide werden **nur** von diesen Tests gerufen.
+Der Vorgaengerplan will sie loeschen. **Ich rate ab:** sie sind die
+Schreib-Variante der reinen Funktionen, kosten 20 Zeilen, und wer sie loescht,
+loescht auch ihre Tests. Wenn Schritt 32 (Spalten-Umbruch) die
+Spaltenbedienung anfasst, wird die Schreib-Variante womoeglich gebraucht.
+**Stehenlassen, im naechsten Durchgang wieder ansehen.**
+
+### U8 · `console.warn` statt Fehler bei doppeltem Bausteintyp
+`blockRegistry.ts:6-8`: registriert jemand denselben Typ zweimal, gibt es eine
+Warnung in der Konsole und der zweite gewinnt still. Das widerspricht
+Grundsatz 4 ("Nichts scheitert still").
+**Aber:** F14 hat gezeigt, dass der Fall heute nicht eintreten kann
+(`beschreibe` wird genau einmal je Baustein gerufen). Die Warnung ist ein
+Netz fuer einen Sturz, den es nicht gibt.
+**Empfehlung: in einen echten Fehler umwandeln** — dann faellt ein kuenftiger
+Doppel-Eintrag sofort auf, statt still zu gewinnen. Erst pruefen, ob ein
+Testaufbau davon lebt.
+
+### U9 · Drei rohe `<input>` neben einer 20-teiligen Werkbank
+`BildControl.tsx:54`, `Toolbar.tsx:222`, `DatenquellenBereich.tsx:113`.
+**Alle drei sind `type="file"` mit `className="hidden"`** — unsichtbare
+Datei-Waehler, die per `ref.click()` ausgeloest werden. Dafuer hat die
+Werkbank kein Teil, und es waere auch keins noetig: das Element ist nie zu
+sehen.
+**Der Vorgaengerplan zaehlt sie als Slop. Das ist falsch.** Es sind die drei
+Stellen, an denen ein rohes `<input>` die richtige Loesung ist.
+**Kein Handlungsbedarf. Streichen aus F13.**
+
 ### N2 · Regel 6 wird vom eigenen Export gebrochen — `inset: 0`
 Arbeitsregel 6 des Vorgaengerplans: *"Kein CSS im Export, das Chromium < 87
 nicht kann. Kein `inset: 0`."* Begruendung `spaltenBreite.ts:113-121`:
@@ -759,25 +867,36 @@ Toolbar ruft. **Drei Zeilen.**
 der Browser-Dialog.
 **Export:** neutral. **Risiko:** minimal.
 
-#### SCHRITT 41 — Meldungen raeumen sich auf · B2
-**BLOCKIERT bis O7 entschieden ist.**
-Entweder Selbstschliessen fuer Hinweise (Fehler bleiben stehen) oder ein
-"Alle schliessen"-Knopf ab der dritten Meldung. `meldungen.leere()` gibt es
-schon, es ruft nur niemand.
+#### SCHRITT 41 — Meldungen verschwinden von selbst · B2
+**ENTSCHIEDEN (Besitzer 2026-09-04): Meldungen sollen allein verschwinden.**
+Umsetzung: jede Meldung bekommt eine Lebensdauer und schliesst sich selbst.
+Der Schliess-Knopf bleibt, damit man sie vorher wegklicken kann.
+**Offen, weil es beim Bauen entschieden werden muss:** ob **jede** Meldung
+geht oder Fehler stehenbleiben. Vorschlag: alle gehen, denn im Editor ist
+jede Meldung ein Hinweis, keine Quittung — und der Besitzer hat "alleine
+verschwinden" ohne Ausnahme gesagt. Wird beim Bauen vorgefuehrt.
 **Wichtig: vor Schritt 23-26 bauen.** Die stopfen Datenverlust-Loecher, indem
 sie **neue Meldungen** erzeugen — der Kanal wird lauter, bevor er aufgeraeumt
 ist.
-**Export:** neutral.
+**Test:** Meldung absetzen, Uhr vorstellen, Liste muss leer sein.
+**Klickprobe:** irgendetwas ausloesen, das meldet -> die Meldung geht nach
+kurzer Zeit von selbst weg.
+**Export:** neutral. **Risiko:** minimal.
 
-#### SCHRITT 42 — Rueckfrage, wo etwas Grosses verschwindet · B3 + B7
-**BLOCKIERT bis O9 entschieden ist.**
-Rueckfrage beim Loeschen einer **Seite** (wie bei "Alle Bausteine loeschen")
-und beim Loeschen eines **Containers mit Kindern**, mit der Zahl im Text.
-Einzelne Bausteine bleiben ohne Rueckfrage.
-Dabei B7 mitnehmen: `SeitenLeiste.tsx:61` geht ueber `loescheBaustein` statt
-direkt ueber `removeBlock`, damit beide Wege denselben Schutz und dieselbe
-Meldung haben.
-**Export:** neutral.
+#### ~~SCHRITT 42 — Rueckfrage beim Loeschen~~ · B3 — **GESTRICHEN**
+**ENTSCHIEDEN (Besitzer 2026-09-04): Rueckfragen sind nervig.**
+Es kommt **keine** zusaetzliche Rueckfrage — weder beim Loeschen einer Seite
+noch bei Containern mit Kindern. Strg+Z bleibt der Rueckweg, und der Titel am
+Knopf sagt es bereits ("Seite löschen (Strg+Z stellt sie zurück)").
+**Folge fuer B3:** Der Befund bleibt als Beschreibung stehen (zwei Loeschwege,
+zwei Disziplinen), aber die Loesung ist nicht mehr "mehr fragen", sondern
+gegebenenfalls "weniger fragen". Ob die bestehende Rueckfrage bei "Alle
+Bausteine loeschen" bleiben soll, entscheidet der Besitzer, wenn sie ihn
+stoert (O9 gestrichen).
+**Aus B7 bleibt ein kleiner Rest:** `SeitenLeiste.tsx:61` ruft `removeBlock`
+direkt statt ueber `loescheBaustein`. Heute folgenlos, aber ein stiller
+Fehlschlag fuer jeden kuenftigen Fall. Wird in Schritt 39 (Kleinteile)
+miterledigt, ohne neue Rueckfrage.
 
 #### SCHRITT 43 — Escape: eine Ebene hoch, dann Auswahl aufheben · B4 + W4
 **Zusammen mit Schritt 34.** Auf oberster Ebene hebt `Escape` die Auswahl auf
@@ -797,15 +916,38 @@ sie behalten will, speichert sie als Datei.
 Diese Dateien wurden **nicht geoeffnet**. Weder "gut" noch "schlecht" ist
 ueber sie belegt:
 
-`src/editor/` — 71 Dateien, davon gelesen: `BlockHost.tsx` (Ausschnitt),
-`CanvasNode.tsx` (Ausschnitt), `rasterMove.ts` (Ausschnitt),
-`Inspector.tsx` (Ausschnitt), `providers.tsx` (ganz). **Rest ungelesen.**
-`src/ui/` — 20 Dateien, **komplett ungelesen**.
-`TabelleBlock.ts` (722 Z.), `tabelleStil.ts` (479), `nachschlagen.ts` (451),
+**`src/editor/zentrale/` — 23 Dateien, 3.544 Zeilen, fast komplett ungelesen.**
+Das ist das **Datencenter**: Datenquellen anlegen, Relationen bauen,
+Aktionsketten zusammenstecken, Felder uebernehmen, DTK-Dateien einlesen.
+Gelesen wurden nur `Kommandozentrale.tsx` (52) und der Kopf von
+`DatenquellenBereich.tsx`. Ungelesen: `DataSourceForm.tsx` (473),
+`StepForm.tsx` (386), `KettenFenster.tsx`, `RelationForm.tsx`,
+`SchrittListe.tsx`, `ParameterZeile.tsx`, `FeldUebernahmePicker.tsx`,
+`schrittEntwurf.ts`, `bindungen.tsx` und weitere.
+**Das ist die groesste ungelesene Flaeche und zugleich die, an der der
+Besitzer die meiste Zeit verbringt.** Hier gilt bislang kein Urteil.
+
+**`src/editor/canvas/` — teilweise.** Gelesen: `Canvas.tsx`, `BlockHost.tsx`,
+`AuswahlLeiste.tsx`, `SeitenLeiste.tsx`, Ausschnitte aus `CanvasNode.tsx` und
+`rasterMove.ts`. Ungelesen: `FieldPicker.tsx` (375), `FeldBindung.tsx` (331),
+`SpaltenBedienung.tsx`, `useBlockResize.ts`, `useLitElement.ts`, `dnd.ts`,
+`rasterDnd.ts`, `zieheGroesse.ts`, `PopupSeite.tsx`.
+
+**`src/editor/inspector/` — teilweise.** Gelesen: `Inspector.tsx`.
+Ungelesen: alle 10 Controls, `AktionenSektion.tsx`, `RechnungSektion.tsx`,
+`QuellenListe.tsx`, `PropControl.tsx`, `SchluesselPaarZeilen.tsx`.
+
+**`src/ui/` — 20 Teile, 1.852 Zeilen.** Gelesen: `Knopf.tsx`, `Feld.tsx`.
+Ungelesen: `Dialog.tsx`, `Popover.tsx`, `ListeDetail.tsx`, `Liste.tsx`,
+`Wahl.tsx`, `Segment.tsx`, `Kachel.tsx`, `Zahl.tsx` und die uebrigen.
+
+**Bausteine und Kern:** `tabelleStil.ts` (479), `nachschlagen.ts` (451),
 `aktionen.ts` (399), `FormFeldBlock.ts` (519), `dataSources.ts` (324),
-`ladeKette.ts` (321), `migrationenRoh.ts` (279), `data.ts` (279),
-`DialogRahmen.ts` (303), `quellenArten.ts` (318), alle uebrigen Bausteine,
-`docs/chef-maske/`, `RECHNUNG-BELEGERFASSUNG.md`.
+`ladeKette.ts` (321), `migrationenRoh.ts` (279), `softengine/data.ts` (279),
+`DialogRahmen.ts` (303), `quellenArten.ts` (318), `erfassungsLauf.ts` (Rest),
+`erfassungsZellen.ts`, `zeilenBearbeitung.ts`, `ansichtsStand.ts`,
+alle Bausteine ausser Tabelle und Kanban, `docs/chef-maske/`,
+`RECHNUNG-BELEGERFASSUNG.md`.
 
 **Der Vorgaengerplan setzt `src/softengine/` auf "nicht geprueft".** Diese
 Pruefung hat `bridge.ts` und `relations.ts` ganz gelesen und dort N3 und N4
@@ -827,9 +969,10 @@ gefunden. `data.ts`, `wertLader.ts`, `relationLader.ts`, `geholteZeilen.ts`,
 | O4 | Kanban `maxSpalten`: welcher Standard (1-8)? | Schritt 36 |
 | O5 | Stoert der einheitliche Auswahlrahmen ueberhaupt? | Schritt 35 |
 | O6 | Soll `src/softengine/` vollstaendig gegen die SE-Kontrakte geprueft werden? (Aufwand) | Kontrakte anfassen |
-| O7 | Meldungen: sollen Hinweise nach ~8 s von selbst verschwinden (Fehler bleiben), oder lieber ein "Alle schliessen"-Knopf? | Schritt 40 |
-| O8 | Soll der Editor sichtbar sagen, dass die Arbeit nur im Browser liegt? Wo — Statusleiste oder Hinweis beim ersten Start? | Schritt 41 |
-| O9 | Rueckfrage beim Loeschen von Seiten und von Containern mit Kindern — gewuenscht, oder stoert das? | Schritt 42 |
+| ~~O7~~ | ~~Meldungen~~ | **ENTSCHIEDEN 2026-09-04: verschwinden allein.** Schritt 41 |
+| O8 | Soll der Editor sichtbar sagen, dass die Arbeit nur im Browser liegt? Wo — Statusleiste oder Hinweis beim ersten Start? | Schritt 44 |
+| ~~O9~~ | ~~Rueckfragen beim Loeschen~~ | **ENTSCHIEDEN 2026-09-04: nervig, kommen nicht.** Schritt 42 gestrichen |
+| O10 | Popup-Test in SoftEngine (`inset: 0`, N2) — vom Besitzer als "erstmal egal" eingestuft. Bleibt offen, Schritt 29 wartet. | Schritt 29 |
 
 ---
 
