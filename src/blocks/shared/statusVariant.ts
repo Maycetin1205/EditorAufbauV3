@@ -3,7 +3,7 @@ import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 
 export type StatusVariant = 'info' | 'success' | 'warning' | 'danger'
 
-export const STATUS_VARIANTS: readonly StatusVariant[] = [
+const STATUS_VARIANTS: readonly StatusVariant[] = [
   'info',
   'success',
   'warning',
@@ -16,7 +16,7 @@ export function coerceStatusVariant(value: string): StatusVariant {
     : 'info'
 }
 
-export const STATUS_BEDEUTUNGEN: readonly { wert: StatusVariant; name: string }[] = [
+const STATUS_BEDEUTUNGEN: readonly { wert: StatusVariant; name: string }[] = [
   { wert: 'info', name: 'Hinweis' },
   { wert: 'success', name: 'Erfolg' },
   { wert: 'warning', name: 'Warnung' },

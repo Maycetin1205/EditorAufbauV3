@@ -50,7 +50,7 @@ function tiefstesAktives(): Element | null {
   return el
 }
 
-export function fokusBeiUns(): boolean {
+function fokusBeiUns(): boolean {
   const el = tiefstesAktives()
   if (!(el instanceof HTMLElement)) return false
   return el.isContentEditable

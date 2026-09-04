@@ -56,7 +56,7 @@ export function seitenDerMaske(tree: BlockTree): SeitenEintrag[] {
   return [{ id: ROOT_ID, name: 'Hauptseite', istHauptseite: true, istFlaeche: true }, ...seiten]
 }
 
-export function eindeutigerSeitenName(
+function eindeutigerSeitenName(
   seiten: readonly SeitenEintrag[],
   eigeneId: string,
   wunsch: string,

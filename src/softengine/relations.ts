@@ -117,7 +117,7 @@ export function extractRelationResult(raw: unknown): string | undefined {
   return undefined
 }
 
-export function extractSatzAntwort(raw: unknown, tiefe = 0): string | undefined {
+function extractSatzAntwort(raw: unknown, tiefe = 0): string | undefined {
   if (tiefe > 12) return undefined
   const value = typeof raw === 'string' ? parsed(raw) : raw
   if (Array.isArray(value)) {
@@ -160,7 +160,7 @@ export function extractRelationFeld(raw: unknown, code: string, tiefe = 0): stri
   return ''
 }
 
-export function seMessageKeys(seData: unknown): string[] {
+function seMessageKeys(seData: unknown): string[] {
   if (!isRecord(seData)) return []
   return Object.keys(seData).filter((key) => /^Message\d+$/.test(key))
 }
@@ -169,7 +169,7 @@ export interface NeueNachricht extends RelationAntwort {
   schluessel: string
 }
 
-export function newSeMessageResult(
+function newSeMessageResult(
   seData: unknown,
   before: ReadonlySet<string>,
   satzAntwort = false,

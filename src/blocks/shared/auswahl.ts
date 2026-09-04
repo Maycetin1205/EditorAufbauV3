@@ -61,7 +61,7 @@ export function auswahlFuer(geberId: string): unknown | undefined {
   return zustand.get(geberId)?.zeile
 }
 
-export function auswahlMerkmal(geberId: string): string {
+function auswahlMerkmal(geberId: string): string {
   return zustand.get(geberId)?.merkmal ?? ''
 }
 
@@ -133,7 +133,7 @@ export function setzeAuswahlZurueck(): void {
 
 const AUSWAHL_FOLGE_ATTR = AUSWAHL_FOLGE_PROP.toLowerCase()
 
-export function folgenAusAttribut(el: HTMLElement): AuswahlFolge[] {
+function folgenAusAttribut(el: HTMLElement): AuswahlFolge[] {
   return paarListeAusAttribut(el, AUSWAHL_FOLGE_ATTR, 'geberId')
     .map((e) => ({ geberId: e.id, keyPairs: e.keyPairs }))
 }

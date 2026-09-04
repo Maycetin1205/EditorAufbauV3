@@ -1,6 +1,6 @@
 import { meldungen } from './meldungen'
 
-export const BACKUP_SUFFIX = '__notfallkopie'
+const BACKUP_SUFFIX = '__notfallkopie'
 
 export function backupKeyFor(storageKey: string): string {
   return `${storageKey}${BACKUP_SUFFIX}`

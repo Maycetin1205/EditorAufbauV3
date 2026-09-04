@@ -1,7 +1,7 @@
 import type { Rechnung } from '../../core/data/rechnung'
 import { verknuepfungenVon } from '../shared/fremdeQuellen'
 import { ErfassungsLauf } from './erfassungsLauf'
-import type { ErfassungsUmfeld } from './erfassungsZellen'
+import type { ErfassungsUmfeld } from './erfassungsZeile'
 import type { Spalte } from './spalten'
 
 export class ErfassungsAnschluss {

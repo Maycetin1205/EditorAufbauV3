@@ -29,7 +29,7 @@ import {
   zellenzielVon,
   zielIn,
   type ErfassungsUmfeld,
-} from './erfassungsZellen'
+} from './erfassungsZeile'
 
 export type ErfassungsTaste = TastenFolge | 'weiter' | 'leeren' | 'liste-auf'
 

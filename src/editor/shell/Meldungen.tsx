@@ -9,6 +9,11 @@ export function Meldungen() {
 
   return (
     <div className="pointer-events-none fixed bottom-8 right-3 z-50 flex w-[22rem] max-w-[calc(100vw-1.5rem)] flex-col gap-2">
+      {liste.length > 1 && (
+        <div className="pointer-events-auto flex justify-end">
+          <Knopf onClick={() => stelle.leere()}>Alle schließen</Knopf>
+        </div>
+      )}
       {liste.map((m) => (
         <div
           key={m.id}

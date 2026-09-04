@@ -34,7 +34,7 @@ function currentValue(field: RuntimeFieldElement): string {
   return typeof field.value === 'string' ? field.value : ''
 }
 
-export function hydrateField(field: RuntimeFieldElement): void {
+function hydrateField(field: RuntimeFieldElement): void {
   field.pruefeEigenenWert?.()
 
   if (field.getAttribute('fieldtype') === 'nachschlagen') {

@@ -58,7 +58,7 @@ export const ACTION_PARAM_SOURCES = [
   'se_variable',
 ] as const
 
-export const GESPEICHERTE_PARAM_QUELLEN = [...ACTION_PARAM_SOURCES, 'aus'] as const
+const GESPEICHERTE_PARAM_QUELLEN = [...ACTION_PARAM_SOURCES, 'aus'] as const
 
 // Die drei Quellen, deren value eine Spalte einer Liste adressiert — im Baum
 // als Kennung, im Export als Index (s. Kommentar an 'erfassungszelle').

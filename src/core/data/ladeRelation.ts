@@ -26,7 +26,7 @@ export const LADE_RELATION_STANDARD = {
 export const POS_LEN = /^\d+_\d+$/
 const NUR_ZIFFERN = /^\d+$/
 
-export const LADE_SCHNITT_LEN = 255
+const LADE_SCHNITT_LEN = 255
 
 export function felderHinterSchnitt(benutzt: ReadonlySet<string> | undefined): string[] {
   const raus: string[] = []

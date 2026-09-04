@@ -6,7 +6,7 @@ import {
   zellenzielVon,
   zielIn,
   type ErfassungsUmfeld,
-} from './erfassungsZellen'
+} from './erfassungsZeile'
 import type { Spalte } from './spalten'
 
 function spalte(titel: string, feld: string): Spalte {

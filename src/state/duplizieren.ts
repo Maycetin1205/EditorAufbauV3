@@ -8,7 +8,7 @@ import { freiePositionFuerKopie } from './rasterOps'
 
 export type NeueIdFuer = (alteId: string) => string | undefined
 
-export function schreibeBlockReferenzenUm(node: BlockNode, neueIdFuer: NeueIdFuer): BlockNode {
+function schreibeBlockReferenzenUm(node: BlockNode, neueIdFuer: NeueIdFuer): BlockNode {
   const folgen = umgeschriebeneFolgen(node.props[AUSWAHL_FOLGE_PROP], neueIdFuer)
   const events = node.events === undefined
     ? undefined
@@ -95,7 +95,7 @@ function umgeschriebeneEreignisse(
   return geaendert ? naechste : events
 }
 
-export function kloneTeilbaum(
+function kloneTeilbaum(
   tree: BlockTree,
   id: string,
 ): { nodes: BlockTree; kopieId: string } {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
-import type { ErfassungsUmfeld } from './erfassungsZellen'
+import type { ErfassungsUmfeld } from './erfassungsZeile'
 import type { Spalte } from './spalten'
 import { leereRechnung } from '../../core/data/rechnung'
 

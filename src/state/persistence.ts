@@ -56,7 +56,7 @@ export function meldeVerworfeneTypen(verworfen: Map<string, number>): void {
 // Eine Aktionskette, die beim Laden die Pruefung nicht besteht, faellt weg —
 // der Baustein bleibt stehen und tut nichts mehr. Das muss man erfahren, denn
 // der naechste Auto-Speicher schreibt den gekuerzten Stand fest.
-export function meldeVerloreneKetten(anzahl: number): void {
+function meldeVerloreneKetten(anzahl: number): void {
   if (anzahl === 0) return
   meldungen.melde(
     `Beim Laden verworfen: ${anzahl} Aktionskette(n), die nicht mehr lesbar war(en).\n`

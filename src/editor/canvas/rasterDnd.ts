@@ -51,7 +51,7 @@ export function zelleAusZeiger(
   return { x, y: Math.max(0, y) }
 }
 
-export function gezogeneGroesse(
+function gezogeneGroesse(
   ed: ReturnType<typeof useEditor>,
   dnd: DndState,
   dt: DataTransfer,

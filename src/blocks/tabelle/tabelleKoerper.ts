@@ -1,21 +1,14 @@
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
-import {
-  spaltenWahlTpl,
-  type SpaltenWahlHandeln,
-  type SpaltenWahlLage,
-} from './spaltenWahl'
+import { spaltenWahlTpl, type SpaltenWahlHandeln, type SpaltenWahlLage } from './spaltenWahl'
 import { markiereTreffer } from '../shared/textMarke'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
-import { spalteAenderbar } from './spaltenBindung'
-import {
-  bewegeZeilenFokus,
-  fokussiereErsteZeile,
-  fokussiereSuchzeile,
-} from './zeilenAktivierung'
+import { spalteAenderbar } from './tabelleEigenschaften'
+import { bewegeZeilenFokus, fokussiereErsteZeile, fokussiereSuchzeile } from './zeilenAktivierung'
 import type { ZeilenZeichen } from './zeilenStatus'
+import { datensatzText } from './tabelleAnsicht'
 
 export interface ZeilenStand {
   zellWert: (rohIndex: number, spalte: number) => string
@@ -345,4 +338,70 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
       </div>
       ${spaltenWahlTpl(lage.spaltenwahl, tun.spaltenwahl)}
     `
+}
+
+export interface FussLage {
+  hatQuelle: boolean
+
+  sichtbar: number
+  gesamt: number
+  suchtAktiv: boolean
+  auswahlAktiv: boolean
+  seite: number
+  seiten: number
+
+  summen: readonly { titel: string; text: string }[]
+
+  erfasst: number
+
+  geaendert: number
+
+  geloescht: number
+
+  blaettert: boolean
+
+  leer: boolean
+}
+
+export interface FussHandeln {
+  blaettere: (zu: number) => void
+}
+
+export function tabelleFuss(
+  lage: FussLage,
+  tun: FussHandeln,
+): TemplateResult | typeof nothing {
+  const noetig = lage.seiten > 1
+    || lage.summen.length > 0
+    || lage.suchtAktiv
+    || lage.auswahlAktiv
+  if (lage.leer || !noetig) return nothing
+  return html`<div class="fusszeile">
+    <div class="seiten-info">${datensatzText({
+      hatQuelle: lage.hatQuelle,
+      sichtbar: lage.sichtbar,
+      gesamt: lage.gesamt,
+      suchtAktiv: lage.suchtAktiv,
+      auswahlAktiv: lage.auswahlAktiv,
+    })}</div>
+    ${lage.summen.length === 0 ? nothing : html`<div class="summen">
+      ${lage.summen.map((s) => html`<span class="summe">
+        <span class="summe-titel">${s.titel}</span>
+        <b>${s.text}</b>
+      </span>`)}
+    </div>`}
+    ${!lage.blaettert ? nothing : html`<div class="seiten-nav">
+      <button
+        aria-label="Seite zurück"
+        ?disabled=${lage.seite <= 0}
+        @click=${() => tun.blaettere(lage.seite - 1)}
+      >‹</button>
+      <span>Seite ${lage.seite + 1} von ${lage.seiten}</span>
+      <button
+        aria-label="Seite vor"
+        ?disabled=${lage.seite >= lage.seiten - 1}
+        @click=${() => tun.blaettere(lage.seite + 1)}
+      >›</button>
+    </div>`}
+  </div>`
 }

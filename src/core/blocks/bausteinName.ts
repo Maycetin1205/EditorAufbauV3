@@ -8,7 +8,7 @@ const TEXT_PROPS = ['label', 'heading', 'title', 'text', 'placeholder'] as const
 
 const MAX_LAENGE = 28
 
-export function eigenerText(
+function eigenerText(
   props: Record<string, unknown>,
   defaults?: Record<string, unknown>,
 

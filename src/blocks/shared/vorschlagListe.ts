@@ -38,7 +38,7 @@ function beginntMit(eintrag: Vorschlag, getippt: string): boolean {
     || schlichtText(eintrag.wert.trim()).startsWith(t)
 }
 
-export function ordneVorschlaege<T extends Vorschlag>(
+function ordneVorschlaege<T extends Vorschlag>(
   treffer: readonly T[],
   getippt: string,
 ): T[] {
@@ -129,7 +129,7 @@ export function tastenFolge(taste: string, args: {
 // Regeln: sie bleibt links verankert und waechst nach rechts; sie wird nie
 // schmaler als der Halter; tritt sie rechts ueber den Rand der Flaeche
 // hinaus, waechst sie nach links (.nach-links).
-export function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
+function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
   let links = 0
   let rechts = typeof window !== 'undefined' && window.innerWidth > 0
     ? window.innerWidth
@@ -165,7 +165,7 @@ export function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number
   return { links, rechts }
 }
 
-export function richteVorschlaegeAus(el: HTMLElement): void {
+function richteVorschlaegeAus(el: HTMLElement): void {
   if (!el || typeof el.getBoundingClientRect !== 'function') return
   const eltern = el.parentElement
   if (!eltern) return

@@ -11,7 +11,7 @@ import {
   type DialogRahmen,
 } from './DialogRahmen'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from '../tabelle/spalten'
-import { TabelleBlock } from '../tabelle/TabelleBlock'
+import type { TabelleBlock } from '../tabelle/TabelleBlock'
 import {
   ZEILE_AKTIVIERT_EVENT,
   type ZeileAktiviertDetail,
@@ -131,12 +131,12 @@ export interface NachschlagEinstellung {
 // Was im FELD steht, ist die erste Spalte des Fensters. Ohne eigene
 // Spalten zeigt das Fenster nur „Gespeichert wird" — dann ist der
 // gespeicherte Wert selbst die Anzeige.
-export function anzeigeFeldVon(spalten: readonly Spalte[], speicherFeld: string): string {
+function anzeigeFeldVon(spalten: readonly Spalte[], speicherFeld: string): string {
   const erste = spalten[0]
   return erste === undefined ? speicherFeld : erste.feld
 }
 
-export function nurEineSpalte(anzeigeFeld: string, speicherFeld: string): boolean {
+function nurEineSpalte(anzeigeFeld: string, speicherFeld: string): boolean {
   const anzeige = anzeigeFeld.trim()
   return anzeige === '' || anzeige === speicherFeld.trim()
 }
@@ -163,7 +163,7 @@ export function nachschlagEintraege(
   return eintraege
 }
 
-export function fensterEintraege(
+function fensterEintraege(
   el: HTMLElement,
   rows: unknown[],
   anzeigeFeld: string,
@@ -369,7 +369,7 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
   }), halter)
 
   const dialog = halter.querySelector<DialogRahmen>(DIALOG_RAHMEN_TAG)
-  const tabelle = halter.querySelector<TabelleBlock>(TabelleBlock.tagName)
+  const tabelle = halter.querySelector<TabelleBlock>('ff-tabelle')
   tabelle?.addEventListener(ZEILE_AKTIVIERT_EVENT, (event) => {
     const detail = (event as CustomEvent<ZeileAktiviertDetail>).detail
     const eintrag = eintraege[detail.rohIndex]

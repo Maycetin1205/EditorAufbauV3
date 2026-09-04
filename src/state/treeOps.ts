@@ -7,7 +7,7 @@ import {
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { deepClone } from '../lib/deepClone'
 
-export function createRootNode(): BlockNode {
+function createRootNode(): BlockNode {
   return { id: ROOT_ID, type: ROOT_TYPE, props: {}, parentId: null, childIds: [] }
 }
 

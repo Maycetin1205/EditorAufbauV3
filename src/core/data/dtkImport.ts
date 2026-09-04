@@ -33,7 +33,7 @@ function latin1(bytes: Uint8Array): string {
   return s
 }
 
-export function dtkTextAusBytes(bytes: Uint8Array): string {
+function dtkTextAusBytes(bytes: Uint8Array): string {
   const teile: string[] = []
   let start = 0
   for (let p = KOPF_VERSATZ; p + KOPF_LAENGE <= bytes.length; p += SEITE) {
@@ -180,7 +180,7 @@ function fuegeZusammen(
   return [...vereinigt.values()]
 }
 
-export function parseDtk(text: string): DtkTabelle[] {
+function parseDtk(text: string): DtkTabelle[] {
   const a = ernteDsatz(text)
   const b = erntePosSaetze(text)
   const soll = sollZahlen(text)

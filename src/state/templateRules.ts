@@ -3,7 +3,7 @@ import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { firstDescendantOfType } from '../core/blocks/treeQuery'
 import { collectSubtree } from './treeOps'
 
-export function owningTemplateBoardId(tree: BlockTree, id: string): string | undefined {
+function owningTemplateBoardId(tree: BlockTree, id: string): string | undefined {
   const node = tree[id]
   if (!node) return undefined
   let cur: BlockNode | undefined = node.parentId ? tree[node.parentId] : undefined

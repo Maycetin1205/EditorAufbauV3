@@ -41,7 +41,7 @@ export function defsMitSatzWahl(): Map<string, BlockDefinition> {
 // gebliebener Nachschlage-Quelle zum falschen Geber der Beleg-Quelle, und
 // Relation 69 fragte Datenmuell ab. Der Export laesst Standardwerte weg,
 // darum springt fuer ein fehlendes Attribut der defaultProps-Wert ein.
-export function quellenAttrFuer(el: Element, def: BlockDefinition): string {
+function quellenAttrFuer(el: Element, def: BlockDefinition): string {
   const wahl = def.satzWahl
   if (!wahl) return ''
   let aktiv = true
@@ -120,7 +120,7 @@ function pruefeHolendeQuellen(durchBedienung: boolean): void {
 
 // Die Quellen, die EINEN Wert holen (Art „Wert per Relation"). Sie haengen an
 // keiner Auswahl: ihr Anlass ist eine neue Lieferung von SoftEngine.
-export function holeWertQuellen(): void {
+function holeWertQuellen(): void {
   const liste: unknown = seGlobal().FF_DATA_SOURCES
   if (!Array.isArray(liste)) return
   for (const eintrag of liste) {

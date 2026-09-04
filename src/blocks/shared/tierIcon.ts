@@ -18,7 +18,7 @@ const TIER_KEY: ReadonlyArray<readonly [string, string]> = [
   ['pferd', 'pferd'], ['pony', 'pferd'], ['fohlen', 'pferd'],
 ]
 
-export function tierBildName(wert: string): string {
+function tierBildName(wert: string): string {
   const a = wert.toLowerCase()
   for (const [wort, bild] of TIER_KEY) {
     if (a.includes(wort)) return bild
@@ -26,7 +26,7 @@ export function tierBildName(wert: string): string {
   return ''
 }
 
-export function tierBild(wert: string): TemplateResult | undefined {
+function tierBild(wert: string): TemplateResult | undefined {
   const bild = tierBildName(wert)
   const quelle = bild === '' ? undefined : TIER_BILDER[bild]
   if (quelle === undefined) return undefined

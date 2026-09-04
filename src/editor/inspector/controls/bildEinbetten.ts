@@ -1,4 +1,4 @@
-export const MAX_KANTE = 1024
+const MAX_KANTE = 1024
 
 const JPEG_QUALITAET = 0.85
 
@@ -6,7 +6,7 @@ function zielTyp(dateiTyp: string): string {
   return dateiTyp === 'image/png' ? 'image/png' : 'image/jpeg'
 }
 
-export function zielMasse(
+function zielMasse(
   breite: number,
   hoehe: number,
   maxKante = MAX_KANTE,

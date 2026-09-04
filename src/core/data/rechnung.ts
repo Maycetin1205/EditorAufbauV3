@@ -59,10 +59,6 @@ export function leereRechnung(): Rechnung {
   }
 }
 
-export function istRechnungLeer(r: Rechnung): boolean {
-  return PLATZ_KEYS.every((k) => r[k].spalte.trim() === '')
-}
-
 // Getippte Zahl, deutsch und STRENG: Komma ist das Dezimalzeichen, Punkte
 // nur als gueltige Tausender-Gruppen. '0.750' ist KEINE davon und bleibt
 // ungelesen (null) — raten hiesse hier Faktor 1000 (Dosierfehler).

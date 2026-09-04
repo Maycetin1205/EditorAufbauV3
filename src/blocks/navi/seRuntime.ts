@@ -8,7 +8,7 @@ function eintraegeVon(navi: Element): NaviEintragBlock[] {
   return Array.from(navi.querySelectorAll(NaviEintragBlock.tagName))
 }
 
-export function haltePunktAktiv(navi: Element, gewaehlt?: Element): void {
+function haltePunktAktiv(navi: Element, gewaehlt?: Element): void {
   const eintraege = eintraegeVon(navi)
   const ziel = gewaehlt ?? eintraege.find((e) => e.hasAttribute(AKTIV)) ?? eintraege[0]
   for (const e of eintraege) {
@@ -32,7 +32,7 @@ function astVon(navi: Element, flaeche: Element): Element | null {
   return cur
 }
 
-export function schalteUm(navi: Element, ansichtsName: string): void {
+function schalteUm(navi: Element, ansichtsName: string): void {
   const doc = navi.ownerDocument
   const alle = Array.from(doc.querySelectorAll(AnsichtBlock.tagName))
 

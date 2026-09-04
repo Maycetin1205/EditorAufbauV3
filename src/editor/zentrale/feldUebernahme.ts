@@ -46,7 +46,7 @@ export function feldUebernahmeArt(raw: string): FeldUebernahmeParameterArt | nul
 
 // Eine ERP-Abfrage darf ihren Feldern einen Vorsatz voranstellen
 // (feldVorsatzMoeglich); darunter steckt trotzdem Position_Laenge.
-export function feldPosLen(
+function feldPosLen(
   source: DataSource,
   code: string,
 ): { pos: string; len: string } | null {

@@ -10,7 +10,7 @@ import { QUELLEN_DEFAULTS } from '../../core/data/sourceLinks'
 import { starteUmbenennen } from '../shared/umbenennen'
 
 // Maskenhaelfte der Anmeldung: aus der Klasse wird ein Element.
-export function definiere(BlockClass: BlockComponentStatic): void {
+function definiere(BlockClass: BlockComponentStatic): void {
   if (!customElements.get(BlockClass.tagName)) {
     customElements.define(
       BlockClass.tagName,
@@ -20,7 +20,7 @@ export function definiere(BlockClass: BlockComponentStatic): void {
 }
 
 // Editorhaelfte der Anmeldung: der Bausteintyp steht in der Registry.
-export function beschreibe(BlockClass: BlockComponentStatic): void {
+function beschreibe(BlockClass: BlockComponentStatic): void {
   registerBlockType({
     type: BlockClass.blockType,
     tagName: BlockClass.tagName,

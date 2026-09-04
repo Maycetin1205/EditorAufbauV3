@@ -3,7 +3,7 @@ import type { DefaultChildSpec } from './BlockDefinition'
 import { getBlockDefinition } from './blockRegistry'
 import { deepClone } from '../../lib/deepClone'
 
-export function createBlockNode(type: string, id?: string): BlockNode {
+function createBlockNode(type: string, id?: string): BlockNode {
   const def = getBlockDefinition(type)
   if (!def) {
     throw new Error(`Unbekannter Block-Typ: "${type}". Vorher mit registerBlockType registrieren.`)

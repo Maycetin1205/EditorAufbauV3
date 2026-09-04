@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
-import type { ErfassungsUmfeld } from './erfassungsZellen'
+import type { ErfassungsUmfeld } from './erfassungsZeile'
 import type { Spalte } from './spalten'
 
 function spalte(titel: string, feld: string): Spalte {

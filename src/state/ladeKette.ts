@@ -203,7 +203,7 @@ function ohneGeleerte(
   return out
 }
 
-export function strukturProbleme(rohBaum: Record<string, unknown>): LadeProblem[] {
+function strukturProbleme(rohBaum: Record<string, unknown>): LadeProblem[] {
   const raus: LadeProblem[] = []
   for (const [id, knoten] of Object.entries(rohBaum)) {
     const kinder = knoten && typeof knoten === 'object'
@@ -226,7 +226,7 @@ export function strukturProbleme(rohBaum: Record<string, unknown>): LadeProblem[
   return raus
 }
 
-export function verlustProbleme(
+function verlustProbleme(
   rohBaum: Record<string, unknown>,
   baum: BaumErgebnis,
 ): LadeProblem[] {

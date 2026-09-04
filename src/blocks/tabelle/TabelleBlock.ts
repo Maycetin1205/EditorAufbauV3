@@ -25,37 +25,35 @@ import {
   type ErfassungsWirt,
 } from './erfassungsBedienung'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
-import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZellen'
-import { erfassungStil } from './erfassungStil'
+import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZeile'
 import {
+  connectTable,
+  disconnectTable,
+  hatSatzNummer,
   leiteZeilenAb,
   type BereitgestellteZeile,
   type Datenbesitz,
-} from './datenBesitz'
-import { connectTable, disconnectTable, hatSatzNummer } from './seRuntime'
-import { zeigtEchteDaten } from './suche'
-import { rechnungNachSpalten } from './spaltenBearbeiten'
-import { ZeilenBearbeitung } from './zeilenBearbeitung'
-import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
-import { meldeVormerkungen } from '../shared/vormerkStand'
-import { AnsichtsStand } from './ansichtsStand'
-import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
-import { BreitenStand } from './spaltenBreite'
-import { SPALTEN_BINDUNG } from './spaltenBindung'
-import { spaltenSicht } from './spalten'
-import { SpaltenWahlStand } from './spaltenWahlStand'
-import { ZEILEN_HOEHE } from './seitengroesse'
-import { tabelleAnsicht } from './tabelleAnsicht'
-import { TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
-import { tabelleFuss } from './tabelleFuss'
-import { tabelleKoerper } from './tabelleKoerper'
-import { tabelleStil } from './tabelleStil'
+} from './seRuntime'
 import {
   coerceSpalten,
+  rechnungNachSpalten,
+  spaltenSicht,
   standardSpalten,
   tryCoerceSpalten,
   type Spalte,
 } from './spalten'
+import { ZeilenBearbeitung } from './zeilenBearbeitung'
+import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
+import { meldeVormerkungen } from '../shared/vormerkStand'
+import { AnsichtsStand } from './ansichtsStand'
+import { aktiviereZeile, zeileDoppelt } from './zeilenAktivierung'
+import { BreitenStand } from './spaltenBreite'
+import { SpaltenWahlStand } from './spaltenWahl'
+import { ZEILEN_HOEHE } from './seitengroesse'
+import { tabelleAnsicht, zeigtEchteDaten } from './tabelleAnsicht'
+import { SPALTEN_BINDUNG, TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
+import { tabelleFuss, tabelleKoerper } from './tabelleKoerper'
+import { erfassungStil, tabelleStil } from './tabelleStil'
 
 export { coerceSpalten, type Spalte } from './spalten'
 

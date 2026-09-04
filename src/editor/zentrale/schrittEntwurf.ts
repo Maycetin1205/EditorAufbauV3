@@ -108,7 +108,7 @@ export type SchrittAktion =
   | { art: 'toolNr'; wert: string }
   | { art: 'befehl'; wert: string }
   | { art: 'popup'; id: string }
-  | { art: 'suche'; wert: string }
+  | { art: 'tabelleAnsicht'; wert: string }
   | { art: 'relation'; id: string; gewaehlt: RelationTemplate | undefined }
   | { art: 'bindung'; index: number; bindung: ActionParamBinding }
   | { art: 'zurueckholen' }
@@ -133,7 +133,7 @@ export function schrittReducer(relationen: readonly RelationTemplate[]) {
         return { ...entwurf, befehl: aktion.wert }
       case 'popup':
         return { ...entwurf, popupId: aktion.id }
-      case 'suche':
+      case 'tabelleAnsicht':
         return { ...entwurf, suche: aktion.wert }
       case 'relation': {
         const gewaehlt = aktion.gewaehlt

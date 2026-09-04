@@ -23,7 +23,7 @@ export interface RasterVariante extends Partial<Omit<RasterSpec, 'varianten'>> {
   wenn: PropertyVisibilityCondition
 }
 
-export const RASTER_FALLBACK: RasterSpec = {
+const RASTER_FALLBACK: RasterSpec = {
   startW: 6,
   startH: 3,
   minW: 1,
@@ -39,7 +39,7 @@ export const RASTER_DEFAULTS: Record<string, unknown> = {
   rasterH: 1,
 }
 
-export function parseRasterCell(value: unknown, fallback: number): number {
+function parseRasterCell(value: unknown, fallback: number): number {
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
     return Math.floor(value)
   }

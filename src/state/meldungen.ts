@@ -5,6 +5,10 @@ export interface Meldung {
   text: string
 }
 
+// Hoechstens so viele Meldungen auf einmal: die aeltesten weichen, sonst
+// wachsen die Kaesten aus dem Bild.
+const HOECHSTENS = 5
+
 class Meldungsstelle extends Subject<Meldungsstelle> {
   private _liste: Meldung[] = []
   private _version = 0
@@ -19,7 +23,7 @@ class Meldungsstelle extends Subject<Meldungsstelle> {
   }
 
   melde(text: string): void {
-    this._liste = [...this._liste, { id: this.naechsteId++, text }]
+    this._liste = [...this._liste, { id: this.naechsteId++, text }].slice(-HOECHSTENS)
     this.notify(this)
   }
 

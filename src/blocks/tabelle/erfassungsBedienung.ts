@@ -6,11 +6,11 @@ import {
 } from '../shared/nachschlagen'
 import type { ErfassungsLauf } from './erfassungsLauf'
 import {
+  erfassungsZeileTpl,
   fensterSpaltenIn,
   zielIn,
   type ErfassungsUmfeld,
-} from './erfassungsZellen'
-import { erfassungsZeileTpl } from './erfassungsZeile'
+} from './erfassungsZeile'
 import type { Spaltensicht } from './spalten'
 
 export interface ErfassungsWirt {

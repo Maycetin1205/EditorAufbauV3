@@ -1,3 +1,5 @@
+
+
 export const ZEILEN_HOEHE = 28
 
 export const OHNE_MESSUNG = 10
@@ -8,7 +10,7 @@ export function platzhalterZeilen(gemessen: number | null): number {
   return gemessen ?? PLATZHALTER_OHNE_MESSUNG
 }
 
-export function passendeZeilen(
+function passendeZeilen(
   rumpfHoehe: number,
   kopfHoehe: number,
   zeilenHoehe: number,
@@ -22,7 +24,7 @@ export interface Zeilenmass {
   zeilenHoehe: number
 }
 
-export function zeilenmass(
+function zeilenmass(
   rumpfHoehe: number,
   kopfHoehe: number,
   takt: number,
@@ -82,4 +84,49 @@ export function seitenAufteilung({
     return { seiten, seite, zeilen: Array.from({ length: platzhalterZeilen }, () => null) }
   }
   return { seiten, seite, zeilen: [...sichtbar.slice(seite * proSeite, (seite + 1) * proSeite)] }
+}
+
+export const OHNE_RUMPF = -1
+
+export interface MessZiel {
+  hasAttribute(name: string): boolean
+  renderRoot: { querySelector(auswahl: string): Element | null }
+}
+
+export interface Rumpfmessung {
+  mass: Zeilenmass | null
+
+  hoehe: number
+
+  // Der Kopf wird ZWEIZEILIG, sobald eine Spalte an eine Hilfsquelle gebunden ist;
+  // der ResizeObserver sieht das nicht, der Rumpf behaelt seine Hoehe. Ohne diesen
+  // Vergleich rechnet die Tabelle mit einer Zeile zu viel.
+  kopf: number
+}
+
+export function rumpfHoehe(ziel: MessZiel): number {
+  if (!ziel.hasAttribute('fuellt')) return OHNE_RUMPF
+  const rumpf = ziel.renderRoot.querySelector('.koerper')
+  return rumpf instanceof HTMLElement ? rumpf.clientHeight : OHNE_RUMPF
+}
+
+export function kopfHoehe(ziel: MessZiel): number {
+  const kopf = ziel.renderRoot.querySelector('.kopf')
+  return kopf instanceof HTMLElement ? kopf.offsetHeight : 0
+}
+
+export function gemessenesMass(ziel: MessZiel, takt: number): Rumpfmessung {
+  const hoehe = rumpfHoehe(ziel)
+  if (hoehe === OHNE_RUMPF) return { mass: null, hoehe, kopf: 0 }
+  const kopf = kopfHoehe(ziel)
+  return { mass: zeilenmass(hoehe, kopf, takt), hoehe, kopf }
+}
+
+export function beobachteRumpf(ziel: MessZiel, beiAenderung: () => void): ResizeObserver | null {
+  if (typeof ResizeObserver === 'undefined') return null
+  const rumpf = ziel.renderRoot.querySelector('.koerper')
+  if (!rumpf) return null
+  const beobachter = new ResizeObserver(beiAenderung)
+  beobachter.observe(rumpf)
+  return beobachter
 }

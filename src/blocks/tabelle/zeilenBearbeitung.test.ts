@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { AenderungsSpeicher } from './aenderungen'
+import { AenderungsSpeicher } from './zeilenBearbeitung'
 
 test('geschluesselt wird nach Satznummer, nicht nach Platz in der Liste', () => {
   const speicher = new AenderungsSpeicher()

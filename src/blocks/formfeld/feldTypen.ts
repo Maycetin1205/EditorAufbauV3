@@ -1,4 +1,4 @@
-export const FELD_TYPEN = ['text', 'number', 'textarea', 'select', 'date', 'time', 'checkbox', 'nachschlagen'] as const
+const FELD_TYPEN = ['text', 'number', 'textarea', 'select', 'date', 'time', 'checkbox', 'nachschlagen'] as const
 export type FeldTyp = (typeof FELD_TYPEN)[number]
 
 export function coerceFeldTyp(v: unknown): FeldTyp {

@@ -12,7 +12,7 @@ const SCHLUESSEL = 'aufbau_editor_inspector_breite'
 // schon zugeschlagen hat: `w-80` sind nicht 320 px, sondern 270.
 export const INSPECTOR_MIN = 300
 export const INSPECTOR_MAX = 600
-export const INSPECTOR_STANDARD = 400
+const INSPECTOR_STANDARD = 400
 
 export function begrenzeBreite(n: number): number {
   if (!Number.isFinite(n)) return INSPECTOR_STANDARD

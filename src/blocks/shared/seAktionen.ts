@@ -21,7 +21,7 @@ import {
   resolveActionParam,
 } from '../../softengine/relations'
 
-export function buildStartToolLink(nr: string, params: readonly string[]): string {
+function buildStartToolLink(nr: string, params: readonly string[]): string {
   let link = '0,START_TOOL,' + nr
   if (params.length > 0) {
     link += ',' + params.map((p) => encodeURIComponent(p)).join(',')

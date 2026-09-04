@@ -8,7 +8,7 @@ export const DIALOG_SCHLIESSEN_EVENT = 'ff-dialog-schliessen'
 // wo im Zug wir stehen. Der Rahmen aendert sich NICHT selbst — er meldet nur,
 // und wer ihn benutzt, speichert und gibt die neue Groesse zurueck. Sonst
 // gaebe es zwei Wahrheiten ueber dieselbe Zahl.
-export const DIALOG_GROESSE_EVENT = 'ff-dialog-groesse'
+const DIALOG_GROESSE_EVENT = 'ff-dialog-groesse'
 
 export interface DialogGroesseDetail {
   achse: 'breite' | 'hoehe'
@@ -23,8 +23,8 @@ export interface DialogGroesseDetail {
 
 export const DIALOG_RAND = 24
 
-export const DIALOG_MIN_BREITE = 240
-export const DIALOG_MIN_HOEHE = 160
+const DIALOG_MIN_BREITE = 240
+const DIALOG_MIN_HOEHE = 160
 
 function pixel(wert: unknown, ersatz: number): number {
   const zahl = Number(wert)

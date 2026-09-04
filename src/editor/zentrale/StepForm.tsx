@@ -275,7 +275,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
             eintraege={sichtbareRelationen}
             relationId={entwurf.relationId}
             suche={entwurf.suche}
-            onSuche={(wert) => dispatch({ art: 'suche', wert })}
+            onSuche={(wert) => dispatch({ art: 'tabelleAnsicht', wert })}
             onSelect={(id) => dispatch({ art: 'relation', id, gewaehlt: vorlageVon(vorlagen, id) })}
           />
 

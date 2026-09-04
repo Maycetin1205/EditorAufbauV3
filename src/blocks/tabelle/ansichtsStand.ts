@@ -5,10 +5,10 @@ import {
   OHNE_RUMPF,
   rumpfHoehe,
   type MessZiel,
-} from './rumpfMessung'
-import type { Zeilenmass } from './seitengroesse'
+  type Zeilenmass,
+} from './seitengroesse'
 import { fokussierterRohIndex, stelleZeilenFokusHer } from './zeilenAktivierung'
-import { leseSortierung, sichereSortierung, sortierSchluessel } from './sortierungMerken'
+import { leseSortierung, sichereSortierung, sortierSchluessel } from './sortierung'
 
 export interface AnsichtsWirt {
   baustein: HTMLElement & MessZiel

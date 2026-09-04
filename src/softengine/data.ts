@@ -168,7 +168,7 @@ function varBlockVon(daten: UnknownRecord): UnknownRecord | undefined {
 // sonst zoege ein fremder Eintrag (BELERF_...) in den Satz ein.
 // Herausgereicht wird EINE Zeile, damit jede vorhandene Bindung unveraendert
 // weiterliest: gelesen wird ohnehin aus der ersten Zeile der Quelle.
-export function offenerSatzZeilen(seData: unknown, tableId: string): unknown[] {
+function offenerSatzZeilen(seData: unknown, tableId: string): unknown[] {
   if (!isRecord(seData) || !isRecord(seData.Daten)) return []
   const id = tableId.trim()
   if (id === '') return []

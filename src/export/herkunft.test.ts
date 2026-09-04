@@ -3,7 +3,7 @@ import { ROOT_ID, ROOT_TYPE, type BlockTree } from '../core/blocks/BlockData'
 import { fremdeQuelleVon } from '../core/blocks/BlockDefinition'
 import type { DataSource } from '../core/data/dataSources'
 import { WEITERE_QUELLEN_PROP } from '../core/data/sourceLinks'
-import { SPALTEN_BINDUNG } from '../blocks/tabelle/spaltenBindung'
+import { SPALTEN_BINDUNG } from '../blocks/tabelle/tabelleEigenschaften'
 import '../blocks/tabelle/TabelleBlock'
 import { exportMask } from './exportMask'
 

@@ -10,7 +10,7 @@ import { CardBlock } from '../card/CardBlock'
 import { KanbanSpalteBlock } from './KanbanSpalteBlock'
 import { KanbanZimmerBlock, ZIMMER_LEER_TEXT } from './KanbanZimmerBlock'
 
-export function columnIndexFor(value: string, columnValues: readonly string[]): number {
+function columnIndexFor(value: string, columnValues: readonly string[]): number {
   const v = value.trim().toLowerCase()
   if (v !== '') {
     for (let i = 0; i < columnValues.length; i++) {
@@ -21,7 +21,7 @@ export function columnIndexFor(value: string, columnValues: readonly string[]): 
   return -1
 }
 
-export function catchColumnIndex(flags: readonly (string | null | undefined)[]): number {
+function catchColumnIndex(flags: readonly (string | null | undefined)[]): number {
   return flags.findIndex((flag) => (flag ?? '').trim() === 'ja')
 }
 

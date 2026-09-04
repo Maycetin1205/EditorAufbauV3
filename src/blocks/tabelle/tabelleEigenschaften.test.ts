@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { leereRechnung, rechnungAlsAttribut, rechnungVonAttribut } from '../../core/data/rechnung'
 import { neueSpalte } from './spalten'
-import { SPALTEN_BINDUNG } from './spaltenBindung'
+import { SPALTEN_BINDUNG } from './tabelleEigenschaften'
 
 function drei() {
   return ['A', 'B', 'C'].map((titel, i) => ({ ...neueSpalte(i), kennung: `s${i + 1}`, titel }))

@@ -208,10 +208,6 @@ export function varAusKopfsaetzen(
   return [...proId].map(([ID, felder]) => ({ ID, FELDER: felder.join(',') }))
 }
 
-export function sanitizeDataSources(raw: unknown): DataSource[] {
-  return pruefeDatenquellen(raw).liste
-}
-
 export function pruefeDatenquellen(
   raw: unknown,
 ): { liste: DataSource[]; probleme: EintragProblem[] } {

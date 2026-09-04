@@ -18,9 +18,9 @@ import { type EntfernGrund } from './migrationenRoh'
 import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from './persistence'
 import { relationStore } from './RelationStore'
 
-export const MASKEN_DATEI_ART = 'aufbau-editor-maske'
+const MASKEN_DATEI_ART = 'aufbau-editor-maske'
 
-export const MASKEN_DATEI_VERSION = 2
+const MASKEN_DATEI_VERSION = 2
 
 export interface MaskenInhalt {
   tree: BlockTree
@@ -43,7 +43,7 @@ function beschaedigtSatz(probleme: readonly LadeProblem[]): string {
     + 'nicht unbemerkt Teile deiner Maske verlorengehen.'
 }
 
-export function packeMaske(inhalt: MaskenInhalt): string {
+function packeMaske(inhalt: MaskenInhalt): string {
   return JSON.stringify(
     {
       art: MASKEN_DATEI_ART,
@@ -120,7 +120,7 @@ function bibliothekPruefen<T>(
   return { ok: true, liste }
 }
 
-export function packeMaskeAus(text: string): AuspackErgebnis {
+function packeMaskeAus(text: string): AuspackErgebnis {
   try {
     return auspacken(text)
   } catch {

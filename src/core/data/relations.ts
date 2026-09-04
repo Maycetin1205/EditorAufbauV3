@@ -6,7 +6,7 @@ export const RELATION_VERBS: readonly RelationVerb[] = [
   'GET_RELATION', 'PUT_RELATION', 'PUTADD_RELATION',
 ]
 
-export const RELATION_PLACEHOLDERS = [
+const RELATION_PLACEHOLDERS = [
   'FELD_POS', 'FELD_LEN', 'PINDEX', 'SELKEY', 'DROP_PINDEX',
   'RELID', 'VALUE', 'ZIMMER', 'NOW_DATE',
 ] as const
@@ -109,22 +109,6 @@ export function relationMatchesSearch(
     .some((value) => value.toLocaleLowerCase('de').includes(needle))
 }
 
-export function relationPlaceholderNames(
-  relation: Pick<RelationTemplate, 'params'>,
-): string[] {
-  const seen = new Set<string>()
-  const names: string[] = []
-  for (const param of relation.params) {
-    for (const match of param.matchAll(/\{([A-Za-z0-9_]+)\}/g)) {
-      const name = match[1]
-      if (seen.has(name)) continue
-      seen.add(name)
-      names.push(name)
-    }
-  }
-  return names
-}
-
 export function resolveParams(
   template: Pick<RelationTemplate, 'params'>,
   context: RelationContext,
@@ -145,10 +129,6 @@ export function unknownPlaceholders(
     if (!known.includes(m[1])) acc.push(m[1])
   }
   return acc
-}
-
-export function sanitizeRelationTemplates(raw: unknown): RelationTemplate[] {
-  return pruefeRelationsVorlagen(raw).liste
 }
 
 export function pruefeRelationsVorlagen(

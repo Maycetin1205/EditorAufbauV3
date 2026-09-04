@@ -4,7 +4,7 @@ import type { BlockDefinition } from '../core/blocks/BlockDefinition'
 import { registerBlockType } from '../core/blocks/blockRegistry'
 import type { DataSource } from '../core/data/dataSources'
 import { WEITERE_QUELLEN_PROP } from '../core/data/sourceLinks'
-import { SPALTEN_BINDUNG } from '../blocks/tabelle/spaltenBindung'
+import { SPALTEN_BINDUNG } from '../blocks/tabelle/tabelleEigenschaften'
 import { benutzteFelderJeQuelle, collectDataSources } from './benutzteQuellen'
 
 // Der Baustein traegt die ECHTE Spalten-Bindung der Tabelle — sonst wuerde der

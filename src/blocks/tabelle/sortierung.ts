@@ -1,3 +1,5 @@
+import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
+
 const LEER_ZULETZT = 1
 
 const ZAHL = /^-?[1-9]\d{0,2}(\.\d{3})+(,\d+)?$|^-?\d+(,\d+)?$|^-?\d+(\.\d+)?$/
@@ -16,7 +18,7 @@ export function alsZahl(wert: string): number | null {
   return Number.isFinite(n) ? n : null
 }
 
-export function alsDatum(wert: string): number | null {
+function alsDatum(wert: string): number | null {
   const t = wert.trim()
   if (t === '') return null
 
@@ -47,7 +49,7 @@ function zeitwert(jahr: number, monat: number, tag: number): number | null {
 
 type Art = 'zahl' | 'datum' | 'text'
 
-export function erkenneArt(werte: readonly string[]): Art {
+function erkenneArt(werte: readonly string[]): Art {
   let gefuellt = 0
   let zahlen = 0
   let daten = 0
@@ -94,3 +96,89 @@ export function sortiereIndizes(
       return d !== 0 ? d * richtung : a - b
     })
 }
+
+// Was der BEDIENER sich in der fertigen Maske sortiert hat, ueberlebt das
+// Schliessen und Neuladen der Maske.
+//
+// Gemerkt wird die KENNUNG der Spalte, nicht ihr Platz: verschiebt der Bauer
+// spaeter eine Spalte, zeigte die Platznummer auf die falsche (derselbe
+// Grund, aus dem Ketten und Rechnung an der Kennung haengen, s. spalten.ts).
+//
+// Dasselbe Verfahren wie die Spaltenwahl (spaltenWahl.ts) — inklusive
+// Rueckfall auf das Gedaechtnis, wenn der Browser-Speicher ausfaellt.
+
+const VORSATZ = 'ff_sortierung_'
+
+export interface GemerkteSortierung {
+  kennung: string
+  auf: boolean
+}
+
+// Faellt der Browser-Speicher aus (SoftEngines eingebauter Browser ist alt,
+// und ob er ihn hergibt, ist unbelegt), haelt die Sortierung wenigstens die
+// Sitzung. Eine Sortierung ist keine Meldung wert.
+const imGedaechtnis = new Map<string, GemerkteSortierung | null>()
+
+// Je Maske und Tabelle eine eigene Sortierung. Die Baustein-Kennung traegt
+// nicht jede Tabelle (nur die adressierbaren), darum der Platz im Dokument
+// als Rueckfall.
+export function sortierSchluessel(el: HTMLElement): string {
+  const titel = typeof document === 'undefined' ? '' : document.title
+  const id = el.getAttribute(ACTION_VALUE_ID_ATTR)
+  if (id !== null && id !== '') return `${VORSATZ}${titel}|${id}`
+  const gleiche = Array.from(el.ownerDocument?.querySelectorAll(el.tagName) ?? [])
+  return `${VORSATZ}${titel}|#${Math.max(0, gleiche.indexOf(el))}`
+}
+
+export function leseSortierung(schluessel: string): GemerkteSortierung | null {
+  if (imGedaechtnis.has(schluessel)) return imGedaechtnis.get(schluessel) ?? null
+  try {
+    const roh = localStorage.getItem(schluessel)
+    if (roh === null) return null
+    return deuteSortierung(JSON.parse(roh))
+  } catch {
+    return null
+  }
+}
+
+// Getrennt und ausgestellt, damit der Test sie ohne Browser-Speicher pruefen
+// kann: Fremde oder alte Staende duerfen die Tabelle nicht umwerfen.
+export function deuteSortierung(roh: unknown): GemerkteSortierung | null {
+  if (typeof roh !== 'object' || roh === null) return null
+  const o = roh as Record<string, unknown>
+  const kennung = typeof o.kennung === 'string' ? o.kennung.trim() : ''
+  if (kennung === '') return null
+  return { kennung, auf: o.auf !== false }
+}
+
+export function sichereSortierung(
+  schluessel: string,
+  stand: GemerkteSortierung | null,
+): void {
+  imGedaechtnis.set(schluessel, stand)
+  try {
+    if (stand === null) localStorage.removeItem(schluessel)
+    else localStorage.setItem(schluessel, JSON.stringify(stand))
+  } catch { /* dann gilt sie fuer die Sitzung */ }
+}
+
+export function summeText(werte: readonly string[], min: number, max: number): string {
+  let summe = 0
+  let gezaehlt = 0
+  for (const wert of werte) {
+    const zahl = alsZahl(wert)
+    if (zahl === null) continue
+    summe += zahl
+    gezaehlt++
+  }
+  if (gezaehlt === 0) return ''
+  return summe.toLocaleString('de-DE', {
+    minimumFractionDigits: min,
+    maximumFractionDigits: max,
+  })
+}
+
+// Keine erzwungene Nachkommastelle, aber bis zu drei, wo der ERP sie liefert
+// (0,25 Stunden). Eine Zahl fuer alle Summen — die Spalte sagt nicht mehr, ob
+// sie Menge oder Betrag ist.
+export const SUMME_NACHKOMMA = { min: 0, max: 3 } as const
