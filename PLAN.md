@@ -9,13 +9,13 @@
 
 ## 0. Rahmen — für JEDEN Chat, der hier arbeitet (zuerst lesen)
 
-> **NÄCHSTER SCHRITT: 19 — Zeilen-Markierung: Maus, Tastatur, eine Marke**
-> (Abschnitt 3c). Diese Zeile ist die Wahrheit darüber, was dran ist, nicht
-> die Reihenfolge der Überschriften: Teil B3 steht weiter unten im Text, geht
-> den Schritten 12b bis 16b aber VOR (Nutzer-Ansage 2026-09-03). Wer einen
-> Schritt fertig hat, schreibt hier den nächsten hin und committet das mit.
-> Reihenfolge ab hier: 19 -> (20, sobald die Höhe entschieden ist) ->
-> 12b -> 13 -> 14 -> 15 -> 16a -> 16b.
+> **NÄCHSTER SCHRITT: 12b — Editor-Angaben aus den Bausteinen heraus**
+> (oder 20, sobald die Höhe entschieden ist; Abschnitt 3c). Diese Zeile ist
+> die Wahrheit darüber, was dran ist, nicht die Reihenfolge der Überschriften:
+> Teil B3 geht den Schritten 12b bis 16b vor (Nutzer-Ansage 2026-09-03). Wer
+> einen Schritt fertig hat, schreibt hier den nächsten hin und committet das mit.
+> Reihenfolge ab hier: (20, sobald die Höhe entschieden ist) -> 12b -> 13 -> 14
+> -> 15 -> 16a -> 16b.
 
 1. Lies `CLAUDE.md` (kurz) und diesen Plan. Arbeite GENAU EINEN Schritt: den,
    den die Zeile „NÄCHSTER SCHRITT" oben nennt. Steht dort nichts, nimm den
@@ -905,7 +905,12 @@ Herkunft: Nutzer-Entscheidung 2026-09-03, vorher Abschnitt 6, Punkt 2.
   an einem schmalen Formularfeld.
 
 ### Schritt 19 — Zeilen-Markierung: Maus, Tastatur, eine Marke
-Status: offen
+Status: erledigt 2026-09-04. Rahmen 4 (Teil B) gruen: `npm run check` Exit 0,
+339 Tests gruen (5 neue Tests in `zeilenAktivierung.test.ts`), Buendel neu
+gebaut (235.650 -> 235.580 Bytes), Referenzabzug erneuert. Ausserhalb des
+Buendels ist `referenz.html` byte-gleich, `referenz.sevariablen.json` unveraendert.
+Sichtprobe 4b: neun Bilder neu gemacht und einzeln angesehen, nur die bekannte
+Lit-Warnung.
 Sorgfalt: normal.
 Herkunft: war Abschnitt 6, Punkt 7 („noch nicht untersucht"). Untersucht
 2026-09-03; Befund:

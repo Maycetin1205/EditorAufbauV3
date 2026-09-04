@@ -157,11 +157,14 @@ export const tabelleStil = css`
       .koerper > .zeile:focus:not(:focus-visible) { outline: none; }
 
       .zeile.gewaehlt,
-      .koerper > .zeile.gewaehlt:hover {
+      .zeile:focus-visible,
+      .koerper > .zeile.gewaehlt:not([data-status]):hover,
+      .koerper > .zeile:not([data-status]):focus-visible:hover {
         background: var(--se-auswahl);
         box-shadow: inset 3px 0 0 var(--se-accent);
       }
-      .zeile.gewaehlt > div { color: var(--se-ink); }
+      .zeile.gewaehlt > div,
+      .zeile:focus-visible > div { color: var(--se-ink); }
       /* Die Textkante JEDER Zelle — eine Zahl, eine Stelle. Eine Zelle mit
          Eingabefeld gibt ihr Polster an das Feld ab (siehe .tippbar weiter
          unten); dessen eigenes Polster plus sein Rahmen ergeben wieder

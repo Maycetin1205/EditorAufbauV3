@@ -41,6 +41,7 @@ export function bewegeZeilenFokus(von: EventTarget | null, richtung: number): bo
   const ziel = at === -1 ? undefined : zeilen[at + richtung]
   if (!ziel) return false
   ziel.focus()
+  ziel.scrollIntoView?.({ block: 'nearest' })
   return true
 }
 
