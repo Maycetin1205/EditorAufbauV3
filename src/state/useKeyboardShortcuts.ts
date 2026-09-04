@@ -19,7 +19,7 @@ export function useKeyboardShortcuts() {
       if (inEingabefeld(e)) return
       const mod = e.ctrlKey || e.metaKey
 
-      if (!mod && e.key === 'Delete') {
+      if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
         if (editor.selectedId) {
           e.preventDefault()
           loescheBaustein(editor, editor.selectedId)

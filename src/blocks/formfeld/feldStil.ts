@@ -36,6 +36,32 @@ export const feldStil = css`
   }
   select.ctrl { padding: calc(var(--feld-pad-y) - 1px) calc(var(--feld-pad-x) - 2px); }
 
+  .feld.linie .ctrl,
+  :host([data-ff-editor]) .feld.linie .ctrl,
+  :host([data-ff-editor]) .feld.linie .huelle[data-ff-bound] .ctrl,
+  :host([data-ff-editor]) .feld.linie .nachschlag .ctrl {
+    border: none !important;
+    border-bottom: 1.5px solid var(--se-line) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding-left: 2px;
+    padding-right: 2px;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  .feld.linie .ctrl:focus {
+    outline: none !important;
+    border-bottom-color: var(--se-accent) !important;
+    box-shadow: none !important;
+  }
+  .feld.linie [data-ff-bound] {
+    text-decoration: none !important;
+  }
+  .feld.linie .ph {
+    left: 2px;
+    right: 2px;
+  }
+
   .ph {
     position: absolute;
     top: calc(var(--feld-pad-y) + var(--feld-rand));
@@ -111,7 +137,7 @@ export const feldStil = css`
   :host([data-ff-editor]) .ctrl { pointer-events: none; }
   /* Die Lupe bleibt im Editor bedienbar: sie oeffnet das Spalten-Stellen. */
   :host([data-ff-editor]) .ph { pointer-events: auto; cursor: text; }
-  :host([data-ff-editor]) .huelle[data-ff-bound] .ctrl {
+  :host([data-ff-editor]) .feld:not(.linie) .huelle[data-ff-bound] .ctrl {
     border-style: dotted;
     border-color: var(--se-accent);
   }
