@@ -32,6 +32,23 @@ export interface Spalte {
   // zeigt weiter `feld`, und dorthin schreibt auch die Kette.
   fuellFeld?: string
 
+  // Das Suchfenster dieser Zelle (F4 beim Erfassen) — genau wie beim
+  // Formularfeld „nachschlagen" einstellbar (Nutzer-Ansage 2026-09-04).
+  //
+  // LEER heisst Automatik: das Fenster nimmt die Spalten der Tabelle, die auf
+  // dieselbe Hilfsquelle zeigen (fensterSpaltenIn). Das ist der Normalfall und
+  // bleibt es. Erst wer etwas ANDERES sehen will — ein Feld, das die Tabelle
+  // gar nicht fuehrt, andere Titel, andere Reihenfolge — stellt hier ein.
+  //
+  // Die Eintraege sind fluechtige Anzeige: nichts adressiert sie, darum tragen
+  // sie keine Kennung.
+  fensterSpalten?: Spalte[]
+
+  // Groesse des Suchfensters. Ohne Wert rechnet sie sich aus der Spaltenzahl
+  // (fensterBreiteFuer).
+  fensterBreite?: number
+  fensterHoehe?: number
+
   // Diese Spalte wird in der exportierten Maske NICHT gezeichnet — im Editor
   // schon, gedaempft. Sie bleibt eine vollwertige Spalte: die Rechnung rechnet
   // in sie hinein, die Kette schreibt sie ins ERP. Nur sehen soll der
@@ -145,6 +162,20 @@ export function alsBreite(v: unknown): number | undefined {
   return gerundet < SPALTEN_MIN_BREITE ? SPALTEN_MIN_BREITE : gerundet
 }
 
+// Fenstermasse kommen aus dem Baum und aus dem Attribut der exportierten
+// Maske. Unter 120 px ist kein Fenster mehr, ueber 2000 passt es auf keinen
+// Bildschirm — beides waere ein Fenster, das der Bediener nicht mehr
+// zurechtruecken kann.
+const FENSTER_MIN = 120
+const FENSTER_MAX = 2000
+
+function fensterMass(v: unknown): number | undefined {
+  if (v === undefined || v === null || v === '') return undefined
+  const zahl = typeof v === 'number' ? v : Number(v)
+  if (!Number.isFinite(zahl)) return undefined
+  return Math.min(FENSTER_MAX, Math.max(FENSTER_MIN, Math.round(zahl)))
+}
+
 function alsSpalte(x: unknown, index: number): Spalte {
   if (x && typeof x === 'object') {
     const o = x as Record<string, unknown>
@@ -171,6 +202,20 @@ function alsSpalte(x: unknown, index: number): Spalte {
       ...(typeof o.fuellFeld === 'string' && o.fuellFeld.trim() !== ''
         ? { fuellFeld: o.fuellFeld.trim() }
         : {}),
+
+      // Eine leere Liste ist dasselbe wie keine: Automatik. So faellt eine
+      // Spalte, deren Fenster-Spalten der Bauer alle wieder geloescht hat,
+      // von selbst auf die Automatik zurueck, statt ein leeres Fenster zu
+      // zeigen.
+      ...(Array.isArray(o.fensterSpalten) && o.fensterSpalten.length > 0
+        ? { fensterSpalten: o.fensterSpalten.map((s, i) => alsSpalte(s, i)) }
+        : {}),
+
+      ...(fensterMass(o.fensterBreite) === undefined
+        ? {} : { fensterBreite: fensterMass(o.fensterBreite) as number }),
+
+      ...(fensterMass(o.fensterHoehe) === undefined
+        ? {} : { fensterHoehe: fensterMass(o.fensterHoehe) as number }),
     }
   }
 

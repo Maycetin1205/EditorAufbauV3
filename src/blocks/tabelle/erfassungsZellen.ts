@@ -122,6 +122,13 @@ export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalt
   // Nachgeschlagen wird nur in einer verknuepften Zelle — in die eigene
   // Quelle wird getippt (s. eintraege in erfassungsLauf).
   if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []
+
+  // Hat der Bauer das Fenster selbst gestellt, gilt SEINE Liste — sonst die
+  // Automatik darunter (Nutzer-Ansage 2026-09-04). Genau wie beim
+  // Formularfeld: eingestellt schlaegt ausgedacht.
+  const eigene = umfeld.spalten[index]?.fensterSpalten
+  if (eigene !== undefined && eigene.length > 0) return eigene.map((s) => ({ ...s }))
+
   const raus: Spalte[] = []
   for (const spalte of umfeld.spalten) {
     const anderes = zellenzielVon(spalte, umfeld.quelleId)

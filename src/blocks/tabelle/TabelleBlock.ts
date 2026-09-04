@@ -14,13 +14,18 @@ import type {
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
 import { vorschlagStil } from '../shared/vorschlagListe'
-import { schliesseNachschlagenFuer } from '../shared/nachschlagen'
+import {
+  FENSTER_HOEHE,
+  fensterBreiteFuer,
+  schliesseNachschlagenFuer,
+  spaltenStellenTpl,
+} from '../shared/nachschlagen'
 import {
   erfassungsZeileFuer,
   type ErfassungsWirt,
 } from './erfassungsBedienung'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
-import type { ErfassungsUmfeld } from './erfassungsZellen'
+import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZellen'
 import { erfassungStil } from './erfassungStil'
 import {
   leiteZeilenAb,
@@ -345,6 +350,60 @@ export class TabelleBlock extends BasicBlock {
     return coerceSpalten(this.spalten)
   }
 
+  // Welche Spalte gerade ihr Suchfenster einstellt (-1: keine). Der Editor
+  // setzt sie, wenn im Spaltenkopf-Fenster „Suchfenster…" gedrueckt wird
+  // (SPALTEN_BINDUNG.eintragsUnterFenster).
+  @property({ attribute: false }) fensterDialogIndex = -1
+
+  // Der Startpunkt im Einstell-Fenster: die gespeicherte Liste, sonst der
+  // heutige Automatik-Stand als konkrete Zeilen — genauso wie beim
+  // Formularfeld (spaltenEffektiv in FormFeldBlock).
+  private fensterSpaltenEffektiv(index: number): Spalte[] {
+    const eigene = this.spaltenListe()[index]?.fensterSpalten
+    if (eigene !== undefined && eigene.length > 0) return eigene.map((s) => ({ ...s }))
+    return fensterSpaltenIn(this.erfassungsUmfeld(), index)
+  }
+
+  // Schreibt einen Teil in GENAU EINE Spalte zurueck. Ueber `aendere`, damit
+  // die Rechnung mitgeführt wird und ein Undo-Schritt entsteht.
+  private aendereSpalte(index: number, teil: Partial<Spalte>): void {
+    const alt = this.spaltenListe()
+    if (alt[index] === undefined) return
+    this.aendere(alt.map((s, i) => (i === index ? { ...s, ...teil } : s)))
+  }
+
+  private fensterDialogTpl(index: number): TemplateResult {
+    const spalte = this.spaltenListe()[index]
+    const spalten = this.fensterSpaltenEffektiv(index)
+    return spaltenStellenTpl({
+      titel: spalte?.titel ?? '',
+      spalten,
+      breite: spalte?.fensterBreite ?? fensterBreiteFuer(spalten.length),
+      hoehe: spalte?.fensterHoehe ?? FENSTER_HOEHE,
+      onGroesse: (detail) => {
+        const schluessel = detail.achse === 'breite' ? 'fensterBreite' : 'fensterHoehe'
+        // „standard" heisst: zurueck zur Automatik. Der Wert wird geloescht,
+        // nicht auf eine Zahl gesetzt — sonst faende die Spalte nie wieder
+        // zur gerechneten Groesse zurueck.
+        this.aendereSpalte(index, {
+          [schluessel]: detail.geste === 'standard' ? undefined : detail.wert,
+        })
+      },
+      onAendern: (neu) => this.aendereSpalte(index, { fensterSpalten: neu as Spalte[] }),
+      // Die Feldwahl im Fenster geht NICHT nach oben. Beim Formularfeld darf
+      // sie das: dort heisst die Liste `nachschlagSpalten` und die des
+      // Bausteins anders. Hier hiessen beide `spalten` — der Editor haette den
+      // Klick auf die Spalte 2 IM FENSTER als Klick auf die Spalte 2 DER
+      // TABELLE verstanden und das falsche Feld gebunden.
+      //
+      // Solange das nicht getrennt ist, wird im Fenster nur benannt und
+      // geordnet (Doppelklick, +/-). Das Feld dahinter kommt aus der
+      // Tabellenspalte, auf die sich der Eintrag bezieht.
+      onFeldWahl: () => {},
+      onSchliessen: () => { this.fensterDialogIndex = -1 },
+    })
+  }
+
   private get zeilenHoehe(): number {
     return ZEILEN_HOEHE
   }
@@ -616,6 +675,9 @@ export class TabelleBlock extends BasicBlock {
       }, {
         blaettere: (zu) => this._ansicht.blaettere(zu),
       })}
+      ${this.imEditor && this.spaltenListe()[this.fensterDialogIndex] !== undefined
+        ? this.fensterDialogTpl(this.fensterDialogIndex)
+        : nothing}
     </div>`
   }
 }

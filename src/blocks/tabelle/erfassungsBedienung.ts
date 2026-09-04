@@ -61,8 +61,10 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
     speicherTitel: spalte.titel,
     spalten,
     titel: spalte.titel,
-    breite: fensterBreiteFuer(spalten.length),
-    hoehe: FENSTER_HOEHE,
+    // Vom Bauer gestellt schlaegt gerechnet: hat er das Fenster einmal
+    // zurechtgezogen, bleibt es so.
+    breite: spalte.fensterBreite ?? fensterBreiteFuer(spalten.length),
+    hoehe: spalte.fensterHoehe ?? FENSTER_HOEHE,
     eintraege: wirt.lauf.eintraege(umfeld, index),
     rueckFokus: null,
     suchtext: wirt.lauf.wertVon(umfeld, index),

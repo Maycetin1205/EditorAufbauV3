@@ -44,6 +44,21 @@ export interface ListenBindung {
     nach: number,
   ) => Record<string, unknown>
 
+  // Eine weiterfuehrende Einstellung des Eintrags, die der BAUSTEIN selbst
+  // zeichnet, weil sie ein eigenes Fenster braucht (Tabellenspalte: das
+  // Suchfenster ihrer Erfassungszelle — dieselbe Flaeche, die das
+  // Formularfeld ueber die Lupe oeffnet).
+  //
+  // Der Editor setzt dafuer nur `eigenschaft` am Custom-Element auf den Platz
+  // des Eintrags; alles Weitere macht der Baustein. Er ruft KEINE Methode:
+  // eine Eigenschaft ist der Weg, auf dem Lit ohnehin neu zeichnet, und sie
+  // ueberlebt den naechsten Rendervorgang.
+  eintragsUnterFenster?: {
+    label: string
+    hinweis?: string
+    eigenschaft: string
+  }
+
   // CSS-Auswahl (im Schatten-DOM des Bausteins) der Stellen, an denen der
   // Editor die Eintraege anfasst, in Listenreihenfolge. Der Editor legt seine
   // Bedienung darueber (Klick = Feld-Picker, Ziehen = Umordnen); der Baustein
