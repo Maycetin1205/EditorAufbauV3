@@ -10,13 +10,22 @@ des Vorgaengers wurde einzeln nachgemessen. Das Ergebnis steht in Abschnitt 1
 diesem Dokument. Wo "NICHT GELESEN" steht, ist die Datei nicht geoeffnet
 worden — dort gilt kein Urteil, weder gut noch schlecht.
 
-**Umfang der Pruefung, ehrlich.** Gelesen wurden rund 3.500 von 34.888 Zeilen
-(10 %): `relations.ts`, `seAktionen.ts`, `bridge.ts`, `Editor.ts`,
+**Umfang der Pruefung, ehrlich.** Gelesen wurden rund 5.000 von 34.888 Zeilen
+(14 %).
+Ganz gelesen: `relations.ts`, `seAktionen.ts`, `bridge.ts`, `Editor.ts`,
 `persistence.ts`, `history.ts`, `speicherPlaner.ts`, `spaltenAufraeumen.ts`,
 `datenAnschluss.ts`, `providers.tsx`, `notfallkopie.ts`, `blockRegistry.ts`,
-`BasicBlock.ts`, `maskeUebernehmen.ts`, `erfassungsLauf.ts` (teilweise), sowie
-alle im Vorgaengerplan genannten Fundstellen. Dazu maschinelle Vollpruefung
-aller 385 Dateien auf Risikomuster. Abschnitt 6 nennt, was ungelesen blieb.
+`BasicBlock.ts`, `maskeUebernehmen.ts`, `meldungen.ts`, `loescheBaustein.ts`,
+`useKeyboardShortcuts.ts`, `Toolbar.tsx`, `EditorShell.tsx`, `StatusBar.tsx`,
+`Meldungen.tsx`, `Frage.tsx`, `Sidebar.tsx`, `Inspector.tsx`, `Canvas.tsx`,
+`BlockHost.tsx`, `AuswahlLeiste.tsx`, `SeitenLeiste.tsx` (Hauptteil),
+`erfassungsLauf.ts` (teilweise), sowie alle im Vorgaengerplan genannten
+Fundstellen. Dazu maschinelle Vollpruefung aller 385 Dateien auf
+Risikomuster. Abschnitt 6 nennt, was ungelesen blieb.
+
+**Zwei eigene Irrtuemer stehen in diesem Dokument** (N1-Korrektur, N7). Sie
+sind nicht stillschweigend berichtigt, sondern benannt — damit sichtbar
+bleibt, wie sie entstanden sind: aus Zaehlen statt Lesen.
 
 ---
 
@@ -251,7 +260,14 @@ Alt-Datenwanderung), aber die Behauptung "eine einzige" ist schlicht unwahr.
 
 ## 3. NEUE BEFUNDE — vom Vorgaengerplan nicht gefunden
 
-### N1 · Eine geladene Maskendatei loescht die Arbeit ohne Rueckweg — **SCHWERSTER FUND**
+### N1 · Eine geladene Maskendatei loescht die Arbeit ohne Rueckweg
+**KORREKTUR gegenueber der ersten Fassung dieses Dokuments:** Ich hatte
+behauptet, es gebe keine Warnung. **Das war falsch, ich hatte `Toolbar.tsx`
+nicht gelesen.** `Toolbar.tsx:106-114` stellt sehr wohl eine Rueckfrage:
+*"Offene Maske ersetzen? Haben Sie den bisherigen Stand gespeichert? Die
+offene Maske wird unwiderruflich ersetzt."* Der Knopf ist rot (`gefahr: true`).
+Der Fund wird damit **von "schwerster Fund" auf "mittel" zurueckgestuft.**
+
 `Editor.ts:370-377`:
 ```
 ersetzeMaske(tree: BlockTree): void {
@@ -274,8 +290,121 @@ der alte Stand im Browser-Speicher ueberschrieben.
 **Verschaerfend:** `maskeUebernehmen.ts:7-9` ersetzt **zuerst** Datenquellen
 und Relationen, **dann** den Baum. Bricht der letzte Schritt ab, sind
 Bibliotheken schon getauscht — ein halb vertauschter Zustand.
-**Das ist derselbe Krankheitstyp wie F5, nur schlimmer:** dort gibt es
-wenigstens eine Meldung.
+**Was trotzdem bleibt:** Die Warnung sagt "unwiderruflich" — und macht das
+wahr, indem sie die Historie loescht. Es gibt keinen technischen Grund dafuer.
+Eine Notfallkopie (`legeKopieAn`) kostet nichts und ist an vier anderen
+Stellen im Projekt schon eingebaut. Wer im Dialog versehentlich auf
+"Ersetzen" klickt, verliert die Arbeit trotz Warnung.
+
+---
+
+## 3b. BEDIENERSICHT — was im taeglichen Gebrauch nicht zusammenpasst
+
+Diese Funde stammen aus dem Lesen der Bedienoberflaeche (`src/editor/shell/`,
+`sidebar/`, Teile von `canvas/` und `inspector/`). Sie sind keine
+Programmfehler — der Code tut, was dasteht. Sie sind Stellen, an denen die
+Bedienung sich selbst widerspricht.
+
+### B1 · Strg+S loest den Browser-Speicherdialog aus
+`useKeyboardShortcuts.ts:31-46` kennt `z`, `y`, `d` und `Delete`. **`s` fehlt.**
+Der Editor hat einen Menuepunkt "Maske speichern…" — der Handgriff, den jeder
+Mensch dafuer benutzt, wird nicht abgefangen. Strg+S oeffnet stattdessen das
+"Seite speichern unter"-Fenster des Browsers, das mit dem Editor nichts zu tun
+hat.
+**Aufwand: drei Zeilen.** Ein Fall im `switch`, der `handleSpeichern` ruft.
+
+### B2 · Meldungen stapeln sich unbegrenzt und gehen nie von selbst weg
+`meldungen.ts:21-24` haengt jede Meldung an die Liste. Kein Limit, kein
+Selbstschliessen (grep: kein `setTimeout`, kein `slice`). `Meldungen.tsx:11`
+zeichnet **alle** in einer festen Spalte unten rechts
+(`fixed bottom-8 right-3 w-[22rem]`).
+**Wirkung:** Zehn Meldungen = zehn Kaesten uebereinander, jeder muss einzeln
+weggeklickt werden, und sie wachsen aus dem Bild heraus. Es gibt zwar
+`meldungen.leere()`, aber **niemand ruft es** (grep: nur die Definition).
+**Verschaerfend:** Meldungen sind hier kein Randfall. F3, F5, F6 und Schritt
+23-26 dieses Plans fuegen alle **neue** Meldungen hinzu. Der Kanal wird also
+lauter, bevor er aufgeraeumt ist.
+**Empfehlung:** entweder Selbstschliessen nach ~8 s fuer reine Hinweise
+(Fehler bleiben stehen), oder ein "Alle schliessen"-Knopf ab der dritten
+Meldung. **Entscheidung des Besitzers (O7).**
+
+### B3 · Eine Seite loeschen fragt nicht nach — "Alle Bausteine loeschen" schon
+Zwei Loeschwege, zwei verschiedene Disziplinen:
+- `Toolbar.tsx:40-56` "Alle Bausteine loeschen" -> Dialog mit roter
+  Bestaetigung, nennt sogar die Zahl der betroffenen Popup-Seiten.
+- `SeitenLeiste.tsx:57-66` Seite loeschen -> `onClick={() =>
+  ed.removeBlock(p.id)}`, **sofort, ohne Rueckfrage.** Mit der Seite gehen
+  alle Bausteine darauf.
+Der Titel des Knopfes sagt "Seite löschen (Strg+Z stellt sie zurück)" — das
+ist ehrlich, aber es ist die einzige Warnung, und man liest sie nur, wenn man
+mit der Maus stehenbleibt.
+**Dasselbe gilt fuer die Entf-Taste** (`useKeyboardShortcuts.ts:22-28`) und
+das Kreuz in der Auswahlleiste (`AuswahlLeiste.tsx:110-119`): beide loeschen
+sofort. Bei einem einzelnen Baustein ist das vertretbar. Bei einem
+**Container mit Kindern** — einer Tabelle mit 16 Spalten, einem Kanban-Brett
+mit drei Spalten — verschwindet der ganze Teilbaum auf einen Tastendruck.
+**Empfehlung:** Rueckfrage nur, wenn der Baustein Kinder hat, und dann mit
+der Zahl ("Tabelle mit 16 Spalten entfernen?"). Einzelne Bausteine bleiben
+ohne Rueckfrage — sonst nervt es.
+
+### B4 · Escape hebt die Auswahl nicht auf
+`useKeyboardShortcuts.ts` kennt kein `Escape`. Die Auswahl loest man nur durch
+einen Klick auf leere Flaeche (`Canvas.tsx:47`). In einer vollen Maske gibt es
+keine leere Flaeche.
+**Zusammenhang mit W4/Schritt 34:** Der Vorgaengerplan will `Escape` fuer "eine
+Ebene hoch" belegen. Das passt zusammen: `Escape` geht eine Ebene hoch, und
+auf oberster Ebene hebt es die Auswahl auf. **Beides in einem Schritt.**
+
+### B5 · Undo endet nach 50 Schritten, ohne dass es jemand sagt
+`history.ts:8` `HISTORY_LIMIT = 50`, `:22` wirft den aeltesten Eintrag weg.
+Der Knopf wird dabei nicht grau — er bleibt aktiv, bis der Stapel leer ist.
+Der Bediener merkt nur, dass er irgendwann nicht mehr weiter zurueckkommt.
+**Bewertung: geringfuegig.** 50 Schritte sind viel. Wird der Vollstaendigkeit
+halber genannt.
+
+### B6 · Der Editor sagt nirgends, dass die Arbeit nur im Browser liegt
+grep durch `src/editor/**/*.tsx` nach "Browser-Speicher": **kein Treffer.**
+Die Maske lebt in `localStorage` (`persistence.ts:15`). Das heisst: anderer
+Rechner, anderer Browser, geleerter Cache oder Privatmodus -> Arbeit weg.
+Der einzige Ort, an dem das Wort "gespeichert" ueberhaupt vorkommt, ist die
+Rueckfrage beim Laden (`Toolbar.tsx:109`) — und die fragt den Bediener, ob
+**er** gespeichert hat, ohne je gesagt zu haben, dass er das muss.
+**Empfehlung:** ein Satz in der Statusleiste (`StatusBar.tsx`, dort ist Platz)
+oder ein Hinweis beim ersten Start. **Entscheidung des Besitzers (O8).**
+
+### B7 · Zwei Wege, einen Baustein zu loeschen, mit verschiedenem Schutz
+`loescheBaustein.ts:8-14` prueft `isRemoveProtected` und meldet bei der
+Musterkarte einen Klartext. Diesen Weg nehmen die Entf-Taste und das Kreuz in
+der Auswahlleiste.
+`SeitenLeiste.tsx:61` ruft dagegen `ed.removeBlock(p.id)` **direkt** — am
+Schutz vorbei. `Editor.removeBlock:202` prueft zwar selbst
+(`if (this.isRemoveProtected(id)) return`), aber es **meldet nichts**: der
+Klick verpufft wortlos.
+**Wirkung heute: keine** — Seiten sind nie musterkarten-geschuetzt. Aber es
+sind zwei Wege durch dieselbe Tuer, und einer hat kein Schloss. Der naechste,
+der `removeBlock` direkt ruft, erbt das stille Scheitern.
+
+### B8 · Was gut ist — damit es nicht "aufgeraeumt" wird
+Beim Lesen der Bedienoberflaeche ist mir mehr aufgefallen, was **richtig**
+geloest ist, als was fehlt. Das gehoert in die Schutzliste:
+- `Frage.tsx` ersetzt `window.confirm` durch einen eigenen Dialog, und die
+  Begruendung steht im Code: `confirm` haelt den Browser an und kennt nur
+  "OK/Abbrechen". Die Ja-Knoepfe heissen "Löschen", "Ersetzen" — nie "OK".
+- `Toolbar.tsx:41-48` zaehlt beim Loeschen die betroffenen Popup-Seiten und
+  nennt sie im Text. Das ist Sorgfalt, die man selten sieht.
+- `AuswahlLeiste.tsx:39-51` misst gegen den naechsten rollenden Vorfahren, wo
+  Platz ist, und legt die Werkzeugleiste oben / unten / rechts / innen. Der
+  Kommentar nennt den Grund (vorher standen Knoepfe ueber den Spaltentiteln).
+- `Inspector.tsx:117-134` trennt Ja/Nein-Schalter (Kacheln) von Werten
+  (Zeilen) — **nach Form, nicht nach Thema**, mit einem Nutzer-Befund vom
+  2026-08-28 als Begruendung.
+- `Toolbar.tsx:37` fuehrt den Maskennamen als normale Baum-Eigenschaft, damit
+  eine Tipp-Sitzung **ein** Undo-Schritt ist statt zwanzig.
+- `BlockPalette.tsx:69` hat eine Suche. `EditorShell.tsx:76-84` macht den
+  Inspector-Griff mit `role="separator"`, `aria-valuenow` und Pfeiltasten
+  bedienbar.
+Das ist keine Gefaelligkeit: Wer hier "vereinfacht", macht die Bedienung
+schlechter.
 
 ### N2 · Regel 6 wird vom eigenen Export gebrochen — `inset: 0`
 Arbeitsregel 6 des Vorgaengerplans: *"Kein CSS im Export, das Chromium < 87
@@ -616,6 +745,53 @@ Testaufbau davon lebt.
 
 ---
 
+### PHASE 7 · Bedienung des Editors — kleine Schritte, sofort spuerbar
+
+Diese Phase kann **jederzeit dazwischengeschoben** werden. Kein Schritt
+beruehrt den Export, keiner dauert lange, jeder ist einzeln sichtbar. Wenn
+die Reparaturen zu lange dauern, ohne dass sich fuer den Besitzer etwas
+aendert, ist das hier das Gegengewicht.
+
+#### SCHRITT 40 — Strg+S speichert die Maske · B1
+Ein Fall im `switch` von `useKeyboardShortcuts.ts`, der den Speichern-Weg der
+Toolbar ruft. **Drei Zeilen.**
+**Klickprobe:** Strg+S drücken -> die Maskendatei wird angeboten, **nicht**
+der Browser-Dialog.
+**Export:** neutral. **Risiko:** minimal.
+
+#### SCHRITT 41 — Meldungen raeumen sich auf · B2
+**BLOCKIERT bis O7 entschieden ist.**
+Entweder Selbstschliessen fuer Hinweise (Fehler bleiben stehen) oder ein
+"Alle schliessen"-Knopf ab der dritten Meldung. `meldungen.leere()` gibt es
+schon, es ruft nur niemand.
+**Wichtig: vor Schritt 23-26 bauen.** Die stopfen Datenverlust-Loecher, indem
+sie **neue Meldungen** erzeugen — der Kanal wird lauter, bevor er aufgeraeumt
+ist.
+**Export:** neutral.
+
+#### SCHRITT 42 — Rueckfrage, wo etwas Grosses verschwindet · B3 + B7
+**BLOCKIERT bis O9 entschieden ist.**
+Rueckfrage beim Loeschen einer **Seite** (wie bei "Alle Bausteine loeschen")
+und beim Loeschen eines **Containers mit Kindern**, mit der Zahl im Text.
+Einzelne Bausteine bleiben ohne Rueckfrage.
+Dabei B7 mitnehmen: `SeitenLeiste.tsx:61` geht ueber `loescheBaustein` statt
+direkt ueber `removeBlock`, damit beide Wege denselben Schutz und dieselbe
+Meldung haben.
+**Export:** neutral.
+
+#### SCHRITT 43 — Escape: eine Ebene hoch, dann Auswahl aufheben · B4 + W4
+**Zusammen mit Schritt 34.** Auf oberster Ebene hebt `Escape` die Auswahl auf
+— das loest B4 ohne zusaetzlichen Handgriff.
+
+#### SCHRITT 44 — Sagen, wo die Arbeit liegt · B6
+**BLOCKIERT bis O8 entschieden ist.**
+Ein Satz in der Statusleiste (`StatusBar.tsx` hat Platz) oder ein Hinweis
+beim ersten Start: die Maske liegt im Browser-Speicher dieses Rechners; wer
+sie behalten will, speichert sie als Datei.
+**Export:** neutral. **Risiko:** minimal.
+
+---
+
 ## 6. WAS NICHT GELESEN WURDE — hier gilt kein Urteil
 
 Diese Dateien wurden **nicht geoeffnet**. Weder "gut" noch "schlecht" ist
@@ -651,6 +827,9 @@ gefunden. `data.ts`, `wertLader.ts`, `relationLader.ts`, `geholteZeilen.ts`,
 | O4 | Kanban `maxSpalten`: welcher Standard (1-8)? | Schritt 36 |
 | O5 | Stoert der einheitliche Auswahlrahmen ueberhaupt? | Schritt 35 |
 | O6 | Soll `src/softengine/` vollstaendig gegen die SE-Kontrakte geprueft werden? (Aufwand) | Kontrakte anfassen |
+| O7 | Meldungen: sollen Hinweise nach ~8 s von selbst verschwinden (Fehler bleiben), oder lieber ein "Alle schliessen"-Knopf? | Schritt 40 |
+| O8 | Soll der Editor sichtbar sagen, dass die Arbeit nur im Browser liegt? Wo — Statusleiste oder Hinweis beim ersten Start? | Schritt 41 |
+| O9 | Rueckfrage beim Loeschen von Seiten und von Containern mit Kindern — gewuenscht, oder stoert das? | Schritt 42 |
 
 ---
 
