@@ -90,6 +90,15 @@ export abstract class BasicBlock extends LitElement implements BlockComponent {
     return (this.constructor as typeof BasicBlock).customProperties
   }
 
+  // Steht der Baustein auf der Leinwand des Editors oder in der fertigen
+  // Maske? Der Editor haengt `data-ff-editor` an (useLitElement.ts) — und die
+  // Frage danach stand als `hasAttribute('data-ff-editor')` an ueber 40
+  // Stellen ausgeschrieben. Ein Name dafuer, geerbt von jedem Baustein:
+  // Wer die Kennung je umbenennt, aendert eine Zeile statt vierzig.
+  get imEditor(): boolean {
+    return this.hasAttribute('data-ff-editor')
+  }
+
   protected inlineEdit(event: MouseEvent, attr: string): void {
     if (!this.editable) return
     const target = event.currentTarget as HTMLElement | null

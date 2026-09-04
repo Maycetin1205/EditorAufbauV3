@@ -82,7 +82,7 @@ export class ButtonBlock extends BasicBlock {
   override connectedCallback(): void {
     super.connectedCallback()
     connectClickAktionen(this, 'onClick')
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     document.addEventListener(VORMERK_EVENT, this.zaehleVormerkungen)
     this.zaehleVormerkungen()
   }

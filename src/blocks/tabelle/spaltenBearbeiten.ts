@@ -61,11 +61,6 @@ export function ohneSpalte(spalten: readonly Spalte[], index: number): readonly 
   return spalten.filter((_, i) => i !== index)
 }
 
-// Eine Spalte an einen anderen Platz setzen. `nach` = Ziel-Platz in der
-// Liste. Alles Ihre reist im Eintrag mit (Kennung, Titel, Belegfeld,
-// Fuellfeld, Breite); Ketten und Rechnung zeigen auf die KENNUNG und
-// brauchen deshalb kein Nachziehen — genau dafuer gibt es sie (spalten.ts).
-
 // Eine Spalte an einen anderen Platz setzen — rein: dieselbe Liste zurueck
 // heisst „nichts zu tun". Alles Ihre reist im Eintrag mit (Kennung, Titel,
 // Belegfeld, Fuellfeld, Breite); Ketten und Rechnung zeigen auf die KENNUNG

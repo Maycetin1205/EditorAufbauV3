@@ -1,6 +1,6 @@
 import { css, html, nothing, type TemplateResult } from 'lit'
 import { ref } from 'lit/directives/ref.js'
-import { zeilePasst } from './textSuche'
+import { schlichtText, zeilePasst } from './textSuche'
 
 // Die Tipp-Vorschlagsliste. Sie entsteht EINMAL hier und wird geteilt: das
 // Formularfeld „nachschlagen" zeigt sie zuerst (G1), die Erfassungszeile der
@@ -22,19 +22,50 @@ export interface Vorschlag {
 // „bay" fuer Baytril, andere die Nummer (Wellen-Kopf G). Leer getippt = KEINE
 // Liste — bei leerem Feld ist Enter der Weg ins grosse Fenster, und alle
 // Saetze untereinander waeren dort nur im Weg.
+// Umlaute sortieren wie ihr Grundbuchstabe (Ä bei A), Zahlen im Text nach
+// Groesse statt nach Ziffernfolge — sonst stuende Pos. 10 vor Pos. 2.
+const textVergleich = new Intl.Collator('de', { numeric: true, sensitivity: 'base' })
+
+// Wer „Schr" tippt, meint zuerst Schraube und Schraubendreher, nicht
+// Holzschraube (Nutzer-Entscheidung 2026-09-04). Also: erst was VORN
+// anfaengt, dann der Rest — und beides in sich alphabetisch. Vorher stand die
+// Liste in der Reihenfolge da, in der SoftEngine die Saetze liefert.
+// Derselbe Massstab wie die Suche (textSuche.ts): Ä zaehlt als A. Sonst
+// stuende ein Treffer, den die Suche gefunden hat, in der Sortierung ploetzlich
+// nicht mehr „am Anfang".
+function beginntMit(eintrag: Vorschlag, getippt: string): boolean {
+  const t = schlichtText(getippt.trim())
+  if (t === '') return false
+  return schlichtText(eintrag.anzeige.trim()).startsWith(t)
+    || schlichtText(eintrag.wert.trim()).startsWith(t)
+}
+
+export function ordneVorschlaege<T extends Vorschlag>(
+  treffer: readonly T[],
+  getippt: string,
+): T[] {
+  return [...treffer].sort((a, b) => {
+    const va = beginntMit(a, getippt)
+    const vb = beginntMit(b, getippt)
+    if (va !== vb) return va ? -1 : 1
+    return textVergleich.compare(a.anzeige.trim(), b.anzeige.trim())
+  })
+}
+
 export function passendeVorschlaege<T extends Vorschlag>(
   eintraege: readonly T[],
   getippt: string,
   max: number = VORSCHLAEGE_MAX,
 ): T[] {
   if (getippt.trim() === '') return []
+  // ALLE Treffer sammeln und erst DANN kuerzen: wer vorher abbricht, wirft
+  // womoeglich den besten Treffer weg, nur weil er in den Daten weit hinten
+  // steht.
   const treffer: T[] = []
   for (const eintrag of eintraege) {
-    if (!zeilePasst([eintrag.anzeige, eintrag.wert], getippt)) continue
-    treffer.push(eintrag)
-    if (treffer.length >= max) break
+    if (zeilePasst([eintrag.anzeige, eintrag.wert], getippt)) treffer.push(eintrag)
   }
-  return treffer
+  return ordneVorschlaege(treffer, getippt).slice(0, max)
 }
 
 // Die Marke laeuft um: unter dem letzten Treffer geht es oben wieder los.

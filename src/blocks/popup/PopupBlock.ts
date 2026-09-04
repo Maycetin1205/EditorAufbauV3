@@ -80,14 +80,14 @@ export class PopupBlock extends BasicBlock {
   @property({ type: Boolean, reflect: true }) offen = false
 
   private onClose(): void {
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     this.removeAttribute('offen')
   }
 
   protected override updated(geaendert: PropertyValues<this>): void {
     super.updated(geaendert)
     if (!geaendert.has('offen') || !this.offen) return
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
 
     void this.updateComplete.then(() => {
       if (!this.offen || !this.isConnected) return

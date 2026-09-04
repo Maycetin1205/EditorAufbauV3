@@ -187,7 +187,7 @@ export class FormFeldBlock extends BasicBlock {
   }
 
   private onTextClick(): void {
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     this.setzeHaken(!this.angehakt)
   }
 
@@ -247,7 +247,7 @@ export class FormFeldBlock extends BasicBlock {
   }
 
   private onLupe(suchtext = ''): void {
-    if (this.hasAttribute('data-ff-editor')) {
+    if (this.imEditor) {
       // Editor-Weg: dasselbe Fenster, aber zum EINSTELLEN der Spalten.
       this.spaltenDialog = true
       return
@@ -356,7 +356,7 @@ export class FormFeldBlock extends BasicBlock {
     if (this.getippt === null || this.listeZu) return []
     if (coerceFeldTyp(this.fieldType) !== 'nachschlagen') return []
     // Im Editor gibt es keine Daten und keine Liste (Regel 7).
-    if (this.hasAttribute('data-ff-editor')) return []
+    if (this.imEditor) return []
     const ergebnis = holeEintraege({
       el: this,
       quelleId: this.nachschlagQuelle,
@@ -370,7 +370,7 @@ export class FormFeldBlock extends BasicBlock {
   // offen ist — der hoert am document in der Abfang-Phase; ein
   // stopPropagation hier waere zu spaet und wuerde Sicherheit vortaeuschen.
   private onNachschlagTaste(e: KeyboardEvent): void {
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     const anzahl = this.vorschlaege.length
     const folge = tastenFolge(e.key, {
       listeOffen: anzahl > 0,
@@ -429,7 +429,7 @@ export class FormFeldBlock extends BasicBlock {
   }
 
   private onNachschlagVerlassen(): void {
-    if (this.hasAttribute('data-ff-editor')) return
+    if (this.imEditor) return
     const folge = folgeBeimVerlassen(this.getippt ?? this.anzeige, this.anzeige, this.value)
     this.getippt = null
     this.listeZu = false
@@ -498,7 +498,7 @@ export class FormFeldBlock extends BasicBlock {
           ? this.textTpl(`ph ${PH_KLASSE[typ] ?? ''}`.trim(), !leer, wertBindbar && this.valueField !== '')
           : nothing}
       </div>
-      ${this.spaltenDialog && this.hasAttribute('data-ff-editor')
+      ${this.spaltenDialog && this.imEditor
         ? this.spaltenDialogTpl()
         : nothing}
     </div>`
