@@ -4,63 +4,28 @@ import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import { getField } from '../../softengine/data'
 import type { Spalte } from './spalten'
 
-// Was eine Zelle der Erfassungszeile tut, wird ABGELEITET — eingestellt wird
-// daran nichts (Nutzer-Entscheidung 2026-08-18). Zwei Angaben, die es beide
-// schon gibt, sagen alles: die Spalte ist am Kopf an ein Feld gebunden, und wo
-// zwei Quellen zusammengehören, steht das in der Verknüpfung des Bausteins
-// („Woran erkennt man die zusammengehörige Zeile?").
-//
-//   nichts gebunden                → frei tippen (die Menge)
-//   Feld der Tabellen-Quelle       → tippen, Vorschläge aus ihr
-//   Feld einer verknüpften Quelle  → nur die passenden Sätze
-//
-// Dass die Ableitung reicht, zeigt die DATENzeile: sie liest ein verknüpftes
-// Feld längst von allein (seRuntime → macheFeldLeser in shared/fremdeQuellen).
-// Nur die Erfassungszeile wusste davon nichts.
-//
-// Seit dem Füllfeld gibt es ZWEI Felder je Spalte, und hier führt das zweite:
-// `feld` ist, was die gebuchte Zeile zeigt und wohin die Kette schreibt
-// (Belegposition), `fuellFeld` ist, woher der Wert beim Erfassen kommt
-// (Artikelstamm). Beides aus einem Feldcode abzuleiten ging nicht — die
-// Spalte war entweder richtig gebucht oder richtig gefüllt, nie beides.
 export type Zellenart = 'frei' | 'eigen' | 'verknuepft'
 
 export interface Zellenziel {
   art: Zellenart
 
-  // Die Quelle, aus der die Zelle ihren Wert nimmt. Leer bei „frei" — und
-  // solange die Tabelle selbst keine Quelle hat.
   quelleId: string
 
-  // Der reine Feldcode IN dieser Quelle.
   code: string
 }
 
-// Was die Zeile über ihre Umgebung wissen muss. Als Bündel, weil damit
-// derselbe Lauf ohne Browser prüfbar ist: die Schlüsselpaare kommen im Produkt
-// vom Baustein-Attribut, im Test aus einer Zeile Testdaten.
 export interface ErfassungsUmfeld {
   spalten: readonly Spalte[]
 
-  // Die EINE Quelle der Tabelle.
   quelleId: string
 
-  // Die Schlüsselpaare zu einer verknüpften Quelle. Leer = keine Verknüpfung
-  // eingestellt; dann wird nicht eingeschränkt.
   paareZu: (quelleId: string) => readonly SchluesselPaar[]
 
-  // Die Quelle, mit der die Paare dieser Quelle verbinden. Leer = die
-  // Hauptquelle der Tabelle. Damit haengt nicht mehr alles sternfoermig an
-  // der ersten Quelle: 2 darf an 3 haengen, 3 an 4.
   partnerVon: (quelleId: string) => string
 
-  // Die Rechnung der Erfassungszeile (Attribut `rechnung` der Tabelle).
-  // Optional, damit Tests ohne sie auskommen — fehlend heisst: keine.
   rechnung?: Rechnung | null
 }
 
-// Welche Spalte ein Rechnungs-Platz meint: die Referenz ist deren `feld` —
-// der stabile Technikwert; Titel sind frei umbenennbar, Plaetze verschieben sich.
 export function zellenzielVon(
   spalte: Spalte | undefined,
   tabellenQuelleId: string,
@@ -77,7 +42,6 @@ export function zielIn(umfeld: ErfassungsUmfeld, index: number): Zellenziel {
   return zellenzielVon(umfeld.spalten[index], umfeld.quelleId)
 }
 
-// Alle verknüpften Quellen dieser Zeile, jede einmal.
 export function verknuepfteQuellenIn(umfeld: ErfassungsUmfeld): string[] {
   const raus: string[] = []
   for (const spalte of umfeld.spalten) {
@@ -88,10 +52,6 @@ export function verknuepfteQuellenIn(umfeld: ErfassungsUmfeld): string[] {
   return raus
 }
 
-// Was die Vorschlagsliste als Anzeige zeigt und mitdurchsucht: die erste
-// ANDERE Spalte DERSELBEN Quelle. Damit findet „bay" den Baytril, ohne dass
-// jemand ein zweites Feld einstellt — in einer Belegerfassung ist das die
-// Bezeichnung. Ohne solche Spalte bleibt es beim Wert selbst.
 export function anzeigeSpalteIn(
   umfeld: ErfassungsUmfeld,
   index: number,
@@ -109,39 +69,19 @@ export function anzeigeSpalteIn(
   return undefined
 }
 
-// Die Spalten des grossen Fensters: ALLE Spalten der Tabelle, die aus
-// derselben Quelle fuellen — in der Reihenfolge, in der sie in der Tabelle
-// stehen. Vorher waren es genau zwei (Anzeige und Wert); wer aus einem
-// Artikelstamm auswaehlt, sah damit Nummer und Bezeichnung, aber nicht die
-// Warengruppe oder den Preis, die in seiner Tabelle daneben stehen.
-//
-// Die BREITE der Spalte reist NICHT mit: das Fenster ist schmaler als die
-// Tabelle, und eine dort gezogene Breite gehoert zur Tabelle, nicht zu ihm.
 export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalte[] {
   const ziel = zielIn(umfeld, index)
-  // Nachgeschlagen wird nur in einer verknuepften Zelle — in die eigene
-  // Quelle wird getippt (s. eintraege in erfassungsLauf).
   if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []
   const raus: Spalte[] = []
   for (const spalte of umfeld.spalten) {
     const anderes = zellenzielVon(spalte, umfeld.quelleId)
     if (anderes.quelleId !== ziel.quelleId || anderes.code === '') continue
     if (raus.some((s) => s.feld === anderes.code)) continue
-    // Fenster-Spalten sind fluechtige Anzeige — nichts adressiert sie.
     raus.push({ kennung: '', titel: spalte.titel, feld: anderes.code })
   }
   return raus
 }
 
-// Eingeschränkt wird nach demselben Muster wie die Auswahl-Folge
-// (zeilenNachAuswahl in blocks/shared/auswahl.ts): alle Schlüsselpaare müssen
-// stimmen (UND). Den Wert eines Schlüssels liefert der Aufrufer — am Satz der
-// Tabellen-Quelle, oder (G3c) abgeleitet aus den schon gewählten verknüpften
-// Sätzen, wenn es den Satz der Tabellen-Quelle beim Erfassen noch nicht gibt.
-// `undefined` heißt UNBEKANNT: ein unbekannter Schlüssel schränkt nicht ein,
-// der Bediener darf die Spalten in beliebiger Reihenfolge füllen. Ein leerer
-// String dagegen ist BEKANNT-LEER und trifft nichts — kein Partner heißt
-// leere Zelle, nie eine verschwundene Zeile (feste Zusage in CLAUDE.md).
 export function passendeSaetze(
   paare: readonly SchluesselPaar[],
   schluesselWert: (feld: string) => string | undefined,

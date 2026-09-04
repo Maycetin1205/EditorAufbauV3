@@ -1,11 +1,5 @@
 import { alsZahl } from './sortierung'
 
-// Die Summe unter der Tabelle: gezaehlt wird, was sich als Zahl lesen laesst
-// — der ERP liefert dieselbe Zahl in drei Schreibweisen ("1999.00",
-// "1999,00", "1.999,00"), gelesen wird sie mit demselben Parser, mit dem die
-// Tabelle sortiert. Werte, die keine Zahl sind, zaehlen NICHT mit: seit die
-// Spalten keine Darstellung mehr tragen, darf jede Spalte summiert werden,
-// und in einer Textspalte waere jede andere Rechnung geraten.
 export function summeText(werte: readonly string[], min: number, max: number): string {
   let summe = 0
   let gezaehlt = 0

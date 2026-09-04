@@ -13,18 +13,11 @@ import { spaltenRaster, type Spalte } from './spalten'
 import { passendeIndizes, zeigtLeerzustand } from './suche'
 
 export interface AnsichtFrage {
-  // Die VOLLE Spaltenliste: Werte, Suche, Sortierung und Summen haengen an
-  // ihrem Platz (s. spalten.ts).
   spalten: readonly Spalte[]
 
-  // Die GEZEICHNETEN Spalten und ihr Platz in der vollen Liste — nur das
-  // Raster (cols) haengt daran. Fehlt beides, ist alles gezeichnet.
   gezeichnet?: readonly Spalte[]
   plaetze?: readonly number[]
 
-  // Die gerade GEZOGENE Breite einer Spalte — sie schlaegt die gespeicherte.
-  // Im Editor gilt sie nur waehrend des Zugs, in der exportierten Maske so
-  // lange, bis der Bediener die Seite neu laedt.
   breiteVon?: (index: number) => number | undefined
 
   hatQuelle: boolean
@@ -39,24 +32,14 @@ export interface AnsichtFrage {
 
   gemessen: Zeilenmass | null
 
-  // Die Erfassungszeile belegt eine der gemessenen Zeilen: ohne das rutscht
-  // die letzte Datenzeile aus dem Rumpf und der Rumpf scrollt.
   erfassungAn: boolean
 
-  // Erfasste, noch nicht geschriebene Zeilen (G4) belegen genauso je einen
-  // Platz zwischen den Daten und der Erfassungszeile.
   erfassteAnzahl: number
 
-  // Was in einer Zelle STEHT — vorgemerkte Aenderung eingerechnet. Die
-  // Summe muss zeigen, was der Bediener sieht: sonst stuende unter einer
-  // geaenderten Menge weiter die alte Summe (so rechnet auch die Handmaske
-  // Rahmen00001 V11, die die geaenderte Menge in die Summe nimmt).
+  // Zellwert samt vorgemerkter Aenderung: die Handmaske Rahmen00001 V11 nimmt
+  // die geaenderte Menge in die Summe.
   wertVon: (rohIndex: number, spalte: number) => string
 
-  // Blaettern: lange Listen in Seiten schneiden. Aus = rollen — alle Treffer
-  // untereinander, der Rumpf rollt. Die Messung bleibt in BEIDEN Faellen
-  // noetig: sie sagt, wie viele Zeilen passen, und damit, wie viel Lineal
-  // unter der letzten Zeile noch zu zeichnen ist.
   blaettert: boolean
 }
 
@@ -77,9 +60,8 @@ export interface TabelleAnsicht {
 
   linealTakte: number | null
 
-  // Was unter der Tabelle steht. Gezaehlt wird ueber ALLE Treffer, nicht nur
-  // ueber die sichtbare Seite: die Summe gehoert zum Filterstand, nicht zum
-  // Blaetterstand (so rechnet auch die Handmaske Rahmen00001 V11).
+  // Ueber ALLE Treffer gezaehlt, nicht nur ueber die sichtbare Seite (so
+  // rechnet die Handmaske Rahmen00001 V11).
   summen: readonly { titel: string; text: string }[]
 }
 

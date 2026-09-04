@@ -4,11 +4,6 @@ import { zeilenIndexVon } from './seRuntime'
 import type { Spalte } from './spalten'
 import type { LaufStand, ZeilenZeichen } from './zeilenStatus'
 
-// Was an einer GEBUCHTEN Zeile passiert: die Vormerkungen (geaendert, weg)
-// und die Bedienung der aenderbaren Zellen. Getrennt vom Baustein wie die
-// Erfassungszeile (erfassungsBedienung.ts), damit der unter seinem
-// Zeilen-Deckel bleibt — mehr als diesen Wirt sieht die Bedienung von ihm
-// nicht.
 export interface ZeilenWirt {
   baustein: HTMLElement
 

@@ -57,10 +57,6 @@ export interface AufteilungFrage {
   platzhalterZeilen: number
 }
 
-// Rollen statt Blaettern: alle Treffer stehen untereinander im Rumpf, der
-// Rumpf rollt. Es gibt genau EINE Seite — die Fusszeile zeigt dann keine
-// Blaetter-Knoepfe. Ohne Quelle bleibt es bei den Platzhalter-Strichen, damit
-// der Editor keine Daten erfindet.
 export function rollAufteilung({
   sichtbar,
   hatQuelle,

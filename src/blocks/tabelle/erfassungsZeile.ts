@@ -4,39 +4,22 @@ import { vorschlagListeTpl, type Vorschlag } from '../shared/vorschlagListe'
 import { zellenzielVon } from './erfassungsZellen'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 
-// Die nächste freie Zeile der Tabelle. Sie ist eine FÄHIGKEIT der Tabelle und
-// kein eigener Baustein: ohne den Schalter gibt es sie nicht, und eine Tabelle
-// ohne sie exportiert wie zuvor. Einzustellen ist an ihr nichts — was eine
-// Zelle tut, leitet erfassungsZellen aus der Bindung der Spalte ab.
-
 export interface ErfassungsLage {
-  // Die GEZEICHNETEN Spalten; `plaetze[j]` ist der Platz der j-ten in der
-  // vollen Liste. Der Lauf haelt seine Werte an der VOLLEN Liste (dorthin
-  // rechnet die Rechnung, von dort schreibt die Kette) — gezeichnet wird in
-  // der Maske ohne die versteckten. Siehe spalten.ts, spaltenSicht.
   spalten: readonly Spalte[]
   plaetze: readonly number[]
 
-  // Die EINE Quelle der Tabelle — sie entscheidet, ob das Feld einer Spalte
-  // ihr eigenes ist oder das einer verknüpften Quelle.
   quelleId: string
 
   cols: Readonly<Record<string, string>>
 
   imEditor: boolean
 
-  // Was in der Zelle steht (Laufzeit).
   wert: (index: number) => string
 
-  // Die offene Vorschlagsliste gehört zu GENAU EINER Zelle.
   tippSpalte: number
   vorschlaege: readonly Vorschlag[]
   marke: number
 
-  // Nach OBEN aufklappen. Der Rumpf schneidet ab, was aus ihm herausragt:
-  // steht die Zeile ganz unten, wäre eine Liste nach unten unerreichbar.
-  // Ist unter ihr noch Platz (leere Tabelle → Zeile 1 ganz oben), klappt sie
-  // nach unten — dorthin wächst auch der Rollbereich des Rumpfes mit.
   listeNachOben: boolean
 }
 
@@ -55,12 +38,6 @@ function eingabe(
   index: number,
   platz: number,
 ): TemplateResult {
-  // Der Spaltenname steht blass IN der leeren Zelle (G5): wer reinklickt,
-  // sieht sofort, was reingehört — der Klarname ist die Vorschau.
-  //
-  // `data-spalte` traegt den VOLLEN Platz: daran findet der Baustein die
-  // Zelle wieder, wenn er den Fokus setzt (fokussiereErfassungsZelle) — die
-  // Zaehlung der gezeichneten Felder stimmte mit versteckten Spalten nicht.
   return html`<input
     class="erf-eingabe"
     type="text"
@@ -73,10 +50,9 @@ function eingabe(
   />`
 }
 
-// Eine gebundene Zelle kann eine Vorschlagsliste zeigen und braucht dafür
-// einen Halter; eine freie Zelle ist nur ein Eingabefeld. Eine Lupe hat hier
-// keine: das große Fenster öffnet F4 oder Alt+Pfeil-runter (Enter springt
-// im leeren Feld weiter, Nutzer 2026-09-01). Die Lupe am Formularfeld bleibt.
+// Keine Lupe in der Erfassungszelle: das große Fenster öffnet F4 oder
+// Alt+Pfeil-runter, Enter springt im leeren Feld weiter (Nutzer 2026-09-01).
+// Die Lupe am Formularfeld bleibt.
 function laufzeitZelle(
   lage: ErfassungsLage,
   tun: ErfassungsHandeln,
@@ -107,8 +83,6 @@ export function erfassungsZeileTpl(
 ): TemplateResult {
   return html`<div class="zeile erfassung" role="row" style=${styleMap(lage.cols)}>
     ${lage.spalten.map((spalte, i) => {
-      // Im Editor gibt es keine Daten und keine Eingaben, sondern Striche —
-      // der Editor erfindet nie Daten (Regel 7).
       if (lage.imEditor) {
         return html`<div
           class=${spalte.versteckt === true ? 'versteckt' : nothing}

@@ -31,33 +31,13 @@ import {
   type ErfassungsUmfeld,
 } from './erfassungsZellen'
 
-// Der Tastenentscheid der Erfassungszeile: die geteilten Folgen der
-// Vorschlagsliste plus die zwei, die nur die Zeile kennt — weiterspringen
-// (G3b) und die zweite Escape-Stufe.
 export type ErfassungsTaste = TastenFolge | 'weiter' | 'leeren' | 'liste-auf'
 
-// Der Stand EINER Erfassungszeile zur Laufzeit: was in den Zellen steht,
-// welcher Satz je Quelle gewählt wurde, welche Zelle gerade tippt. Als eigene
-// Klasse, weil er sich so ohne Browser prüfen lässt — und weil der
-// Tabellen-Baustein sonst über seinen Zeilen-Deckel liefe.
-//
-// Die Zeile schreibt NICHT ins ERP und veröffentlicht ihre Wahl NICHT als
-// globale Auswahl: die Geber-Kennung der Tabelle gehört ihrer Zeilenauswahl,
-// und ein Baustein kann heute Geber für genau EINE Quelle sein. Geschrieben
-// wird erst in G4 über einen Knopf.
 export class ErfassungsLauf {
-  // Getippt je Spalte. Eine Map und kein Array: sie bleibt richtig, wenn
-  // Spalten dazukommen oder wegfallen.
   private getippt = new Map<number, string>()
 
-  // Der gewählte Satz JE QUELLE. Eine Zeile kann mehrere tragen: den Artikel
-  // aus der Tabellen-Quelle UND die Tierart aus der verknüpften.
   private gewaehlt = new Map<string, unknown>()
 
-  // Welche Wahl der Bediener SELBST getroffen hat (Übernahme per Liste oder
-  // Fenster). Nur Hand-Wahlen liefern Schlüsselwerte für andere Quellen —
-  // sonst schränkte eine selbstgefüllte Tierart die Artikelwahl ein, aus der
-  // sie gerade erst abgeleitet wurde (Kreis).
   private vonHand = new Set<string>()
 
   private _tippSpalte = -1
@@ -66,19 +46,10 @@ export class ErfassungsLauf {
 
   private _listeZu = false
 
-  // Die Spalte, deren Liste per Pfeil-runter aufgemacht wurde. Ohne das gibt
-  // es die Liste nur zum Getippten — an eine Zelle, die man erst ansieht,
-  // kaeme der Bediener nie ohne zu tippen.
   private _listeAuf = -1
 
-  // Der Bediener hat selbst in der Liste ausgesucht (Pfeiltasten oder Liste
-  // aufgemacht). Dann schlaegt seine Wahl die Trefferzahl — sonst risse ihm
-  // Enter die Liste unter der Marke weg und machte das Fenster auf.
   private _markeVonHand = false
 
-  // Der EINE gerechnete Platz der Rechnung (RECHNUNG-BELEGERFASSUNG.md).
-  // Getrennt vom Getippten: er rechnet sich neu, sobald ein gegebener Wert
-  // sich aendert — Getipptes tut das nie.
   private _gerechnet: { index: number; wert: string } | null = null
 
   private _vorschlaege: Eintrag[] = []
@@ -95,10 +66,6 @@ export class ErfassungsLauf {
     return this._vorschlaege
   }
 
-  // Was in der Zelle steht: das Getippte, solange es da ist — sonst der Wert
-  // aus dem gewählten Satz ihrer Quelle. Eine freie Zelle hat nur Getipptes.
-  // Der gerechnete Platz zeigt sein Ergebnis; leert der Bediener ihn, ist er
-  // wieder Lücke und zeigt das nächste Ergebnis (Getipptes schlägt Gerechnetes).
   wertVon(umfeld: ErfassungsUmfeld, index: number): string {
     const getippt = this.getippt.get(index)
     if (getippt !== undefined && getippt !== '') return getippt
@@ -110,9 +77,6 @@ export class ErfassungsLauf {
     return satz === undefined ? '' : getField(satz, ziel.code)
   }
 
-  // Der GEGEBENE Zahlwert eines Platzes — ohne das Gerechnete, sonst bliebe
-  // die Lücke nach dem ersten Ergebnis für immer gefüllt. Getipptes wird
-  // STRENG gelesen (raten wäre Faktor 1000), Quellen-Werte tolerant.
   private gegebeneZahl(umfeld: ErfassungsUmfeld, index: number): PlatzWert {
     const getippt = this.getippt.get(index)
     if (getippt !== undefined) {
@@ -130,8 +94,6 @@ export class ErfassungsLauf {
     return zahl === null ? 'fehler' : zahl
   }
 
-  // Rechnet den einen leeren Platz — oder nichts. Läuft vor jedem Zeichnen
-  // (aktualisiereVorschlaege) und vor jedem Einfrieren der Zeile.
   rechne(umfeld: ErfassungsUmfeld): void {
     this._gerechnet = null
     const r = umfeld.rechnung
@@ -161,9 +123,6 @@ export class ErfassungsLauf {
     this._listeZu = false
   }
 
-  // Der Sprung in eine andere Zelle räumt die offene Liste ab; das Getippte
-  // bleibt stehen, damit ein halb getippter Wert nicht beim Fokuswechsel
-  // verschwindet.
   verlasse(index: number): void {
     if (this._tippSpalte !== index) return
     this._tippSpalte = -1
@@ -175,30 +134,19 @@ export class ErfassungsLauf {
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
     const listeOffen = this._tippSpalte === index && this._vorschlaege.length > 0
-    // Tab ist die Weiter-Taste — IMMER (Nutzer 2026-09-01). Eine eindeutige
-    // Wahl (Marke von Hand oder genau ein Treffer) nimmt sie im Vorbeigehen
-    // mit; bei mehreren Treffern springt sie einfach weiter. Das große
-    // Fenster öffnen nur Enter und F4, nie die Weiter-Taste — vorher riss
-    // Tab dem Bediener mitten im Durchtabben ein Fenster auf.
+    // Tab ist die Weiter-Taste — IMMER (Nutzer 2026-09-01); das grosse Fenster
+    // oeffnen nur Enter und F4, nie Tab.
     if (taste === 'Tab') {
       if (listeOffen && (this._markeVonHand || this._vorschlaege.length === 1)) taste = 'Enter'
       else return 'weiter'
     }
-    // F4 (und Alt+Pfeil-runter, vom Aufrufer darauf abgebildet) macht das
-    // grosse Fenster IMMER auf. Ohne das kam man nur an ein LEERES Feld
-    // heran: stand schon etwas drin, half nur noch die Maus auf der Lupe.
     if (taste === 'F4') {
       if (zielIn(umfeld, index).art === 'frei') return 'nichts'
       return this.eintraege(umfeld, index).length === 0 ? 'nichts' : 'fenster'
     }
     const wert = this.wertVon(umfeld, index)
-    // Escape-Stufe 2: keine Liste (mehr) offen → die Zelle leert sich.
     if (taste === 'Escape' && !listeOffen) return wert === '' ? 'nichts' : 'leeren'
-    // Eine freie Zelle hat keine Liste und kein Fenster; Enter geht weiter.
     if (zielIn(umfeld, index).art === 'frei') return taste === 'Enter' ? 'weiter' : 'nichts'
-    // Pfeil-runter in eine geschlossene Liste macht sie auf — die Gewohnheit
-    // jedes Auswahlfeldes. Vorher passierte hier nichts. Nur dort, wo es
-    // auch etwas aufzumachen gibt: die eigene Quelle bietet nichts an.
     if (taste === 'ArrowDown' && !listeOffen) {
       return zielIn(umfeld, index).art === 'verknuepft' ? 'liste-auf' : 'nichts'
     }
@@ -214,19 +162,9 @@ export class ErfassungsLauf {
       this._markeVonHand = true
     }
     else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
-    // Enter im LEEREN Feld springt weiter (Nutzer 2026-09-01): leer lassen
-    // ist in der Erfassungszeile eine Aussage — die Lücke rechnet die
-    // Rechnung. Das große Fenster öffnet hier F4 oder Alt+Pfeil-runter.
+    // Enter im LEEREN Feld springt weiter (Nutzer 2026-09-01).
     else if (folge === 'fenster' && wert === '') return 'weiter'
-    // Kein einziger möglicher Satz (kein Partner): Enter bleibt nicht hängen.
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
-    // Auf einem gewählten Wert geht Enter weiter. Getipptes hält dagegen an
-    // (G1: sonst rauscht der Fluss über den Tippfehler) — aber NUR dort, wo es
-    // überhaupt etwas zu treffen gibt, also in einer verknüpften Zelle. Eine
-    // Zelle der eigenen Quelle hat keine Liste und keinen Treffer: dort IST
-    // das Getippte der Wert. Vorher tat Enter nach dem Tippen genau dort gar
-    // nichts — in einer Belegerfassung ist das die Mengen-Spalte, und der
-    // Fluss brach an ihr jedes Mal ab.
     else if (folge === 'nichts' && taste === 'Enter' && wert !== '') {
       const getippt = this.getippt.get(index) !== undefined
       if (!getippt || zielIn(umfeld, index).art !== 'verknuepft') return 'weiter'
@@ -234,8 +172,6 @@ export class ErfassungsLauf {
     return folge
   }
 
-  // Pfeil-runter: die Zelle wird zur tippenden, und ihre Liste zeigt alles,
-  // was sie hergibt — auch ohne ein einziges getipptes Zeichen.
   oeffneListe(index: number): void {
     this._tippSpalte = index
     this._listeZu = false
@@ -244,23 +180,14 @@ export class ErfassungsLauf {
     this._markeVonHand = true
   }
 
-  // Die nächste Zelle, in der noch nichts steht. Selbstgefülltes wird damit
-  // automatisch übersprungen (es ist nicht leer). -1 = rechts ist nichts
-  // Leeres mehr; was dann passiert, entscheidet der Aufrufer (ab G4: Zeile
-  // erfasst).
   naechsteLeere(umfeld: ErfassungsUmfeld, ab: number): number {
     for (let i = ab + 1; i < umfeld.spalten.length; i++) {
-      // Eine in der Maske ausgeblendete Spalte hat dort keine Zelle: der
-      // Fokus liefe ins Leere. Sie wird gefuellt, aber nicht angesteuert —
-      // von der Rechnung oder gar nicht.
       if (umfeld.spalten[i]?.versteckt === true) continue
       if (this.wertVon(umfeld, i) === '') return i
     }
     return -1
   }
 
-  // Der naechste bzw. vorige PLATZ, den der Bediener ansteuern kann:
-  // ausgeblendete Spalten haben in der Maske keine Zelle. -1 = keiner mehr.
   nachbarPlatz(umfeld: ErfassungsUmfeld, ab: number, richtung: 1 | -1): number {
     for (let i = ab + richtung; i >= 0 && i < umfeld.spalten.length; i += richtung) {
       if (umfeld.spalten[i]?.versteckt !== true) return i
@@ -268,10 +195,6 @@ export class ErfassungsLauf {
     return -1
   }
 
-  // Escape-Stufe 2: die Zelle wird wirklich leer. Bei einer gebundenen Zelle
-  // muss dafür der gewählte Satz ihrer Quelle gehen — sonst stünde der Wert
-  // beim nächsten Rendern wieder da. Mit ihm leeren sich die Schwesterzellen
-  // derselben Quelle; das ist gewollt: ein Satz gilt immer ganz.
   leere(umfeld: ErfassungsUmfeld, index: number): void {
     this.getippt.delete(index)
     const ziel = zielIn(umfeld, index)
@@ -283,17 +206,10 @@ export class ErfassungsLauf {
     this._markeVonHand = false
   }
 
-  // Die Maus faehrt ueber einen Eintrag. Das ist noch keine Wahl — wer nur
-  // hinsieht, soll mit Enter trotzdem das Fenster bekommen.
   setzeMarke(marke: number): void {
     this._marke = marke
   }
 
-  // Die Übernahme: der Satz gilt für alle Zellen DIESER Quelle, sie zeigen ihn
-  // sofort. Ein Satz der Tabellen-Quelle ist der Anker — die verknüpften
-  // Sätze hingen an ihm und werden gelöst. Danach gleicht sich die Zeile ab
-  // (G3c): jede Wahl kann Abhängiges neu bestimmen, auch die Wahl in einer
-  // verknüpften Spalte.
   uebernimm(umfeld: ErfassungsUmfeld, index: number, satz: unknown): void {
     const ziel = zielIn(umfeld, index)
     if (ziel.quelleId === '') return
@@ -311,8 +227,6 @@ export class ErfassungsLauf {
     this._listeZu = false
   }
 
-  // Ein Satz gilt immer für die ganze Quelle. Das Getippte ihrer Zellen fällt
-  // dabei weg: sonst stünde dort das Suchwort und nicht der übernommene Wert.
   private setze(umfeld: ErfassungsUmfeld, quelleId: string, satz: unknown): void {
     if (satz === undefined) {
       this.gewaehlt.delete(quelleId)

@@ -23,9 +23,6 @@ function spaltenVon(el: HTMLElement): Spalte[] {
   return tryCoerceSpalten(el.getAttribute('spalten') ?? '')
 }
 
-// Die Satznummer der angeklickten Zeile — was die Kette als {PINDEX}
-// weitergibt. Steht hier, weil nur die Laufzeit-Seite die Quellenliste
-// kennt; ohne angeschlossene Quelle (geliefertes Fenster) ist sie leer.
 export function zeilenIndexVon(el: HTMLElement, rohzeile: unknown): string {
   const source = findRuntimeDataSource(
     seGlobal().FF_DATA_SOURCES,
@@ -34,9 +31,6 @@ export function zeilenIndexVon(el: HTMLElement, rohzeile: unknown): string {
   return source ? satzIndexVon(source, rohzeile) : ''
 }
 
-// Traegt die Quelle dieser Tabelle eine Satznummer? Nur dann laesst sich
-// eine geaenderte Zeile spaeter wiederfinden — und nur dann bietet die
-// Tabelle das Aendern in der Zeile ueberhaupt an.
 export function hatSatzNummer(el: HTMLElement): boolean {
   const source = findRuntimeDataSource(
     seGlobal().FF_DATA_SOURCES,
@@ -46,9 +40,8 @@ export function hatSatzNummer(el: HTMLElement): boolean {
 }
 
 function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
-  // Der Beweis, dass der neue Stand da ist. Erst jetzt duerfen die
-  // hinausgeschickten Erfassungszeilen weg — vorher waere es ein Verwerfen
-  // auf Verdacht (s. ZeilenStatus 'geschrieben').
+  // Erst die Lieferung von SoftEngine beweist den neuen Stand; nur dann
+  // duerfen die hinausgeschickten Erfassungszeilen weg (Status 'geschrieben').
   if (lieferung) el.vergissGeschriebene()
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {

@@ -2,30 +2,10 @@ import { html, nothing, type TemplateResult } from 'lit'
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import type { Spalte } from './spalten'
 
-// Die Spaltenwahl des BEDIENERS: in der fertigen Maske raeumt er sich seine
-// Ansicht selbst auf (Rechtsklick auf eine Spaltenueberschrift) und holt
-// Spalten genauso wieder zurueck.
-//
-// Das ist etwas anderes als `Spalte.versteckt`: DAS ist die Entscheidung des
-// Masken-Bauers (eine Hilfsspalte, die nur die Rechnung braucht) und steht
-// hier gar nicht zur Wahl. Der Bediener sieht nur, was der Bauer ihm gezeigt
-// hat, und darf davon wegnehmen.
-//
-// Und wie beim Bauer gilt: weggenommen heisst NUR nicht gezeichnet. Werte,
-// Ketten-Parameter und Rechnung haengen weiter am Platz in der vollen Liste
-// (s. Spalten-Kontrakt in spalten.ts).
-
 const VORSATZ = 'ff_spaltenwahl_'
 
-// Faellt der Browser-Speicher aus (SoftEngines eingebauter Browser ist alt,
-// und ob er ihn hergibt, ist unbelegt), haelt die Wahl wenigstens die
-// Sitzung. Nichts scheitert still, aber auch nichts laut: eine Ansicht ist
-// keine Nachricht wert.
 const imGedaechtnis = new Map<string, string[]>()
 
-// Je Maske und Tabelle eine eigene Wahl. Die Baustein-Kennung traegt nicht
-// jede Tabelle (nur die adressierbaren), darum der Platz im Dokument als
-// Rueckfall.
 export function wahlSchluessel(el: HTMLElement): string {
   const titel = typeof document === 'undefined' ? '' : document.title
   const id = el.getAttribute(ACTION_VALUE_ID_ATTR)
@@ -58,13 +38,10 @@ export function sichereWahl(schluessel: string, weg: ReadonlySet<string>): void 
 }
 
 export interface SpaltenWahlLage {
-  // Die Spalten, die der BAUER zeigt — nur ueber die entscheidet der
-  // Bediener. `kennung` ist der dauerhafte Ausweis (spalten.ts).
   waehlbar: readonly Spalte[]
 
   weg: ReadonlySet<string>
 
-  // Wo das Fenster steht, gemessen an der Tabelle.
   links: number
   oben: number
 }
@@ -93,8 +70,6 @@ export function spaltenWahlTpl(
       <p class="sw-titel">Spalten</p>
       ${lage.waehlbar.map((s) => {
         const an = !lage.weg.has(s.kennung)
-        // Die letzte sichtbare Spalte laesst sich nicht auch noch wegnehmen:
-        // eine Tabelle ohne jede Spur sieht kaputt aus.
         const letzte = an && sichtbare <= 1
         return html`<button
           class=${an ? 'sw-zeile an' : 'sw-zeile'}

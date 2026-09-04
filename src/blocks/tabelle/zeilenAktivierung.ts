@@ -27,10 +27,6 @@ export function fokussierterRohIndex(wurzel: ShadowRoot | null): number | null |
   return roh === null || roh === '' ? null : Number(roh)
 }
 
-// Pfeil hoch/runter bewegen den Fokus von Datenzeile zu Datenzeile. Ohne das
-// kam man nur mit Tab durch die Liste — im Nachschlage-Fenster hiess das
-// praktisch gar nicht. Platzhalter-, Erfassungs- und erfasste Zeilen tragen
-// kein data-ff-roh und fallen damit von selbst heraus.
 export function bewegeZeilenFokus(von: EventTarget | null, richtung: number): boolean {
   if (!(von instanceof HTMLElement)) return false
   const zeile = von.closest<HTMLElement>('.zeile')
