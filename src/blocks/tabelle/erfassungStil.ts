@@ -1,8 +1,5 @@
 import { css } from 'lit'
 
-// Die Erfassungszeile sitzt unter den Daten und traegt dieselbe Grid-Form wie
-// eine Datenzeile (.zeile); eigen ist nur, dass sie EINGABEN enthaelt und
-// dass die Vorschlagsliste aus ihr herausragen darf.
 export const erfassungStil = css`
       .zeile.erfassung {
         flex: none;

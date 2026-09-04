@@ -1,7 +1,5 @@
 const LEER_ZULETZT = 1
 
-// Eine Tausendergruppe folgt nie auf eine alleinstehende Null: '0.750' ist
-// 0,75 (englisches Dezimal), nicht 750 — der Unterschied ist Faktor 1000.
 const ZAHL = /^-?[1-9]\d{0,2}(\.\d{3})+(,\d+)?$|^-?\d+(,\d+)?$|^-?\d+(\.\d+)?$/
 
 const DATUM_DE = /^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/

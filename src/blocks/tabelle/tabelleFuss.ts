@@ -13,17 +13,12 @@ export interface FussLage {
 
   summen: readonly { titel: string; text: string }[]
 
-  // Die Vormerkungen dieser Tabelle, in ZEILEN. Geschrieben werden sie erst
-  // durch eine Kette an einem Knopf — bis dahin sagt die Fusszeile, dass
-  // etwas offen ist, und der Knopf sagt es mit denselben Worten.
   erfasst: number
 
   geaendert: number
 
   geloescht: number
 
-  // Beim Rollen gibt es nur eine Seite — dann waere „Seite 1 von 1" mit zwei
-  // toten Knoepfen daneben. Die Zaehlzeile bleibt, sie traegt den Filterstand.
   blaettert: boolean
 
   leer: boolean
@@ -33,9 +28,6 @@ export interface FussHandeln {
   blaettere: (zu: number) => void
 }
 
-// Ob es die Fusszeile ueberhaupt gibt, entscheidet sie selbst: sie erscheint
-// nur, wenn sie etwas zu sagen hat. Sonst stuende unter jeder kurzen Tabelle
-// eine leere Leiste.
 export function tabelleFuss(
   lage: FussLage,
   tun: FussHandeln,

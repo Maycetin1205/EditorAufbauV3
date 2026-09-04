@@ -10,15 +10,9 @@ import type { Zeilenmass } from './seitengroesse'
 import { fokussierterRohIndex, stelleZeilenFokusHer } from './zeilenAktivierung'
 import { leseSortierung, sichereSortierung, sortierSchluessel } from './sortierungMerken'
 
-// Der Stand, in dem die Tabelle gerade DASTEHT: Suchtext, Sortierung, Seite,
-// die Rumpf-Messung und der Zeilenfokus. Nichts davon ist eine Einstellung
-// des Bausteins — es entsteht beim Bedienen und faellt mit dem Zweckwechsel.
-// Als eigene Naht wie der Erfassungs-Stand (erfassungsAnschluss.ts), damit
-// der Baustein unter seinem Zeilen-Deckel bleibt.
 export interface AnsichtsWirt {
   baustein: HTMLElement & MessZiel
 
-  // Im Editor wird nicht sortiert: dort ist der Kopfklick der Feld-Waehler.
   editable: () => boolean
 
   zeilenHoehe: () => number
@@ -176,12 +170,9 @@ export class AnsichtsStand {
   }
 
   nachRendern(): void {
-    // Neu messen, sobald Rumpf ODER Kopf nicht mehr so hoch sind wie beim
-    // Rechnen. Beides aendert sich NACH der Messung: die Fusszeile haengt an
-    // der Seitenzahl und die an der Messung; der Kopf wird zweizeilig, sobald
-    // eine Spalte an eine Hilfsquelle gebunden ist. Den Kopf sieht der
-    // ResizeObserver ueberhaupt nie (er haengt am Rumpf, und der behaelt seine
-    // Hoehe) — ohne den Vergleich bleibt eine Zeile zu viel gerechnet.
+    // Den Kopf sieht der ResizeObserver nie (er haengt am Rumpf, der seine
+    // Hoehe behaelt) — ohne diesen Vergleich bleibt eine Zeile zu viel
+    // gerechnet.
     if (this._taktGemessen !== this.wirt.zeilenHoehe()
       || this._rumpfGemessen !== rumpfHoehe(this.wirt.baustein)
       || this._kopfGemessen !== kopfHoehe(this.wirt.baustein)) {
@@ -197,8 +188,6 @@ export class AnsichtsStand {
     this._beobachter = null
   }
 
-  // Ein Daten-Push liefert eine neue Liste: Seite und Messung gelten nicht
-  // mehr. Suchtext und Sortierung bleiben — die hat der Bediener gesetzt.
   nachPush(): void {
     this._seite = 0
     this._mass = null

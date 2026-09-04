@@ -17,11 +17,7 @@ import {
 } from './zeilenAktivierung'
 import type { ZeilenZeichen } from './zeilenStatus'
 
-// Was eine GEBUCHTE Zeile zeigt und was mit ihr passiert — als EIN Gegenueber
-// statt als sieben Rueckrufe. Die Tabelle reicht dafuer ihre ZeilenBearbeitung
-// durch; der Rumpf sieht nur diese Form.
 export interface ZeilenStand {
-  // Was in der Zelle steht — vorgemerkter Wert, sonst der Wert der Zeile.
   zellWert: (rohIndex: number, spalte: number) => string
 
   istGeaendert: (rohIndex: number, spalte: number) => boolean
