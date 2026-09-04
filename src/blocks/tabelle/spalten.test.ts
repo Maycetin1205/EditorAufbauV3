@@ -206,3 +206,46 @@ test('nimmt der Bediener alles weg, bleibt die erste Spalte stehen', () => {
   const sicht = spaltenSicht(liste(false, false), false, new Set(['s1', 's2']))
   expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1'])
 })
+
+// Das Suchfenster einer Spalte (F4 beim Erfassen) war bis 2026-09-04 nirgends
+// einstellbar. Was der Bauer dort stellt, muss denselben Weg ueberleben wie
+// jede andere Spalten-Angabe — sonst faende er seine Einstellung im Editor
+// wieder, waehrend die exportierte Maske weiter die Automatik zeigte.
+test('eingestellte Fenster-Spalten ueberleben Export und Einlesen', () => {
+  const raus = rundlauf({
+    titel: 'Artikel',
+    feld: '164_8',
+    fensterSpalten: [
+      { titel: 'Nummer', feld: '164_1' },
+      { titel: 'Bezeichnung', feld: '164_2' },
+    ],
+  })
+  expect(raus.fensterSpalten).toMatchObject([
+    { titel: 'Nummer', feld: '164_1' },
+    { titel: 'Bezeichnung', feld: '164_2' },
+  ])
+})
+
+// Eine leere Liste ist keine Einstellung, sondern Automatik. Sonst zeigte eine
+// Spalte, deren Fenster-Spalten alle wieder geloescht wurden, ein leeres
+// Fenster statt der gerechneten Vorgabe.
+test('eine leere Fenster-Liste faellt auf die Automatik zurueck', () => {
+  expect('fensterSpalten' in rundlauf({ titel: 'Artikel', feld: '164_8', fensterSpalten: [] }))
+    .toBe(false)
+})
+
+// Ein Fenster von 20 Pixeln ist keins mehr, eines von 9000 passt auf keinen
+// Bildschirm — beides koennte der Bediener nicht zurechtruecken.
+test('Fenstermasse werden in vernuenftige Grenzen gezogen', () => {
+  expect(rundlauf({ titel: 'A', feld: '164_8', fensterBreite: 20 }))
+    .toMatchObject({ fensterBreite: 120 })
+  expect(rundlauf({ titel: 'A', feld: '164_8', fensterHoehe: 9000 }))
+    .toMatchObject({ fensterHoehe: 2000 })
+})
+
+// Unsinn im Attribut darf keine Spalte kippen: ohne Zahl gilt die gerechnete
+// Groesse.
+test('unbrauchbare Fenstermasse fallen weg statt zu stoeren', () => {
+  expect('fensterBreite' in rundlauf({ titel: 'A', feld: '164_8', fensterBreite: 'breit' }))
+    .toBe(false)
+})

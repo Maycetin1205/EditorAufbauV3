@@ -12,6 +12,7 @@ import {
   type ListenBindung,
 } from '../../core/blocks/BlockDefinition'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
+import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import { quellenKennung } from '../../core/data/dataSources'
 import { paarKlartext, type QuelleInReichweite } from '../../core/data/sourceLinks'
 import type { Editor } from '../../state/Editor'
@@ -156,6 +157,28 @@ export function useFeldBindung({
     return () => el.removeEventListener('ff-listen-bind', handler)
   }, [containerRef, listenBindung])
 
+  // Das Unterfenster zeichnet der BAUSTEIN, nicht der Editor: es ist dieselbe
+  // Flaeche, die das Formularfeld ueber die Lupe oeffnet, und sie lebt im
+  // Schatten-DOM des Bausteins. Der Editor merkt sich nur, welcher Eintrag
+  // dran ist; der Effekt unten traegt es am Element ein. Ueber den Umweg,
+  // weil das DOM waehrend des Zeichnens nichts zu suchen hat.
+  //
+  // Der Auftrag ist ein frisches Objekt je Klick, keine blosse Nummer: sonst
+  // liefe der Effekt beim zweiten Oeffnen DERSELBEN Spalte nicht noch einmal,
+  // und ein zwischendurch geschlossenes Fenster bliebe zu.
+  const [unterFenster, setUnterFenster] = useState<{ index: number } | null>(null)
+
+  useEffect(() => {
+    if (unterFenster === null) return
+    const unter = listenBindung?.eintragsUnterFenster
+    const tag = getBlockDefinition(block.type)?.tagName
+    if (unter === undefined || tag === undefined) return
+    const el = containerRef.current?.querySelector(
+      tag,
+    ) as (HTMLElement & Record<string, unknown>) | null
+    if (el) el[unter.eigenschaft] = unterFenster.index
+  }, [block.type, containerRef, listenBindung, unterFenster])
+
   const gruppen = pickerGruppen(quellen)
 
   // Erste Stufe, solange der Baustein keine Hauptquelle hat: die Quellen der
@@ -276,6 +299,16 @@ export function useFeldBindung({
               onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
             }))}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
+            weiter={listenBindung.eintragsUnterFenster === undefined ? undefined : {
+              label: listenBindung.eintragsUnterFenster.label,
+              hinweis: listenBindung.eintragsUnterFenster.hinweis,
+              onOeffne: () => {
+                setUnterFenster({ index: listenPicker.index })
+                // Der Spaltenkopf-Picker macht zu: sonst laegen zwei
+                // Einstellflaechen fuer dieselbe Spalte uebereinander.
+                setListenPicker(null)
+              },
+            }}
             entfernenLabel={`${listenBindung.standardTitel.replace(/\s*\{n\}/, '')} entfernen`}
             onEntfernen={listenBindung.eintragWeg === undefined ? undefined : () => {
               const weg = listenBindung.eintragWeg

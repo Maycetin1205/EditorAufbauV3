@@ -89,6 +89,15 @@ interface FieldPickerProps {
   onEntfernen?: () => void
   entfernenLabel?: string
 
+  // Weiterfuehrende Einstellung dieses Eintrags, die ein eigenes Fenster
+  // braucht (Tabellenspalte: das Suchfenster ihrer Erfassungszelle). Steht
+  // ueber der Streich-Taste, weil sie etwas oeffnet statt etwas zu loeschen.
+  weiter?: {
+    label: string
+    hinweis?: string
+    onOeffne: () => void
+  }
+
   // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
   // schliesst nicht — sonst raeumt dieser Druck das Fenster ab und der Klick
   // unmittelbar danach oeffnet es wieder: es liesse sich mit seinem eigenen
@@ -197,6 +206,7 @@ export function FieldPicker({
   onClose,
   onEntfernen,
   entfernenLabel,
+  weiter,
 }: FieldPickerProps) {
   // Schließt das Fenster ohne blur (Escape, Außenklick), bliebe die offene
   // Tipp-Klammer sonst stehen — und Undo wäre für den Rest der Sitzung stumm.
@@ -361,6 +371,16 @@ export function FieldPicker({
           onWaehle={aktiv.onWaehle}
         />
           </>
+        )}
+        {weiter !== undefined && (
+          <div className="mt-1 border-t border-linie px-1.5 pb-1 pt-2">
+            <Knopf className="w-full justify-start" onClick={weiter.onOeffne}>
+              {weiter.label}
+            </Knopf>
+            {weiter.hinweis !== undefined && (
+              <p className="px-1 pt-1 text-dicht text-matt">{weiter.hinweis}</p>
+            )}
+          </div>
         )}
         {onEntfernen !== undefined && (
           // Klebt am unteren Rand des rollenden Fensters: die Streich-Taste ist

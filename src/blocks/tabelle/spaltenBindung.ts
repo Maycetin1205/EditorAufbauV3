@@ -33,6 +33,16 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     return neu === alt ? {} : { spalten: [...neu] }
   },
 
+  // Das Suchfenster dieser Spalte (F4 in der Erfassungszeile). Bis heute war
+  // es nirgends einstellbar: es rechnete sich bei jedem Oeffnen neu aus den
+  // Tabellenspalten. Der Knopf oeffnet dieselbe Flaeche, die das Formularfeld
+  // ueber die Lupe zeigt (Nutzer-Ansage 2026-09-04).
+  eintragsUnterFenster: {
+    label: 'Suchfenster…',
+    hinweis: 'Ohne Einstellung nimmt es die Spalten derselben Hilfsquelle.',
+    eigenschaft: 'fensterDialogIndex',
+  },
+
   eintragStellen: '[data-ff-eintrag]',
 
   eintragsSchalter: [
