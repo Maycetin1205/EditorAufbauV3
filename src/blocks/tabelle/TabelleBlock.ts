@@ -35,10 +35,10 @@ import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 import { meldeVormerkungen } from '../shared/vormerkStand'
 import { AnsichtsStand } from './ansichtsStand'
 import { aktiviereZeile, zeileDoppelt } from './zeilenEreignisse'
-import type { BreitenAenderung, BreitenWirt } from './spaltenBreite'
+import { BreitenStand } from './spaltenBreite'
 import { SPALTEN_BINDUNG } from './spaltenBindung'
 import { spaltenSicht } from './spalten'
-import { ladeWahl, sichereWahl, wahlSchluessel } from './spaltenWahl'
+import { SpaltenWahlStand } from './spaltenWahlStand'
 import { ZEILEN_HOEHE } from './seitengroesse'
 import { tabelleAnsicht } from './tabelleAnsicht'
 import { TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
@@ -53,8 +53,6 @@ import {
 } from './spalten'
 
 export { coerceSpalten, type Spalte } from './spalten'
-
-const LEERE_WAHL: ReadonlySet<string> = new Set()
 
 export class TabelleBlock extends BasicBlock {
   static readonly blockType = 'tabelle'
@@ -158,17 +156,16 @@ export class TabelleBlock extends BasicBlock {
 
   private _besitz: Datenbesitz = 'softengine'
 
-  // Die von Hand am Spaltenkopf gezogenen Breiten. Im Editor stehen sie hier
-  // nur waehrend des Zugs — beim Loslassen wandern sie in den Baum, und das
-  // ist EIN Undo-Schritt fuer den ganzen Zug. In der exportierten Maske gibt
-  // es keinen Baum: dort bleiben sie stehen und gelten, bis der Bediener die
-  // Seite neu laedt.
-  private readonly _breiten = new Map<number, number>()
-
-  // Der Stand der gerade gezogenen Spalten, wie er VOR dem Zug war — damit
-  // Escape genau diese zwei zuruecksetzt und nicht die Breiten, die der
-  // Bediener vorher eingestellt hat.
-  private _breiteVorZug: Map<number, number | undefined> | null = null
+  // Die von Hand am Spaltenkopf gezogenen Breiten; der Zug an der Kante
+  // liegt in spaltenBreite, der Baustein delegiert nur.
+  private readonly _breiten = new BreitenStand({
+    imEditor: () => this.imEditor,
+    vollerPlatz: (gezeichnet) =>
+      spaltenSicht(this.spaltenListe(), this.imEditor).plaetze[gezeichnet] ?? gezeichnet,
+    spaltenListe: () => this.spaltenListe(),
+    schreibeSpalten: (spalten) => this.aendere(spalten),
+    melde: () => this.requestUpdate(),
+  })
 
   // Suchtext, Sortierung, Seite, Messung, Zeilenfokus — der Stand, in dem die
   // Tabelle dasteht. Er liegt in ansichtsStand, der Baustein delegiert nur.
@@ -186,6 +183,15 @@ export class TabelleBlock extends BasicBlock {
   // Was der Ketten-Lauf ueber einzelne Zeilen gemeldet hat (schreibt, haengen
   // geblieben). Der Baustein haelt ihn, weil er beide Sorten Zeilen zeigt.
   private readonly _lauf = new LaufStand(() => this.requestUpdate())
+
+  // Was der BEDIENER sich weggenommen hat, und ob sein Wahlfenster offen
+  // steht. Nur in der fertigen Maske; liegt in spaltenWahlStand.
+  private readonly _wahl = new SpaltenWahlStand({
+    baustein: this,
+    an: () => this.spaltenwahlAn,
+    melde: () => this.requestUpdate(),
+    breitenVergessen: () => this._breiten.vergessen(),
+  })
 
   // Vormerkungen und Zellbedienung der GEBUCHTEN Zeilen — Stand und
   // Bedienung liegen in zeilenBearbeitung, der Baustein delegiert nur.
@@ -341,64 +347,6 @@ export class TabelleBlock extends BasicBlock {
     return ZEILEN_HOEHE
   }
 
-  // Der Zug an der Spaltenkante. Zwei Ablagen, EIN Zug: im Editor schreibt
-  // das Loslassen in den Baum, in der Maske bleibt es beim fluechtigen Stand.
-  // Ein Zug bringt IMMER beide Nachbarn der Linie mit (spaltenBreite:
-  // verteileZug) — sie wandern zusammen, sonst waere das Loslassen im Editor
-  // zwei Undo-Schritte fuer eine Handbewegung.
-  private breitenWirt(): BreitenWirt {
-    // Die Griffe zaehlen die GEZEICHNETEN Spalten; gespeichert wird unter dem
-    // vollen Platz. Ohne die Uebersetzung landete die gezogene Breite hinter
-    // einer ausgeblendeten Spalte auf der falschen.
-    const vollerPlatz = (gezeichnet: number): number => {
-      const sicht = spaltenSicht(this.spaltenListe(), this.imEditor)
-      return sicht.plaetze[gezeichnet] ?? gezeichnet
-    }
-    const voll = (aenderung: readonly BreitenAenderung[]): BreitenAenderung[] =>
-      aenderung.map((a) => ({ index: vollerPlatz(a.index), breite: a.breite }))
-    const merkeVorZug = (aenderung: readonly BreitenAenderung[]): void => {
-      if (this._breiteVorZug !== null) return
-      this._breiteVorZug = new Map(aenderung.map((a) => [a.index, this._breiten.get(a.index)]))
-    }
-    return {
-      zeige: (roh) => {
-        const aenderung = voll(roh)
-        merkeVorZug(aenderung)
-        for (const a of aenderung) this._breiten.set(a.index, a.breite)
-        this.requestUpdate()
-      },
-      uebernimm: (roh) => {
-        const aenderung = voll(roh)
-        this._breiteVorZug = null
-        const liste = this.spaltenListe()
-        if (!this.imEditor) {
-          for (const a of aenderung) this._breiten.set(a.index, a.breite)
-          this.requestUpdate()
-          return
-        }
-        // Im Editor gilt der Baum. Der fluechtige Stand muss WEG, sonst
-        // ueberdeckte er die gespeicherte Breite und ein spaeteres Undo
-        // aenderte sichtbar nichts.
-        for (const a of aenderung) {
-          if (a.index >= liste.length) continue
-          this._breiten.delete(a.index)
-          liste[a.index] = { ...liste[a.index], breite: a.breite }
-        }
-        this.aendere(liste)
-      },
-      verwirf: () => {
-        const vorher = this._breiteVorZug
-        this._breiteVorZug = null
-        if (!vorher) return
-        for (const [index, wert] of vorher) {
-          if (wert === undefined) this._breiten.delete(index)
-          else this._breiten.set(index, wert)
-        }
-        this.requestUpdate()
-      },
-    }
-  }
-
   private get erfassungAn(): boolean {
     return this.erfassung === 'ja'
   }
@@ -501,7 +449,7 @@ export class TabelleBlock extends BasicBlock {
     // zurueck auf die gleichmaessige Aufteilung als auf ein verschobenes
     // Raster. Waehrend eines Zugs passiert das nicht: dort aendert sich
     // `spalten` erst beim Loslassen, und da sind die Eintraege schon weg.
-    if (changed.has('spalten')) this._breiten.clear()
+    if (changed.has('spalten')) this._breiten.vergessen()
     if (!this.erfassungAn || this.imEditor) return
     this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())
   }
@@ -516,7 +464,7 @@ export class TabelleBlock extends BasicBlock {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback()
-    window.removeEventListener('keydown', this.nimmWahlTaste)
+    this._wahl.loese()
     document.removeEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
     this._ansicht.loese()
     schliesseNachschlagenFuer(this)
@@ -531,59 +479,16 @@ export class TabelleBlock extends BasicBlock {
     erfassungStil,
   ]
 
-  // Was der BEDIENER weggenommen hat (nur Maske). Erst beim ersten Zeichnen
-  // gelesen: `wahlSchluessel` braucht den Maskennamen und das fertige
-  // Dokument.
-  private _wahlWeg: Set<string> | null = null
-
-  private _wahlOffen: { links: number; oben: number } | null = null
-
   private get spaltenwahlAn(): boolean {
     return this.spaltenwahl === 'ja'
       && this.kopfzeile === 'ja'
       && !this.imEditor
   }
 
-  private wahlWeg(): ReadonlySet<string> {
-    if (!this.spaltenwahlAn) return LEERE_WAHL
-    if (this._wahlWeg === null) this._wahlWeg = ladeWahl(wahlSchluessel(this))
-    return this._wahlWeg
-  }
-
-  private readonly nimmWahlTaste = (e: KeyboardEvent): void => {
-    if (e.key !== 'Escape') return
-    this.schliesseSpaltenwahl()
-  }
-
   private oeffneSpaltenwahl(e: MouseEvent): void {
-    // Das eigene Fenster statt des Browser-Menues — genau dafuer ist der
-    // Rechtsklick hier vergeben (Nutzer-Entscheidung 2026-09-03).
-    e.preventDefault()
-    e.stopPropagation()
     const rahmen = this.shadowRoot?.querySelector('.tabelle')?.getBoundingClientRect()
     if (!rahmen) return
-    this._wahlOffen = {
-      links: Math.max(4, Math.min(e.clientX - rahmen.left, Math.max(4, rahmen.width - 170))),
-      oben: Math.max(4, Math.min(e.clientY - rahmen.top, Math.max(4, rahmen.height - 60))),
-    }
-    window.addEventListener('keydown', this.nimmWahlTaste)
-    this.requestUpdate()
-  }
-
-  private schliesseSpaltenwahl(): void {
-    if (this._wahlOffen === null) return
-    this._wahlOffen = null
-    window.removeEventListener('keydown', this.nimmWahlTaste)
-    this.requestUpdate()
-  }
-
-  private merkeWahl(weg: Set<string>): void {
-    this._wahlWeg = weg
-    sichereWahl(wahlSchluessel(this), weg)
-    // Die fluechtigen Breiten haengen am Platz der gezeichneten Spalten; mit
-    // einer Spalte mehr oder weniger stimmen sie nicht mehr.
-    this._breiten.clear()
-    this.requestUpdate()
+    this._wahl.oeffne(e, rahmen)
   }
 
   override render(): TemplateResult {
@@ -591,13 +496,13 @@ export class TabelleBlock extends BasicBlock {
 
     // Gezeichnet wird in der Maske ohne die ausgeblendeten Spalten; Werte,
     // Ketten und Rechnung laufen weiter ueber den vollen Platz (spalten.ts).
-    const sicht = spaltenSicht(spalten, this.imEditor, this.wahlWeg())
+    const sicht = spaltenSicht(spalten, this.imEditor, this._wahl.weg())
 
     const ansicht = tabelleAnsicht({
       spalten,
       gezeichnet: sicht.spalten,
       plaetze: sicht.plaetze,
-      breiteVon: (i) => this._breiten.get(i),
+      breiteVon: (i) => this._breiten.breiteVon(i),
       hatQuelle: this.hatQuelle,
       datenGeliefert: this.datenGeliefert,
       datenzeilen: this.datenzeilen,
@@ -623,12 +528,12 @@ export class TabelleBlock extends BasicBlock {
         imEditor: this.imEditor,
         zeigeKopf: this.kopfzeile === 'ja',
         spaltenwahlAn: this.spaltenwahlAn,
-        spaltenwahl: this._wahlOffen === null ? null : {
+        spaltenwahl: this._wahl.offen === null ? null : {
           // Zur Wahl steht nur, was der BAUER zeigt.
           waehlbar: spalten.filter((sp) => sp.versteckt !== true),
-          weg: this.wahlWeg(),
-          links: this._wahlOffen.links,
-          oben: this._wahlOffen.oben,
+          weg: this._wahl.weg(),
+          links: this._wahl.offen.links,
+          oben: this._wahl.offen.oben,
         },
         auswahlSemantik: geberIdVon(this) !== '',
         zeigeSuche: this.suche === 'ja',
@@ -666,16 +571,11 @@ export class TabelleBlock extends BasicBlock {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
         oeffneSpaltenwahl: (e) => this.oeffneSpaltenwahl(e),
         spaltenwahl: {
-          schalte: (kennung) => {
-            const weg = new Set(this.wahlWeg())
-            if (weg.has(kennung)) weg.delete(kennung)
-            else weg.add(kennung)
-            this.merkeWahl(weg)
-          },
-          alleZeigen: () => this.merkeWahl(new Set()),
-          schliesse: () => this.schliesseSpaltenwahl(),
+          schalte: (kennung) => this._wahl.schalte(kennung),
+          alleZeigen: () => this._wahl.alleZeigen(),
+          schliesse: () => this._wahl.schliesse(),
         },
-        breiten: this.breitenWirt(),
+        breiten: this._breiten.wirtFuerZug(),
         // Sortieren gehoert der Maske; im Editor liegt die Spalten-Bedienung
         // des Editors ueber dem Kopf.
         klickKopf: (i) => {

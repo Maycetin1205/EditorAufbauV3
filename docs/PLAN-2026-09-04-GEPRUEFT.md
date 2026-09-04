@@ -436,6 +436,18 @@ ist die aeltere Fassung, die beim Umschreiben stehenblieb.
 **Loeschen: der erste Block.**
 
 ### U3 · Acht Dateien ueber 400 Zeilen
+**TEILWEISE ERLEDIGT 2026-09-04** (Commit "Tabelle entlastet"):
+`TabelleBlock.ts` ist von **722 auf 621 Zeilen** geschrumpft. Zwei
+Zustaende sind als eigene Nahten herausgezogen — nach dem Muster, das der
+Baustein fuer Ansicht, Erfassung und Zeilen schon benutzt:
+- **`spaltenWahlStand.ts`** (neu, 103 Z.) — was der Bediener sich an Spalten
+  weggenommen hat und ob sein Wahlfenster offen steht.
+- **`BreitenStand`** in `spaltenBreite.ts` — die von Hand gezogenen
+  Spaltenbreiten, jetzt dort, wo der Rest der Breiten-Logik schon lag.
+
+Nebenbei geschlossen: stand das Spaltenwahl-Fenster offen, waehrend die
+Tabelle verschwand, blieb ihr Escape-Horcher am Fenster haengen. `loese()`
+raeumt ihn jetzt ab.
 ```
 722  TabelleBlock.ts        <- doppelt so gross wie der naechste
 519  FormFeldBlock.ts
@@ -969,21 +981,14 @@ Toolbar ruft. **Drei Zeilen.**
 der Browser-Dialog.
 **Export:** neutral. **Risiko:** minimal.
 
-#### SCHRITT 41 — Meldungen verschwinden von selbst · B2
-**ENTSCHIEDEN (Besitzer 2026-09-04): Meldungen sollen allein verschwinden.**
-Umsetzung: jede Meldung bekommt eine Lebensdauer und schliesst sich selbst.
-Der Schliess-Knopf bleibt, damit man sie vorher wegklicken kann.
-**Offen, weil es beim Bauen entschieden werden muss:** ob **jede** Meldung
-geht oder Fehler stehenbleiben. Vorschlag: alle gehen, denn im Editor ist
-jede Meldung ein Hinweis, keine Quittung — und der Besitzer hat "alleine
-verschwinden" ohne Ausnahme gesagt. Wird beim Bauen vorgefuehrt.
-**Wichtig: vor Schritt 23-26 bauen.** Die stopfen Datenverlust-Loecher, indem
-sie **neue Meldungen** erzeugen — der Kanal wird lauter, bevor er aufgeraeumt
-ist.
-**Test:** Meldung absetzen, Uhr vorstellen, Liste muss leer sein.
-**Klickprobe:** irgendetwas ausloesen, das meldet -> die Meldung geht nach
-kurzer Zeit von selbst weg.
-**Export:** neutral. **Risiko:** minimal.
+#### ~~SCHRITT 41 — Meldungen~~ · B2 — **ZURUECKGESTELLT**
+**Besitzer 2026-09-04: "meldungen und so gerne alle weg, die brauche ich
+nicht jetzt."** Das Thema ist vom Tisch — nicht abgelehnt, sondern
+unwichtig gegenueber dem Aufraeumen der Tabelle.
+Ich hatte bereits angefangen (Lebensdauer je Meldung in `meldungen.ts`) und
+habe die Aenderung **vollstaendig zurueckgenommen**; an `meldungen.ts` ist
+nichts geaendert.
+B2 bleibt als Befund stehen, falls die Meldungen spaeter einmal stoeren.
 
 #### ~~SCHRITT 42 — Rueckfrage beim Loeschen~~ · B3 — **GESTRICHEN**
 **ENTSCHIEDEN (Besitzer 2026-09-04): Rueckfragen sind nervig.**
