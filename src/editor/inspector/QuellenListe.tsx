@@ -151,8 +151,8 @@ export function QuellenListe({ block }: QuellenListeProps) {
           </div>
           {partnerAuswahl(i)}
           {/* Ohne Partner gibt es nichts zu verbinden — dann bleiben auch die
-              Feldpaare weg. Vorher stand hier ein „+ Feld dazu", und ein Klick
-              darauf liess „Verbunden mit" von selbst auf die Hauptquelle
+              Feldpaare weg. Stuende hier trotzdem ein „+ Feld dazu", liesse ein
+              Klick darauf „Verbunden mit" von selbst auf die Hauptquelle
               zurueckspringen (partnerVon zaehlt die Paarzeilen). */}
           {partnerVon(i) !== '' && (
             <SchluesselPaarZeilen

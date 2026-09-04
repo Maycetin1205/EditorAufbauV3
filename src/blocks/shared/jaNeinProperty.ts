@@ -1,8 +1,7 @@
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 
 // Die EINE Stelle fuer eine Ja/Nein-Eigenschaft: gleiche Antwortliste,
-// gleiche Reihenfolge, gleiche Darstellung. Vorher lag dieselbe Liste
-// dreimal im Code, in zwei Reihenfolgen und zwei Darstellungen.
+// gleiche Reihenfolge, gleiche Darstellung.
 //
 // Die REIHENFOLGE der Optionen ist ein Kontrakt: erste = aus, zweite = ein.
 // Der Inspector zeichnet daraus eine Kachel (controls/KachelControl) und

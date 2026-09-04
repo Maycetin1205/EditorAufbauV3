@@ -128,9 +128,9 @@ export function Inspector() {
 
   // Getrennt nach FORM, nicht nach Thema: ein Ja/Nein ist eine Kachel und
   // steht neben seinesgleichen in einer Wand, ein Wert ist eine Zeile mit
-  // Beschriftung darueber. Vorher trugen beide dieselbe Zeilenform — bei der
+  // Beschriftung darueber. Truegen beide dieselbe Zeilenform, staenden bei der
   // Tabelle fuenf gleich aussehende Pillen untereinander, in denen man erst
-  // lesen musste, welche Haelfte dunkel ist.
+  // lesen muesste, welche Haelfte dunkel ist.
   const kachelProps = generalProps.filter((p) => p.kind === 'jaNein')
   const wertProps = generalProps.filter((p) => p.kind !== 'jaNein')
 

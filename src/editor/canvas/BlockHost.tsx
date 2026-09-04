@@ -212,8 +212,7 @@ interface AnfasserProps {
 }
 
 // Der eine Anfasser fuer Breite und Hoehe: ein Pillenstrich in der
-// Auswahlfarbe, mittig auf der Kante. Vorher standen vier Kopien desselben
-// Stilblocks im BlockHost.
+// Auswahlfarbe, mittig auf der Kante.
 function Anfasser({ achse, title, onStart, onReset }: AnfasserProps) {
   return (
     <div

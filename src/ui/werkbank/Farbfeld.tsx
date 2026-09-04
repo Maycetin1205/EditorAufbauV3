@@ -6,8 +6,7 @@ export interface FarbfeldProps {
   // welche Farben zur Wahl stehen, entscheidet die Maske, nicht der Bausatz.
   //
   // Fehlt sie, bleibt das Feld leer (nur Rahmen). Das ist kein Sonderfall zum
-  // Abfangen, sondern das Ehrlichste, was ein Farbfeld ohne Farbe zeigen kann
-  // — und genau das, was die Farbwahl vorher tat.
+  // Abfangen, sondern das Ehrlichste, was ein Farbfeld ohne Farbe zeigen kann.
   farbe?: string
 
   // Der Klarname der Farbe. Pflicht, denn zu sehen ist nur ein Fleck — ohne

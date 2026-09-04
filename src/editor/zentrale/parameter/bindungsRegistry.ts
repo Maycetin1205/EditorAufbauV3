@@ -24,9 +24,9 @@ function einziger(liste: readonly { blockId: string }[]): BindungsStart {
 }
 
 // Geschluesselt ueber ALLE gespeicherten Quellen, `aus` eingeschlossen: das
-// Record erzwingt einen Eintrag je Quelle. Vorher endete die Zeichnung in
-// einem Auffang-Textfeld — eine neue Quelle sah dort aus wie ein Freitext,
-// ohne dass irgendwas anschlug.
+// Record erzwingt einen Eintrag je Quelle. Endete die Zeichnung stattdessen in
+// einem Auffang-Textfeld, saehe eine neue Quelle dort aus wie ein Freitext,
+// ohne dass irgendwas anschluege.
 export const PARAM_QUELLEN: Record<ActionParamSource, QuellenEintrag> = {
   fixed: {
     name: 'Fest',

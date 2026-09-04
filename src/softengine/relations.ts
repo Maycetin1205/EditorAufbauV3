@@ -96,10 +96,10 @@ export function extractRelationResult(raw: unknown): string | undefined {
     if (found !== undefined) return found
   }
   // Traegt die Nachricht den RESULT-Schluessel, IST sie die Antwort — auch
-  // leer (kein Treffer, leeres Feld). Vorher blieb der Job bei {"RESULT":""}
-  // offen, lief in den 20-s-Timeout, meldete „nicht geantwortet" und stellte
+  // leer (kein Treffer, leeres Feld). Bliebe der Job bei {"RESULT":""} offen,
+  // liefe er in den 20-s-Timeout, meldete „nicht geantwortet" und stellte
   // die Verfallsmarke scharf, die dann die erste echte Antwort des NAECHSTEN
-  // Rufs verwarf.
+  // Rufs verwuerfe.
   for (const key of SATZ_SCHLUESSEL) {
     if (typeof value[key] === 'string') return ''
   }

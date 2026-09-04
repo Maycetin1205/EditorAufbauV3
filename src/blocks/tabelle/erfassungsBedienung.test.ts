@@ -54,8 +54,8 @@ test('Tab geht Zelle fuer Zelle, auch in gefuellte', () => {
   expect(p.erfasst).toBe(0)
 })
 
-// Vorher gab Tab hinter der letzten Spalte an den Browser ab: der Fokus
-// verliess die Tabelle, und die getippte Zeile blieb UNERFASST stehen.
+// Gaebe Tab hinter der letzten Spalte an den Browser ab, verliesse der Fokus
+// die Tabelle, und die getippte Zeile bliebe UNERFASST stehen.
 test('Tab hinter der letzten Spalte schliesst die Zeile ab', () => {
   const lauf = new ErfassungsLauf()
   lauf.tippe(0, 'ART1')

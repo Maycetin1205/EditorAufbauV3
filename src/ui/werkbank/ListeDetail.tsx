@@ -19,8 +19,7 @@ export interface ListeDetailProps {
 // Der EINE Aufbau fuer Fenster mit Liste und Detail: Bereiche links
 // (optional), Liste mit Kopf, Detail rechts. Muss direktes Kind eines
 // randlosen Dialogs sein — der stellt die Flex-Zeile und die Hoehe.
-// Datencenter und Kettenfenster benutzen genau dieses Teil; vorher hatte
-// jedes Fenster seine eigenen Spalten, und das Kettenfenster gar keine.
+// Datencenter und Kettenfenster benutzen genau dieses Teil.
 export function ListeDetail({
   bereiche, listeKopf, liste, detail, listeOhneRand = false,
 }: ListeDetailProps) {

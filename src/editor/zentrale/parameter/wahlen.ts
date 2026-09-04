@@ -12,8 +12,6 @@ import type {
 } from '../helfer'
 
 // Alles, woraus ein Parameter seinen Wert ziehen kann — als EIN Buendel.
-// Vorher reisten dieselben sieben Listen als sieben Props durch zwei Ebenen;
-// eine neue Quelle haette an vier Stellen eine achte gebraucht.
 export interface ParameterWahlen {
   dataSources: readonly DataSource[]
   blockValues: readonly BlockValueOption[]
@@ -41,9 +39,7 @@ export interface BindungsProps {
 // Eintrag der Registry sich nicht auf eine fremde Quelle schreiben kann.
 export type BindungsStart = Omit<ActionParamBinding, 'source'>
 
-// Was eine Parameter-Quelle ausmacht, an EINER Stelle je Quelle. Vorher
-// stand dasselbe Wissen dreifach verstreut: Anzeigename in einer Tabelle,
-// Startwert in `setSource`, Sperrgrund in einem siebenfachen ||-Ausdruck.
+// Was eine Parameter-Quelle ausmacht, an EINER Stelle je Quelle.
 export interface QuellenEintrag {
   name: string
   Control: (props: BindungsProps) => ReactElement

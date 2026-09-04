@@ -55,7 +55,7 @@ export function weitereQuellenAus(roh: unknown): BausteinQuelle[] {
     acc.push({
       quelleId: e.quelleId,
       // Alte Masken kennen die Angabe nicht: leer heisst Hauptquelle, also
-      // genau das Verhalten von vorher. Deshalb braucht es keine Migration.
+      // das, was sie ohne die Angabe meinen. Deshalb braucht es keine Migration.
       partnerId: typeof e.partnerId === 'string' ? e.partnerId : '',
       keyPairs: keyPairs.slice(0, MAX_SCHLUESSELPAARE),
     })

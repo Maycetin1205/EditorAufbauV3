@@ -62,9 +62,8 @@ const STIL: Record<Lage, { top: string; bottom: string; right: string; left: str
 const halt = (e: { stopPropagation: () => void }): void => e.stopPropagation()
 
 // Die EINE Werkzeugleiste des gewaehlten Bausteins: Kind anlegen, Eintrag
-// (Spalte) anfuegen, Baustein entfernen. Vorher lagen zwei runde Abzeichen am
-// Rahmen, und die Tabelle zeichnete eigene Plus/Minus-Knoepfe und ein Kreuz
-// in die Maske — bei schmalen Spalten standen sie ueber den Titeln.
+// (Spalte) anfuegen, Baustein entfernen. Zeichnete die Tabelle eigene Knoepfe
+// in die Maske, staenden sie bei schmalen Spalten ueber den Titeln.
 export function AuswahlLeiste({ block, def, wirt, amRand }: AuswahlLeisteProps) {
   const editor = useEditorInstance()
   // Die Lage wird gemessen und direkt ans Element geschrieben — kein

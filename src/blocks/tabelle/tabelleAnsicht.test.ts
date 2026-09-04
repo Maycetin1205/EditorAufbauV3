@@ -54,7 +54,7 @@ test('die Sortierung ordnet nach der vorgemerkten Aenderung', () => {
   expect(ansicht.zeilen.filter((z) => z !== null)).toEqual([1, 2, 0])
 })
 
-// Die Gegenprobe: ohne Vormerkung entscheiden die Rohwerte, wie bisher.
+// Die Gegenprobe: ohne Vormerkung entscheiden die Rohwerte.
 test('ohne Vormerkung bleibt es bei den Rohwerten', () => {
   const roh = frage({ sortSpalte: 1, sortAuf: true, wertVon: (z, s) => DATEN[z][s] })
   expect(tabelleAnsicht(roh).zeilen.filter((z) => z !== null)).toEqual([0, 1, 2])

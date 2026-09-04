@@ -282,11 +282,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
           {relation && (
             <>
               {/* Ueberschrift wie ueberall sonst (werkbank/Gruppe): normale
-                  Groesse, halbfett, Strich DARUNTER. Der Abschnitt hatte
-                  bisher gar keine — die Parameter standen einfach unter der
-                  Relationswahl, und "Zusatzparameter" darunter trug seine
-                  eigene Machart mit Strich darueber. Zwei Ueberschriften-
-                  Systeme in einem Formular. */}
+                  Groesse, halbfett, Strich DARUNTER — sonst stuenden zwei
+                  Ueberschriften-Systeme in einem Formular. */}
               <Gruppe titel="Parameter">
                 {relation.params.map((raw, index) => {
                   if (bindung(index).source === 'aus') return null

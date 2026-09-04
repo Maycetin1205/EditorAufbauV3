@@ -63,9 +63,9 @@ test('leer getippt heisst keine Liste', () => {
   expect(passendeVorschlaege([eintrag('Schraube')], '   ')).toEqual([])
 })
 
-// Im Lager tippt niemand Umlaute mit. Vorher fiel jeder Treffer mit Umlaut
-// aus der Liste — der Bediener sah "keine Treffer" und hielt den Artikel fuer
-// nicht vorhanden.
+// Im Lager tippt niemand Umlaute mit. Fiele jeder Treffer mit Umlaut aus der
+// Liste, saehe der Bediener "keine Treffer" und hielte den Artikel fuer nicht
+// vorhanden.
 test('ohne Umlaut getippt findet trotzdem', () => {
   expect(namen(passendeVorschlaege([eintrag('Müller')], 'muller'))).toEqual(['Müller'])
   expect(namen(passendeVorschlaege([eintrag('Ärmel')], 'armel'))).toEqual(['Ärmel'])

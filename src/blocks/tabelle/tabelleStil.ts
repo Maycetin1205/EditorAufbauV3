@@ -85,10 +85,10 @@ export const tabelleStil = css`
 
       .koerper > .zeile { flex: none; }
 
-      /* Die Erfassungszeile klebt unten, IMMER. Vorher hing die Regel an einer
-         Klasse, die es nur bei „Blaettern = Nein" gab — bei der Voreinstellung
-         rollte die Zeile also weg, sobald mehr Zeilen da waren als in den
-         Rumpf passen, und der Bediener tippte ins Unsichtbare.
+      /* Die Erfassungszeile klebt unten, IMMER. Hinge die Regel an einer
+         Klasse, die es nur bei „Blaettern = Nein" gibt, rollte die Zeile bei
+         der Voreinstellung weg, sobald mehr Zeilen da sind als in den Rumpf
+         passen, und der Bediener tippte ins Unsichtbare.
          Die Kopfzeile klebt ohnehin schon bedingungslos (.kopf). */
       .koerper > .zeile.erfassung {
         position: sticky;
@@ -127,10 +127,10 @@ export const tabelleStil = css`
       }
 
       /* Zebra: jede zweite Datenzeile leicht getoent. Die Zeile bringt die
-         Klasse mit, gezaehlt wird nach ihrer NUMMER in der Ansicht. Vorher
-         zaehlte nth-child alle Kinder des Rumpfes mit — die Toenung kippte
-         also um eine Zeile, sobald die Kopfzeile abgeschaltet war oder die
-         Erfassungszeile (ohne Quelle) vorne stand.
+         Klasse mit, gezaehlt wird nach ihrer NUMMER in der Ansicht: nth-child
+         ueber alle Kinder des Rumpfes kippte die Toenung um eine Zeile, sobald
+         die Kopfzeile abgeschaltet ist oder die Erfassungszeile (ohne Quelle)
+         vorne steht.
 
          Bewusst ohne den Rumpf-Vorsatz: so bleibt die Regel gleich stark wie
          die Status-Farben weiter unten, und die stehen spaeter — eine
@@ -168,8 +168,8 @@ export const tabelleStil = css`
       /* Die Textkante JEDER Zelle — eine Zahl, eine Stelle. Eine Zelle mit
          Eingabefeld gibt ihr Polster an das Feld ab (siehe .tippbar weiter
          unten); dessen eigenes Polster plus sein Rahmen ergeben wieder
-         dieselbe Kante. Vorher stand der Text einer tippbaren Zelle 15px vom
-         Rand, der ihrer Nachbarin 10px — in derselben Zeile. */
+         dieselbe Kante. Sonst stuende der Text einer tippbaren Zelle weiter
+         vom Rand als der ihrer Nachbarin — in derselben Zeile. */
       .kopf > div,
       .zeile > div {
         padding: 0 var(--se-zell-x);

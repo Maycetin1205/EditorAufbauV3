@@ -37,12 +37,12 @@ export function Gruppe({
 
   return (
     <section className={cn('flex min-w-0 flex-col', className)}>
-      {/* Die Ueberschrift traegt die Trennlinie selbst. Vorher stand sie
-          klein, grau und in Grossbuchstaben ueber Inhalt, der GROESSER war
-          als sie — die Rangfolge stand auf dem Kopf —, und die Abschnitte
-          wurden zusaetzlich von einem eigenen Trenner-Strich getrennt: zwei
-          Trennsysteme nebeneinander, mit unterschiedlichen Abstaenden je
-          nachdem, welche Kombination gerade zutraf. */}
+      {/* Die Ueberschrift traegt die Trennlinie selbst. Stuende sie klein,
+          grau und in Grossbuchstaben ueber Inhalt, der GROESSER ist als sie,
+          stuende die Rangfolge auf dem Kopf; trennte zusaetzlich ein eigener
+          Trenner-Strich die Abschnitte, waeren das zwei Trennsysteme
+          nebeneinander, mit unterschiedlichen Abstaenden je nachdem, welche
+          Kombination gerade zutrifft. */}
       <div className="flex h-steuer items-center gap-1 border-b border-linie">
         <button
           type="button"

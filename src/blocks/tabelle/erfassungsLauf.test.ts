@@ -259,9 +259,9 @@ describe('Tastenentscheid', () => {
     expect(new ErfassungsLauf().entscheideTaste(umfeld, 3, 'Enter')).toBe('weiter')
   })
 
-  // Der Fall, an dem der Fluss jedes Mal abbrach: eine Spalte auf der EIGENEN
-  // Quelle (in der Belegerfassung die Menge) hat keine Liste und keinen
-  // Treffer — dort IST das Getippte der Wert. Enter tat dort vorher nichts.
+  // Eine Spalte auf der EIGENEN Quelle (in der Belegerfassung die Menge) hat
+  // keine Liste und keinen Treffer — dort IST das Getippte der Wert. Taete
+  // Enter dort nichts, braeche der Fluss jedes Mal an dieser Spalte ab.
   test('Enter auf Getipptem geht weiter, wo es gar nichts zu treffen gibt', () => {
     const lauf = new ErfassungsLauf()
     lauf.tippe(1, '3')
@@ -292,8 +292,8 @@ describe('Tastenentscheid', () => {
     expect(lauf.entscheideTaste(umfeld, 2, 'Enter')).toBe('uebernehmen')
   })
 
-  // Vorher nahm Enter hier stumm den ersten der acht — bei tausenden Saetzen
-  // war das Raten.
+  // Naehme Enter hier stumm den ersten Treffer, waere das bei tausenden
+  // Saetzen Raten.
   test('Enter macht bei mehreren Treffern das Fenster auf', () => {
     const lauf = new ErfassungsLauf()
     lauf.tippe(2, 'e')

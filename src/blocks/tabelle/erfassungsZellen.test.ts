@@ -75,7 +75,7 @@ test('Zellenart: frei, eigen oder verknuepft', () => {
 
 // Der Kern des Fuellfeldes: dieselbe Spalte zeigt in der gebuchten Zeile die
 // Belegposition (`feld`) und holt sich beim ERFASSEN den Wert aus dem
-// Artikelstamm (`fuellFeld`). Vorher ging nur eines von beiden.
+// Artikelstamm (`fuellFeld`).
 test('das Fuellfeld fuehrt beim Erfassen, nicht das Spaltenfeld', () => {
   const beide: Spalte = {
     kennung: '',

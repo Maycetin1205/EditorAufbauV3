@@ -181,9 +181,9 @@ export function useFeldBindung({
   const gruppen = pickerGruppen(quellen)
 
   // Erste Stufe, solange der Baustein keine Hauptquelle hat: die Quellen der
-  // Bibliothek. Vorher standen hier ALLE Felder ALLER Quellen, und die Wahl
-  // eines Feldes bestimmte nebenbei still die Hauptquelle — der Bediener sah
-  // eine Wand aus Feldern und traf eine Entscheidung, die ihm keiner ansagte.
+  // Bibliothek. Staenden hier ALLE Felder ALLER Quellen, bestimmte die Wahl
+  // eines Feldes nebenbei still die Hauptquelle — der Bediener saehe eine
+  // Wand aus Feldern und traefe eine Entscheidung, die ihm keiner ansagt.
   const quellenWahl = !bibliotheksAngebot ? undefined : {
     hinweis: 'Erst die Hauptquelle wählen.',
     eintraege: bibliothek.map((s) => ({ wert: s.id, name: s.name, kennung: quellenKennung(s) })),

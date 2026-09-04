@@ -115,8 +115,8 @@ test('eine verspaetete Antwort loest den naechsten Frager NICHT auf', async () =
 })
 
 // Eine leere Antwort IST eine Antwort: {"RESULT":""} heisst „kein Treffer",
-// nicht „noch keine Nachricht". Vorher blieb der Job offen bis zum Timeout,
-// und die Verfallsmarke verwarf danach die erste Antwort des naechsten Rufs.
+// nicht „noch keine Nachricht". Bliebe der Job sonst offen bis zum Timeout,
+// verwuerfe die Verfallsmarke danach die erste Antwort des naechsten Rufs.
 test('extractRelationResult loest eine leere RESULT-Antwort als leeren Text auf', () => {
   expect(extractRelationResult('{"RESULT":""}')).toBe('')
   expect(extractRelationResult({ RESULT: '', PINDEX: '48' })).toBe('48')
