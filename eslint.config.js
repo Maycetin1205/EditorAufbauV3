@@ -5,8 +5,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
-// tsconfigRootDir explizit setzen, weil sonst neben react-app auch
-// react-app/grundlast als Kandidat fuer das Projekt-Root angesehen wird.
+// tsconfigRootDir explizit setzen, damit der Typpruefer nur dieses Projekt als
+// Wurzel nimmt.
 const rootDir = import.meta.dirname
 
 const coreOuterLayers = '(?:app|blocks|design|editor|export|softengine|state|test|ui)'
@@ -53,12 +53,11 @@ export default defineConfig([
       },
     },
   },
-  // Typ-gestuetztes Linten NUR fuer diese eine Regel. Anlass: vier
-  // nebenlaeufig gestartete Aktionsketten verschluckten jeden Fehler, weil
-  // niemand `.catch` daran haengte (Befund A3) — ein `void` davor sah aus wie
-  // Absicht. Diese Regel braucht den Typpruefer, darum `projectService`.
-  // Bewusst NICHT der ganze `recommendedTypeChecked`-Satz: der brachte
-  // hunderte Funde ohne Anlass (Regel 10).
+  // Typ-gestuetztes Linten NUR fuer diese eine Regel: ein vergessenes `.catch`
+  // an einer Aktionskette verschluckt jeden Fehler, und ein `void` davor sieht
+  // aus wie Absicht. Die Regel braucht den Typpruefer, darum `projectService`.
+  // Bewusst nicht der ganze `recommendedTypeChecked`-Satz, der bringt hunderte
+  // Funde ohne Nutzen.
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {

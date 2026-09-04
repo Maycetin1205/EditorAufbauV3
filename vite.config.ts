@@ -7,10 +7,8 @@ import react from '@vitejs/plugin-react'
 const here = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  // Fester Port: die im Browser gespeicherten Masken/Datenquellen hängen am
-  // Ursprung http://localhost:5300 — unter dieser Adresse hat der Nutzer
-  // immer gearbeitet (Nutzer-Ansage 2026-08-24). Ein anderer Port fände
-  // seine gespeicherten Daten nicht.
+  // Fester Port: die im Browser gespeicherten Masken und Datenquellen hängen
+  // am Ursprung http://localhost:5300. Ein anderer Port fände sie nicht.
   server: { port: 5300, strictPort: true },
   plugins: [react()],
   resolve: {

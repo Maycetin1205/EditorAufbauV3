@@ -1,11 +1,8 @@
-# SoftEngine-Kontrakte — geerntet aus den Code-Kommentaren
+# SoftEngine-Kontrakte
 
-Diese Datei entstand beim Kommentar-Schnitt 2026-08-17. Die Kommentare in
-`src/` sind entfernt; was hier steht, ist der Teil davon, den man **nur durch
-einen Echttest in SoftEngine wieder herausfinden könnte**.
-
-Kein Bauverlauf, keine Begründungen — nur Fakten und wo sie gelten.
-Bei Widerspruch gewinnt `CLAUDE.md`.
+Was hier steht, lässt sich **nur durch einen Echttest in SoftEngine**
+herausfinden. Nur Fakten und wo sie im Code gelten, kein Bauverlauf. Was hier
+fehlt, wird nicht geraten, sondern getestet.
 
 ---
 
@@ -27,6 +24,9 @@ Bei Widerspruch gewinnt `CLAUDE.md`.
   und `WWMSG` (WEBWARE) zu demselben Callback. **Nie direkt nur auf `BWMSG`
   lauschen.**
 - Immer nur EINE GET-Anfrage in Flug (Warteschlange).
+- GET-Antworten kommen über den REGISTER-Callback; `SEDATA.Message<N>` ist
+  der Rückfallweg. Eine leere Antwort `{"RESULT":""}` ist eine Antwort (kein
+  Treffer), kein Schweigen.
 - Gilt in: `softengine/bridge.ts`, `softengine/relations.ts`.
 
 ## 3. Feldcodes
@@ -47,6 +47,7 @@ Bei Widerspruch gewinnt `CLAUDE.md`.
   - **IDB** → SEFILELOOP. Beide Chef-Masken führen `FELDER: '*'`.
   - **Stamm (ADR/ART/BEL/POS)** → explizite `pos_len`-Liste.
   - **ERP-Abfrage** → eigener `ERPAPICALL`-Block, nicht in der SEFILELOOP.
+  - **MEMTAB** kommt in keiner echten Maske vor und wird nicht geschrieben.
 - Unser Export schreibt für IDB die explizite Liste der BENUTZTEN Felder statt
   `*`. Grund: SoftEngine macht für jeden gelieferten Wert einen Bild-Nachschlag
   (`GET_RELATION 1911` — Nutzer-Log 2026-08-11: 5 953 Aufrufe in 9,2 s beim
@@ -113,8 +114,7 @@ Ein vierter Block `MASKE` kommt in derselben Datei vor und trägt
 ## 4b. Feldpositionen der Installation (2026-08-17)
 
 Abgelesen an den Chef-Masken und am Vorlagen-Bestand des Nutzers. Alles
-installations-individuell — steht hier als NOTIZ, gehört nie in den Code
-(Regel 5).
+installations-individuell — steht hier als Notiz, gehört nie in den Code.
 
 | Tabelle | Feld | Code | Anmerkung |
 |---|---|---|---|
@@ -189,6 +189,9 @@ aus der Liste heraus und kann sie nicht scheitern lassen.
 - ⚠ **`relId` OHNE `IDB`-Präfix** (`ID0001`, nicht `IDBID0001`) — die
   SEvariablen derselben Maske sagen `IDBID0001`, der PUT nicht.
 - Standard-PUT NR 174 ist nur die mitgelieferte Vorlage, keine Konstante.
+- `pindex` ist die **Satznummer** des Zielsatzes. Für einen neuen Satz erst
+  `GET_RELATION[640!<IDBID>]` (liefert die Satznummer), dann
+  `PUT_RELATION[174!…!<Satznr>!…]`.
 - Belegter Fehlerfall: schickt man Feldnamen statt Werte, landen sie als
   INHALTE in SoftEngine — `PUT_RELATION[82!0!L!…!STSPALTE!!TEXT!!EPREIS!…]`.
 - Gilt in: `core/data/relations.ts`, `blocks/shared/seAktionen.ts`.
@@ -270,14 +273,15 @@ steht hier nur als Wissen:
   (`blocks/tabelle/rumpfMessung.ts`, `seitengroesse.ts`).
 - HTML5-Drag ändert in SoftEngine nur den Mauszeiger.
 - `<!--SOFTENGINE-VAR!EditorPfad-->/JS/JS/basis.html.interface.js` existiert und
-  arbeitet (belegt 2026-07-28, WinUI). Ob der Tag NÖTIG ist, ist ungeklärt —
-  s. CLAUDE.md, Regel 5.
+  arbeitet (belegt 2026-07-28, WinUI). Ob der Tag nötig ist, ist ungeklärt.
+- Ein Skript im Maskenordner (`<script src="fftest.js">`) wird ebenfalls
+  geladen (belegt 2026-08-28). Der Export nutzt das nicht.
 - Nebenbeobachtung: `CONECT` wird ZWEIMAL gesendet, Empfang trotzdem nur
   1 Paket. Ungeklärt.
 
 ## 14. Ansichten/Flächen
 
-- Befund N2.1-6 (Echttest 2026-08-12): ohne das Sicht-Attribut lagen zwei
+- Echttest 2026-08-12: ohne das Sicht-Attribut lagen zwei
   Flächen **übereinander** — im Editor unsichtbar, in SoftEngine kaputt.
   Wer es entfernt, bricht die Ansichten.
 - Gilt in: `blocks/base/BasicBlock.ts`, `blocks/navi/seRuntime.ts`.
@@ -295,5 +299,5 @@ steht hier nur als Wissen:
 ## Was hier NICHT steht
 
 - Bauverlauf, Umbau-Etappen, wer wann was entschieden hat → `git log`.
-- Regeln und Entscheidungen → `CLAUDE.md`.
+- Arbeitsweise und Aufbau des Editors → `CLAUDE.md`.
 - Die echten Masken selbst → `docs/chef-maske/`.

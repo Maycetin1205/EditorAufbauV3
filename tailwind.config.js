@@ -32,13 +32,9 @@ export default {
         fehler: 'hsl(var(--wb-fehler) / <alpha-value>)',
         vormerkung: 'hsl(var(--wb-vormerkung) / <alpha-value>)',
       },
-      // ============================================================
-      // Die Masseinheiten der Werkbank. Bis 2026-08-07 hat sich jede der
-      // 30 Editor-Dateien ihre eigenen ausgedacht: fuenf Textgroessen, vier
-      // Bedienhoehen, vier Rundungen. Das ist der Grund fuer „sieht
-      // uneinheitlich aus" — kein Schlendrian, sondern eine fehlende
-      // gemeinsame Liste.
-      // ============================================================
+      // Die Masseinheiten der Werkbank: eine gemeinsame Liste, damit nicht
+      // jede Editor-Datei eigene Textgroessen, Bedienhoehen und Rundungen
+      // erfindet.
       fontSize: {
         // ZWEI Stufen. Rangfolge macht der Editor ueber Fettung und Farbe,
         // nicht ueber ein Achtel Millimeter.

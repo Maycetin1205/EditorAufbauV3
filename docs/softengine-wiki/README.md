@@ -2,8 +2,7 @@
 
 Gesammeltes SE-Wissen aus **Originalquellen** (offizielles SE-Wiki, echte
 Masken, bestätigte Echttests) — damit wir SE-Kontrakte nachschlagen können,
-statt sie zu raten. Deckt sich mit **Regel 5** des Projektgedächtnisses:
-„SE-Kontrakte nur aus Originalquellen, nie geraten."
+statt sie zu raten.
 
 > Jede Seite nennt ihre Quelle (Wiki-Beitragsnummer + Stand, oder „Echttest
 > Datum"). Wo ein Kontrakt nur vermutet ist, steht das ausdrücklich dabei.
@@ -34,6 +33,9 @@ Alternative zu unseren eigenen Web Components (v. a. beim Thema Tabelle) →
 
 ## Artikel
 
+- [kontrakte.md](kontrakte.md) — die belegten Kontrakte unseres Export-Wegs:
+  Dateiform, Anmeldung, Feldcodes, SEvariablen, Schreiben, Hol-Relation,
+  START_TOOL, Plattform-Unterschiede.
 - [parser-direktiven.md](parser-direktiven.md) — die HTML-/JS-Kommentar-Direktiven
   des Server-Parsers (Beitrag #34712): SOFTENGINE-VAR, -BLOCK, -LOOP, -LINK,
   DATUM, TRIM, CONCAT, FILE_DREHEN, STATKENNZAHL, GET_REFRESH, NUMFORMAT.

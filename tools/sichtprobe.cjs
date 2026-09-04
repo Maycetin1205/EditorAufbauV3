@@ -1,18 +1,33 @@
-// Sichtprobe: den laufenden Editor im Browser bedienen und Bilder machen.
+// Sichtprobe: den laufenden Editor in einem unsichtbaren Chromium bedienen
+// und Bilder nach ./sichtprobe/<name>.png legen (nicht im Repo).
 //
-//   npm run dev                      (anderes Terminal; Port 5300)
-//   node tools/sichtprobe.cjs standard
+//   npm run dev                          (anderes Terminal, Port 5300)
+//   node tools/sichtprobe.cjs standard   neun Bilder: Editor, Tabelle gewaehlt,
+//                                        Feld-Picker, Formularfeld, Kanban-
+//                                        Spalte, Datencenter, Kettenfenster,
+//                                        Menue, Popup-Seite
 //   node tools/sichtprobe.cjs click:ff-tabelle wait:400 shot:meins
 //
-// Bilder landen in ./sichtprobe/<name>.png. Anleitung: tools/SICHTPROBE.md.
-// Ohne Browser: einmal `node node_modules/playwright-core/cli.js install chromium-headless-shell`.
+// Aktionen: click:<selektor> hover:<selektor> mclick:x,y mclick-kopf:<n>
+// drag:x1,y1,x2,y2 key:<Taste> type:<Text> select:<selektor>=<wert> wait:<ms>
+// shot:<name> clip:x,y,b,h,<name> text:<selektor> eval:<js>
+//
+// Die Maske im Bild kommt aus tools/sichtprobe-seed.json (die Referenzmaske im
+// Browserspeicher). SEED=0 laesst den Speicher leer, SEED=<datei> nimmt einen
+// eigenen Abzug, URL=... einen anderen Server.
+// Konsolen-Fehler und -Warnungen der Seite werden mit ausgegeben. Erwartet ist
+// genau EINE Warnung "ff-tabelle scheduled an update" je Tabelle: sie misst
+// nach dem ersten Zeichnen ihre Hoehe und zeichnet einmal nach. Alles andere
+// ist ein Fehler.
+// Ohne installierten Browser einmal:
+//   node node_modules/playwright-core/cli.js install chromium-headless-shell
 const { chromium } = require('playwright-core')
 const fs = require('fs')
 const path = require('path')
 
 const WURZEL = path.resolve(__dirname, '..')
 const AUSGABE = path.join(WURZEL, 'sichtprobe')
-const URL = process.env.URL || 'http://127.0.0.1:5300/'
+const URL = process.env.URL || 'http://localhost:5300/'
 const SEED = process.env.SEED === '0' ? null : (process.env.SEED || path.join(__dirname, 'sichtprobe-seed.json'))
 
 // Die Standard-Bilder, die JEDER Schritt vor dem Commit macht und ansieht.

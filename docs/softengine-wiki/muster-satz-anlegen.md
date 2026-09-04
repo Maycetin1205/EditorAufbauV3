@@ -2,7 +2,7 @@
 
 > **Quelle:** SE-Ausführungslog des Nutzers, 2026-07-17 — echter Vorgang
 > „Termin anlegen" in der Referenz-Installation (behandlung-umbau-Umfeld).
-> Originalquelle im Sinne von Regel 5; die Relations-NRs (640/174/666) sind
+> Die Relations-NRs (640/174/666) sind
 > **installations-individuell** und gehören NIE fest in Code.
 
 ## Der Ablauf (aus dem Log)
