@@ -14,7 +14,7 @@ export class ErfassungsAnschluss {
   private _zurueck: { kennung: string; platz: number } | null = null
 
   // Die Korrektur bleibt AN ORT UND STELLE: nichts springt, nichts sortiert
-  // sich um (Nutzer 2026-09-01).
+  // sich um.
   get korrekturPlatz(): number | null {
     return this._zurueck === null ? null : this._zurueck.platz
   }
@@ -27,9 +27,9 @@ export class ErfassungsAnschluss {
     return `e${this.naechsteKennung}`
   }
 
-  // Auch die unten getippte Zeile zaehlt hier mit: wer sie ausfuellte und
-  // buchte, ohne vorher Enter zu druecken, sah sie vor sich und bekam sie
-  // trotzdem nicht ins ERP (Nutzer-Befund 2026-09-01).
+  // Auch die unten getippte Zeile zaehlt hier mit: wer sie ausfuellt und
+  // bucht, ohne vorher Enter zu druecken, sieht sie vor sich und bekaeme sie
+  // sonst trotzdem nicht ins ERP.
   vormerkungen(umfeld: ErfassungsUmfeld): { kennung: string; werte: readonly string[] }[] {
     const alle = this._zeilen
       .filter((z) => z.geschrieben !== true)

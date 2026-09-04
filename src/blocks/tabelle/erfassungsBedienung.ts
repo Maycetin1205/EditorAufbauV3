@@ -80,8 +80,8 @@ export function springe(wirt: ErfassungsWirt, index: number, taste: string): boo
 
 function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
   // Shift+Tab setzt den Fokus selbst eine Zelle zurück: der Browser-Weg durch
-  // die Schatten-Wurzeln war nicht verlässlich, und die Tastatursteuerung soll
-  // in beide Richtungen vollständig sein (Nutzer 2026-09-01).
+  // die Schatten-Wurzeln ist nicht verlässlich, und die Tastatursteuerung soll
+  // in beide Richtungen vollständig sein.
   if (e.key === 'Tab' && e.shiftKey) {
     const vorige = wirt.lauf.nachbarPlatz(wirt.umfeld(), index, -1)
     if (vorige === -1) return

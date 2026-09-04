@@ -201,8 +201,8 @@ describe('Tastenentscheid', () => {
     expect(new ErfassungsLauf().entscheideTaste(umfeld, 2, 'Tab')).toBe('weiter')
   })
 
-  // Tab ist die Weiter-Taste — IMMER (Nutzer 2026-09-01). Vorher riss sie
-  // bei mehreren Treffern das grosse Fenster auf, mitten im Durchtabben.
+  // Tab ist die Weiter-Taste — IMMER. Sie darf bei mehreren Treffern nicht
+  // das grosse Fenster aufreissen, mitten im Durchtabben.
   test('Tab bei mehreren Treffern springt weiter statt Fenster', () => {
     const lauf = new ErfassungsLauf()
     lauf.tippe(2, 'e')
@@ -269,7 +269,7 @@ describe('Tastenentscheid', () => {
     expect(lauf.entscheideTaste(umfeld, 1, 'Enter')).toBe('weiter')
   })
 
-  // G1: getippter Text ohne Treffer haelt bewusst an — sonst rauscht der Fluss
+  // Getippter Text ohne Treffer haelt bewusst an — sonst rauscht der Fluss
   // ueber den Tippfehler hinweg.
   test('Enter auf Getipptem ohne Treffer haelt an, auf Gewaehltem geht es weiter', () => {
     const lauf = new ErfassungsLauf()
@@ -357,11 +357,11 @@ describe('Tastenentscheid', () => {
   })
 })
 
-// P4: Eine erfasste Zeile zur Korrektur zurueckholen. In ihr steht ALLES
+// Eine erfasste Zeile zur Korrektur zurueckholen. In ihr steht ALLES
 // gefuellt — auch der Platz, den die Rechnung selbst ausgerechnet hat. Wird
 // er als getippt uebernommen, gilt er als GEGEBEN: die Rechnung hat keine
 // Luecke mehr und schweigt. Der Bediener aendert die Tiere, und die alte
-// Abgabemenge geht ins ERP (Nutzer-Befund 2026-09-01).
+// Abgabemenge geht ins ERP.
 describe('Zurueckholen und die Rechnung', () => {
   const spalten: Spalte[] = [
     { kennung: 's1', titel: 'Artikel', feld: '18_25' },

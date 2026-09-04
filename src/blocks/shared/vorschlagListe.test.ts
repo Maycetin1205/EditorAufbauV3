@@ -5,8 +5,8 @@ const eintrag = (anzeige: string, wert = anzeige) => ({ anzeige, wert })
 
 const namen = (liste: readonly { anzeige: string }[]) => liste.map((e) => e.anzeige)
 
-// Nutzer-Entscheidung 2026-09-04: „Schr" soll zuerst Schraube zeigen, nicht
-// Holzschraube — auch wenn Holzschraube in den Daten weiter vorn steht.
+// „Schr" soll zuerst Schraube zeigen, nicht Holzschraube — auch wenn
+// Holzschraube in den Daten weiter vorn steht.
 test('Treffer am Wortanfang stehen oben, dann der Rest', () => {
   const liste = passendeVorschlaege(
     [eintrag('Holzschraube'), eintrag('Schraubendreher'), eintrag('Schraube')],

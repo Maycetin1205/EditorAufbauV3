@@ -1,7 +1,7 @@
 // Umlaute und Akzente auf ihren Grundbuchstaben zurueckfuehren: wer „muller"
-// tippt, sucht Mueller, und wer „AERMEL" tippt, sucht Ärmel. Ohne das fiel
+// tippt, sucht Mueller, und wer „AERMEL" tippt, sucht Ärmel. Ohne das faellt
 // jeder Treffer mit Umlaut aus der Liste, sobald der Bediener die Taste nicht
-// traf — im Lager tippt niemand Umlaute mit (Nutzer-Befund 2026-09-04).
+// trifft — im Lager tippt niemand Umlaute mit.
 //
 // Zusaetzlich ss/ß, weil das kein Akzent ist und die Zerlegung es nicht
 // erwischt. Getrennt ausgestellt, damit Suche und Sortierung DASSELBE

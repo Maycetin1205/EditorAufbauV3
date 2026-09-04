@@ -53,8 +53,8 @@ export function QuellenListe({ block }: QuellenListeProps) {
   }
 
   // Woran diese Quelle haengt. Drei Zustaende, und sie muessen auseinander
-  // bleiben — sonst sprang „keine" beim naechsten Zeichnen auf Datenquelle 1
-  // zurueck (Nutzer-Befund 2026-08-27):
+  // bleiben — sonst springt „keine" beim naechsten Zeichnen auf Datenquelle 1
+  // zurueck:
   //   KEIN Feldpaar   -> gar keine Verbindung (reine Nachschlagequelle)
   //   partnerId leer  -> die Hauptquelle (so lesen sich auch alte Masken)
   //   partnerId gesetzt -> eine andere weitere Quelle (2 an 3, 3 an 4)

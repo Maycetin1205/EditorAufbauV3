@@ -7,8 +7,8 @@ export interface ListeEintrag {
   wert: string
   name: string
 
-  // Rechts in der Zeile, technisch (Feldcode, Nummer) — Regel 3: der
-  // Klarname fuehrt, die Kennung steht daneben.
+  // Rechts in der Zeile, technisch (Feldcode, Nummer): der Klarname fuehrt,
+  // die Kennung steht daneben.
   kennung?: string
   deaktiviert?: boolean
 }

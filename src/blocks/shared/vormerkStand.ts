@@ -51,9 +51,9 @@ function anzahlVon(traeger: VormerkTraeger, art: VormerkArt): number {
 }
 
 // Was DIESE Kette noch zu schreiben hat. Welche Listen das sind, steht in
-// ihren eigenen Parametern — kein Bausteintyp kommt vor (Regel 2). undefined
-// heisst: die Kette liest gar keine Vormerkungen, der Knopf bleibt ein
-// gewoehnlicher Knopf ohne Zaehler.
+// ihren eigenen Parametern — kein Bausteintyp kommt vor. undefined heisst:
+// die Kette liest gar keine Vormerkungen, der Knopf bleibt ein gewoehnlicher
+// Knopf ohne Zaehler.
 export function vormerkStandVon(el: HTMLElement, eventKey: string): VormerkZahlen | undefined {
   const steps = parseBlockEvents(el.getAttribute('data-ff-aktionen'))[eventKey]
   if (!steps || steps.length === 0) return undefined

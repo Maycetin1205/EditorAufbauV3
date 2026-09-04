@@ -53,11 +53,9 @@ function maskeMitTabelle(): BlockTree {
   }
 }
 
-// Die Auflage des Nutzers: „nur im Editor, nie im Export" wird als eigener
-// Test festgenagelt. Der in CLAUDE.md genannte Referenzabzug existiert in
-// diesem Repo NICHT — er beschreibt ein frueheres Repo und taugt nicht als
-// Absicherung. Der Name der Hilfsquelle ist die Probe: er steht im Editor
-// unter dem Spaltentitel und darf in der Maskendatei nirgends auftauchen.
+// Die Regel „nur im Editor, nie im Export" wird als eigener Test festgenagelt.
+// Der Name der Hilfsquelle ist die Probe: er steht im Editor unter dem
+// Spaltentitel und darf in der Maskendatei nirgends auftauchen.
 test('der Quellname steht nicht am exportierten Baustein', () => {
   const html = exportMask(maskeMitTabelle(), 'Pruefmaske', [POS, ART], []).html
   const tag = /<ff-tabelle[^>]*>/.exec(html)?.[0] ?? ''

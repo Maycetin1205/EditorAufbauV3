@@ -68,8 +68,8 @@ test('ein vollstaendiger Lauf veroeffentlicht die Zeilen', async () => {
 })
 
 // Ein gescheiterter Ruf liefert einen LEEREN Satz. Der sieht aus wie das Ende
-// der Liste: bis P2 schnitt ein Timeout die restlichen Positionen stumm ab und
-// die halbe Liste ging als ganze durch.
+// der Liste: ohne diese Pruefung schnitte ein Timeout die restlichen Positionen
+// stumm ab und die halbe Liste ginge als ganze durch.
 test('ein Fehler bricht ab, meldet und veroeffentlicht KEINE halbe Liste', async () => {
   antworten.push(
     { wert: SATZ },

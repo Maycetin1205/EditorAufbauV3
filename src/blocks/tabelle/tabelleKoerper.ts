@@ -88,7 +88,7 @@ export interface KoerperLage {
   leer: boolean
   leerText: string
 
-  // Erfasste, noch nicht geschriebene Zeilen (G4): sie stehen zwischen der
+  // Erfasste, noch nicht geschriebene Zeilen: sie stehen zwischen der
   // letzten Datenzeile und der Erfassungszeile, links markiert — erst der
   // Ketten-Lauf des Knopfs macht aus ihnen echte Positionen.
   erfasste: readonly (readonly string[])[]
@@ -238,7 +238,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 return
               }
               // Entf merkt die fokussierte Zeile zum Loeschen vor — und nimmt
-              // es am selben Weg zurueck (Nutzer-Entscheidung 2026-09-01).
+              // es am selben Weg zurueck.
               if (e.key === 'Delete' && lage.loeschbar && rohIndex !== null && !lage.imEditor) {
                 e.preventDefault()
                 tun.schalteLoeschung(rohIndex)

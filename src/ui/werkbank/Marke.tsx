@@ -13,9 +13,9 @@ export interface MarkeProps {
   className?: string
 }
 
-// Die kleine Plakette am rechten Ende einer Zeile: das, was Regel 3 als
-// KENNUNG neben den Klarnamen stellt — Feldcode, Relations-Nummer, Art der
-// Quelle. Der Klarname fuehrt, die Kennung steht daneben und draengelt nicht.
+// Die kleine Plakette am rechten Ende einer Zeile: die KENNUNG neben dem
+// Klarnamen — Feldcode, Relations-Nummer, Art der Quelle. Der Klarname
+// fuehrt, die Kennung steht daneben und draengelt nicht.
 //
 // Warum als eigenes Bauteil: es gab dieselbe Sache in drei Formen — im
 // Datencenter mit Fuellung, in den Waehlerlisten ohne, in den Schritten gar

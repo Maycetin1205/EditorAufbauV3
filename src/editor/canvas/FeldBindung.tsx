@@ -144,8 +144,7 @@ export function useFeldBindung({
       // Ein zweiter Klick auf DENSELBEN Kopf macht wieder zu. Der Kopf gilt
       // dem Fenster als Anker, sonst haette der Zeigerdruck es schon
       // geschlossen und der Klick danach sofort wieder geoeffnet — netto
-      // passierte nichts (Nutzer-Befund 2026-08-28). Ein anderer Kopf schaltet
-      // um statt zu schliessen.
+      // passierte nichts. Ein anderer Kopf schaltet um statt zu schliessen.
       setListenPicker((vorher) => (vorher !== null && vorher.index === index ? null : {
         index,
         top: Math.max(8, detail.top ?? 0),
@@ -265,8 +264,7 @@ export function useFeldBindung({
             // Ein anderer Spaltenkopf = frisches Fenster. Ohne `key` bleibt das
             // Fenster am Leben und behaelt sein Schreibziel: wer einmal
             // „Nachschlagen" angeklickt hatte, band bei der naechsten Spalte
-            // wieder das Fuellfeld — Titel und Zelle blieben leer
-            // (Nutzer-Befund 2026-08-31).
+            // wieder das Fuellfeld — Titel und Zelle blieben leer.
             key={listenPicker.index}
             spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
             gruppen={listenGruppen}
@@ -331,14 +329,12 @@ export function useFeldBindung({
                 // Feldes. Umbenennen geht danach jederzeit — bis zur naechsten
                 // Feldwahl, dann fuehrt wieder das Feld.
                 //
-                // Das kehrt eine Regel vom 2026-08-27 um. Damals galt: ein
-                // selbst getippter Name bleibt unangetastet, die Wahl setzt den
-                // Titel nur, solange er noch „Spalte 3" heisst. Der Nutzer hat
-                // das am 2026-08-28 zweimal ausdruecklich anders verlangt
-                // („ich nehme ein feld aus, aber die Spaltenueberschrift bleibt
-                // gleich"). Die Kehrseite ist bekannt und in Kauf genommen: wer
-                // eine Spalte benannt hat und danach umbindet, muss den Namen
-                // neu tippen.
+                // Die Gegenregel — ein selbst getippter Name bleibt stehen, die
+                // Wahl setzt den Titel nur, solange er noch „Spalte 3" heisst —
+                // ist bewusst verworfen: bei ihr waehlt man ein Feld aus, und
+                // die Spaltenueberschrift bleibt trotzdem gleich. Die Kehrseite
+                // ist bekannt und in Kauf genommen: wer eine Spalte benannt hat
+                // und danach umbindet, muss den Namen neu tippen.
                 const klarname = (feldWert: string): string => (proQuelle
                   ? (quelleAusProp.fields.find((f) => f.code === feldWert)?.label ?? '')
                   : klarnameVon(feldWert, quellen)) || feldWert
@@ -350,8 +346,8 @@ export function useFeldBindung({
               // Das Fenster bleibt OFFEN. Es ist die Einstellflaeche der
               // Spalte, kein einmaliger Feldwaehler: nach dem Feld will man
               // meist noch die Darstellung, das Nachschlage-Feld oder einen
-              // Schalter setzen (Nutzer-Ansage 2026-08-28). Zu geht es ueber
-              // Esc, einen Klick daneben oder einen anderen Spaltenkopf.
+              // Schalter setzen. Zu geht es ueber Esc, einen Klick daneben oder
+              // einen anderen Spaltenkopf.
             }}
             onClose={closeListenPicker}
           />

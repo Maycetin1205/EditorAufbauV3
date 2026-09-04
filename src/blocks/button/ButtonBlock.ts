@@ -61,8 +61,7 @@ export class ButtonBlock extends BasicBlock {
 
   // Liest die Kette dieses Knopfs Vormerkungen, steht ihre Zahl im Label und
   // der Knopf ist bei Null aus — er haette nichts zu tun. undefined heisst:
-  // gewoehnlicher Knopf. Im Editor bleibt es dabei, dort gibt es keine Daten
-  // (Regel 7).
+  // gewoehnlicher Knopf. Im Editor bleibt es dabei, dort gibt es keine Daten.
   @property({ attribute: false }) vormerkungen: VormerkZahlen | undefined = undefined
 
   private readonly zaehleVormerkungen = (): void => {

@@ -79,7 +79,7 @@ interface TemplateCtx {
 
 // Spalten-Kennung -> Platz fuer die Ketten-Parameter (aktionen.ts,
 // ZELLEN_PARAM_QUELLEN): generisch ueber die Listen-Bindung des Ziel-
-// Bausteins, kein Bausteintyp-Sondercode (Regel 2). Unbekannt -> '-1',
+// Bausteins, kein Bausteintyp-Sondercode. Unbekannt -> '-1',
 // die Laufzeit liefert dann den leeren Wert — dieselbe Antwort wie ueberall.
 function spaltenIndexFuer(tree: BlockTree): (blockId: string, kennung: string) => string {
   return (blockId, kennung) => {
@@ -194,10 +194,10 @@ function nodeToHtml(
     // Ist dieser Knoten eine FLAECHE, liegen seine Kinder in Zellen: die
     // Ansicht gibt die Rasterebene der Maskenwurzel durch (sie hat keinen
     // eigenen Kasten, display:contents), das Popup oeffnet mit seinem Rumpf
-    // eine EIGENE Flaeche (C2). Alles andere reicht Fluss weiter. Gefragt wird
+    // eine EIGENE Flaeche. Alles andere reicht Fluss weiter. Gefragt wird
     // die eine Stelle, die auch `Editor.addBlock` und der Canvas fragen —
     // wuerde der Export hier eigenstaendig raten, saessen die Bausteine in
-    // SoftEngine woanders als im Editor (Regel 1).
+    // SoftEngine woanders als im Editor.
     .map((c) => nodeToHtml(tree, c, childDirection, depth + 1, popupName, spaltenIndex, sources, childCtx, istRasterFlaeche(node)))
     .filter((html) => html !== '')
     .join('\n')

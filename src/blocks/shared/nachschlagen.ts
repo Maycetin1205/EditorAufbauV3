@@ -39,7 +39,7 @@ export function nachschlagFeldTpl(args: {
   onVerlassen: () => void
   onLupe: () => void
 
-  // Die Vorschlagsliste (G1) haengt im selben Halter wie die Lupe: sie
+  // Die Vorschlagsliste haengt im selben Halter wie die Lupe: sie
   // steht unter dem Feld und deckt zu, was darunter liegt.
   liste: TemplateResult | typeof nothing
 }): TemplateResult {
@@ -323,7 +323,7 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
   // Das Nachschlage-Fenster IST eine Tabelle — also kann der Bediener sich
   // hier dasselbe einrichten wie ueberall: Rechtsklick auf den Spaltenkopf
   // nimmt Spalten weg, ein Klick sortiert, und beides ueberlebt das
-  // Schliessen (Nutzer-Entscheidung 2026-09-04).
+  // Schliessen.
   return html`<ff-tabelle
     fuellt
     suche="ja"
@@ -410,7 +410,7 @@ export interface SpaltenStellenArgs {
 }
 
 // Editor-Weg der Lupe: dasselbe Fenster wie zur Laufzeit (fensterTpl),
-// aber die Tabelle laeuft im Editor-Modus (Striche statt Daten, Regel 7)
+// aber die Tabelle laeuft im Editor-Modus (Striche statt Daten)
 // und traegt ihre eigene Spalten-Bedienung: +/- oben rechts, Doppelklick
 // = umbenennen, Klick auf den Titel = Feld waehlen. Lebt im Shadow-DOM
 // des Feldes, damit die Aenderungen als normale Ereignisse beim Editor

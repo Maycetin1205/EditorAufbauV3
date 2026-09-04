@@ -3,12 +3,11 @@
 // Gerechnet wird der EINE leere Platz; Getipptes und aus Quellen Gefuelltes
 // gilt als gegeben.
 //
-// Tiergewicht und "je kg" sind am 2026-09-01 auf Nutzer-Ansage RAUS: die
-// Dosis gilt pro Tier. Mit ihnen war ein Artikel, bei dem in der IDB ein
-// Koerpergewicht steht (313_5, z. B. Baytril "5 ml / 50 kg"), nur zu rechnen,
-// wenn der Bediener zusaetzlich ein Tiergewicht tippte — sonst waren es zwei
-// Luecken und die Rechnung schwieg. Genau das war der Nutzer-Befund. Nicht
-// ohne neue Entscheidung wieder einbauen.
+// Tiergewicht und "je kg" sind bewusst KEINE Plaetze: die Dosis gilt pro
+// Tier. Mit ihnen waere ein Artikel, bei dem in der IDB ein Koerpergewicht
+// steht (313_5, z. B. Baytril "5 ml / 50 kg"), nur zu rechnen, wenn der
+// Bediener zusaetzlich ein Tiergewicht tippte — sonst waeren es zwei Luecken
+// und die Rechnung schwiege. Nicht wieder einbauen.
 
 export type RundungsRichtung = 'auf' | 'ab' | 'kfm'
 
@@ -20,8 +19,8 @@ export interface Rundung {
 export interface RechnungsPlatz {
   // Spalten-Referenz ueber die dauerhafte KENNUNG der Spalte (Spalte.kennung),
   // nie ueber Platz oder Belegfeld: Plaetze verrutschen beim Verschieben/
-  // Loeschen, und ein doppelt vergebenes Belegfeld traf stumm die falsche
-  // Spalte (Nutzer-Vorfall 2026-09-01). Leer = Platz unbenutzt (Faktor 1).
+  // Loeschen, und ein doppelt vergebenes Belegfeld traefe stumm die falsche
+  // Spalte. Leer = Platz unbenutzt (Faktor 1).
   spalte: string
   runden: Rundung
 }
@@ -37,10 +36,10 @@ export const PLATZ_NAMEN: Record<PlatzKey, string> = {
   tage: 'Behandlungstage',
 }
 
-// Einheiten trägt die Rechnung KEINE (ein Einheiten-Umrechner an der
-// Abgabemenge ist am 2026-09-01 auf Nutzer-Ansage wieder ausgebaut): die
-// Einheit kommt aus den Daten der Zeile (Behandlungseinheit) und ist oft
-// gar nicht umrechenbar ('Inj.', 'Stab') — getippt wird in genau ihr.
+// Einheiten trägt die Rechnung KEINE, auch keinen Umrechner an der
+// Abgabemenge: die Einheit kommt aus den Daten der Zeile (Behandlungseinheit)
+// und ist oft gar nicht umrechenbar ('Inj.', 'Stab') — getippt wird in genau
+// ihr.
 export interface Rechnung {
   menge: RechnungsPlatz
   anzahl: RechnungsPlatz
@@ -53,8 +52,7 @@ const RUNDEN_STANDARD: Rundung = { stellen: 3, richtung: 'kfm' }
 export function leereRechnung(): Rechnung {
   return {
     menge: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-    // Tiere sind ganze Tiere; aufgerundet, damit keines leer ausgeht
-    // (Nutzer-Entscheidung 2026-08-31).
+    // Tiere sind ganze Tiere; aufgerundet, damit keines leer ausgeht.
     anzahl: { spalte: '', runden: { stellen: 0, richtung: 'auf' } },
     dosis: { spalte: '', runden: { ...RUNDEN_STANDARD } },
     tage: { spalte: '', runden: { ...RUNDEN_STANDARD } },

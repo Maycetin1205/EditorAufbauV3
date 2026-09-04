@@ -56,9 +56,9 @@ export function feldPosLen(
 }
 
 // Position und Laenge sind Position und Laenge — welche ART die Quelle hat,
-// spielt dafuer keine Rolle. Bis 2026-08-28 stand hier `kind !== 'idb'` und
-// sperrte jede Tabelle aus, die nicht als IDB-Tabelle angelegt war: eine
-// ERP-Abfrage IDB.GET auf dieselbe Tabelle fiel damit heraus.
+// spielt dafuer keine Rolle. Ein Filter auf die Art sperrte jede Tabelle aus,
+// die nicht als IDB-Tabelle angelegt ist: eine ERP-Abfrage IDB.GET auf
+// dieselbe Tabelle fiele damit heraus.
 export function uebernahmeFelder(
   dataSources: readonly DataSource[],
 ): UebernahmeFeld[] {

@@ -3,13 +3,12 @@ import { ref } from 'lit/directives/ref.js'
 import { schlichtText, zeilePasst } from './textSuche'
 
 // Die Tipp-Vorschlagsliste. Sie entsteht EINMAL hier und wird geteilt: das
-// Formularfeld „nachschlagen" zeigt sie zuerst (G1), die Erfassungszeile der
-// Tabelle bekommt dieselbe (G2). Geteilt sind Logik UND Aussehen — zwei
-// Fassungen wuerden auseinanderlaufen, genau wie beim Nachschlage-Fenster
-// vor V7.
+// Formularfeld „nachschlagen" zeigt sie, die Erfassungszeile der Tabelle
+// bekommt dieselbe. Geteilt sind Logik UND Aussehen — zwei Fassungen wuerden
+// auseinanderlaufen.
 
 // Mehr als acht Treffer liest niemand im Vorbeitippen; wer alle sehen will,
-// nimmt das grosse Fenster (Wellen-Kopf G: „bis ~8 Treffer").
+// nimmt das grosse Fenster.
 export const VORSCHLAEGE_MAX = 8
 
 export interface Vorschlag {
@@ -19,7 +18,7 @@ export interface Vorschlag {
 }
 
 // Gesucht wird in BEIDEM, Anzeige und gespeichertem Wert: Geuebte tippen
-// „bay" fuer Baytril, andere die Nummer (Wellen-Kopf G). Leer getippt = KEINE
+// „bay" fuer Baytril, andere die Nummer. Leer getippt = KEINE
 // Liste — bei leerem Feld ist Enter der Weg ins grosse Fenster, und alle
 // Saetze untereinander waeren dort nur im Weg.
 // Umlaute sortieren wie ihr Grundbuchstabe (Ä bei A), Zahlen im Text nach
@@ -27,12 +26,11 @@ export interface Vorschlag {
 const textVergleich = new Intl.Collator('de', { numeric: true, sensitivity: 'base' })
 
 // Wer „Schr" tippt, meint zuerst Schraube und Schraubendreher, nicht
-// Holzschraube (Nutzer-Entscheidung 2026-09-04). Also: erst was VORN
-// anfaengt, dann der Rest — und beides in sich alphabetisch. Vorher stand die
-// Liste in der Reihenfolge da, in der SoftEngine die Saetze liefert.
-// Derselbe Massstab wie die Suche (textSuche.ts): Ä zaehlt als A. Sonst
-// stuende ein Treffer, den die Suche gefunden hat, in der Sortierung ploetzlich
-// nicht mehr „am Anfang".
+// Holzschraube. Also: erst was VORN anfaengt, dann der Rest — und beides in
+// sich alphabetisch, nicht in der Reihenfolge, in der SoftEngine die Saetze
+// liefert. Derselbe Massstab wie die Suche (textSuche.ts): Ä zaehlt als A.
+// Sonst stuende ein Treffer, den die Suche gefunden hat, in der Sortierung
+// ploetzlich nicht mehr „am Anfang".
 function beginntMit(eintrag: Vorschlag, getippt: string): boolean {
   const t = schlichtText(getippt.trim())
   if (t === '') return false
@@ -83,7 +81,7 @@ export function gueltigeMarke(marke: number, anzahl: number): number {
 }
 
 // Was eine Taste an der Vorschlagsliste bedeutet — als eigene Entscheidung,
-// weil die Erfassungszeile der Tabelle (G2/G3) genau dieselbe braucht (dort
+// weil die Erfassungszeile der Tabelle genau dieselbe braucht (dort
 // kommt nur der Sprung in die naechste Zelle hinzu) und weil sie sich so ohne
 // Feld und ohne Browser pruefen laesst. Benannte Schalter statt zwei
 // boolean hintereinander: vertauscht sieht man an der Aufrufstelle nicht.
@@ -113,21 +111,21 @@ export function tastenFolge(taste: string, args: {
   if (taste === 'Escape') return args.listeOffen ? 'liste-zu' : 'nichts'
   if (taste !== 'Enter') return 'nichts'
   // Genau ein Treffer ist keine Auswahl, sondern das Ergebnis: Enter nimmt
-  // ihn. Bei mehreren nahm Enter frueher stumm den ersten der acht — bei
-  // tausenden Saetzen war das Raten. Jetzt geht das grosse Fenster auf, das
-  // suchen, sortieren und blaettern kann (Nutzer-Entscheidung 2026-08-28).
+  // ihn. Bei mehreren stumm den ersten der acht zu nehmen waere bei
+  // tausenden Saetzen Raten — darum geht das grosse Fenster auf, das suchen,
+  // sortieren und blaettern kann.
   if (args.listeOffen) {
     return args.markeVonHand || args.treffer === 1 ? 'uebernehmen' : 'fenster'
   }
-  // Enter im LEEREN Feld oeffnet das grosse Fenster (Wellen-Kopf G).
+  // Enter im LEEREN Feld oeffnet das grosse Fenster.
   // Getippter Text ohne Treffer laesst es ZU: sonst belohnt das Fenster den
   // Tippfehler und der Bediener verliert seinen Text aus den Augen.
   return args.feldLeer ? 'fenster' : 'nichts'
 }
 
-// Schritt 18: Die Vorschlagsliste darf breiter werden als der Halter
+// Die Vorschlagsliste darf breiter werden als der Halter
 // (width: max-content, min-width: 100%), damit Artikelbezeichnungen bei
-// schmalen Spalten nicht mehr abgeschnitten werden.
+// schmalen Spalten nicht abgeschnitten werden.
 // Regeln: sie bleibt links verankert und waechst nach rechts; sie wird nie
 // schmaler als der Halter; tritt sie rechts ueber den Rand der Flaeche
 // hinaus, waechst sie nach links (.nach-links).
@@ -266,7 +264,7 @@ export const vorschlagStil = css`
   }
 
   /* Tritt die Liste ueber den rechten Rand der Flaeche hinaus, waechst sie
-     nach links statt weiter nach rechts (Schritt 18). */
+     nach links statt weiter nach rechts. */
   .vorschlaege.nach-links {
     left: auto;
     right: 0;

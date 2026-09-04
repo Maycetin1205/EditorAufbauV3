@@ -16,7 +16,7 @@ export interface ReiterProps {
 // Die aktive Zunge wird nicht nur farbig, sondern auch fett. Das ist Absicht:
 // Farbe allein unterscheidet fuer manche Augen zu wenig, und die Zunge ist die
 // Anzeige, WO man ist — sie muss ohne Vergleich mit den Nachbarn lesbar sein.
-// Weil fett breiter baut als mager, huepfte die Leiste beim Wechsel frueher um
+// Weil fett breiter baut als mager, huepfte die Leiste beim Wechsel sonst um
 // ein paar Pixel; `whitespace-nowrap` und die feste Hoehe halten sie ruhig.
 //
 // Kein `aria-pressed`: dieselbe Zunge dient auch als Aktion („＋ Neue Seite"),

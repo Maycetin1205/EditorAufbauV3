@@ -25,12 +25,11 @@ export function eigenerText(
   return ''
 }
 
-// Die Props, deren gespeicherten Text der Nutzer gerade GAR NICHT sieht: an
+// Die Props, deren gespeicherten Text der Bediener gerade GAR NICHT sieht: an
 // einer gebundenen Stelle schreibt der Editor den Klarnamen des gebundenen
 // Feldes in die Vorschau-Prop (useLitElement) — im Feld steht also der
 // Klarname, nicht der Platzhalter. Ein Name aus dem ueberdeckten Text
-// widerspraeche dem Bild („im Waehler heissen die anders als im Feld",
-// Nutzer-Befund 2026-09-01).
+// widerspraeche dem Bild: im Waehler hiessen die Bausteine anders als im Feld.
 function verdeckteProps(node: BlockNode): Set<string> {
   const raus = new Set<string>()
   for (const stelle of bindbareStellenVon(node)) {

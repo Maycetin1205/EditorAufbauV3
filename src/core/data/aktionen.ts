@@ -37,7 +37,7 @@ export const ACTION_PARAM_SOURCES = [
 
   // „Wert aus Erfassungszelle <Spalte>": liefert je Ketten-Lauf den
   // sichtbaren Zellwert der jeweiligen erfassten Zeile — Herkunft egal,
-  // gewaehlt oder frei getippt (Formularfeld-Prinzip, G4). blockId = die
+  // gewaehlt oder frei getippt (Formularfeld-Prinzip). blockId = die
   // Tabelle. value = im BAUM die dauerhafte Spalten-KENNUNG (Spalte.kennung,
   // verrutscht nicht beim Verschieben/Loeschen), im EXPORT der Spalten-Index
   // (withoutEditorId uebersetzt — dasselbe Muster wie popupId -> Name und
@@ -126,7 +126,7 @@ export interface StartToolStep extends ActionStepBase {
 }
 
 // Ein freier BüroWARE-Befehl. START_TOOL hat eine eigene Art, weil sein Link
-// fest aufgebaut ist ('0,START_TOOL,<nr>'); hier gibt der Nutzer die ganze
+// fest aufgebaut ist ('0,START_TOOL,<nr>'); hier gibt der Bediener die ganze
 // Zeile vor, weil die Befehle je Installation andere sind.
 export interface BwLinkStep extends ActionStepBase {
   type: 'BW_LINK'
@@ -246,10 +246,9 @@ function stepFields(raw: unknown): RuntimeStep | null {
   if (raw.type === 'RELATION') {
     if (typeof raw.relationId !== 'string') return null
     if (!Array.isArray(raw.extraParams)) return null
-    // Frueher liess eine Ausnahme fuer ein Alt-Feld `bindings` den Schritt
-    // durch — mit LEEREN params, weil niemand `bindings` je umsetzte. Die
-    // Relation ging dann mit lauter leeren Parametern ins ERP. Ein Schritt
-    // ohne params-Liste ist jetzt ungueltig und faellt beim Laden auf.
+    // Ein Schritt ohne params-Liste ist ungueltig und faellt beim Laden auf.
+    // Liesse man ihn mit LEEREN params durch, ginge die Relation mit lauter
+    // leeren Parametern ins ERP.
     if (!Array.isArray(raw.params)) return null
     const params: ActionParamBinding[] = []
     for (const value of raw.params) {

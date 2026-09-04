@@ -28,9 +28,9 @@ test('verschiedene Namen bleiben unangetastet', () => {
   expect(mitEindeutigenNamen(liste)).toEqual(liste)
 })
 
-// Arten ohne feste Tabellen-ID tragen sie als eigene Kennung. Fehlt sie, ging
-// bisher ein SEFILELOOP-Eintrag mit ID:"" hinaus — SoftEngine findet dazu
-// nichts und bricht laut Kontrakt die ganze Loop-Liste ab.
+// Arten ohne feste Tabellen-ID tragen sie als eigene Kennung. Fehlt sie, ginge
+// ein SEFILELOOP-Eintrag mit ID:"" hinaus — SoftEngine findet dazu nichts und
+// bricht laut Kontrakt die ganze Loop-Liste ab.
 test('eine IDB-Quelle ohne Kennung wird gemeldet statt still bestellt', () => {
   const { liste, probleme } = pruefeDatenquellen([
     { id: 'a', name: 'Ohne', kind: 'idb', fields: [] },

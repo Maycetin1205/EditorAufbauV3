@@ -28,13 +28,12 @@ export interface ZeileProps {
 
 // Eine Beschriftung mit ihrem Bedienelement — EINSPALTIG, Beschriftung oben.
 //
-// Bis 2026-08-31 stand die Beschriftung links in einem 2fr/3fr-Raster. Im
-// damals 270 px breiten Inspector waren das rund 98 px, also gut ein Dutzend
-// Zeichen: fast jede Beschriftung brach auf zwei Zeilen um, wodurch die
-// Zeilen unterschiedlich hoch wurden — genau der ungleiche Takt, den man als
-// „kaputt" liest. Dem Bedienelement blieben gleichzeitig nur 178 px, weshalb
-// in den Waehlern Klarnamen abgeschnitten standen. Uebereinander bekommen
-// beide die volle Breite.
+// Staende die Beschriftung links in einem 2fr/3fr-Raster, blieben ihr im
+// schmalen Inspector nur gut ein Dutzend Zeichen: fast jede Beschriftung
+// braeche auf zwei Zeilen um, die Zeilen wuerden unterschiedlich hoch — genau
+// der ungleiche Takt, den man als „kaputt" liest. Dem Bedienelement bliebe
+// gleichzeitig zu wenig Platz, und in den Waehlern staenden Klarnamen
+// abgeschnitten. Uebereinander bekommen beide die volle Breite.
 //
 // Beschriftung und Wert sind gleich GROSS und unterscheiden sich nur in der
 // Farbe — so steht es in der Schriftskala (tailwind.config: „Rangfolge macht

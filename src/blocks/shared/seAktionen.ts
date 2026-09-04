@@ -29,10 +29,10 @@ export function buildStartToolLink(nr: string, params: readonly string[]): strin
   return link
 }
 
-// Beide Sende-Wege sagen, ob der Ruf HINAUSGING. Frueher schluckten sie
-// jeden Fehler (kein Bruecken-Objekt, Aufruf wirft), und die Kette lief
-// weiter, als stuende das Werkzeug schon — GET/PUT meldeten an derselben
-// Stelle laengst „keine Verbindung zu SoftEngine".
+// Beide Sende-Wege sagen, ob der Ruf HINAUSGING. Schluckten sie jeden Fehler
+// (kein Bruecken-Objekt, Aufruf wirft), liefe die Kette weiter, als stuende
+// das Werkzeug schon — GET/PUT melden an derselben Stelle „keine Verbindung
+// zu SoftEngine".
 function seBwLink(befehl: string): boolean {
   const zeile = befehl.trim()
   if (zeile === '') return false
@@ -125,7 +125,7 @@ interface Abschnitt {
 }
 
 // Woher DIESER Schritt seine Zellen liest. Kein Bausteintyp kommt vor: es
-// zaehlt allein, was in seinen Parametern steht (Regel 2).
+// zaehlt allein, was in seinen Parametern steht.
 function zeilenBezug(step: RuntimeStep): { art: VormerkArt; blockId: string } | null {
   if (step.type !== 'RELATION') return null
   let treffer: { art: VormerkArt; blockId: string } | null = null

@@ -1,5 +1,3 @@
-// eslint no-restricted-imports). Bis 2026-08-11 stand hier `LucideIcon` aus
-
 export type BausteinSymbol = (eigenschaften: {
   size?: number | string
   className?: string

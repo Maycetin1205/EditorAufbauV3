@@ -193,7 +193,7 @@ function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
   for (const schalter of b.eintragsSchalter ?? []) {
     // Behalten wird ein Schalterwert nur, wenn er sichtbar ist UND vom
     // Standard abweicht. Ein ausdrueckliches „nein" bei Standard „ja" ist
-    // damit genauso wichtig wie frueher das ausdrueckliche „ja".
+    // damit genauso wichtig wie ein ausdrueckliches „ja" bei Standard „nein".
     regeln.push({
       key: schalter.key,
       erlaubt: (e) => schalterFuer(b, e).includes(schalter)

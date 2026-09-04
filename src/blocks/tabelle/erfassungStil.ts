@@ -39,16 +39,16 @@ export const erfassungStil = css`
       /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }
 
-      /* Erfasste, noch nicht geschriebene Zeilen (G4): wie Datenzeilen, nur
+      /* Erfasste, noch nicht geschriebene Zeilen: wie Datenzeilen, nur
          links markiert — erst der Knopf macht aus ihnen echte Positionen.
          Die Markierung selbst macht der Statusbalken (tabelleStil).
 
          Ein Klick macht sie AN ORT UND STELLE wieder zur Tipp-Zeile,
          darum der Zeigefinger. Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie
-         an der gebuchten Zeile: absolut rechts, erst bei Hover. Vorher sass
-         es mitten in der ERSTEN Zelle und schob deren Wert um rund 20px nach
-         rechts — die erfasste Zeile stand darum sichtbar versetzt unter den
-         gebuchten (Nutzer-Befund 2026-08-28). */
+         an der gebuchten Zeile: absolut rechts, erst bei Hover. Saesse es
+         mitten in der ERSTEN Zelle, schoebe es deren Wert um rund 20px nach
+         rechts — die erfasste Zeile stuende sichtbar versetzt unter den
+         gebuchten. */
       .zeile.erfasst { flex: none; }
       :host(:not([data-ff-editor])) .zeile.erfasst { cursor: pointer; }
 `

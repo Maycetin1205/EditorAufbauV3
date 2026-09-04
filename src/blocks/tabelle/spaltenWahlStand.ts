@@ -55,7 +55,7 @@ export class SpaltenWahlStand {
   }
 
   // Das eigene Fenster statt des Browser-Menues — genau dafuer ist der
-  // Rechtsklick hier vergeben (Nutzer-Entscheidung 2026-09-03).
+  // Rechtsklick hier vergeben.
   oeffne(e: MouseEvent, rahmen: DOMRect): void {
     e.preventDefault()
     e.stopPropagation()

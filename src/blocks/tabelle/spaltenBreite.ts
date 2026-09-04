@@ -87,8 +87,8 @@ function starteZug(e: PointerEvent, index: number, wirt: BreitenWirt): void {
 }
 
 // Greifstreifen mittig auf der Linie, als eigene Gitter-Kinder: `inset: 0` kennt
-// erst Chromium 87, SoftEngines eingebauter Browser ist aelter und gab einer Lage
-// dort keine Groesse (Nutzer-Befund 2026-08-31).
+// erst Chromium 87, SoftEngines eingebauter Browser ist aelter und gibt einer Lage
+// dort keine Groesse.
 export function breitenGriffe(
   spaltenAnzahl: number,
   wirt: BreitenWirt,

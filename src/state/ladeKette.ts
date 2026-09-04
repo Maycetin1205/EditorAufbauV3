@@ -279,7 +279,7 @@ export type AblehnGrund =
   | 'zukunft'
   // Gueltiges JSON, aber kein verwertbarer Masken-Aufbau.
   | 'unlesbar'
-  // Beim Laden waere etwas verlorengegangen (A4).
+  // Beim Laden waere etwas verlorengegangen.
   | 'verlust'
 
 export type LadeAusgang =

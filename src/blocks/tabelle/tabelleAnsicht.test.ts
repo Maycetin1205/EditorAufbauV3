@@ -2,10 +2,10 @@ import { expect, test } from 'vitest'
 import { tabelleAnsicht, type AnsichtFrage } from './tabelleAnsicht'
 import type { Spalte } from './spalten'
 
-// P4: Suche und Sortierung lesen denselben Zellwert wie die Summe — die
-// vorgemerkte Aenderung eingerechnet. Vorher lasen sie die rohen Daten: der
-// Bediener aenderte eine Menge, suchte nach dem, was er gerade getippt
-// hatte, und seine eigene Zeile fiel aus der Liste.
+// Suche und Sortierung lesen denselben Zellwert wie die Summe — die
+// vorgemerkte Aenderung eingerechnet. Laesen sie die rohen Daten, aenderte
+// der Bediener eine Menge, suchte nach dem, was er gerade getippt hat, und
+// seine eigene Zeile fiele aus der Liste.
 
 const SPALTEN: Spalte[] = [
   { kennung: 's1', titel: 'Artikel', feld: '18_25' },
@@ -60,7 +60,7 @@ test('ohne Vormerkung bleibt es bei den Rohwerten', () => {
   expect(tabelleAnsicht(roh).zeilen.filter((z) => z !== null)).toEqual([0, 1, 2])
 })
 
-// Schritt 7: Ausgeblendete Spalten zeichnet die Maske nicht. Suche, Sortierung
+// Ausgeblendete Spalten zeichnet die Maske nicht. Suche, Sortierung
 // und Summen bleiben trotzdem an der VOLLEN Liste — nur die Rasterspuren
 // zaehlen die gezeichneten, und die gezogene Breite steht unter dem vollen
 // Platz. Wer hier verwechselt, gibt der falschen Spalte die falsche Breite.

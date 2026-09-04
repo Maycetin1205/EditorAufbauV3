@@ -20,11 +20,10 @@ export interface EintragProps {
 
 // Eine Zeile in einer der Listen des Datencenters.
 //
-// Die Datenquellen-Liste und die Relationen-Liste trugen dieselben
-// dreiundzwanzig Klassen zweimal wortgleich im Code. Wortgleich heisst: bis
-// jemand eine davon anfasst — dann sehen die zwei Listen im selben Fenster
-// verschieden aus, ohne dass es jemand beschlossen haette. Genau das ist mit
-// „einheitlich" gemeint (Nutzer-Auftrag 2026-08-31).
+// Ein gemeinsames Bauteil: sonst truegen die Datenquellen-Liste und die
+// Relationen-Liste dieselben Klassen zweimal wortgleich im Code. Wortgleich
+// heisst: bis jemand eine davon anfasst — dann sehen die zwei Listen im selben
+// Fenster verschieden aus, ohne dass es jemand beschlossen haette.
 //
 // Die Einrueckung der zweiten Zeile ist die Breite des Zeichens plus der
 // Abstand dahinter (12 + 6 px): so beginnt sie unter dem NAMEN und nicht

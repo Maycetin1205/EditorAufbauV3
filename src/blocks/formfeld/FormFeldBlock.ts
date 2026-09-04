@@ -357,7 +357,7 @@ export class FormFeldBlock extends BasicBlock {
   private berechneVorschlaege(): Eintrag[] {
     if (this.getippt === null || this.listeZu) return []
     if (coerceFeldTyp(this.fieldType) !== 'nachschlagen') return []
-    // Im Editor gibt es keine Daten und keine Liste (Regel 7).
+    // Im Editor gibt es keine Daten und keine Liste.
     if (this.imEditor) return []
     const ergebnis = holeEintraege({
       el: this,
@@ -408,8 +408,8 @@ export class FormFeldBlock extends BasicBlock {
   }
 
   // Der EINE Uebernahme-Weg fuer den Bediener: Zeilenklick im grossen
-  // Fenster und Wahl in der Vorschlagsliste landen beide hier (G1). Er
-  // raeumt das Getippte weg, damit im Feld der bestaetigte Text steht.
+  // Fenster und Wahl in der Vorschlagsliste landen beide hier. Er raeumt
+  // das Getippte weg, damit im Feld der bestaetigte Text steht.
   private uebernimmUndMelde(anzeige: string, wert: string, satz: unknown): void {
     this.getippt = null
     this.listeZu = false

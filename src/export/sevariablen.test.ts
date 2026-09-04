@@ -39,8 +39,8 @@ const belegkopf: DataSource = {
   fields: felder(['2_1', '3_8']),
 }
 
-// Der harte Beleg dahinter: steht ein Kopfsatz-Loop VORNE, liefert SoftEngine
-// aus KEINER Quelle Daten (A/B-Echttest 2026-08-11, in CLAUDE.md festgehalten).
+// Der Grund: steht ein Kopfsatz-Loop VORNE, liefert SoftEngine aus KEINER
+// Quelle Daten.
 test('Kopfsatz-Loops stehen zwangsweise zuletzt', () => {
   const zuerstPos = bestellung([positionen, artikel])
   expect(zuerstPos.SEFILELOOP.map((e) => e.ALIAS)).toEqual(['ART', 'POS'])
@@ -85,8 +85,6 @@ test('ohne VAR-Bedarf fehlt der VAR-Abschnitt ganz', () => {
 
 // SoftEngine schlaegt zu jedem gelieferten Wert nach; eine Quelle mit 34
 // Feldern, von denen die Maske drei zeigt, kostet das Elffache an Zeit.
-// Bis 2026-08-28 las felderFor die Benutzt-Liste NUR bei IDB — alle anderen
-// Arten bestellten ihre komplette Feldliste.
 const langePos: DataSource = {
   id: 'q-pos-lang',
   name: 'POS',

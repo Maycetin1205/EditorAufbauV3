@@ -11,10 +11,10 @@ function knoten(type: string, props: Record<string, unknown>): BlockNode {
   return { id: 'k1', type, props, parentId: null, childIds: [] }
 }
 
-// Wer eine Zeile hat, kann sie hergeben (Nutzer 2026-09-01): das gebundene
-// Formularfeld gibt seine ANGEZEIGTE Zeile — nicht nur das Nachschlage-Feld
-// seine gewaehlte. Die wenn-Bedingung der satzWahl waehlt nur die
-// Quell-Eigenschaft, sie schaltet die Faehigkeit nicht ab.
+// Wer eine Zeile hat, kann sie hergeben: das gebundene Formularfeld gibt
+// seine ANGEZEIGTE Zeile — nicht nur das Nachschlage-Feld seine gewaehlte.
+// Die wenn-Bedingung der satzWahl waehlt nur die Quell-Eigenschaft, sie
+// schaltet die Faehigkeit nicht ab.
 test('ein gebundenes Formularfeld ist Geber seiner Quelle', () => {
   const feld = knoten('formfeld', { fieldType: 'text', source: 'q-bel' })
   expect(istAuswahlGeber(feld)).toBe(true)
@@ -48,8 +48,8 @@ test('der Text-Baustein bleibt kein Geber, auch gebunden', () => {
 // Der Name im Waehler muss dem Bild entsprechen: ein GEBUNDENES Feld zeigt im
 // Canvas den Klarnamen des gebundenen Feldes (die Vorschau ueberdeckt den
 // Platzhalter) — also heisst es auch im Waehler so, nicht nach dem alten,
-// unsichtbaren Platzhalter (Nutzer-Befund 2026-09-01: vier Felder hiessen
-// alle "Artikelnummer", im Canvas stand laengst anderes).
+// unsichtbaren Platzhalter (sonst heissen vier Felder alle "Artikelnummer",
+// waehrend im Canvas laengst anderes steht).
 test('der Baustein-Name folgt bei gebundenen Feldern dem Klarnamen', () => {
   const quellen = [{
     id: 'q-bel',

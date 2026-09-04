@@ -14,10 +14,10 @@ export interface KachelProps {
 //
 // Warum: ein Baustein hat mehrere davon (die Tabelle fuenf). Als Zeilen
 // untereinander kosten sie fuenf Zeilen Hoehe, obwohl jede nur ein Bit
-// traegt, und der frueher benutzte Zweiknopf „Nein | Ja" verlangte, dass man
-// erkennt, WELCHE Haelfte dunkel ist — zwei Woerter fuer ein Bit. Als
-// Kacheln stehen sie nebeneinander, und man sieht auf einen Blick, was der
-// Baustein kann und was davon an ist.
+// traegt, und ein Zweiknopf „Nein | Ja" verlangt, dass man erkennt, WELCHE
+// Haelfte dunkel ist — zwei Woerter fuer ein Bit. Als Kacheln stehen sie
+// nebeneinander, und man sieht auf einen Blick, was der Baustein kann und
+// was davon an ist.
 //
 // Das Haekchen bleibt im Aus-Zustand als unsichtbarer Platzhalter stehen:
 // sonst huepfte die Kachel beim Schalten in der Breite.

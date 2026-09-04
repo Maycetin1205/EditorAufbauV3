@@ -82,8 +82,8 @@ export function auswahlQuelleIdVon(node: BlockNode | undefined): string {
 // wenn-Bedingung der satzWahl waehlt dabei nur, WELCHE Eigenschaft die
 // Quelle nennt (auswahlQuelleIdVon faellt sonst auf `source` zurueck) —
 // sie ist KEIN Schalter fuer die Faehigkeit: auch ein gebundenes
-// Formularfeld gibt seine angezeigte Zeile (Nutzer 2026-09-01), nicht nur
-// das Nachschlage-Feld seine gewaehlte.
+// Formularfeld gibt seine angezeigte Zeile, nicht nur das Nachschlage-Feld
+// seine gewaehlte.
 export function istAuswahlGeber(node: BlockNode | undefined): boolean {
   if (!node) return false
   if (!getBlockDefinition(node.type)?.satzWahl) return false
@@ -108,7 +108,7 @@ export function auswahlGeberImBaum(tree: BlockTree): BlockNode[] {
 }
 
 // Bausteine, deren Erfassungszeile gerade AN ist (Faehigkeit kannErfassen,
-// Regel 2: gelesen aus der Registry, kein Bausteintyp-Sondercode). Nur ihre
+// gelesen aus der Registry, kein Bausteintyp-Sondercode). Nur ihre
 // Zellen kann eine Kette als „Wert aus Erfassungszelle" lesen.
 export function erfassungsTraegerImBaum(tree: BlockTree): BlockNode[] {
   const result: BlockNode[] = []

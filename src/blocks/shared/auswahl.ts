@@ -24,11 +24,11 @@ let wahlZaehler = 0
 // Nachschlage-Fenster) oder aus einem Programm-Lauf (Hydrieren), reist als
 // Argument MIT der Meldung zu jedem Hoerer. Die holenden Quellen lesen das als
 // Bremse gegen Kreis-Feuer: nur eine Bedienung darf dieselbe Zeile beliebig
-// oft neu laden lassen (Nutzer-Befund 2026-09-01: zwei Geber schaukelten sich
-// hoch, Relation 69 feuerte im Halbsekundentakt gegen das ERP). Frueher stand
-// die Herkunft in einem globalen Flag — das ueberschrieb der ERSTE Hoerer
-// (Hydrierung eines Folge-Felds ruft setzeAuswahl), bevor der zweite las, und
-// der dritte Klick auf denselben Beleg holte keine Positionen mehr.
+// oft neu laden lassen — sonst schaukeln sich zwei Geber gegenseitig hoch und
+// Relation 69 feuert im Halbsekundentakt gegen das ERP. Als globales Flag
+// taugt die Herkunft nicht: das ueberschriebe der ERSTE Hoerer (Hydrierung
+// eines Folge-Felds ruft setzeAuswahl), bevor der zweite liest, und der
+// dritte Klick auf denselben Beleg holte keine Positionen mehr.
 let meldungLaeuft = false
 let nachmeldung = false
 let nachBedienung = false

@@ -19,8 +19,8 @@ interface AuswahlFensterProps {
 
   // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
   // schliesst hier nicht — sonst raeumt dieser Druck das Fenster ab und der
-  // Klick unmittelbar danach oeffnet es wieder: das Fenster liess sich mit
-  // seinem eigenen Knopf nicht zumachen (Nutzer-Befund 2026-08-27).
+  // Klick unmittelbar danach oeffnet es wieder: das Fenster liesse sich mit
+  // seinem eigenen Knopf nicht zumachen.
   anker?: RefObject<HTMLElement | null>
 
   className: string

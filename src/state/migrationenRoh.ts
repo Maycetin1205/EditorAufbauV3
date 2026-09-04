@@ -121,7 +121,7 @@ export function migrateZeileAufloesen(src: Record<string, RohKnoten>): RohEntfer
   return entfernt
 }
 
-// V0 (2026-08-18): Das Nachschlage-Feld hat kein „Angezeigt wird" mehr —
+// V0: Das Nachschlage-Feld hat kein „Angezeigt wird" mehr —
 // was im Feld steht, ist die ERSTE Spalte seines Fensters. Ein alter Stand
 // mit eigenem Anzeigefeld und ohne eigene Spalten bekommt daraus genau die
 // zwei Spalten, die er bisher sah; sonst ginge die Einstellung still
@@ -155,15 +155,14 @@ export function migrateAnzeigeFeldAufSpalten(src: Record<string, RohKnoten>): vo
   }
 }
 
-// V-Kennung (2026-09-01): Jede Tabellen-Spalte traegt eine dauerhafte Kennung
+// V-Kennung: Jede Tabellen-Spalte traegt eine dauerhafte Kennung
 // (Spalte.kennung), und alles zeigt auf SIE: Ketten-Parameter (Wert aus
 // Erfassungs-/Aenderungs-/Loeschzelle, vorher Platznummer — verrutschte beim
 // Loeschen/Verschieben) und die Rechnung (vorher Belegfeld — doppelt vergeben
-// traf sie stumm die falsche Spalte, Nutzer-Vorfall 2026-09-01). Laeuft auf
-// den Rohdaten VOR normalizeProps und ist absichtlich idempotent: vergebene
-// Kennungen bleiben, Ketten-Werte werden nur umgeschrieben, wenn sie noch
-// eine Ziffernfolge sind, die Rechnung nur, wo noch `feld` statt `spalte`
-// steht.
+// traf sie stumm die falsche Spalte). Laeuft auf den Rohdaten VOR
+// normalizeProps und ist absichtlich idempotent: vergebene Kennungen bleiben,
+// Ketten-Werte werden nur umgeschrieben, wenn sie noch eine Ziffernfolge
+// sind, die Rechnung nur, wo noch `feld` statt `spalte` steht.
 const ZELLEN_QUELLEN_ROH = new Set(['erfassungszelle', 'aenderungszelle', 'loeschzelle'])
 
 const RECHNUNG_PLAETZE_ROH = ['menge', 'anzahl', 'dosis', 'tage'] as const
@@ -236,7 +235,7 @@ function schreibeRechnungUm(node: RohKnoten, spalten: readonly Record<string, un
   }
   // Ausgebaut und darum aus dem Attribut raus, sonst reisen die Reste in
   // jedem Export weiter: der Einheiten-Umrechner und die beiden Plaetze
-  // Tiergewicht/je-kg (beides 2026-09-01, s. core/data/rechnung.ts).
+  // Tiergewicht/je-kg (s. core/data/rechnung.ts).
   delete r.einheitFeld
   delete r.einheiten
   delete r.gewicht
@@ -255,7 +254,7 @@ export function migrateSpaltenKennungen(src: Record<string, RohKnoten>): void {
   for (const node of tabellen) schreibeRechnungUm(node, rohSpalten(node))
 }
 
-// G3 (2026-08-18): Die Erfassungszeile stellt nichts mehr je Zelle ein — was
+// Die Erfassungszeile stellt nichts mehr je Zelle ein — was
 // eine Zelle tut, leitet sie aus der Bindung der Spalte und der Verknuepfung
 // des Bausteins ab. Die vier alten Zellen-Angaben fallen weg; sie muessen AUS
 // DEN ROHDATEN raus, sonst vermisst die Verlustpruefung sie beim Laden: sie

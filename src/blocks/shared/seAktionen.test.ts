@@ -317,8 +317,8 @@ describe('Lauf-Bericht je Zeile', () => {
     expect(laeufe.at(-1)).toBe('frische Daten')
   })
 
-  // Der Kern von Etappe 3: ein Fehler in Zeile 2 von 3 darf den Zeilen 2 und 3
-  // nicht ihre Vormerkung nehmen — sonst waere die Eingabe verloren.
+  // Ein Fehler in Zeile 2 von 3 darf den Zeilen 2 und 3 nicht ihre
+  // Vormerkung nehmen — sonst waere die Eingabe verloren.
   test('Fehler stoppt den Lauf, die Zeilen dahinter bleiben vorgemerkt', async () => {
     const t = tabelle('t1', 'erfasst', ['e1', KAPUTT, 'e3'])
     const kette = { klick: [relationsSchritt('put-1', [zelle('erfassungszelle', 't1')])] }
@@ -396,9 +396,9 @@ test('runEvent meldet Klartext, wenn ein Schritt zwei Listen liest', async () =>
 })
 
 // Der Fall aus der Belegerfassung: einmal die Belegnummer holen, dann je
-// erfasster Zeile eine Position schreiben. Frueher baute jeder Abschnitt seine
-// Ergebnisliste neu auf — der Schreib-Schritt bekam fuer „Ergebnis von
-// Schritt 1" einen leeren String, still, mit leerem Parameter im PUT.
+// erfasster Zeile eine Position schreiben. Baute jeder Abschnitt seine
+// Ergebnisliste neu auf, bekaeme der Schreib-Schritt fuer „Ergebnis von
+// Schritt 1" einen leeren String — still, mit leerem Parameter im PUT.
 describe('Ergebnisse ueber die Abschnittsgrenze', () => {
   function ausSchritt(platz: number): ActionParamBinding {
     return { source: 'step_result', value: String(platz) }

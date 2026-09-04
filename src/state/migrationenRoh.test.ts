@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { migrateSpaltenKennungen } from './migrationenRoh'
 
-// Die Lade-Migration zur Spalten-Kennung (2026-09-01): alte Masken sprachen
+// Die Lade-Migration zur Spalten-Kennung: alte Masken sprachen
 // Spalten ueber Platznummer (Ketten) bzw. Belegfeld (Rechnung) an — beides
 // zeigte nach Loeschen/Verschieben bzw. bei doppelt vergebenem Belegfeld
 // stumm auf die falsche Spalte. Hier haengt, dass KEINE alte Maske ihre
@@ -85,7 +85,7 @@ test('die Migration ist beim zweiten Lauf still', () => {
   expect(JSON.stringify(src)).toBe(einmal)
 })
 
-// Der Vorfall vom 2026-09-01: ZWEI Spalten auf demselben Belegfeld 930_3.
+// Der Fall: ZWEI Spalten auf demselben Belegfeld 930_3.
 // Die Migration nimmt die vorderste — dieselbe Antwort, die der alte
 // Feld-Vergleich zur Laufzeit gab, nur jetzt sichtbar im Formular.
 test('bei doppeltem Belegfeld gewinnt die vorderste Spalte', () => {
@@ -96,11 +96,11 @@ test('bei doppeltem Belegfeld gewinnt die vorderste Spalte', () => {
   expect(rechnung.dosis).toMatchObject({ spalte: 's3' })
 })
 
-// P4: derselbe Vergabe-Weg wie in `mitKennungen` (blocks/tabelle/spalten.ts,
+// Derselbe Vergabe-Weg wie in `mitKennungen` (blocks/tabelle/spalten.ts,
 // Zwilling) — neue Kennungen zaehlen ueber der hoechsten weiter, statt sich
 // in die Luecke einer geloeschten Spalte zu setzen. Eine Maske, in der schon
 // s1 und s3 stehen, darf beim Laden kein zweites s2 bekommen: die Ketten der
-// frueheren s2 zeigten sonst stumm auf die neue Spalte.
+// geloeschten s2 zeigten sonst stumm auf die neue Spalte.
 test('die Migration setzt neue Kennungen ueber die hoechste, nicht in die Luecke', () => {
   const src = alteMaske()
   // Aussen s1 und s3, in der Mitte eine Spalte ohne Kennung: die Luecke s2

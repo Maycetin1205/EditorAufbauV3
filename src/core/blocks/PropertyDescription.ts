@@ -21,12 +21,12 @@ export type PropertyKind =
   | 'relation'
   // seite speichert die id einer SEITE DIESER MASKE (Hauptseite oder
   // Ansicht) — waehlbar ist nur, was es in der Maske gibt: keine freien
-  // Links, keine externen Ziele (Nutzer-Vorgabe zur Navi, 2026-08-12).
+  // Links, keine externen Ziele.
   // Die id ist ein Editor-Technikwert und bleibt daheim (nurImEditor); was
   // die fertige Maske braucht, ist der KLARNAME der Seite — er wandert wie
   // beim Feld-Control ueber klarnameProp in eine eigene Prop.
   | 'seite'
-  // bild speichert eine BILDDATEI als eingebetteten Daten-URI (N5). Der Wert
+  // bild speichert eine BILDDATEI als eingebetteten Daten-URI. Der Wert
   // ist der fertige `data:`-String — die Maske laedt nie etwas nach, und eine
   // Maske bleibt EINE Datei. Das Waehlen und das stille Verkleinern macht das
   // Inspector-Control (controls/BildControl); der Baustein bekommt nur das

@@ -15,8 +15,8 @@ export interface BausteinQuelle {
   quelleId: string
 
   // Die Quelle, mit der die Schlüsselpaare verbinden. Leer = die Hauptquelle
-  // des Bausteins. Damit hängen nicht mehr alle Quellen sternförmig an der
-  // ersten: Quelle 2 darf an Quelle 3 hängen, 3 an 4 (Nutzer 2026-08-27).
+  // des Bausteins. So müssen nicht alle Quellen sternförmig an der ersten
+  // hängen: Quelle 2 darf an Quelle 3 hängen, 3 an 4.
   partnerId: string
 
   keyPairs: SchluesselPaar[]
@@ -28,12 +28,12 @@ export const QUELLEN_DEFAULTS: Record<string, BausteinQuelle[]> = {
   [WEITERE_QUELLEN_PROP]: [],
 }
 
-// Eine gewählte Quelle genügt. Das Schlüsselpaar ist AUSDRÜCKLICH freiwillig
-// (Nutzer 2026-08-27): eine Quelle ohne Paar ist eine reine Nachschlagequelle
-// — der Bediener sucht den Satz von Hand aus, es gibt nichts zu verknüpfen.
-// Vorher verlangte diese Stelle ein vollständiges Paar; auf einem leeren Beleg
-// gibt es aber gar keine Zeile, an die man etwas hätte knüpfen können, und die
-// Quelle fiel damit still aus Feldwähler und Export.
+// Eine gewählte Quelle genügt. Das Schlüsselpaar ist AUSDRÜCKLICH freiwillig:
+// eine Quelle ohne Paar ist eine reine Nachschlagequelle — der Bediener sucht
+// den Satz von Hand aus, es gibt nichts zu verknüpfen. Verlangte diese Stelle
+// ein vollständiges Paar, fiele die Quelle auf einem leeren Beleg still aus
+// Feldwähler und Export: dort gibt es gar keine Zeile, an die man etwas
+// knüpfen könnte.
 export function quelleBrauchbar(q: BausteinQuelle): boolean {
   return q.quelleId !== ''
 }

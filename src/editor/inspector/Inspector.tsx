@@ -116,11 +116,11 @@ export function Inspector() {
   })
 
   // Nach unten wandert nur, was WIRKLICH auf ein Feld, eine Quelle oder eine
-  // Relation zeigt. `requiresDataSource` gehoerte nicht dazu: es sagt bloss
+  // Relation zeigt. `requiresDataSource` gehoert nicht dazu: es sagt bloss
   // „ohne Quelle sinnlos" und steckt auch an gewoehnlichen Ja/Nein-Schaltern.
-  // Bei der Tabelle lagen deshalb fuenf gleichartige Schalter auf zwei Seiten
-  // des Trennstrichs, und vier von sieben Einstellungen standen woanders, als
-  // der Baustein sie aufschreibt (Nutzer-Befund 2026-08-28).
+  // Sortierte man danach, laegen bei der Tabelle fuenf gleichartige Schalter
+  // auf zwei Seiten des Trennstrichs, und die Einstellungen staenden woanders,
+  // als der Baustein sie aufschreibt.
   const dataProps = visibleProps.filter(
     (p) => p.kind === 'field' || p.kind === 'quelle' || p.kind === 'relation',
   )

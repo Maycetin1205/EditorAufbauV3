@@ -93,9 +93,8 @@ export function getField(row: unknown, code: string): string {
   return raw.substring(pos, pos + len).trim()
 }
 
-// Die Satznummer EINER Zeile — was Ketten als {PINDEX} weitergeben. Stand
-// bis 2026-08-18 wortgleich in feldRuntime und kanban/seRuntime; die
-// Tabelle waere die dritte Kopie gewesen.
+// Die Satznummer EINER Zeile — was Ketten als {PINDEX} weitergeben. Die EINE
+// Stelle dafuer, statt einer Kopie je Baustein.
 export function satzIndexVon(source: { indexField: string }, row: unknown): string {
   return source.indexField === '' ? '' : getField(row, source.indexField)
 }

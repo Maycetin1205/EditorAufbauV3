@@ -5,7 +5,7 @@ import { verteileZug } from './spaltenBreite'
 // Der Kern des Zugs: was die linke Spalte gewinnt, gibt die rechte ab. Nur so
 // bleibt der Platz gleich, den sich alle uebrigen Spalten teilen — sonst
 // rechnet das Raster bei jedem Zug ALLE Spalten neu, obwohl der Bediener nur
-// eine Linie angefasst hat (Nutzer-Befund 2026-08-31).
+// eine Linie angefasst hat.
 test('die Summe der beiden Nachbarn bleibt gleich', () => {
   const { links, rechts } = verteileZug(200, 300, 40)
   expect(links).toBe(240)
@@ -57,7 +57,7 @@ test('ohne gezogene Breite teilen alle gleichmaessig', () => {
 })
 
 // Feste Pixel summierten sich nur zufaellig auf die Tabellenbreite; die
-// Differenz stand rechts als leere Flaeche (Nutzer-Befund 2026-08-31).
+// Differenz stuende rechts als leere Flaeche.
 test('im Raster steht nie ein Pixelmass', () => {
   const spalten = coerceSpalten([
     { titel: 'A', feld: '1_1', breite: 120 },
@@ -78,8 +78,8 @@ test('die gezogene Breite schlaegt die gespeicherte', () => {
 })
 
 // Und er gilt auch fuer eine Spalte, die noch GAR KEINE gespeicherte Breite
-// traegt. Genau dort wurde er verworfen: beim Ziehen bewegte sich nichts, und
-// erst das Loslassen liess die Spalte springen (Nutzer-Befund 2026-08-31).
+// traegt. Wuerde er dort verworfen, bewegte sich beim Ziehen nichts, und
+// erst das Loslassen liesse die Spalte springen.
 test('der fluechtige Stand gilt auch ohne gespeicherte Breite', () => {
   const spalten = coerceSpalten([{ titel: 'A', feld: '1_1' }, { titel: 'B', feld: '2_1' }])
   expect(spaltenRaster(spalten, (i) => (i === 0 ? 300 : 200)))

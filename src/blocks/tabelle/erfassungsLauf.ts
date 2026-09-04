@@ -134,8 +134,8 @@ export class ErfassungsLauf {
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
     const listeOffen = this._tippSpalte === index && this._vorschlaege.length > 0
-    // Tab ist die Weiter-Taste — IMMER (Nutzer 2026-09-01); das grosse Fenster
-    // oeffnen nur Enter und F4, nie Tab.
+    // Tab ist die Weiter-Taste — IMMER; das grosse Fenster oeffnen nur Enter
+    // und F4, nie Tab.
     if (taste === 'Tab') {
       if (listeOffen && (this._markeVonHand || this._vorschlaege.length === 1)) taste = 'Enter'
       else return 'weiter'
@@ -162,7 +162,7 @@ export class ErfassungsLauf {
       this._markeVonHand = true
     }
     else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
-    // Enter im LEEREN Feld springt weiter (Nutzer 2026-09-01).
+    // Enter im LEEREN Feld springt weiter.
     else if (folge === 'fenster' && wert === '') return 'weiter'
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
     else if (folge === 'nichts' && taste === 'Enter' && wert !== '') {
@@ -239,14 +239,14 @@ export class ErfassungsLauf {
     }
   }
 
-  // Der Schlüsselwert der WERDENDEN Zeile — hier hängt das Messlatten-
-  // Szenario (G3c): Gibt es den Satz der Tabellen-Quelle, trägt ER die Felder
-  // (so liest ihn auch die Datenzeile). Beim Erfassen einer NEUEN Zeile gibt
-  // es ihn nicht — dann liefern die von Hand gewählten verknüpften Sätze den
-  // Wert über ihre Paare: der gewählte Artikel liefert die Artikelnummer der
-  // Position, bevor es die Position gibt. Selbstgefülltes liefert nichts
-  // (s. vonHand), und `ausser` nimmt die fragende Quelle aus der Suche —
-  // ein Satz rechtfertigt sich nicht mit den eigenen Schlüsseln.
+  // Der Schlüsselwert der WERDENDEN Zeile: Gibt es den Satz der Tabellen-
+  // Quelle, trägt ER die Felder (so liest ihn auch die Datenzeile). Beim
+  // Erfassen einer NEUEN Zeile gibt es ihn nicht — dann liefern die von Hand
+  // gewählten verknüpften Sätze den Wert über ihre Paare: der gewählte
+  // Artikel liefert die Artikelnummer der Position, bevor es die Position
+  // gibt. Selbstgefülltes liefert nichts (s. vonHand), und `ausser` nimmt die
+  // fragende Quelle aus der Suche — ein Satz rechtfertigt sich nicht mit den
+  // eigenen Schlüsseln.
   //
   // `partnerId` sagt, WESSEN Feld gefragt ist. Leer (oder die Tabellen-Quelle)
   // heisst Hauptquelle — das ist der Fall oben. Zeigt die Verknüpfung dagegen
@@ -355,7 +355,7 @@ export class ErfassungsLauf {
   // die Rechnung selbst ausgerechnet hat. Als getippt uebernommen waere er ab
   // jetzt ein GEGEBENER Wert: die Rechnung haette keine Luecke mehr und
   // schwiege. Der Bediener aendert die Tiere von 10 auf 20, und die alte
-  // Abgabemenge geht ins ERP (Nutzer-Befund 2026-09-01).
+  // Abgabemenge ginge ins ERP.
   //
   // Erkannt wird der Platz daran, dass sein Wert exakt dem entspricht, was
   // sich ohne ihn aus den uebrigen rechnet. Geprueft wird in PLATZ_KEYS-
@@ -389,8 +389,8 @@ export class ErfassungsLauf {
     this._vorschlaege = []
   }
 
-  // Wie in G1 einmal je Darstellung berechnet: Tastatur und Anzeige müssen
-  // DENSELBEN Stand sehen, zwei Berechnungen liefen auseinander.
+  // Einmal je Darstellung berechnet: Tastatur und Anzeige müssen DENSELBEN
+  // Stand sehen, zwei Berechnungen liefen auseinander.
   aktualisiereVorschlaege(umfeld: ErfassungsUmfeld): void {
     this.rechne(umfeld)
     this._vorschlaege = this.berechne(umfeld)

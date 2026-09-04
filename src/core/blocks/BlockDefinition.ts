@@ -110,7 +110,7 @@ export type VormerkArt = 'erfasst' | 'geaendert' | 'geloescht'
 // Der Laufzeit-Vertrag eines Bausteins mit dieser Fähigkeit: die Kette am
 // Knopf liest die erfassten Zeilen (Werte je Spalte, in Spalten-Reihenfolge).
 // Rein als Typ — die Laufzeit findet den Baustein über data-ff-block-id, nie
-// über einen Import (Regel 2).
+// über einen Import.
 //
 // erfassteSchluessel steht Platz fuer Platz neben erfassteZeilen: eine
 // erfasste Zeile hat noch keine Satznummer, und ihr PLATZ taugt nicht als
@@ -194,7 +194,7 @@ export interface BlockDefinition {
   // Der Schluessel des Eintrags-Schalters, der einen Listeneintrag (z. B.
   // eine Spalte) als aenderbar markiert. Gesetzt heisst: dieser Baustein
   // kann einer Kette die GEAENDERTEN Zeilen geben — welcher Baustein das
-  // ist, steht damit in der Registry und nicht im Ketten-Code (Regel 2).
+  // ist, steht damit in der Registry und nicht im Ketten-Code.
   aenderungsSchluessel?: string
 
   bindableSpots?: readonly BindableSpot[]

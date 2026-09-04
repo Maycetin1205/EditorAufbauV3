@@ -50,13 +50,11 @@ export function PickerControl({
   // faellt rot auf statt lautlos als „nichts gewaehlt" zu erscheinen.
   const unbekannt = wert !== '' && treffer === undefined
 
-  // Der geschlossene Knopf zeigt NUR den Klarnamen. Die Kennung stand hier bis
-  // 2026-08-28 daneben und nahm sich bis zur halben Breite — in der 3/5-Spalte
-  // des Inspectors blieben dem Namen dann rund 80 px, waehrend er in der
-  // offenen Liste 166 hat. Dieselbe Quelle sah aufgeklappt gut aus und
-  // zugeklappt abgehackt (Nutzer-Befund). Die Kennung steht weiter in der
-  // Liste und jetzt zusaetzlich im Tooltip — Regel 3 bleibt gewahrt, der
-  // Klarname fuehrt.
+  // Der geschlossene Knopf zeigt NUR den Klarnamen. Stuende die Kennung
+  // daneben, naehme sie sich bis zur halben Breite, und der Name stuende
+  // zugeklappt abgehackt da, waehrend er in der offenen Liste gut lesbar ist.
+  // Die Kennung steht in der Liste und zusaetzlich im Tooltip — der Klarname
+  // fuehrt, die Kennung bleibt erreichbar.
   const gezeigt = unbekannt ? 'fehlt' : (treffer?.name ?? leerText ?? platzhalter)
   const tooltip = unbekannt
     ? `Nicht mehr vorhanden: ${wert}`

@@ -23,9 +23,8 @@ export function ParameterZeile({
   nummer: number
 
   // Was die Relationsvorlage an dieser Stelle vorsieht ({PINDEX}, 253_30).
-  // Das ist eine KENNUNG und keine Beschriftung (Regel 3), darum steht es in
-  // derselben Marke wie jede andere Kennung im Editor — vorher war es nackter
-  // Schreibmaschinentext auf 47 px, also fast immer abgeschnitten.
+  // Das ist eine KENNUNG und keine Beschriftung, darum steht es in derselben
+  // Marke wie jede andere Kennung im Editor.
   // Zusatzparameter haben keine Vorlage; dort bleibt der Platz leer, damit
   // die Bedienelemente beider Abschnitte an derselben Kante beginnen.
   kennung?: string

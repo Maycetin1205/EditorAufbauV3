@@ -33,10 +33,10 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     return neu === alt ? {} : { spalten: [...neu] }
   },
 
-  // Das Suchfenster dieser Spalte (F4 in der Erfassungszeile). Bis heute war
-  // es nirgends einstellbar: es rechnete sich bei jedem Oeffnen neu aus den
-  // Tabellenspalten. Der Knopf oeffnet dieselbe Flaeche, die das Formularfeld
-  // ueber die Lupe zeigt (Nutzer-Ansage 2026-09-04).
+  // Das Suchfenster dieser Spalte (F4 in der Erfassungszeile). Ohne
+  // Einstellung rechnet es sich bei jedem Oeffnen aus den Tabellenspalten.
+  // Der Knopf oeffnet dieselbe Flaeche, die das Formularfeld ueber die Lupe
+  // zeigt.
   eintragsUnterFenster: {
     label: 'Suchfenster…',
     hinweis: 'Ohne Einstellung nimmt es die Spalten derselben Hilfsquelle.',
@@ -72,7 +72,7 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       key: 'fuellFeld',
 
       // Nicht „Füllfeld"/„Spaltenfeld" nennen: die Beschriftung muss sagen,
-      // WANN das Feld gilt (Nutzer-Entscheidung 2026-08-28).
+      // WANN das Feld gilt.
       label: 'Nachschlagen',
       hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.',
       nurFremdeQuellen: true,

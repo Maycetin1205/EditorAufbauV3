@@ -7,7 +7,7 @@ const BAUPLAN: VorlagenBauplan<DataSource> = {
   klarnameLesen: 'Datenquellen',
   klarnameSchreiben: 'Datenquellen',
   pruefe: pruefeDatenquellen,
-  // Kein Startbestand — restlos entfernt am 2026-07-30, nicht wieder einbauen.
+  // Bewusst kein Startbestand — nicht wieder einbauen.
 }
 
 export class DataSourceStore extends VorlagenStore<DataSource> {

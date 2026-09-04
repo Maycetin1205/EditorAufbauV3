@@ -20,9 +20,9 @@ const letzterAbdruck = new Map<string, string>()
 // Die Bremse gegen Kreis-Feuer: je Quelle die Abdruecke, die OHNE Bedienung
 // (aus der Hydrier-Kette heraus) schon geladen wurden. Jeder darf so nur
 // EINMAL laden — erst ein echter Zeilenklick setzt die Spur zurueck. Ohne
-// das schaukelten sich zwei Geber derselben Quelle gegenseitig hoch: Laden ->
+// das schaukeln sich zwei Geber derselben Quelle gegenseitig hoch: Laden ->
 // Hydrieren -> anderer Geber gewinnt -> Laden -> ... im Halbsekundentakt
-// gegen das ERP (Nutzer-Log 2026-09-01).
+// gegen das ERP.
 const stillGeladen = new Map<string, Set<string>>()
 let verdrahtet = false
 
@@ -36,12 +36,11 @@ export function defsMitSatzWahl(): Map<string, BlockDefinition> {
 
 // Welches Attribut DIESES Elements die Geber-Quelle nennt — dieselbe Regel
 // wie auswahlQuelleIdVon im Editor: die wenn-Bedingung der satzWahl waehlt
-// nur die Eigenschaft, erfuellt das Element sie nicht, gilt `source`. Vorher
-// galt je Tag pauschal die quelleProp; ein TEXT-Formularfeld mit uebrig
-// gebliebener Nachschlage-Quelle wurde so zum falschen Geber der Beleg-Quelle
-// und Relation 69 fragte Datenmuell ab (Nutzer-Befund 2026-09-01). Der Export
-// laesst Standardwerte weg, darum springt fuer ein fehlendes Attribut der
-// defaultProps-Wert ein.
+// nur die Eigenschaft, erfuellt das Element sie nicht, gilt `source`. Gaelte
+// je Tag pauschal die quelleProp, wuerde ein TEXT-Formularfeld mit uebrig
+// gebliebener Nachschlage-Quelle zum falschen Geber der Beleg-Quelle, und
+// Relation 69 fragte Datenmuell ab. Der Export laesst Standardwerte weg,
+// darum springt fuer ein fehlendes Attribut der defaultProps-Wert ein.
 export function quellenAttrFuer(el: Element, def: BlockDefinition): string {
   const wahl = def.satzWahl
   if (!wahl) return ''
@@ -55,12 +54,12 @@ export function quellenAttrFuer(el: Element, def: BlockDefinition): string {
 }
 
 // Der letzte Klick gewinnt: zeigen mehrere Bausteine dieselbe Quelle, gilt die
-// juengste Auswahl. Frueher nahm diese Stelle den ersten Baustein in
-// DOM-Reihenfolge — damit bestimmte bei zwei Tabellen derselben Quelle der
-// Zufall des Aufbaus, welche Zeile geholt wurde. Wird die juengste Wahl
-// abgewaehlt, faellt sie auf die naechstjuengere zurueck (ihr Eintrag ist weg).
-// Die Wurzel ist uebergebbar wie bei applyPopupStep — so ist die Auswahl ohne
-// Fenster pruefbar; im Produkt sucht sie im Dokument.
+// juengste Auswahl — nicht der erste Baustein in DOM-Reihenfolge, sonst
+// bestimmte bei zwei Tabellen derselben Quelle der Zufall des Aufbaus, welche
+// Zeile geholt wird. Wird die juengste Wahl abgewaehlt, faellt sie auf die
+// naechstjuengere zurueck (ihr Eintrag ist weg). Die Wurzel ist uebergebbar
+// wie bei applyPopupStep — so ist die Auswahl ohne Fenster pruefbar; im
+// Produkt sucht sie im Dokument.
 export function gewaehlteZeileDerQuelle(
   quelleId: string,
   defsJeTag: Map<string, BlockDefinition>,
@@ -138,9 +137,9 @@ export function verdrahteHolendeQuellen(): void {
   aufAuswahlHoeren(pruefeHolendeQuellen)
 
   // NUR bei einer echten Lieferung. Das Ablegen der Antwort stoesst selbst an
-  // (meldeAnstoss), und ein Anstoss, der wieder holt, ist genau der Kreis vom
-  // 2026-09-01 — hier waere er sogar unbremsbar, weil der Ruf keine Auswahl
-  // hat, an der ein Abdruck haengen koennte.
+  // (meldeAnstoss), und ein Anstoss, der wieder holt, waere genau so ein
+  // Kreis — hier sogar unbremsbar, weil der Ruf keine Auswahl hat, an der
+  // ein Abdruck haengen koennte.
   onSeDaten((lieferung) => { if (lieferung) holeWertQuellen() })
 
   // Stand die Lieferung schon, als der erste Baustein sich anschloss, kommt

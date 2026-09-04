@@ -16,8 +16,8 @@ export type AbschnittName =
   | 'aktionen'
   | 'rechnung'
 
-// Zugeklappt ist die Vorgabe (Nutzer 2026-09-03): der Inspector einer Tabelle
-// war laenger als das Fenster, man scrollte an allem vorbei, was man suchte.
+// Zugeklappt ist die Vorgabe: offen ist der Inspector einer Tabelle laenger
+// als das Fenster, und man scrollt an allem vorbei, was man sucht.
 const VORGABE = false
 
 function lese(): Record<string, boolean> {

@@ -75,7 +75,8 @@ export function macheFeldLeser(el: HTMLElement): FeldLeser {
   // Der zur Zeile gehoerende Satz EINER Quelle. Leere Kennung = die Zeile
   // selbst (Hauptquelle). Sonst wird erst der Satz der PARTNER-Quelle geholt
   // und dessen Felder liefern den Schluessel — so traegt eine Kette
-  // (Hauptquelle → 2 → 3) genauso wie der fruehere Stern auf die Hauptquelle.
+  // (Hauptquelle → 2 → 3) genauso wie ein Stern, in dem jede Quelle direkt
+  // an der Hauptquelle haengt.
   // `laufend` bricht einen Kreis ab (2 zeigt auf 3, 3 zurueck auf 2): der
   // Kreis liefert dann keinen Satz statt die Maske haengen zu lassen.
   const satzVon = (quelleId: string, row: unknown, laufend: Set<string>): unknown => {

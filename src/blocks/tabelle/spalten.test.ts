@@ -79,7 +79,7 @@ test('eine unbrauchbare Breite faellt auf die Mindestbreite', () => {
 //
 // Vergeben wird ueber der hoechsten schon vorhandenen (hier s7), nicht in
 // deren Luecken: eine niedrigere Nummer koennte einer geloeschten Spalte
-// gehoert haben. Frueher standen hier s1 und s2 — genau der Fehler.
+// gehoert haben.
 test('coerceSpalten vergibt fehlende Kennungen und behaelt vorhandene', () => {
   const raus = coerceSpalten([
     { titel: 'A', feld: '1_1' },
@@ -89,10 +89,10 @@ test('coerceSpalten vergibt fehlende Kennungen und behaelt vorhandene', () => {
   expect(raus.map((s) => s.kennung)).toEqual(['s8', 's7', 's9'])
 })
 
-// Der Kern von P4: der Bediener loescht eine Spalte in der Mitte und legt
-// eine neue an. Bekaeme die neue die frei gewordene Kennung, zeigten
-// Rechnung und Ketten-Parameter der geloeschten Spalte ab sofort stumm auf
-// sie — sie zeigen ja auf die Kennung, nicht auf den Platz.
+// Der Bediener loescht eine Spalte in der Mitte und legt eine neue an.
+// Bekaeme die neue die frei gewordene Kennung, zeigten Rechnung und
+// Ketten-Parameter der geloeschten Spalte ab sofort stumm auf sie — sie
+// zeigen ja auf die Kennung, nicht auf den Platz.
 test('eine geloeschte Kennung wird nicht wiedervergeben', () => {
   const vorher = mitKennungen([
     { kennung: '', titel: 'A', feld: '' },
@@ -163,7 +163,7 @@ function liste(...versteckt: boolean[]): Spalte[] {
   }))
 }
 
-// Der Kern von Schritt 7: JEDER Wert und jeder Ketten-Parameter haengt am
+// JEDER Wert und jeder Ketten-Parameter haengt am
 // Platz in der VOLLEN Liste (datenzeilen, exportMask, Rechnung). Die Sicht
 // darf nur sagen, WAS gezeichnet wird — und wo das Gezeichnete voll steht.
 test('spaltenSicht laesst im Editor alles stehen', () => {
@@ -207,10 +207,10 @@ test('nimmt der Bediener alles weg, bleibt die erste Spalte stehen', () => {
   expect(sicht.spalten.map((s) => s.kennung)).toEqual(['s1'])
 })
 
-// Das Suchfenster einer Spalte (F4 beim Erfassen) war bis 2026-09-04 nirgends
-// einstellbar. Was der Bauer dort stellt, muss denselben Weg ueberleben wie
-// jede andere Spalten-Angabe — sonst faende er seine Einstellung im Editor
-// wieder, waehrend die exportierte Maske weiter die Automatik zeigte.
+// Was der Bauer am Suchfenster einer Spalte (F4 beim Erfassen) stellt, muss
+// denselben Weg ueberleben wie jede andere Spalten-Angabe — sonst faende er
+// seine Einstellung im Editor wieder, waehrend die exportierte Maske weiter
+// die Automatik zeigte.
 test('eingestellte Fenster-Spalten ueberleben Export und Einlesen', () => {
   const raus = rundlauf({
     titel: 'Artikel',

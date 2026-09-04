@@ -3,7 +3,7 @@ import type { ActionParamBinding, ActionStep, RelationStep } from './aktionen'
 import type { RelationTemplate } from './relations'
 import { stepProblem } from './schrittPruefung'
 
-// Der Nutzer kann nicht am Code nachsehen, warum ein Schritt rot ist — er
+// Der Bediener kann nicht am Code nachsehen, warum ein Schritt rot ist — er
 // liest allein diese Sätze. Darum jeder einmal.
 
 function relation(params: readonly string[], extra = false): RelationTemplate {

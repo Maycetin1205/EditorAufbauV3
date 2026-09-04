@@ -51,8 +51,8 @@ function eingabe(
 }
 
 // Keine Lupe in der Erfassungszelle: das große Fenster öffnet F4 oder
-// Alt+Pfeil-runter, Enter springt im leeren Feld weiter (Nutzer 2026-09-01).
-// Die Lupe am Formularfeld bleibt.
+// Alt+Pfeil-runter, Enter springt im leeren Feld weiter. Die Lupe am
+// Formularfeld bleibt.
 function laufzeitZelle(
   lage: ErfassungsLage,
   tun: ErfassungsHandeln,

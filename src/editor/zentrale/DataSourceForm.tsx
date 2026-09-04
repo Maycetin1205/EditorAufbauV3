@@ -205,8 +205,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         : 'Zwei Felder haben dieselbe Position + Länge.')
     : ''
 
-  // Gewaehlt wird ein FELD der Quelle, nicht ein getippter Code (Regel 3):
-  // der Klarname steht vorn, der Feldcode daneben.
+  // Gewaehlt wird ein FELD der Quelle, nicht ein getippter Code: der Klarname
+  // steht vorn, der Feldcode daneben.
   const satzNummerOptionen = [
     { value: '', label: 'Nicht gebunden' },
     ...zeilen

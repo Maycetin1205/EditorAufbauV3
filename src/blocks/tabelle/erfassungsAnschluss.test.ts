@@ -67,8 +67,8 @@ test('die Kette sieht die oben stehende Zeile mit ihren LEBENDEN Werten', () => 
     .toEqual([['ART1', '9'], ['ART2', '2']])
 })
 
-// Genau der Weg zur LEERZEILE im ERP: frueher liess sich eine erfasste Zeile
-// an Ort und Stelle leer tippen und blieb trotzdem vorgemerkt.
+// Genau der Weg zur LEERZEILE im ERP: eine erfasste Zeile, die sich an Ort
+// und Stelle leer tippen laesst und trotzdem vorgemerkt bleibt.
 test('eine leer geraeumte Rueckholung ist eine Wegnahme, keine Leerzeile', () => {
   const a = new ErfassungsAnschluss()
   lege(a, 'ART1', '1')
@@ -111,8 +111,8 @@ test('die oben stehende Zeile geht beim Schreiben markiert an ihren Platz', () =
   expect(a.istGeschrieben(0)).toBe(true)
 })
 
-// Der eigentliche Datenverlust: frueher flog die Zeile hier aus der Liste,
-// und blieb die Lieferung aus, war die Eingabe spurlos weg.
+// Der eigentliche Datenverlust: floege die Zeile hier aus der Liste, waere
+// die Eingabe spurlos weg, sobald die Lieferung ausbleibt.
 test('eine geschriebene Zeile bleibt sichtbar und zaehlt nicht mehr mit', () => {
   const a = new ErfassungsAnschluss()
   lege(a, 'ART1', '1')
@@ -170,9 +170,8 @@ test('eine ganz leere Erfassungszeile wird weiterhin nicht abgelegt', () => {
 })
 
 // Die Tipp-Zeile zeichnet AN ORT UND STELLE der geoeffneten Zeile
-// (korrekturPlatz), nicht unten — nichts springt, nichts sortiert sich um
-// (Nutzer 2026-09-01). Enter legt sie dort wieder ab, und die Tipp-Zeile
-// sitzt wieder unten (null).
+// (korrekturPlatz), nicht unten — nichts springt, nichts sortiert sich um.
+// Enter legt sie dort wieder ab, und die Tipp-Zeile sitzt wieder unten (null).
 test('korrekturPlatz nennt den Platz der geoeffneten Zeile', () => {
   const a = new ErfassungsAnschluss()
   lege(a, 'ART1', '1')
@@ -188,11 +187,11 @@ test('korrekturPlatz nennt den Platz der geoeffneten Zeile', () => {
   expect(werte(a)).toEqual([['ART1', '1'], ['ART2', '2'], ['ART3', '3']])
 })
 
-// P4: Der Bediener fuellt die untere Zeile aus und klickt auf Buchen, ohne
-// vorher Enter zu druecken. Bis P4 zaehlte sie nicht mit und wurde nicht
-// geschrieben — sie stand sichtbar ausgefuellt vor ihm und ging still
-// verloren (Nutzer-Befund 2026-09-01). Dieselbe Mechanik wie bei der zur
-// Korrektur zurueckgeholten Zeile.
+// Der Bediener fuellt die untere Zeile aus und klickt auf Buchen, ohne
+// vorher Enter zu druecken. Zaehlte sie nicht mit, wuerde sie nicht
+// geschrieben — sie stuende sichtbar ausgefuellt vor ihm und ginge still
+// verloren. Dieselbe Mechanik wie bei der zur Korrektur zurueckgeholten
+// Zeile.
 test('die unten getippte Zeile zaehlt mit, auch ohne Enter', () => {
   const a = new ErfassungsAnschluss()
   lege(a, 'ART1', '1')

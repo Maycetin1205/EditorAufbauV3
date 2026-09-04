@@ -1,8 +1,7 @@
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 
 // Was der BEDIENER sich in der fertigen Maske sortiert hat, ueberlebt das
-// Schliessen (Nutzer-Entscheidung 2026-09-04: "ich klick Datum an ... und
-// diese Sortierung bleibt auch nach Neuladen").
+// Schliessen und Neuladen der Maske.
 //
 // Gemerkt wird die KENNUNG der Spalte, nicht ihr Platz: verschiebt der Bauer
 // spaeter eine Spalte, zeigte die Platznummer auf die falsche (derselbe

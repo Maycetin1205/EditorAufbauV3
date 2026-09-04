@@ -67,8 +67,8 @@ test('jeder Registry-Baustein exportiert seinen Tag', () => {
 })
 
 // Round-Trip je Baustein: eine geaenderte Text-Eigenschaft muss als Attribut
-// hinausgehen. Der Tabellen-Bug 2026-07-24 (umbenannte Spalten fielen im
-// Export still auf die Standardtitel zurueck) war genau diese Luecke.
+// hinausgehen. Sonst fallen z. B. umbenannte Spalten im Export still auf die
+// Standardtitel zurueck.
 test('eine geänderte Eigenschaft erreicht den Export als Attribut', () => {
   const LAYOUT = new Set(['width', 'height', 'rasterX', 'rasterY', 'rasterW', 'rasterH'])
   const pruefbar = new Map<string, string>()

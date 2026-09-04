@@ -28,7 +28,7 @@ function werte(teil: Partial<Record<PlatzKey, PlatzWert>>): Record<PlatzKey, Pla
 // Der Praxisfall aus den Kundendaten: Baytril 5 % (IDB-Satz ART00005/Rind),
 // Behandlungsmenge 5, Behandlungsdauer 5. 5000 ml Vorrat -> 200 Tiere.
 // In der IDB steht bei diesem Artikel auch ein Koerpergewicht (50) — es
-// zaehlt seit 2026-09-01 NICHT mehr mit, die Dosis gilt pro Tier.
+// zaehlt NICHT mit, die Dosis gilt pro Tier.
 test('Anzahl Tiere ist die Luecke und wird aufgerundet', () => {
   const geloest = loeseRechnung(rechnung(), werte({ menge: 5000, dosis: 5, tage: 5 }), ALLE)
   expect(geloest).toEqual({ platz: 'anzahl', wert: 200 })
@@ -123,10 +123,10 @@ test('kaputtes Attribut liefert null statt Truemmer', () => {
 })
 
 // Alte Masken tragen im Attribut noch die ausgebauten Teile: einheitFeld/
-// einheiten (Umrechner), gewicht/bezug (Tiergewicht und je-kg, beide raus am
-// 2026-09-01) und `feld` statt `spalte` (vor der Spalten-Kennung) — die Leser
-// lassen Unbekanntes einfach fallen; `feld` uebersetzt die Lade-Migration
-// (migrationenRoh), nicht dieser Leser.
+// einheiten (Umrechner), gewicht/bezug (Tiergewicht und je-kg) und `feld`
+// statt `spalte` (vor der Spalten-Kennung) — die Leser lassen Unbekanntes
+// einfach fallen; `feld` uebersetzt die Lade-Migration (migrationenRoh),
+// nicht dieser Leser.
 test('unbekannte Attribut-Teile werden beim Lesen fallengelassen', () => {
   const roh = JSON.stringify({
     menge: { spalte: 's5', feld: 'm' },

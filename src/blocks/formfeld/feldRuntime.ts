@@ -45,9 +45,9 @@ export function hydrateField(field: RuntimeFieldElement): void {
   const stelle = leseGebundeneStelle(field, bindingAttr('value'))
   if (stelle.art !== 'wert') {
     fieldData.delete(field)
-    // Ein gebundenes Feld ist Geber seiner ANGEZEIGTEN Zeile (Nutzer
-    // 2026-09-01) — zeigt es keine, gibt es auch keine. Ohne Kennung
-    // (kein Geber) sind beide Rufe stumm.
+    // Ein gebundenes Feld ist Geber seiner ANGEZEIGTEN Zeile — zeigt es
+    // keine, gibt es auch keine. Ohne Kennung (kein Geber) sind beide Rufe
+    // stumm.
     klareAuswahl(geberIdVon(field))
 
     if (stelle.art === 'ohneZeile') field.value = ''

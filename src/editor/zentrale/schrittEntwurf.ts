@@ -8,8 +8,8 @@ import type { RelationTemplate } from '../../core/data/relations'
 import type { FeldUebernahmeZiel, UebernahmeTreffer } from './feldUebernahme'
 
 export interface SchrittEntwurf {
-  // Einmal beim Oeffnen vergeben. Frueher zog jeder Render eine neue UUID,
-  // also pruefte die Anzeige einen anderen Schritt, als Speichern schrieb.
+  // Einmal beim Oeffnen vergeben. Zoege jeder Render eine neue UUID, pruefte
+  // die Anzeige einen anderen Schritt, als Speichern schreibt.
   id: string
 
   typ: StepTypeKey

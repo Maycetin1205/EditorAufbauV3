@@ -57,9 +57,9 @@ export function SchluesselPaarZeilen({
       {/* Die beiden Waehler stehen UNTEREINANDER. Nebeneinander teilten sie
           sich eine ohnehin eingerueckte Spalte und trugen jeder die vollen
           Fixkosten (Rahmen, Polster, Pfeil): vom Feldnamen blieben drei bis
-          sechs Zeichen — man sah nicht mehr, was man gewaehlt hatte
-          (Nutzer-Befund 2026-08-28). Untereinander hat jeder die volle
-          Breite; es kostet eine Zeilenhoehe je Paar. */}
+          sechs Zeichen — man sah nicht mehr, was man gewaehlt hatte.
+          Untereinander hat jeder die volle Breite; es kostet eine Zeilenhoehe
+          je Paar. */}
       {paare.map((paar, at) => (
         <div key={at} className="flex flex-col gap-1 rounded border border-linie p-1.5">
           <div className="flex items-center gap-1.5">

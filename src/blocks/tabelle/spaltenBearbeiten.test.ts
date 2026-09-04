@@ -17,9 +17,8 @@ function drei(): Spalte[] {
 }
 
 // Der Punkt der Sache: gestrichen wird die Spalte, die gemeint ist — nicht
-// immer die letzte (Nutzer-Befund 2026-08-31). Vorher gab es nur den
-// Minus-Knopf, und der nahm hinten weg; wer die mittlere loswerden wollte,
-// musste die hintere mit opfern und neu aufbauen.
+// immer die letzte. Naehme nur ein Minus-Knopf hinten weg, muesste, wer die
+// mittlere loswerden will, die hintere mit opfern und neu aufbauen.
 test('gestrichen wird die genannte Spalte, nicht die letzte', () => {
   let raus: Spalte[] = []
   entferneSpalte(1, drei, (l) => { raus = l })
@@ -72,7 +71,7 @@ test('die neue Spalte ist sichtbar, auch wenn alle anderen gezogen sind', () => 
     .toBe('minmax(0, 120fr) minmax(0, 100fr) minmax(0, 80fr) minmax(0, 100fr)')
 })
 
-// Was der Bediener gezogen hat, bleibt stehen. Frueher wurde beim Anfuegen
+// Was der Bediener gezogen hat, bleibt stehen — beim Anfuegen wird nicht
 // ALLES neu verteilt.
 test('gezogene Breiten bleiben beim Anfuegen unangetastet', () => {
   expect(fuegeSpalteAn(feste(43, 97, 61, 399)).map((s) => s.breite))
@@ -80,8 +79,8 @@ test('gezogene Breiten bleiben beim Anfuegen unangetastet', () => {
 })
 
 // Spiegelbild: die Verbliebenen behalten ihre Anteile und fuellen die Tabelle
-// trotzdem wieder aus. Vorher blieb der Platz der gestrichenen Spalte als
-// leere Flaeche am rechten Rand stehen (Nutzer-Befund 2026-08-31).
+// trotzdem wieder aus — der Platz der gestrichenen Spalte bleibt nicht als
+// leere Flaeche am rechten Rand stehen.
 test('beim Streichen behalten die Verbliebenen ihre Breite', () => {
   let raus: Spalte[] = []
   entferneSpalte(1, () => feste(120, 100, 80), (l) => { raus = l })

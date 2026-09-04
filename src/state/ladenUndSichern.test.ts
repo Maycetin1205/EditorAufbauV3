@@ -8,7 +8,7 @@ import { backupKeyFor } from './notfallkopie'
 import { loadFromStorage, STORAGE_KEY } from './persistence'
 import { VorlagenStore, type VorlagenBauplan } from './VorlagenStore'
 
-// Hier haengt, dass kein Stand des Nutzers stumm verschwindet: was der Editor
+// Hier haengt, dass kein gespeicherter Stand stumm verschwindet: was der Editor
 // nicht lesen kann, muss er sichern — und was er meldet, muss stimmen.
 
 class SpeicherStub {

@@ -18,9 +18,8 @@ import { useAbschnitt } from './abschnittStand'
 
 // Die Rechnung (Abgabemenge = Anzahl x Dosis x Tage) gehoert zur Tabelle,
 // deren Erfassungszeile sie rechnet — und wird darum HIER bedient, im
-// Inspector dieser Tabelle. Vorher war sie ein eigener Reiter im
-// Datencenter, obwohl sie nichts Maskenweites ist (PLAN.md Schritt 3).
-// Der Baustein traegt nur das Ergebnis im Attribut `rechnung`.
+// Inspector dieser Tabelle, nicht im Datencenter: sie ist nichts
+// Maskenweites. Der Baustein traegt nur das Ergebnis im Attribut `rechnung`.
 
 const RICHTUNGEN: WahlOption[] = [
   { wert: 'auf', name: 'aufrunden' },
@@ -30,8 +29,7 @@ const RICHTUNGEN: WahlOption[] = [
 
 // Die Spalten des Bausteins, so weit dieses Formular sie braucht: Titel als
 // Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das Belegfeld,
-// das kann doppelt vergeben sein und traf dann stumm die falsche Spalte
-// (Nutzer-Vorfall 2026-09-01, zweimal 930_3).
+// das kann doppelt vergeben sein und trifft dann stumm die falsche Spalte.
 function spaltenVon(node: BlockNode): { titel: string; kennung: string; versteckt: boolean }[] {
   const roh = node.props.spalten
   if (!Array.isArray(roh)) return []
@@ -67,9 +65,9 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
   // Eine ausgeblendete Spalte kann der Bediener nie tippen — sie kann also
   // immer nur der GERECHNETE Platz sein. Sitzen zwei Plaetze auf
   // ausgeblendeten Spalten, hat die Gleichung zwei Luecken, und die Rechnung
-  // rechnet nie: sie fuellt genau eine. Das faellt sonst erst in SoftEngine
-  // auf, an einer Zelle, die einfach leer bleibt (Regel 4: nichts scheitert
-  // still). Welche Spalten ausgeblendet sind, entscheidet der Bediener —
+  // rechnet nie: sie fuellt genau eine. Das fiele sonst erst in SoftEngine
+  // auf, an einer Zelle, die einfach leer bleibt — nichts soll still
+  // scheitern. Welche Spalten ausgeblendet sind, entscheidet der Bediener —
   // gesagt bekommt er nur, wenn sich zwei davon gegenseitig blockieren.
   const versteckteKennungen = new Set(
     spaltenVon(block).filter((sp) => sp.versteckt).map((sp) => sp.kennung),

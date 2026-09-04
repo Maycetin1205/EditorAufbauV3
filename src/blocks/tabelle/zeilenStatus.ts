@@ -2,7 +2,7 @@ import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 
 // Woran eine Zeile gerade ist. Gezeigt wird das ausschliesslich als schmaler
 // Balken am linken Zeilenrand plus Klartext im title — nie als Wort in der
-// Zeile (Nutzer-Vorgabe: keine Text-Marken wie „NEU").
+// Zeile (keine Text-Marken wie „NEU").
 export type ZeilenStatus =
   | 'gebucht'
   | 'erfasst'

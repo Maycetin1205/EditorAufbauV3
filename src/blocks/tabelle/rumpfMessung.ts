@@ -14,7 +14,7 @@ export interface Rumpfmessung {
 
   // Der Kopf wird ZWEIZEILIG, sobald eine Spalte an eine Hilfsquelle gebunden ist;
   // der ResizeObserver sieht das nicht, der Rumpf behaelt seine Hoehe. Ohne diesen
-  // Vergleich rechnet die Tabelle mit einer Zeile zu viel (Nutzer-Befund 2026-08-31).
+  // Vergleich rechnet die Tabelle mit einer Zeile zu viel.
   kopf: number
 }
 

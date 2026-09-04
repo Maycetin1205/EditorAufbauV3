@@ -33,10 +33,10 @@ function fakeWurzel(...els: Element[]): ParentNode {
   return { querySelectorAll: () => els } as unknown as ParentNode
 }
 
-// Der Befund vom 2026-09-01: ein TEXT-Formularfeld trug noch eine alte
-// Nachschlage-Quelle als Attribut und galt darum als Geber der Beleg-Quelle —
-// seine veroeffentlichte Zeile (aus einer ANDEREN Quelle) fuetterte Relation
-// 69 mit Datenmuell, im Halbsekundentakt. Die Quelle eines Gebers haengt am
+// Ein TEXT-Formularfeld kann noch eine alte Nachschlage-Quelle als Attribut
+// tragen. Gaelte es darum als Geber der Beleg-Quelle, fuetterte seine
+// veroeffentlichte Zeile (aus einer ANDEREN Quelle) Relation 69 mit
+// Datenmuell, im Halbsekundentakt. Die Quelle eines Gebers haengt am
 // FELDTYP, nicht pauschal am Tag.
 test('ein Text-Feld mit uebriger Nachschlage-Quelle ist NICHT deren Geber', () => {
   const feld = fakeEl('ff-formfeld', {
