@@ -230,48 +230,26 @@ function runNextGet(): void {
   if (getBusy || getQueue.length === 0) return
   getBusy = true
   const job = getQueue.shift()!
-  const g = seGlobal()
-  const before = new Set(seMessageKeys(g.SEDATA))
   let settled = false
   let verfallenGenutzt = false
+  let unsubscribe: (() => void) | null = null
+  let poll: ReturnType<typeof setInterval> | null = null
+  let timeout: ReturnType<typeof setTimeout> | null = null
 
+  // `finish` gibt die Warteschlange in JEDEM Fall frei — auch wenn der Aufbau
+  // des Rufs selbst wirft. Bliebe `getBusy` stehen, laedt die Maske fuer den
+  // Rest der Sitzung keine Daten mehr, ohne dass irgendwer davon erfaehrt.
   const finish = (wert: string, roh: unknown, fehler?: string): void => {
     if (settled) return
     settled = true
-    unsubscribe()
-    clearInterval(poll)
-    clearTimeout(timeout)
+    unsubscribe?.()
+    if (poll !== null) clearInterval(poll)
+    if (timeout !== null) clearTimeout(timeout)
     getBusy = false
     job.resolve(fehler === undefined ? { wert, roh } : { wert, roh, fehler })
 
     queueMicrotask(runNextGet)
   }
-
-  const satzAntwort = job.optionen.satzAntwort === true
-
-  const unsubscribe = onSeAntwort((raw) => {
-    const result = satzAntwort ? extractSatzAntwort(raw) : extractRelationResult(raw)
-    if (result === undefined) return
-    if (verfaelltRueckruf && markeGilt()) {
-      verfaelltRueckruf = false
-      verfallenGenutzt = true
-      return
-    }
-    finish(result, raw)
-  })
-
-  const poll = setInterval(() => {
-    const nachricht = newSeMessageResult(seGlobal().SEDATA, before, satzAntwort)
-    if (nachricht === undefined) return
-    if (verfaelltNachlese && markeGilt()) {
-      verfaelltNachlese = false
-      verfallenGenutzt = true
-      // Sonst faende der naechste Durchlauf dieselbe Nachricht erneut.
-      before.add(nachricht.schluessel)
-      return
-    }
-    finish(nachricht.wert, nachricht.roh)
-  }, GET_POLL_MS)
 
   // Der Balken schweigt bei 'still' (Hintergrund-Nachladen), der Bericht an
   // die Kette nie: sonst braeche ein Lauf ab, ohne dass jemand sagen kann,
@@ -281,20 +259,48 @@ function runNextGet(): void {
     finish('', undefined, text)
   }
 
-  const timeout = setTimeout(() => {
-    if (!verfallenGenutzt) {
-      verfaelltRueckruf = true
-      verfaelltNachlese = true
-      verfallenBis = Date.now() + VERFALL_MS
-    }
-    gescheitert(`Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. ${job.template.nr}).`)
-  }, GET_TIMEOUT_MS)
-
-  if (typeof g.basisHTML_SND_MSG !== 'function') {
-    gescheitert('Daten laden nicht möglich: keine Verbindung zu SoftEngine.')
-    return
-  }
   try {
+    const g = seGlobal()
+    const before = new Set(seMessageKeys(g.SEDATA))
+    const satzAntwort = job.optionen.satzAntwort === true
+
+    unsubscribe = onSeAntwort((raw) => {
+      const result = satzAntwort ? extractSatzAntwort(raw) : extractRelationResult(raw)
+      if (result === undefined) return
+      if (verfaelltRueckruf && markeGilt()) {
+        verfaelltRueckruf = false
+        verfallenGenutzt = true
+        return
+      }
+      finish(result, raw)
+    })
+
+    poll = setInterval(() => {
+      const nachricht = newSeMessageResult(seGlobal().SEDATA, before, satzAntwort)
+      if (nachricht === undefined) return
+      if (verfaelltNachlese && markeGilt()) {
+        verfaelltNachlese = false
+        verfallenGenutzt = true
+        // Sonst faende der naechste Durchlauf dieselbe Nachricht erneut.
+        before.add(nachricht.schluessel)
+        return
+      }
+      finish(nachricht.wert, nachricht.roh)
+    }, GET_POLL_MS)
+
+    timeout = setTimeout(() => {
+      if (!verfallenGenutzt) {
+        verfaelltRueckruf = true
+        verfaelltNachlese = true
+        verfallenBis = Date.now() + VERFALL_MS
+      }
+      gescheitert(`Daten laden: SoftEngine hat nicht geantwortet (Relation Nr. ${job.template.nr}).`)
+    }, GET_TIMEOUT_MS)
+
+    if (typeof g.basisHTML_SND_MSG !== 'function') {
+      gescheitert('Daten laden nicht möglich: keine Verbindung zu SoftEngine.')
+      return
+    }
     g.basisHTML_SND_MSG('GET_RELATION', {
       NR: job.template.nr,
       PARAMS: job.params,
@@ -344,7 +350,7 @@ export interface RuntimeActionValues {
   gewaehlteZeile?: (geberId: string) => unknown
 
   // Gesetzt, wenn die Kette gerade EINE Zeile abarbeitet — eine erfasste
-  // (G4) oder eine geaenderte: liefert den Zellwert der Spalte dieser Zeile.
+  // oder eine geaenderte: liefert den Zellwert der Spalte dieser Zeile.
   zeilenZelle?: (blockId: string, spaltenIndex: number) => string
 }
 

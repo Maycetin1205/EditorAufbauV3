@@ -10,6 +10,15 @@ export function auswahlAufSeite(
   return seiteVon(tree, id) === seitenWurzel ? id : null
 }
 
+// Escape geht eine Ebene hoch: zum Elternteil, sofern er kein Seiten-Baustein
+// und nicht die Wurzel ist. Sonst wird die Auswahl aufgehoben (null).
+export function elternZiel(tree: BlockTree, id: string): string | null {
+  const node = tree[id]
+  const eltern = node?.parentId ? tree[node.parentId] : undefined
+  if (!eltern || eltern.id === ROOT_ID || istSeitenBaustein(eltern)) return null
+  return eltern.id
+}
+
 export function auswahlZiel(
   tree: BlockTree,
   getroffenId: string,

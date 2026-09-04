@@ -2,8 +2,8 @@ import { kennungenVergeben } from '../../core/blocks/listenBindung'
 
 export interface Spalte {
   // Ketten-Parameter und Rechnung zeigen auf die Kennung, nie auf Platz oder
-  // Belegfeld: ein Belegfeld kann doppelt vergeben sein (Nutzer-Vorfall
-  // 2026-09-01: zweimal 930_3, die Rechnung erwischte stumm die falsche Spalte).
+  // Belegfeld: ein Belegfeld kann doppelt vergeben sein (zweimal 930_3), und
+  // die Rechnung erwischte dann stumm die falsche Spalte.
   kennung: string
   titel: string
   feld: string
@@ -17,7 +17,7 @@ export interface Spalte {
   fuellFeld?: string
 
   // Das Suchfenster dieser Zelle (F4 beim Erfassen) — genau wie beim
-  // Formularfeld „nachschlagen" einstellbar (Nutzer-Ansage 2026-09-04).
+  // Formularfeld „nachschlagen" einstellbar.
   //
   // LEER heisst Automatik: das Fenster nimmt die Spalten der Tabelle, die auf
   // dieselbe Hilfsquelle zeigen (fensterSpaltenIn). Das ist der Normalfall und
@@ -93,8 +93,7 @@ export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): n
   return spalten.findIndex((s) => s.kennung === t)
 }
 
-// Eine neue Tabelle startet mit EINER leeren Spalte (Nutzer-Entscheidung
-// 2026-09-01).
+// Eine neue Tabelle startet mit EINER leeren Spalte.
 export function standardSpalten(): Spalte[] {
   return mitKennungen([neueSpalte(0)])
 }
@@ -171,7 +170,10 @@ export function coerceSpalten(v: unknown): Spalte[] {
   } else {
     arr = standardSpalten()
   }
-  if (arr.length > SPALTEN_MAX) arr = arr.slice(0, SPALTEN_MAX)
+  // Nie kuerzen: die Obergrenze gilt fuer das Anlegen neuer Spalten
+  // (spaltenBindung). Eine gespeicherte Liste mit mehr Spalten bleibt ganz,
+  // sonst verschoeben sich die Plaetze dahinter und Ketten schrieben stumm
+  // falsche Werte ins ERP.
   if (arr.length < SPALTEN_MIN) arr = [neueSpalte(0)]
   return mitKennungen(arr)
 }
@@ -186,7 +188,7 @@ export function tryCoerceSpalten(v: string): Spalte[] {
 
 // Die gezogene Zahl gilt als ANTEIL (`fr`), nicht als festes Pixelmass: feste
 // Pixel liessen rechts eine leere Flaeche stehen, sobald ihre Summe die
-// Tabellenbreite verfehlte (Nutzer-Befund 2026-08-31).
+// Tabellenbreite verfehlte.
 export function spaltenRaster(
   spalten: readonly Spalte[],
   breiten: (index: number) => number | undefined = () => undefined,

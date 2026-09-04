@@ -165,8 +165,11 @@ export class TabelleBlock extends BasicBlock {
   // liegt in spaltenBreite, der Baustein delegiert nur.
   private readonly _breiten = new BreitenStand({
     imEditor: () => this.imEditor,
+    // Dieselbe Sicht wie beim Zeichnen: auch die Spalten, die der Bediener in
+    // der Maske weggenommen hat, fehlen im gezeichneten Raster.
     vollerPlatz: (gezeichnet) =>
-      spaltenSicht(this.spaltenListe(), this.imEditor).plaetze[gezeichnet] ?? gezeichnet,
+      spaltenSicht(this.spaltenListe(), this.imEditor, this._wahl.weg())
+        .plaetze[gezeichnet] ?? gezeichnet,
     spaltenListe: () => this.spaltenListe(),
     schreibeSpalten: (spalten) => this.aendere(spalten),
     melde: () => this.requestUpdate(),
@@ -304,7 +307,7 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
-  // Enter am Zeilenende (G4): die Zeile bleibt stehen, die Erfassung rueckt
+  // Enter am Zeilenende: die Zeile bleibt stehen, die Erfassung rueckt
   // tiefer, der Cursor auf die erste Zelle. Geschrieben wird hier NICHTS.
   private erfasseZeile(): boolean {
     if (!this._erfassung.erfasse(this.erfassungsUmfeld())) return false
@@ -317,9 +320,8 @@ export class TabelleBlock extends BasicBlock {
   // Nach dem Abschliessen muss die gerade erfasste Zeile zu sehen sein. Der
   // Fokus allein holt sie nicht her: die Erfassungszeile KLEBT unten, der
   // Browser haelt sie fuer sichtbar und rollt darum gar nicht — die neue Zeile
-  // kann oben aus dem Bild sein oder hinter der klebenden Zeile liegen
-  // (Nutzer-Ansage 2026-08-28). Ans Ende zu rollen setzt sie genau ueber die
-  // Erfassungszeile.
+  // kann oben aus dem Bild sein oder hinter der klebenden Zeile liegen. Ans
+  // Ende zu rollen setzt sie genau ueber die Erfassungszeile.
   private zeigeLetzteErfasste(): void {
     void this.updateComplete.then(() => {
       const koerper = this.shadowRoot?.querySelector<HTMLElement>('.koerper')
@@ -500,9 +502,9 @@ export class TabelleBlock extends BasicBlock {
     this._ansicht.beobachte()
   }
 
-  // Wie beim Nachschlage-Feld (G1): einmal je Darstellung berechnet, damit
+  // Wie beim Nachschlage-Feld: einmal je Darstellung berechnet, damit
   // Tastatur und Anzeige DENSELBEN Stand sehen. Im Editor gibt es keine Daten
-  // und keine Liste (Regel 7).
+  // und keine Liste.
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed)
     // Die fluechtigen Breiten haengen am PLATZ der Spalte. Kommt eine Spalte

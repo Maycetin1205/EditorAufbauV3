@@ -14,11 +14,10 @@ import { parseDtkBytes, type DtkTabelle } from '../../core/data/dtkImport'
 import { bausteineMitQuelle } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
-import { useFrage } from '../shell/Frage'
 import { DataSourceForm } from './DataSourceForm'
 import { DtkImportForm } from './DtkImportForm'
 import { bausteinName } from '../../core/blocks/bausteinName'
-import { loeschFrage, ikonFuer } from './helfer'
+import { ikonFuer } from './helfer'
 
 // „Belege (Kopie)", und wenn es die schon gibt: „Belege (Kopie 2)" usw. —
 // zwei gleichnamige Quellen wären im Feld-Picker nicht zu unterscheiden.
@@ -33,7 +32,6 @@ function kopieName(name: string, vergeben: readonly string[]): string {
 export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
   const store = useDataSources()
   const ed = useEditor()
-  const [frageKnoten, frage] = useFrage()
   const [auswahlId, setAuswahlId] = useState<string | null>(store.list[0]?.id ?? null)
 
   const [modus, setModus] = useState<'lesen' | 'bearbeiten' | 'neu' | 'import'>('lesen')
@@ -69,7 +67,7 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
   const kennung = (s: DataSource): string => quellenKennung(s)
 
   // Zum Testen und Weiterverbiegen, ohne alle Felder von Hand nachzutragen —
-  // die Maskendatei zu laden ersetzt ja den GANZEN Stand (Nutzer 2026-09-01).
+  // die Maskendatei zu laden ersetzt ja den GANZEN Stand.
   // Die Kopie ist eigenständig; Bausteine zeigen weiter auf das Original.
   // store.add klont tief und setzt die eigene Kennung ZULETZT — die alte id
   // im Spread wird also sicher überschrieben.
@@ -82,14 +80,9 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
     setModus('lesen')
   }
 
-  async function loeschen(s: DataSource) {
-    const ja = await frage(loeschFrage(
-      'Datenquelle',
-      s.name,
-      verwendungFor(s.id).length > 0,
-      'Die Bausteine bleiben stehen, ihre Daten-Bindungen ruhen.',
-    ))
-    if (!ja) return
+  // Ohne Rueckfrage: Strg+Z holt die Quelle zurueck. Bausteine, die sie
+  // benutzen, bleiben stehen; ihre Daten-Bindungen ruhen.
+  function loeschen(s: DataSource) {
     store.remove(s.id)
     setModus('lesen')
   }
@@ -98,7 +91,6 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
   // Bereiche links, Liste mit Kopf, Detail rechts.
   return (
     <>
-      {frageKnoten}
       <ListeDetail
         bereiche={bereiche}
         listeKopf={(
@@ -232,9 +224,7 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
             <div className="flex gap-2 border-t border-linie pt-3">
               <Knopf art="primaer" onClick={() => setModus('bearbeiten')}>Bearbeiten</Knopf>
               <Knopf onClick={() => dupliziere(auswahl)}>Duplizieren</Knopf>
-              <Knopf art="gefahr" onClick={() => void loeschen(auswahl)}>
-                Löschen…
-              </Knopf>
+              <Knopf art="gefahr" onClick={() => loeschen(auswahl)}>Löschen</Knopf>
             </div>
           </div>
         )}

@@ -188,8 +188,11 @@ export function benutzteFelderJeQuelle(
 
   // Woraus eine holende Quelle ihre Parameter zieht, steht an der QUELLE und
   // nicht im Baum. Ohne diese Runde bestellte der Export das Feld nicht, und
-  // der Parameter ginge in SoftEngine leer hinaus.
-  for (const source of sources) {
+  // der Parameter ginge in SoftEngine leer hinaus. Nur die Quellen, die die
+  // Maske benutzt: eine Quelle, die bloss in der Bibliothek liegt, darf keiner
+  // benutzten Quelle Felder unterschieben — SoftEngine bestellt sonst mehr,
+  // als die Maske braucht.
+  for (const source of collectDataSources(tree, sources)) {
     for (const { quelleId, code } of quellenAusHolWert(source)) merke(quelleId, code)
   }
   return felder

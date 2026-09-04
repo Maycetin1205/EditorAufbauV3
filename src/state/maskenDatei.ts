@@ -8,9 +8,15 @@ import {
   type LadeProblem,
 } from '../core/data/ladeProblem'
 import { pruefeRelationsVorlagen, type RelationTemplate } from '../core/data/relations'
+import { downloadFile } from '../lib/dateiDownload'
+import { dataSourceStore } from './DataSourceStore'
+import type { Editor } from './Editor'
 import { keinVerlust, pruefeBaumStand } from './ladeKette'
+import { meldungen } from './meldungen'
 import { CURRENT_SCHEMA_VERSION } from './migrations'
 import { type EntfernGrund } from './migrationenRoh'
+import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from './persistence'
+import { relationStore } from './RelationStore'
 
 export const MASKEN_DATEI_ART = 'aufbau-editor-maske'
 
@@ -50,6 +56,43 @@ export function packeMaske(inhalt: MaskenInhalt): string {
     null,
     2,
   ) + '\n'
+}
+
+export function speichereMaskeAlsDatei(editor: Editor): void {
+  const text = packeMaske({
+    tree: editor.tree,
+    datenquellen: [...dataSourceStore.list],
+    relationen: [...relationStore.list],
+  })
+  const heute = new Date().toISOString().slice(0, 10)
+  downloadFile(`aufbau-maske-${heute}.json`, text, 'application/json')
+}
+
+// Laedt eine Maskendatei in den Editor. Ohne Rueckfrage: das Laden ist ein
+// Undo-Schritt, Strg+Z bringt die vorige Maske samt Bibliotheken zurueck.
+export async function ladeMaskeAusDatei(editor: Editor, datei: File): Promise<void> {
+  let text: string
+  try {
+    text = await datei.text()
+  } catch {
+    meldungen.melde('Die Datei konnte nicht gelesen werden.')
+    return
+  }
+  const ergebnis = packeMaskeAus(text)
+  if (!ergebnis.ok) {
+    const liste = ergebnis.probleme.slice(0, 10)
+      .map((p) => `• ${p.bereich}${p.stelle === '' ? '' : ` (${p.stelle})`}: ${p.grund}`)
+    const rest = ergebnis.probleme.length - liste.length
+    meldungen.melde([
+      ergebnis.grund,
+      ...(liste.length > 0 ? ['', ...liste] : []),
+      ...(rest > 0 ? [`… und ${rest} weitere.`] : []),
+    ].join('\n'))
+    return
+  }
+  editor.ersetzeMaske(ergebnis.inhalt)
+  meldeVerworfeneTypen(ergebnis.verworfen)
+  meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
 }
 
 function bibliothekPruefen<T>(

@@ -78,8 +78,9 @@ function nachlaufBeenden(): void {
   nachlauf = null
 }
 
-export function onSeDaten(cb: (lieferung: boolean) => void): void {
+export function onSeDaten(cb: (lieferung: boolean) => void): () => void {
   zuhoerer.add(cb)
+  return () => { zuhoerer.delete(cb) }
 }
 
 export function onSeAntwort(cb: (raw: unknown) => void): () => void {
@@ -124,7 +125,7 @@ export function meldeAnstoss(): void {
 // schiebt von sich aus — wir stossen ihre Datenbasis an und zeichnen neu.
 // ⚠ Ob der Anstoss SoftEngine wirklich zu einer neuen Lieferung bewegt, ist
 // an KEINER echten Maske belegt (die Handmaske Rahmen00001 V11 schreibt gar
-// nicht zurueck). Das gehoert in den SE-Echttest.
+// nicht zurueck). Das laesst sich nur in SoftEngine selbst pruefen.
 export function frischeDatenAnfordern(): void {
   refreshDataBasis()
   klingeln(false)

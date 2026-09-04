@@ -48,7 +48,7 @@ export class PopupBlock extends BasicBlock {
       :host([data-ff-editor]) {
         display: block;
         position: absolute;
-        inset: 0;
+        top: 0; right: 0; bottom: 0; left: 0;
         z-index: 10;
         font-family: var(--se-font);
       }

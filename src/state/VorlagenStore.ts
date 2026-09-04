@@ -108,6 +108,19 @@ export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenSt
     return this._eintraege.find((e) => e.id === id)
   }
 
+  // Wer Aenderungen zuruecknehmen will (die Historie des Editors), bekommt
+  // den Ruf VOR jeder Aenderung — frueh genug, um den alten Stand festzuhalten.
+  private vorAenderung = new Set<() => void>()
+
+  beobachteVorAenderung(fn: () => void): () => void {
+    this.vorAenderung.add(fn)
+    return () => { this.vorAenderung.delete(fn) }
+  }
+
+  private meldeVorAenderung(): void {
+    for (const fn of [...this.vorAenderung]) fn()
+  }
+
   override notify(data: VorlagenStore<T>): void {
     this._version++
     super.notify(data)
@@ -116,6 +129,7 @@ export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenSt
 
   add(data: Omit<T, 'id'>): T {
     const eintrag = { ...deepClone(data), id: crypto.randomUUID() } as T
+    this.meldeVorAenderung()
     this._eintraege = [...this._eintraege, eintrag]
     this.notify(this)
     return eintrag
@@ -126,11 +140,13 @@ export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenSt
     if (at < 0) return
     const naechste = [...this._eintraege]
     naechste[at] = { ...deepClone(data), id } as T
+    this.meldeVorAenderung()
     this._eintraege = naechste
     this.notify(this)
   }
 
   ersetzeAlle(eintraege: readonly T[]): void {
+    this.meldeVorAenderung()
     this._eintraege = deepClone(eintraege) as T[]
     this.notify(this)
   }
@@ -138,6 +154,7 @@ export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenSt
   remove(id: string): void {
     const naechste = this._eintraege.filter((e) => e.id !== id)
     if (naechste.length === this._eintraege.length) return
+    this.meldeVorAenderung()
     this._eintraege = naechste
     this.notify(this)
   }

@@ -4,6 +4,7 @@ import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Reiter } from '@/ui/werkbank/Reiter'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
+import { loescheBaustein } from '../../state/loescheBaustein'
 import { useEditor } from '../../state/useEditor'
 
 export function SeitenLeiste() {
@@ -58,7 +59,7 @@ export function SeitenLeiste() {
                 nurZeichen
                 title="Seite löschen (Strg+Z stellt sie zurück)"
                 aria-label={`Seite ${p.name} löschen`}
-                onClick={() => ed.removeBlock(p.id)}
+                onClick={() => loescheBaustein(ed, p.id)}
                 className="h-6 w-auto rounded-l-none bg-akzent/15 pr-1.5 hover:bg-akzent/15 hover:text-fehler"
               >
                 <Trash size={12} />

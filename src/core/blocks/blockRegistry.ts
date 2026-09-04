@@ -2,9 +2,11 @@ import type { BlockDefinition } from './BlockDefinition'
 
 const registry = new Map<string, BlockDefinition>()
 
+// Ein zweiter Baustein desselben Typs ist ein Baufehler, kein Betriebsfall:
+// er wuerde den ersten still verdraengen.
 export function registerBlockType(def: BlockDefinition): void {
   if (registry.has(def.type)) {
-    console.warn(`Block-Typ "${def.type}" wird ueberschrieben.`)
+    throw new Error(`Bausteintyp "${def.type}" ist schon angemeldet.`)
   }
   registry.set(def.type, def)
 }

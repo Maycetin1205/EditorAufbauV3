@@ -15,10 +15,8 @@ import { exportMask } from '../../export/exportMask'
 import { failedChecks, validateMaskHtml } from '../../export/validator'
 import { downloadFile } from '../../lib/dateiDownload'
 import { dataSourceStore } from '../../state/DataSourceStore'
-import { uebernehmeMaske } from '../../state/maskeUebernehmen'
-import { packeMaske, packeMaskeAus } from '../../state/maskenDatei'
+import { ladeMaskeAusDatei, speichereMaskeAlsDatei } from '../../state/maskenDatei'
 import { meldungen } from '../../state/meldungen'
-import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from '../../state/persistence'
 import { relationStore } from '../../state/RelationStore'
 import { useEditor } from '../../state/useEditor'
 import { Feld } from '@/ui/werkbank/Feld'
@@ -27,34 +25,14 @@ import { MenueZeile } from '@/ui/werkbank/MenueZeile'
 import { Popover } from '@/ui/werkbank/Popover'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
-import { useFrage } from './Frage'
 
 export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const ed = useEditor()
-  const [frageKnoten, frage] = useFrage()
 
   // Der Maskenname wird wie jede Eigenschaft im Baum gefuehrt (Undo, Speichern,
   // Maskendatei) — eine Tipp-Sitzung ist EIN Undo-Schritt.
   const nameSitzung = useEingabeSitzung(() => ed.beginTransaction(), () => ed.endTransaction())
   const maskenName = String(ed.tree[ROOT_ID]?.props[MASKEN_NAME_PROP] ?? '')
-
-  const handleClear = async () => {
-    if (ed.blockCount === 0) return
-    const popups = ed.pages.filter((p) => !p.istHauptseite).length
-    const zusatz = popups === 0
-      ? ''
-      : popups === 1
-        ? '\n\nDie Popup-Seite fällt mit.'
-        : `\n\nDie ${popups} Popup-Seiten fallen mit.`
-    const ja = await frage({
-      titel: 'Alle Bausteine löschen?',
-      text: `${ed.blockCount} Bausteine aller Seiten werden entfernt.${zusatz}`,
-      jaText: 'Alle löschen',
-      gefahr: true,
-    })
-    if (!ja) return
-    ed.clear()
-  }
 
   const handleExport = () => {
     const sources = dataSourceStore.list
@@ -73,60 +51,13 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
     downloadFile('index.basis.SEvariablen.json', sevariablen, 'application/json')
   }
 
-  const handleSpeichern = () => {
-    const text = packeMaske({
-      tree: ed.tree,
-      datenquellen: [...dataSourceStore.list],
-      relationen: [...relationStore.list],
-    })
-    const heute = new Date().toISOString().slice(0, 10)
-    downloadFile(`aufbau-maske-${heute}.json`, text, 'application/json')
-  }
-
-  const handleDateiGewaehlt = async (datei: File) => {
-    let text: string
-    try {
-      text = await datei.text()
-    } catch {
-      meldungen.melde('Die Datei konnte nicht gelesen werden.')
-      return
-    }
-    const ergebnis = packeMaskeAus(text)
-    if (!ergebnis.ok) {
-      const liste = ergebnis.probleme.slice(0, 10)
-        .map((p) => `• ${p.bereich}${p.stelle === '' ? '' : ` (${p.stelle})`}: ${p.grund}`)
-      const rest = ergebnis.probleme.length - liste.length
-      meldungen.melde([
-        ergebnis.grund,
-        ...(liste.length > 0 ? ['', ...liste] : []),
-        ...(rest > 0 ? [`… und ${rest} weitere.`] : []),
-      ].join('\n'))
-      return
-    }
-
-    const ja = await frage({
-      titel: 'Offene Maske ersetzen?',
-      text: 'Haben Sie den bisherigen Stand gespeichert?\n\n'
-        + 'Die offene Maske wird unwiderruflich ersetzt — das lässt sich nicht '
-        + 'rückgängig machen.',
-      jaText: 'Ersetzen',
-      gefahr: true,
-    })
-    if (!ja) return
-
-    uebernehmeMaske(ed, ergebnis.inhalt)
-    meldeVerworfeneTypen(ergebnis.verworfen)
-    meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
-  }
-
   return (
     <div className="flex items-center gap-1.5 justify-self-end">
-      {frageKnoten}
       <WeitereAktionen
-        onClearAll={() => void handleClear()}
+        onClearAll={() => ed.clear()}
         clearDisabled={ed.blockCount === 0}
-        onSpeichern={handleSpeichern}
-        onDatei={handleDateiGewaehlt}
+        onSpeichern={() => speichereMaskeAlsDatei(ed)}
+        onDatei={(datei) => void ladeMaskeAusDatei(ed, datei)}
       />
 
       <Trenner senkrecht className="mx-1" />
@@ -190,6 +121,8 @@ export function VerlaufKnoepfe() {
   )
 }
 
+// Speichern, Laden und Leeren fragen nicht nach: Strg+Z nimmt jedes davon
+// zurueck, auch eine geladene Maskendatei.
 function WeitereAktionen({
   onClearAll,
   clearDisabled,
@@ -250,7 +183,7 @@ function WeitereAktionen({
                 onSpeichern()
               }}
             >
-              Maske speichern…
+              Maske speichern (Strg+S)
             </MenueZeile>
             <MenueZeile
               role="menuitem"
@@ -273,7 +206,7 @@ function WeitereAktionen({
                 onClearAll()
               }}
             >
-              Alle Bausteine löschen…
+              Alle Bausteine löschen
             </MenueZeile>
           </div>
         </Popover>

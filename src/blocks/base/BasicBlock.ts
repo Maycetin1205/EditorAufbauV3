@@ -123,8 +123,8 @@ export abstract class BasicBlock extends LitElement implements BlockComponent {
     })
   }
 
-  // Faellt mit Schritt 12b weg, sobald jeder Baustein selbst `definiere` und
-  // jede `editorAngaben.ts` selbst `beschreibe` ruft.
+  // Meldet die Klasse doppelt an: als Element fuer die Maske und als
+  // Bausteintyp fuer den Editor.
   static defineAndRegister(BlockClass: BlockComponentStatic): void {
     definiere(BlockClass)
     beschreibe(BlockClass)

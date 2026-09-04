@@ -10,9 +10,8 @@ import {
 // Wird eine Spalte gestrichen, zeigen Ketten-Parameter weiter auf ihre
 // Kennung. Sichtbar wird das nirgends: der Export macht daraus die Platznummer
 // -1 (exportMask.ts, spaltenIndexFuer) und die Laufzeit schreibt kommentarlos
-// einen Leerstring ins ERP. Darum wird der Zeiger beim Loeschen abgeraeumt —
-// Bedienung am Ding statt Warnung. Generisch ueber die Listen-Bindung, kein
-// Bausteintyp-Sondercode.
+// einen Leerstring ins ERP. Darum wird der Zeiger beim Loeschen abgeraeumt.
+// Generisch ueber die Listen-Bindung, kein Bausteintyp-Sondercode.
 //
 // Damit ist zugleich egal, dass die naechste neue Spalte dieselbe Kennung
 // wieder bekommen kann (Vergabe = hoechste + 1, spalten.ts): nach dem Loeschen
@@ -38,23 +37,32 @@ function schrittOhneZeiger(
   schritt: ActionStep,
   blockId: string,
   weg: ReadonlySet<string>,
-): ActionStep | null {
+): { schritt: ActionStep; getroffen: number } | null {
   if (schritt.type !== 'RELATION') return null
-  let getroffen = false
+  let getroffen = 0
   const abraeumen = (liste: ActionParamBinding[]): ActionParamBinding[] =>
     liste.map((b) => {
       const zeigt = (ZELLEN_PARAM_QUELLEN as readonly string[]).includes(b.source)
         && (b.blockId ?? '') === blockId
         && weg.has(b.value)
       if (!zeigt) return b
-      getroffen = true
+      getroffen++
       // 'aus' ist die sichtbare Antwort: die Steuerung zeigt den Parameter
       // ausgegraut, die Laufzeit liefert '' (relations.ts).
       return { source: 'aus' as const, value: '' }
     })
   const params = abraeumen(schritt.params)
   const extraParams = abraeumen(schritt.extraParams)
-  return getroffen ? { ...schritt, params, extraParams } : null
+  return getroffen > 0 ? { schritt: { ...schritt, params, extraParams }, getroffen } : null
+}
+
+export interface Abgeraeumt {
+  tree: BlockTree
+
+  // Wie viele Parameter auf wie vielen Bausteinen abgeschaltet wurden — der
+  // Editor sagt es dem Bediener, weil die Bausteine woanders stehen koennen.
+  parameter: number
+  bausteine: number
 }
 
 // Alle Ketten im Baum, die auf eine gestrichene Spalte DIESES Bausteins
@@ -64,25 +72,28 @@ export function ohneSpaltenZeiger(
   tree: BlockTree,
   blockId: string,
   gestrichen: readonly string[],
-): BlockTree {
-  if (gestrichen.length === 0) return tree
+): Abgeraeumt {
+  if (gestrichen.length === 0) return { tree, parameter: 0, bausteine: 0 }
   const weg = new Set(gestrichen)
-  let geaendert = false
+  let parameter = 0
+  let bausteine = 0
   const next: BlockTree = { ...tree }
   for (const node of Object.values(tree) as BlockNode[]) {
     if (!node.events) continue
     const events: Record<string, ActionStep[]> = {}
-    let nodeGeaendert = false
+    let nodeGetroffen = 0
     for (const [key, schritte] of Object.entries(node.events)) {
       events[key] = schritte.map((s) => {
         const neu = schrittOhneZeiger(s, blockId, weg)
-        if (neu) nodeGeaendert = true
-        return neu ?? s
+        if (!neu) return s
+        nodeGetroffen += neu.getroffen
+        return neu.schritt
       })
     }
-    if (!nodeGeaendert) continue
+    if (nodeGetroffen === 0) continue
     next[node.id] = { ...node, events }
-    geaendert = true
+    parameter += nodeGetroffen
+    bausteine++
   }
-  return geaendert ? next : tree
+  return bausteine > 0 ? { tree: next, parameter, bausteine } : { tree, parameter: 0, bausteine: 0 }
 }

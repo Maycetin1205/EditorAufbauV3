@@ -65,19 +65,20 @@ test('eine andere Eigenschaft streicht nie eine Kennung', () => {
 })
 
 test('der Ketten-Parameter der geloeschten Spalte steht danach auf aus', () => {
-  const tree = ohneSpaltenZeiger(baum('s3'), 't1', ['s3'])
+  const { tree, parameter: anzahl, bausteine } = ohneSpaltenZeiger(baum('s3'), 't1', ['s3'])
   expect(parameter(tree)).toEqual({ source: 'aus', value: '' })
+  expect([anzahl, bausteine]).toEqual([1, 1])
 })
 
 test('ein Parameter auf eine gebliebene Spalte bleibt stehen', () => {
-  const tree = ohneSpaltenZeiger(baum('s1'), 't1', ['s3'])
+  const { tree } = ohneSpaltenZeiger(baum('s1'), 't1', ['s3'])
   expect(parameter(tree)).toEqual({ source: 'erfassungszelle', value: 's1' })
 })
 
 // Zwei Tabellen koennen dieselbe Kennung tragen — die Kennung gilt je
 // Baustein, nicht je Maske.
 test('eine gleichnamige Kennung an einer anderen Tabelle bleibt stehen', () => {
-  const tree = ohneSpaltenZeiger(baum('s3', 't2'), 't1', ['s3'])
+  const { tree } = ohneSpaltenZeiger(baum('s3', 't2'), 't1', ['s3'])
   expect(parameter(tree)).toEqual({ source: 'erfassungszelle', value: 's3' })
 })
 

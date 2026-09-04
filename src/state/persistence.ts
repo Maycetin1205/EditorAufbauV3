@@ -139,6 +139,12 @@ export function loadFromStorage(): LoadedState | null {
       backupUnreadableState(raw)
       return null
     }
+    // Faellt beim Laden etwas weg, schreibt der naechste Auto-Speicher den
+    // gekuerzten Stand fest. Vorher bekommt der volle Stand eine Notfallkopie.
+    const verlust = baum.verworfen.size > 0
+      || baum.verloreneKetten > 0
+      || [...baum.absichtlichEntfernt.values()].some((grund) => ENTFERN_TEXT[grund] !== undefined)
+    if (verlust) meldungen.melde(kopieSatz(STORAGE_KEY, legeKopieAn(STORAGE_KEY, raw)))
     meldeVerworfeneTypen(baum.verworfen)
     meldeAbsichtlichEntfernte(baum.absichtlichEntfernt)
     meldeVerloreneKetten(baum.verloreneKetten)

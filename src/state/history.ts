@@ -1,8 +1,15 @@
 import type { BlockTree } from '../core/blocks/BlockData'
+import type { DataSource } from '../core/data/dataSources'
+import type { RelationTemplate } from '../core/data/relations'
 
+// Ein Stand der ganzen Maske: Bausteine, Auswahl und die beiden Bibliotheken.
+// Strg+Z nimmt darum auch eine geloeschte Datenquelle oder eine geladene
+// Maskendatei zurueck.
 export interface EditorSnapshot {
   tree: BlockTree
   selectedId: string | null
+  datenquellen: readonly DataSource[]
+  relationen: readonly RelationTemplate[]
 }
 
 const HISTORY_LIMIT = 50
@@ -53,12 +60,6 @@ export class Historie {
     if (!next) return null
     this._past.push(makeCurrent())
     return next
-  }
-
-  leeren(): void {
-    this._past = []
-    this._future = []
-    this._txDepth = 0
   }
 }
 

@@ -35,7 +35,7 @@ export class DialogRahmen extends LitElement {
   static override styles = css`
     :host {
       position: absolute;
-      inset: 0;
+      top: 0; right: 0; bottom: 0; left: 0;
       display: block;
       font-family: var(--se-font);
       font-size: var(--se-fs);
@@ -49,7 +49,7 @@ export class DialogRahmen extends LitElement {
     .abdunklung,
     .buehne {
       position: absolute;
-      inset: 0;
+      top: 0; right: 0; bottom: 0; left: 0;
     }
     .abdunklung { background: var(--se-scrim); }
     .buehne {

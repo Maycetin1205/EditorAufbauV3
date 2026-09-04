@@ -1,13 +1,47 @@
 import './register'
 
-import './ansicht/editorAngaben'
-import './button/editorAngaben'
-import './card/editorAngaben'
-import './datum/editorAngaben'
-import './formfeld/editorAngaben'
-import './kanban/editorAngaben'
-import './navi/editorAngaben'
-import './popup/editorAngaben'
-import './tabelle/editorAngaben'
-import './text/editorAngaben'
-import './trenner/editorAngaben'
+import { ergaenzeEditorAngaben } from '../core/blocks/editorAngaben'
+import {
+  ZeichenDatum,
+  ZeichenFormularfeld,
+  ZeichenKanban,
+  ZeichenKanbanSpalte,
+  ZeichenKarte,
+  ZeichenNavi,
+  ZeichenPopup,
+  ZeichenSchaltflaeche,
+  ZeichenTabelle,
+  ZeichenText,
+  ZeichenTrenner,
+} from '../ui/bausteinZeichen'
+import { ButtonBlock } from './button/ButtonBlock'
+import { CardBlock } from './card/CardBlock'
+import { DatumBlock } from './datum/DatumBlock'
+import { FormFeldBlock } from './formfeld/FormFeldBlock'
+import { KanbanBlock } from './kanban/KanbanBlock'
+import { KanbanSpalteBlock } from './kanban/KanbanSpalteBlock'
+import { NaviBlock } from './navi/NaviBlock'
+import { NaviEintragBlock } from './navi/NaviEintragBlock'
+import { PopupBlock } from './popup/PopupBlock'
+import { TabelleBlock } from './tabelle/TabelleBlock'
+import { TextBlock } from './text/TextBlock'
+import { TrennerBlock } from './trenner/TrennerBlock'
+
+// Die Symbole der Bausteine fuer Palette und Inspector. Sie stehen hier und
+// nicht am Baustein, damit die Maske (runtime-entry) keinen Editor-Code traegt.
+const SYMBOLE = [
+  [ButtonBlock.blockType, ZeichenSchaltflaeche],
+  [CardBlock.blockType, ZeichenKarte],
+  [DatumBlock.blockType, ZeichenDatum],
+  [FormFeldBlock.blockType, ZeichenFormularfeld],
+  [KanbanBlock.blockType, ZeichenKanban],
+  [KanbanSpalteBlock.blockType, ZeichenKanbanSpalte],
+  [NaviBlock.blockType, ZeichenNavi],
+  [NaviEintragBlock.blockType, ZeichenNavi],
+  [PopupBlock.blockType, ZeichenPopup],
+  [TabelleBlock.blockType, ZeichenTabelle],
+  [TextBlock.blockType, ZeichenText],
+  [TrennerBlock.blockType, ZeichenTrenner],
+] as const
+
+for (const [typ, symbol] of SYMBOLE) ergaenzeEditorAngaben(typ, { symbol })

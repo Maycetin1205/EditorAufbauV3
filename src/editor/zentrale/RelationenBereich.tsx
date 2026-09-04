@@ -17,17 +17,15 @@ import {
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { useRelations } from '../../state/useRelations'
-import { useFrage } from '../shell/Frage'
 import { SegmentControl } from '../inspector/controls/SegmentControl'
 import { RelationForm } from './RelationForm'
 import { bausteinName } from '../../core/blocks/bausteinName'
-import { loeschFrage, parameterBedeutung, RELATION_GRUPPEN, VERB_KURZ } from './helfer'
+import { parameterBedeutung, RELATION_GRUPPEN, VERB_KURZ } from './helfer'
 
 export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
   const store = useRelations()
   const ed = useEditor()
   const quellen = useDataSources().list
-  const [frageKnoten, frage] = useFrage()
   const [suche, setSuche] = useState('')
 
   // Start auf dem Reiter, der etwas zu zeigen hat; danach gewinnt der Klick.
@@ -60,14 +58,9 @@ export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
       .filter((n) => relationIdsVon(n).includes(id))
       .map((n) => bausteinName(n, quellen))
 
-  async function loeschen(r: RelationTemplate) {
-    const ja = await frage(loeschFrage(
-      'Relation',
-      r.name,
-      verwendungFor(r.id).length > 0,
-      'Die Bausteine bleiben stehen, ihr Schreibweg ruht.',
-    ))
-    if (!ja) return
+  // Ohne Rueckfrage: Strg+Z holt die Relation zurueck. Bausteine, die sie
+  // rufen, bleiben stehen; ihr Schreibweg ruht.
+  function loeschen(r: RelationTemplate) {
     store.remove(r.id)
     setModus('lesen')
   }
@@ -76,7 +69,6 @@ export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
   // Bereiche links, Liste mit Kopf, Detail rechts.
   return (
     <>
-      {frageKnoten}
       <ListeDetail
         bereiche={bereiche}
         listeKopf={(
@@ -196,9 +188,7 @@ export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
 
             <div className="flex gap-2 border-t border-linie pt-3">
               <Knopf art="primaer" onClick={() => setModus('bearbeiten')}>Bearbeiten</Knopf>
-              <Knopf art="gefahr" onClick={() => void loeschen(auswahl)}>
-                Löschen…
-              </Knopf>
+              <Knopf art="gefahr" onClick={() => loeschen(auswahl)}>Löschen</Knopf>
             </div>
           </div>
         )}

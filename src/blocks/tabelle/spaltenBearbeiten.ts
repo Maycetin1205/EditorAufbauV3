@@ -12,9 +12,8 @@ import {
 
 // Eine Spalte hinten anfuegen. Hier wird NICHT gerechnet: die Breiten sind
 // Anteile (spalten.ts: spaltenRaster), die neue Spalte bekommt den mittleren
-// Anteil, und das Raster fuellt die Tabelle von allein wieder aus. Die zwei
-// Anlaeufe davor haben die Summe fester Pixel umverteilt (7f92603, dann
-// 040b73c mit einem Wasserfall) — beide behandelten nur das Symptom.
+// Anteil, und das Raster fuellt die Tabelle von allein wieder aus. Feste
+// Pixel umzuverteilen behandelte nur das Symptom.
 export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
   return mitKennungen([...spalten, neueSpalte(spalten.length)])
 }
@@ -55,7 +54,7 @@ export function entferneSpalte(
 // Streicht GENAU diese Spalte — rein: dieselbe Liste zurueck heisst „nicht
 // erlaubt" (letzte Spalte, Platz ausserhalb). Die verbliebenen Anteile
 // fuellen die Tabelle wieder aus (spaltenRaster), der Platz der gestrichenen
-// bleibt nicht als leere Flaeche stehen (Nutzer-Befund 2026-08-31).
+// bleibt nicht als leere Flaeche stehen.
 export function ohneSpalte(spalten: readonly Spalte[], index: number): readonly Spalte[] {
   if (spalten.length <= SPALTEN_MIN || index < 0 || index >= spalten.length) return spalten
   return spalten.filter((_, i) => i !== index)

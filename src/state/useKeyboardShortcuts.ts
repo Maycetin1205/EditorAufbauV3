@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useEditorInstance } from './EditorContext'
 import { loescheBaustein } from './loescheBaustein'
+import { speichereMaskeAlsDatei } from './maskenDatei'
+import { elternZiel } from './selectionOps'
 
 function inEingabefeld(e: KeyboardEvent): boolean {
   for (const ziel of e.composedPath()) {
@@ -12,18 +14,40 @@ function inEingabefeld(e: KeyboardEvent): boolean {
   return false
 }
 
+// Ein offenes Fenster (Datencenter, Feld-Picker, Menue) nimmt Escape selbst.
+function fensterOffen(): boolean {
+  return document.querySelector('[role="dialog"]') !== null
+}
+
 export function useKeyboardShortcuts() {
   const editor = useEditorInstance()
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (inEingabefeld(e)) return
       const mod = e.ctrlKey || e.metaKey
+
+      // Strg+S speichert die Maske als Datei, auch aus einem Eingabefeld
+      // heraus — sonst oeffnet der Browser seinen eigenen Speicherdialog.
+      if (mod && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        speichereMaskeAlsDatei(editor)
+        return
+      }
+
+      if (inEingabefeld(e)) return
 
       if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
         if (editor.selectedId) {
           e.preventDefault()
           loescheBaustein(editor, editor.selectedId)
         }
+        return
+      }
+
+      // Escape: eine Ebene hoch, oben angekommen die Auswahl aufheben. So ist
+      // jeder Container erreichbar, auch wenn seine Kinder ihn ganz bedecken.
+      if (!mod && e.key === 'Escape') {
+        if (editor.selectedId === null || fensterOffen()) return
+        editor.selectBlock(elternZiel(editor.tree, editor.selectedId))
         return
       }
 

@@ -8,7 +8,10 @@ import { type QuelleInReichweite } from '../core/data/sourceLinks'
 import { dataSourceStore } from './DataSourceStore'
 import { ersteQuelleInReichweite, quellenInReichweite } from './quellenOps'
 import { gestenKlammer, Historie, type EditorSnapshot, type GestenKlammer } from './history'
+import type { MaskenInhalt } from './maskenDatei'
+import { meldungen } from './meldungen'
 import { loadFromStorage, persistState, SAVE_DEBOUNCE_MS } from './persistence'
+import { relationStore } from './RelationStore'
 import { gestricheneKennungen, ohneSpaltenZeiger } from './spaltenAufraeumen'
 import { SpeicherPlaner } from './speicherPlaner'
 import { Subject } from './Subject'
@@ -53,6 +56,10 @@ export class Editor extends Subject<Editor> {
   )
   private _hydrated = false
 
+  // Waehrend Undo/Redo die Bibliotheken zuruecksetzt, darf deren Aenderung
+  // keinen neuen Historien-Eintrag erzeugen.
+  private _stelltWiederHer = false
+
   constructor() {
     super()
     const persisted = loadFromStorage()
@@ -60,6 +67,14 @@ export class Editor extends Subject<Editor> {
     this._selectedId = this.auswahlAufAktiverSeite(persisted?.selectedId ?? null)
     this._hydrated = true
     if (persisted?.resaveNeeded) this._planer.plane()
+
+    // Die Bibliotheken gehoeren zur Maske: jede Aenderung an Datenquellen oder
+    // Relationen wird hier festgehalten, damit Strg+Z sie zuruecknimmt.
+    for (const store of [dataSourceStore, relationStore]) {
+      store.beobachteVorAenderung(() => {
+        if (!this._stelltWiederHer) this.pushHistory()
+      })
+    }
   }
 
   get tree(): Readonly<BlockTree> { return this._tree }
@@ -129,7 +144,22 @@ export class Editor extends Subject<Editor> {
   }
 
   private snapshot(): EditorSnapshot {
-    return { tree: deepClone(this._tree), selectedId: this._selectedId }
+    return {
+      tree: deepClone(this._tree),
+      selectedId: this._selectedId,
+      datenquellen: dataSourceStore.list,
+      relationen: relationStore.list,
+    }
+  }
+
+  private setzeBibliotheken(stand: Pick<EditorSnapshot, 'datenquellen' | 'relationen'>): void {
+    this._stelltWiederHer = true
+    try {
+      if (dataSourceStore.list !== stand.datenquellen) dataSourceStore.ersetzeAlle(stand.datenquellen)
+      if (relationStore.list !== stand.relationen) relationStore.ersetzeAlle(stand.relationen)
+    } finally {
+      this._stelltWiederHer = false
+    }
   }
 
   private pushHistory(): void {
@@ -155,16 +185,19 @@ export class Editor extends Subject<Editor> {
   undo(): void {
     const prev = this._historie.undo(() => this.snapshot())
     if (!prev) return
-    this._tree = prev.tree
-    this._selectedId = this.auswahlAufAktiverSeite(prev.selectedId)
-    this.notify(this)
+    this.stelleHer(prev)
   }
 
   redo(): void {
     const next = this._historie.redo(() => this.snapshot())
     if (!next) return
-    this._tree = next.tree
-    this._selectedId = this.auswahlAufAktiverSeite(next.selectedId)
+    this.stelleHer(next)
+  }
+
+  private stelleHer(stand: EditorSnapshot): void {
+    this.setzeBibliotheken(stand)
+    this._tree = stand.tree
+    this._selectedId = this.auswahlAufAktiverSeite(stand.selectedId)
     this.notify(this)
   }
 
@@ -283,15 +316,24 @@ export class Editor extends Subject<Editor> {
 
     // Verschwindet mit dieser Aenderung eine Kennung aus einer Liste (eine
     // geloeschte Spalte), darf kein Ketten-Parameter mehr auf sie zeigen.
+    // Die Ketten koennen auf anderen Bausteinen liegen, darum wird gesagt,
+    // was abgeschaltet wurde.
     const geputzt = ohneSpaltenZeiger(
       next,
       id,
       gestricheneKennungen(def, attr, node.props[attr], wert),
     )
+    if (geputzt.parameter > 0) {
+      meldungen.melde(
+        `Spalte gelöscht: ${geputzt.parameter} Ketten-Parameter auf `
+        + `${geputzt.bausteine} Baustein(en) zeigten darauf und sind jetzt ausgeschaltet. `
+        + 'Strg+Z holt alles zurück.',
+      )
+    }
 
     this._tree = typeof wert === 'string' && def?.pageBlock === true && attr === 'name'
-      ? klarnamenNachziehen(geputzt, id, wert)
-      : geputzt
+      ? klarnamenNachziehen(geputzt.tree, id, wert)
+      : geputzt.tree
     this.notify(this)
     return true
   }
@@ -367,12 +409,14 @@ export class Editor extends Subject<Editor> {
     this.notify(this)
   }
 
-  ersetzeMaske(tree: BlockTree): void {
-    this._tree = tree
+  // Eine geladene Maskendatei ersetzt Bausteine, Datenquellen und Relationen
+  // in EINEM Undo-Schritt: Strg+Z bringt die vorige Maske zurueck.
+  ersetzeMaske(inhalt: MaskenInhalt): void {
+    this.pushHistory()
+    this.setzeBibliotheken(inhalt)
+    this._tree = inhalt.tree
     this._selectedId = null
     this._activePageId = ROOT_ID
-    this._historie.leeren()
-    this._planer.plane()
     this.notify(this)
   }
 

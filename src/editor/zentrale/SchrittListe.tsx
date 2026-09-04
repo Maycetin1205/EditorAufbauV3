@@ -25,8 +25,8 @@ interface SchrittListeProps {
 }
 
 // Nur die Liste. Das Formular des gewaehlten Schritts steht rechts daneben
-// (KettenFenster, Aufbau ListeDetail) — frueher klappte es unter der Zeile
-// auf, und das Fenster sah aus wie kein anderes im Editor.
+// (KettenFenster, Aufbau ListeDetail) — klappte es unter der Zeile auf, saehe
+// das Fenster aus wie kein anderes im Editor.
 export function SchrittListe({
   steps, aktivId, onWaehle, onAendern,
 }: SchrittListeProps) {
@@ -95,8 +95,7 @@ export function SchrittListe({
           : undefined
         // Eine Relation mit eigenem Namen nennt IHN. Eine ungetaufte Vorlage
         // heisst schlicht „Relation" — WELCHE es ist, sagt die Marke rechts in
-        // der Zeile. Vorher stand „GET_RELATION · Nr. 640" als Name, und
-        // rechts stand nichts; die Nummer war nur im Tooltip zu finden.
+        // der Zeile.
         const was = s.type === 'RELATION' && relation && !istUngetaufteVorlage(relation)
           ? relation.name
           : stepTypeName(s.type)
@@ -154,19 +153,15 @@ export function SchrittListe({
 
               {/* Welche Relation der Schritt ruft — dieselbe Marke wie in der
                   Relationen-Liste des Datencenters (VERB + Nummer, voller
-                  Aufruf im Tooltip). Bis hierher war die Relation in der Kette
-                  nur zu sehen, wenn man den Schritt aufklappte. */}
+                  Aufruf im Tooltip). */}
               {relation && (
                 <Marke hinweis={formatRelationSyntax(relation)}>
                   {VERB_KURZ[relation.verb]} {relation.nr}
                 </Marke>
               )}
 
-              {/* Das Notizfeld stand bisher in JEDER Zeile und nahm zwei
-                  Fuenftel der Breite — auch in den allermeisten Zeilen, die
-                  gar keine Notiz tragen. Jetzt steht die Notiz als Text da,
-                  wo es eine gibt, und das Eingabefeld erscheint an dem
-                  Schritt, den der Bediener geoeffnet hat. */}
+              {/* Die Notiz steht als Text da, wo es eine gibt; das Eingabefeld
+                  erscheint nur am geoeffneten Schritt. */}
               {notizOffen ? (
                 <Feld
                   aria-label={`Notiz zu Schritt ${i + 1}`}

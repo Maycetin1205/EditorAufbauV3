@@ -39,7 +39,8 @@ export interface PickerSchalter {
   key: string
   label: string
 
-  // Kurzwort und Standard fuer die zugeklappte Kopfzeile.
+  // Kurzwort fuer die Schalterzeile; `standard` sagt, welcher Stand keine
+  // Einstellung ist.
   kurz?: string
   standard?: boolean
   an: boolean
@@ -67,8 +68,7 @@ interface FieldPickerProps {
 
   schalter?: readonly PickerSchalter[]
 
-  // Felder, die unabhaengig von der Darstellung sind (Fuellfeld). Sie liegen
-  // in der zugeklappten Ebene, nicht im Blick.
+  // Weitere Feld-Wahlen neben dem Hauptfeld (Fuellfeld).
   weitereFelder?: readonly PickerFeld[]
 
   // Erste Stufe: der Baustein hat noch keine Hauptquelle. Dann zeigt das
@@ -90,8 +90,8 @@ interface FieldPickerProps {
   entfernenLabel?: string
 
   // Weiterfuehrende Einstellung dieses Eintrags, die ein eigenes Fenster
-  // braucht (Tabellenspalte: das Suchfenster ihrer Erfassungszelle). Steht
-  // ueber der Streich-Taste, weil sie etwas oeffnet statt etwas zu loeschen.
+  // braucht (Tabellenspalte: das Suchfenster ihrer Erfassungszelle). Steht in
+  // der Fusszeile neben der Streich-Taste, damit sie immer zu sehen ist.
   weiter?: {
     label: string
     hinweis?: string
@@ -231,10 +231,9 @@ export function FieldPicker({
   const aktiv = ziele.find((z) => z.key === zielKey) ?? ziele[0]
 
   // ALLE Hilfsquellen auf einmal, nach Quelle gruppiert — die Liste kann das
-  // und hat eine Suche. Eine Stufe „erst Quelle, dann Feld" war hier kurz
-  // eingebaut und ist wieder raus: nach der Wahl einer Quelle sah der Bediener
-  // die anderen nicht mehr und hielt sie fuer nicht angeboten
-  // (Nutzer-Befund 2026-08-28). Die Stufe bleibt nur dort, wo sie etwas
+  // und hat eine Suche. Eine Stufe „erst Quelle, dann Feld" taugt hier nicht:
+  // nach der Wahl einer Quelle sieht der Bediener die anderen nicht mehr und
+  // haelt sie fuer nicht angeboten. Die Stufe bleibt nur dort, wo sie etwas
   // verhindert: solange der Baustein gar keine Hauptquelle hat (quellenWahl).
   const sichtbareGruppen = aktiv.nurFremdeQuellen === true
     ? gruppen.filter((g) => g.quelleId !== '')
@@ -306,19 +305,12 @@ export function FieldPicker({
         {feldZeile(ziele[0])}
 
         {/* Das Fuellfeld steht OFFEN und gleichrangig neben dem Hauptfeld: es
-            ist der halbe Sinn der Spalte, nicht eine seltene Zusatzeinstellung
-            (Nutzer-Befund 2026-08-28). Zugeklappt bleibt nur, was man selten
-            anfasst. Ohne Hilfsquelle waere es sinnlos — dann erscheint es
-            nicht. */}
+            ist der halbe Sinn der Spalte, nicht eine seltene Zusatzeinstellung.
+            Zugeklappt bleibt nur, was man selten anfasst. Ohne Hilfsquelle
+            waere es sinnlos — dann erscheint es nicht. */}
         {ebene2.map(feldZeile)}
 
-        {/* Zugeklappt heisst nicht versteckt: die Kopfzeile sagt, WAS darin
-            vom Standard abweicht. Sonst merkt niemand, dass „In der Zeile
-            aenderbar" ueberhaupt existiert — der Schalter steht auf JA, ohne
-            dass ihn je jemand angefasst hat, und bei einer gerechneten Spalte
-            gehoert er aus. */}
-        {/* Die Schalter stehen OFFEN, nebeneinander in einer Zeile
-            (Nutzer-Ansage 2026-08-28: „‚Mehr' nicht zuklappen"). Zugeklappt
+        {/* Die Schalter stehen OFFEN, nebeneinander in einer Zeile. Zugeklappt
             merkte niemand, dass es sie gibt — und „In der Zeile aenderbar"
             steht auf JA, ohne dass es je jemand eingestellt hat. Eine Zeile
             kostet weniger als eine Klappe und verbirgt nichts. */}
@@ -372,21 +364,16 @@ export function FieldPicker({
         />
           </>
         )}
-        {weiter !== undefined && (
-          <div className="mt-1 border-t border-linie px-1.5 pb-1 pt-2">
-            <Knopf className="w-full justify-start" onClick={weiter.onOeffne}>
-              {weiter.label}
-            </Knopf>
-            {weiter.hinweis !== undefined && (
-              <p className="px-1 pt-1 text-dicht text-matt">{weiter.hinweis}</p>
+        {(weiter !== undefined || onEntfernen !== undefined) && (
+          // Klebt am unteren Rand des rollenden Fensters: beide Tasten sind
+          // immer zu sehen, egal wie lang die Feldliste ist.
+          <div className="sticky bottom-0 -mb-1 flex items-center justify-between gap-2 border-t border-linie bg-panel px-1.5 py-1.5">
+            {weiter !== undefined ? (
+              <Knopf title={weiter.hinweis} onClick={weiter.onOeffne}>{weiter.label}</Knopf>
+            ) : <span />}
+            {onEntfernen !== undefined && (
+              <Knopf art="gefahr" onClick={onEntfernen}>{entfernenLabel ?? 'Entfernen'}</Knopf>
             )}
-          </div>
-        )}
-        {onEntfernen !== undefined && (
-          // Klebt am unteren Rand des rollenden Fensters: die Streich-Taste ist
-          // immer da, egal wie lang die Feldliste ist.
-          <div className="sticky bottom-0 -mb-1 flex justify-end border-t border-linie bg-panel px-1.5 py-1.5">
-            <Knopf art="gefahr" onClick={onEntfernen}>{entfernenLabel ?? 'Entfernen'}</Knopf>
           </div>
         )}
       </div>

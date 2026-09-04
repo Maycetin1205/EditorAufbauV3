@@ -242,7 +242,7 @@ export const tabelleStil = css`
          darum schon eingerechnet aus dem Baustein. */
       .sw-schirm {
         position: absolute;
-        inset: 0;
+        top: 0; right: 0; bottom: 0; left: 0;
         z-index: 4;
       }
       .spaltenwahl {
@@ -327,9 +327,9 @@ export const tabelleStil = css`
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
 
       /* Der Zeilen-Status ist EIN Balken links, sonst nichts: keine Worte in
-         der Zeile (Nutzer-Vorgabe). Er steht NACH .gewaehlt, weil er den
-         Auswahl-Balken schlagen muss — was noch nicht geschrieben ist, ist
-         die dringendere Auskunft. Der Klartext haengt im title. */
+         der Zeile. Er steht NACH .gewaehlt, weil er den Auswahl-Balken
+         schlagen muss — was noch nicht geschrieben ist, ist die dringendere
+         Auskunft. Der Klartext haengt im title. */
       .zeile[data-status="erfasst"] {
         box-shadow: inset 3px 0 0 var(--se-accent);
         background: var(--se-accent-soft);
@@ -394,10 +394,9 @@ export const tabelleStil = css`
       /* Eine tippbare Zelle ist eine ZELLE, kein Formularfeld — weder im
          Ruhezustand noch unter der Maus noch mit der Schreibmarke darin.
          Dass man "drin" ist, sagt allein die blinkende Marke, wie in einer
-         Tabellenkalkulation (Nutzer-Ansage 2026-08-28: "weg damit"). Vorher
-         zog Hover einen Rahmen und Fokus einen zweiten in Akzentfarbe; in
-         einer Zeile mit sechs tippbaren Spalten flackerte beim Ueberfahren
-         die halbe Zeile.
+         Tabellenkalkulation. Zoege Hover einen Rahmen und Fokus einen zweiten
+         in Akzentfarbe, flackerte in einer Zeile mit sechs tippbaren Spalten
+         beim Ueberfahren die halbe Zeile.
 
          Der transparente Rahmen BLEIBT: er haelt die Hoehe. Ohne ihn springt
          der Text um einen Pixel, sobald die Zelle den Zustand wechselt.
