@@ -270,7 +270,7 @@ steht hier nur als Wissen:
 - Die Maske läuft in **WinUI/BüroWARE** (`__WEBWARE__: "0"`,
   `__WINUI_MAJORVERSION__: "7"`) und in **WebUI/WEBWARE**.
 - Altes WinUI hat **keinen `ResizeObserver`** — Rückfall ist Pflicht
-  (`blocks/tabelle/rumpfMessung.ts`, `seitengroesse.ts`).
+  (`blocks/tabelle/seitengroesse.ts`).
 - HTML5-Drag ändert in SoftEngine nur den Mauszeiger.
 - `<!--SOFTENGINE-VAR!EditorPfad-->/JS/JS/basis.html.interface.js` existiert und
   arbeitet (belegt 2026-07-28, WinUI). Ob der Tag nötig ist, ist ungeklärt.
