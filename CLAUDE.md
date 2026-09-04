@@ -1,25 +1,29 @@
 # Aufbau-Editor — Projektgedächtnis
 
-> Neu geschrieben 2026-09-02 nach Nutzer-Ansage. Die alte Fassung (git-Historie
-> bis `4fe9e88`) bestand aus KI-generierten Regeln, Ritualen und als
-> „Nutzer-Entscheidung" etikettierten KI-Deutungen. **Nichts davon ist bindend.**
-> Bindend sind nur drei Dinge: das Ziel, die SoftEngine-Kontrakte aus Echttests
-> (unten), und was der Nutzer im aktuellen Chat sagt.
+> Neu geschrieben 2026-09-04. Die alte Fassung schrieb dem Nutzer Sätze zu, die
+> er nie gesagt hat — er hat das im Chat vom 2026-09-04 ausdrücklich bestätigt.
+> Alles, was als „Nutzer-Entscheidung" etikettiert war und nicht belegt ist,
+> wurde entfernt. Bindend sind nur: das Ziel, die SoftEngine-Kontrakte aus
+> Echttests, die Repo-Fakten — und was der Nutzer im aktuellen Chat sagt.
+
+## Der eine Plan
+
+**`docs/PLAN-2026-09-04.md`** ist der Arbeitsplan: 14 Befunde mit Beleg
+(Datei:Zeile), 5 fehlende Fähigkeiten, 14 Schritte ab Nummer 21, dazu
+Schutzliste, Arbeitsregeln und Definition of Done. **Vor jeder Änderung lesen.**
+Andere Pläne gibt es nicht.
 
 ## Wer hier arbeitet und wie
 
 - Der Nutzer programmiert nicht. Er baut mit dem Editor Masken für sein
   SoftEngine/BüroWARE-ERP und testet sie selbst in Browser und SoftEngine.
-  Der Agent liefert zu jeder Änderung eine kurze Klickanleitung (was öffnen, was
-  tun, was zu sehen sein muss) und sagt, was er nicht prüfen konnte.
-- Der Agent urteilt selbst, kritisch und sachlich, ohne Cheerleading. Berichte
-  im Chat, in Klartext, keine Technik-Reviews. Verbesserungsvorschläge nur, wenn
-  sie den Auftrag betreffen oder der Nutzer fragt.
-- Der Agent darf den Dev-Server starten und Screenshots machen, wenn das dem
-  Urteil dient (Nutzer 2026-09-02). Token-sparsam arbeiten (Nutzer 2026-09-01).
-- `PLAN.md` ist der EINE Plan: Zielbild, Rahmen für jeden Chat, Schritte mit
-  Prüfung und Klickprobe. Ein Chat arbeitet genau einen Schritt ab. Neue
-  Pläne gibt es nicht (Nutzer 2026-09-02). Chroniken leben in git.
+- Der Agent liefert zu jeder Änderung eine kurze Klickanleitung (was öffnen,
+  was tun, was zu sehen sein muss) und sagt, was er nicht prüfen konnte.
+- Berichte in Klartext, keine Technik-Reviews, kein Cheerleading. Der Agent
+  urteilt selbst und widerspricht, wo er Grund hat.
+- Befunde anderer KI werden am Code nachgeprüft, bevor sie weitergegeben
+  werden. Belegt am 2026-09-04: von acht übernommenen Befunden war einer
+  schlicht falsch.
 
 ## Ziel
 
@@ -29,33 +33,32 @@ exportieren. Die Maske läuft in SoftEngine ohne Nacharbeit. Was der Editor
 zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
 `data-ff-editor`) und in der Maske.
 
-## Repo-Fakten (geprüft 2026-09-02)
+## Repo-Fakten (geprüft 2026-09-04)
 
-- EIN Branch: `master` (Nutzer 2026-09-02). Der Arbeits-Branch
-  `claude/level-mythos-improve-oa0rrh` ist in `master` aufgegangen.
-  Halbfertiges liegt nur als Patch unter `docs/wip/`, nie als Branch.
+- EIN Branch: `master`, 142 Commits. Die `arena/…`-Branches und
+  `claude/level-mythos-improve-oa0rrh` wurden am 2026-09-04 gelöscht, nachdem
+  geprüft war, dass sie nichts Eigenes tragen.
 - Scripts: `npm run check` (tsc -b + eslint), `npm test` (vitest),
   `npm run build:runtime` (baut `src/export/generated/ff-runtime.js`),
-  `npm run dev`, `npm run build`. Andere Wächter-Scripts gibt es nicht.
+  `npm run dev`, `npm run build`.
 - Prüfbündel vor jedem Commit: `npm run check`, `npm run build:runtime`,
-  `npm test`. Berührt eine Änderung `src/blocks/`, `src/softengine/` oder
-  `src/core/data/`, ändert sich das Bündel — das ist normal.
+  `npm test`. `build:runtime` wird leicht vergessen.
 - Referenzabzug: `src/export/referenzabzug.test.ts` vergleicht den Export einer
   festen Maske byte-gleich mit `src/export/referenz/`. Rot heißt: der Export hat
   sich geändert. Gewollt → erneuern mit
   `REFERENZ_ERNEUERN=1 npx vitest run src/export/referenzabzug.test.ts` und im
-  Commit sagen, was sich außerhalb des Bündels geändert hat. Ungewollt → Fehler
-  suchen. Prüfhilfe: alles zwischen der Zeile `window.FF_RELATIONS` und
-  `</script>` ist Bündel, der Rest ist Maske.
+  Commit sagen, was sich geändert hat. Prüfhilfe: alles zwischen der Zeile
+  `window.FF_RELATIONS` und `</script>` ist Bündel, der Rest ist Maske.
 - Git: vor Arbeitsbeginn und vor jedem Push `git fetch`; nie force-push;
   Dateien namentlich stagen (kein `git add -A`); ein Thema = ein Commit.
 - Sichtprobe: `node tools/sichtprobe.cjs standard` bei laufendem Dev-Server
-  (Port 5300) macht neun Bilder des Editors nach `sichtprobe/`; Pflicht vor
-  jedem Commit, der Editor oder Bausteine berührt (`tools/SICHTPROBE.md`).
-- Vitest ist die einzige Testart. Bestehende Tests wachsen mit echten
-  Änderungen; neue Test-Gattungen (Browser, Komponenten) nur nach Absprache.
-- Es gibt keinen Ordner `designsprache/`, keine `docs/ARCHI.md`. Echte
-  SE-Referenzmasken: `docs/chef-maske/`; SE-Wissen: `docs/softengine-wiki/`.
+  (Port 5300) macht neun Bilder des Editors nach `sichtprobe/`
+  (`tools/SICHTPROBE.md`).
+- Vitest ist die einzige Testart: 40 Dateien, 339 Tests (Stand 2026-09-04).
+- Echte SE-Referenzmasken: `docs/chef-maske/`; SE-Wissen: `docs/softengine-wiki/`.
+- Browser-Schranke: der eingebaute Browser von SoftEngine ist älter als
+  Chromium 87. Kein `inset: 0` und nichts Neueres im Export.
+  Beleg: `src/blocks/tabelle/spaltenBreite.ts:113-121` (Nutzer-Befund 2026-08-31).
 
 ## Wichtige Stellen
 
@@ -76,27 +79,26 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
 - Design: Masken-Tokens `src/design/masken-tokens.css` (`--se-*`, Türkis-Akzent,
   Navy-Leiste), Editor-UI `src/index.css` (hell, Lila-Akzent). Nie mischen.
 
-## Bauart-Grundsätze (aus dem Code abgelesen, haben sich bewährt)
+## Bauart-Grundsätze (aus dem Code abgelesen)
 
 1. Eine Render-Quelle. Editor-Hilfen leben im BlockHost, nie im Baustein.
-2. Fähigkeiten sind Registry-Einträge, kein `if typ === 'kanban'`.
+2. Fähigkeiten sind Registry-Einträge, kein `if typ === 'kanban'`. Im ganzen
+   `src/` gibt es genau eine solche Stelle — das soll so bleiben.
 3. Technikwert ≠ Anzeigename: Feldcodes und Nummern arbeiten unsichtbar.
    Die SE-Begriffe START_TOOL / GET_RELATION / PUT_RELATION bleiben sichtbar.
 4. Nichts scheitert still: Laufzeitfehler gehen über `meldeFehler` in den
    Fehlerbalken; eine Kette bricht mit Klartext ab. Der Export blockt nur, wenn
    SoftEngine die Datei nicht laden könnte (Dateiform), nicht wegen Fachlichem.
+   (Gegen diesen Grundsatz verstoßen heute F3 und F6 aus dem Plan.)
 5. SE-Kontrakte nur aus Echttests. Installations-Individuelles (Relations-NRs,
    Werkzeug-Nummern, Felder) sind Daten, nie Code.
 6. Bedienung am Ding (Anfasser, Klick auf die Stelle, Inspector für
-   Unzeigbares). Der Editor erfindet keine Daten (Striche statt Demo-Werte;
-   echte Nutzer-Entscheidung 2026-09-02: keine Beispieldaten, auch nicht als
-   Schalter).
+   Unzeigbares). Der Editor erfindet keine Daten — Striche statt Demo-Werte.
 7. Neue Bezeichner deutsch; bestehende englische bleiben.
-8. Tabellen-Spalten: jeder Zustand und jeder ERP-Kontrakt haengt am PLATZ in
-   der VOLLEN Spaltenliste (datenzeilen, Ketten-Parameter, Rechnung,
-   Vormerkungen). Gefiltert wird nur beim ZEICHNEN, ueber `spaltenSicht` —
-   nie im Export, nie in `seRuntime`, nie im Erfassungs-Umfeld. Der volle
-   Kontrakt steht in `PLAN.md`, Schritt 7.
+8. Tabellen-Spalten: jeder Zustand und jeder ERP-Kontrakt hängt am PLATZ in
+   der VOLLEN Spaltenliste (datenzeilen, Ketten-Parameter, Rechnung).
+   Gefiltert wird nur beim ZEICHNEN, über `spaltenSicht` — nie im Export, nie
+   in `seRuntime`, nie im Erfassungs-Umfeld.
 
 ## SoftEngine-Kontrakte (aus Echttests des Nutzers — nie verlieren)
 
@@ -143,9 +145,5 @@ zeigt, IST der Export: dieselben Lit-Web-Components rendern im Editor (Attribut
   Zeile in einem Ruf; Ende: 11_6 UND 18_25 leer. Immer seriell.
 - Nebenbeobachtung: `CONECT` wird zweimal gesendet, Empfang trotzdem ein Paket.
 
-## Entscheidungen des Nutzers
-
-- „Rechnung" (Abgabemenge = Anzahl × Dosis × Tage, `core/data/rechnung.ts` +
-  `editor/zentrale/RechnungenBereich.tsx`): **bleibt, ist dem Nutzer wichtig**
-  (Nutzer 2026-09-02). Offen ist nur der Ort ihrer Bedienung (heute ein
-  Datencenter-Reiter, obwohl sie die Erfassungszeile EINER Tabelle betrifft).
+**Diese Kontrakte sind NICHT gegen `src/softengine/` geprüft** (11 Dateien,
+`relations.ts` 409 Z.). Bis das geschehen ist, werden sie nicht angefasst.
