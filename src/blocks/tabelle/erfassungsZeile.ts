@@ -19,6 +19,10 @@ export interface ErfassungsLage {
 
   wert: (index: number) => string
 
+  // Steht in der Zelle etwas, das nicht der Bediener getippt hat (gewaehlter
+  // Satz, Rechnung)? Dann zeigt sie es kursiv.
+  automatisch: (index: number) => boolean
+
   tippSpalte: number
   vorschlaege: readonly Vorschlag[]
   marke: number
@@ -42,7 +46,7 @@ function eingabe(
   platz: number,
 ): TemplateResult {
   return html`<input
-    class="erf-eingabe"
+    class=${lage.automatisch(platz) ? 'erf-eingabe auto' : 'erf-eingabe'}
     type="text"
     data-spalte=${platz}
     placeholder=${lage.spalten[index]?.titel ?? ''}

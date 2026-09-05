@@ -173,7 +173,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           // zweite Reihe.
           lage.spalten.map(
           (s, i) => html`<div
-            class=${s.versteckt === true ? 'versteckt' : nothing}
+            class=${[s.versteckt === true ? 'versteckt' : '', s.summe === true ? 'z' : '']
+              .filter((k) => k !== '').join(' ') || nothing}
             role="columnheader"
             data-ff-editable
             data-ff-eintrag=${lage.imEditor ? lage.plaetze[i] : nothing}
@@ -280,12 +281,17 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 s.versteckt === true ? 'versteckt' : '',
                 rohIndex !== null && alsZahl(wert) !== null ? 'zahl' : '',
               ].filter((k) => k !== '').join(' ')
+              // Ein Fehler des Ketten-Laufs steht als Wort in der ersten Zelle,
+              // nicht nur im Tooltip: die rote Zeile allein sagt nicht, warum.
+              const fehltext = i === 0 && zeichen.status === 'fehler'
+                ? html`<span class="fehltext">${zeichen.titel}</span>`
+                : nothing
               return html`<div
                 class=${klassen === '' ? nothing : klassen}
                 role="cell"
                 data-ff-editable=${kopfGriff ? '' : nothing}
                 data-ff-eintrag=${kopfGriff && ansichtIndex === 0 ? platz : nothing}
-              >${markiereTreffer(wert, lage.suchtext)}</div>`
+              >${markiereTreffer(wert, lage.suchtext)}${fehltext}</div>`
             })}
             ${lage.loeschbar && rohIndex !== null && !lage.imEditor
               ? html`<button
@@ -319,7 +325,10 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
         >
           ${lage.spalten.map((_s, i) => {
             const wert = werte[lage.plaetze[i]] ?? ''
-            return html`<div class=${alsZahl(wert) !== null ? 'zahl' : nothing} role="cell">${wert}</div>`
+            const fehltext = i === 0 && zeichen.status === 'fehler'
+              ? html`<span class="fehltext">${zeichen.titel}</span>`
+              : nothing
+            return html`<div class=${alsZahl(wert) !== null ? 'zahl' : nothing} role="cell">${wert}${fehltext}</div>`
           })}
           ${lage.imEditor ? nothing : html`<button
               class="zeile-weg"
@@ -360,30 +369,46 @@ export interface FussLage {
 
   summen: readonly { titel: string; text: string }[]
 
-  erfasst: number
-
-  geaendert: number
-
-  geloescht: number
-
   blaettert: boolean
 
   leer: boolean
+
+  // Mit Erfassungszeile stehen die Tasten im Fuss: der Bediener soll sie
+  // sehen, nicht erraten.
+  erfassungAn: boolean
+
+  imEditor: boolean
+
+  // Der Buchen-Knopf, wenn die Tabelle eine Buchen-Kette hat (Aktionen →
+  // Buchen). `offen` ist, was die Kette noch zu schreiben hat.
+  buchen: { offen: number } | null
 }
 
 export interface FussHandeln {
   blaettere: (zu: number) => void
+  buche: () => void
 }
+
+const TASTEN = [
+  ['Enter', 'weiter'],
+  ['Tab', 'Zelle'],
+  ['F4', 'Suchen'],
+  ['Einfg', 'neue Zeile'],
+  ['Esc', 'leeren'],
+] as const
 
 export function tabelleFuss(
   lage: FussLage,
   tun: FussHandeln,
 ): TemplateResult | typeof nothing {
-  const noetig = lage.seiten > 1
+  const noetig = lage.hatQuelle
+    || lage.erfassungAn
+    || lage.seiten > 1
     || lage.summen.length > 0
     || lage.suchtAktiv
     || lage.auswahlAktiv
   if (lage.leer || !noetig) return nothing
+  const buchen = lage.buchen
   return html`<div class="fusszeile">
     <div class="seiten-info">${datensatzText({
       hatQuelle: lage.hatQuelle,
@@ -398,18 +423,32 @@ export function tabelleFuss(
         <b>${s.text}</b>
       </span>`)}
     </div>`}
-    ${!lage.blaettert ? nothing : html`<div class="seiten-nav">
-      <button
-        aria-label="Seite zurück"
-        ?disabled=${lage.seite <= 0}
-        @click=${() => tun.blaettere(lage.seite - 1)}
-      >‹</button>
-      <span>Seite ${lage.seite + 1} von ${lage.seiten}</span>
-      <button
-        aria-label="Seite vor"
-        ?disabled=${lage.seite >= lage.seiten - 1}
-        @click=${() => tun.blaettere(lage.seite + 1)}
-      >›</button>
+    ${!lage.erfassungAn ? nothing : html`<div class="tasten" aria-label="Tasten der Erfassung">
+      ${TASTEN.map(([taste, wirkung]) => html`<span><kbd>${taste}</kbd> ${wirkung}</span>`)}
     </div>`}
+    <div class="fuss-rechts">
+      ${!lage.blaettert ? nothing : html`<div class="seiten-nav">
+        <button
+          aria-label="Seite zurück"
+          ?disabled=${lage.seite <= 0}
+          @click=${() => tun.blaettere(lage.seite - 1)}
+        >‹</button>
+        <span>Seite ${lage.seite + 1} von ${lage.seiten}</span>
+        <button
+          aria-label="Seite vor"
+          ?disabled=${lage.seite >= lage.seiten - 1}
+          @click=${() => tun.blaettere(lage.seite + 1)}
+        >›</button>
+      </div>`}
+      ${buchen === null ? nothing : html`<button
+        class="buchen"
+        type="button"
+        ?disabled=${buchen.offen === 0}
+        title=${lage.imEditor
+          ? 'In der Maske: schreibt die erfassten Zeilen über die Kette „Buchen" (F5)'
+          : 'F5'}
+        @click=${() => tun.buche()}
+      >${buchen.offen > 0 ? `Buchen (${buchen.offen})` : 'Buchen'}</button>`}
+    </div>
   </div>`
 }

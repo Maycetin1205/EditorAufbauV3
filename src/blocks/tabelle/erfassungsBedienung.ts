@@ -125,6 +125,7 @@ export function erfassungsZeileFuer(
     cols,
     imEditor: wirt.baustein.hasAttribute('data-ff-editor'),
     wert: (i) => wirt.lauf.wertVon(umfeld, i),
+    automatisch: (i) => wirt.lauf.istAutomatisch(umfeld, i),
     tippSpalte: wirt.lauf.tippSpalte,
     vorschlaege: wirt.lauf.vorschlaege,
     marke: wirt.lauf.marke,

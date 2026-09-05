@@ -187,6 +187,40 @@ export const tabelleStil = css`
         text-align: right;
         font-variant-numeric: tabular-nums;
       }
+      .kopf > div.z { justify-content: flex-end; text-align: right; }
+
+      /* Vor der ersten Zelle ist Platz fuer den Statuspunkt der Zeile und das
+         Plus der Erfassungszeile; alle Zeilen ruecken gleich ein. */
+      .kopf > div:first-of-type,
+      .zeile > div:first-of-type { padding-left: calc(var(--se-zell-x) + 14px); }
+      .zeile[data-status]::before,
+      .zeile.erfassung::before {
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--se-faint);
+        pointer-events: none;
+      }
+      .zeile.erfassung::before {
+        content: '+';
+        width: auto;
+        height: auto;
+        border-radius: 0;
+        background: none;
+        color: var(--se-accent);
+        font-weight: 700;
+        line-height: 1;
+      }
+      .fehltext {
+        margin-left: 8px;
+        font-size: var(--se-fs-sm);
+        color: var(--se-red);
+      }
 
       /* Der Titel darf auf zwei Zeilen umbrechen; erst danach wird gekuerzt. */
       .kopf > div {
@@ -205,8 +239,11 @@ export const tabelleStil = css`
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
-        /* Ein Wort bricht nur, wenn es allein nicht in die Spalte passt. */
+        /* Ein Wort bricht nur, wenn es allein nicht in die Spalte passt; wo
+           der Browser deutsch trennen kann, trennt er mit Bindestrich. */
         overflow-wrap: break-word;
+        -webkit-hyphens: auto;
+        hyphens: auto;
       }
 
       /* Der Greifstreifen ist ein eigenes Kind der Kopfzeile und sitzt in
@@ -317,17 +354,72 @@ export const tabelleStil = css`
       .fusszeile {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 4px 10px;
+        gap: 14px;
+        min-height: 30px;
+        padding: 3px 10px;
         border-top: var(--se-border) solid var(--se-line);
         font-size: var(--se-fs-sm);
         color: var(--se-muted);
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .seiten-info { flex: none; }
+      .fuss-rechts {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: auto;
       }
       .seiten-nav {
         display: flex;
         align-items: center;
         gap: 6px;
       }
+
+      /* Die Tasten der Erfassung, mittig im Fuss. Fehlt Platz, fallen ganze
+         Hinweise weg (sie brechen in eine verdeckte zweite Zeile um), statt
+         dass ein Hinweis halb abgeschnitten stehen bleibt. */
+      .tasten {
+        flex: 1 1 auto;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px 10px;
+        min-width: 0;
+        max-height: 20px;
+        margin: 0 auto;
+        overflow: hidden;
+      }
+      .tasten span { flex: none; display: inline-flex; align-items: center; gap: 4px; }
+      .tasten kbd {
+        padding: 1px 5px;
+        font-family: var(--se-mono);
+        font-size: var(--se-fs-xs);
+        line-height: 1.3;
+        color: var(--se-ink);
+        background: var(--se-panel);
+        border: var(--se-border) solid var(--se-line);
+        border-bottom-width: 2px;
+        border-radius: var(--se-r-sm);
+      }
+
+      .buchen {
+        height: 24px;
+        padding: 0 12px;
+        font-family: var(--se-font);
+        font-size: var(--se-fs);
+        font-weight: 600;
+        line-height: 1;
+        color: var(--se-panel);
+        background: var(--se-accent);
+        border: var(--se-border) solid var(--se-accent);
+        border-radius: var(--se-r-md);
+        cursor: pointer;
+      }
+      .buchen:hover { background: var(--se-accent-dark); border-color: var(--se-accent-dark); }
+      .buchen:disabled { opacity: 0.5; cursor: default; }
+      .buchen:disabled:hover { background: var(--se-accent); border-color: var(--se-accent); }
 
       /* Die Summen stehen rechts neben der Zaehlzeile — Titel blass, Wert
          kraeftig, Ziffern in fester Breite, damit die Kante steht. */
@@ -338,31 +430,21 @@ export const tabelleStil = css`
          noch da, aber sie geht. Zurueckgenommen wird sie am selben Kreuz. */
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
 
-      /* Der Zeilen-Status ist EIN Balken links, sonst nichts: keine Worte in
-         der Zeile. Er steht NACH .gewaehlt, weil er den Auswahl-Balken
-         schlagen muss — was noch nicht geschrieben ist, ist die dringendere
-         Auskunft. Der Klartext haengt im title. */
-      .zeile[data-status="erfasst"] {
-        box-shadow: inset 3px 0 0 var(--se-accent);
-        background: var(--se-accent-soft);
-      }
-      .zeile[data-status="geaendert"],
-      .zeile[data-status="loeschung"] { box-shadow: inset 3px 0 0 var(--se-amber); }
+      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle: petrol neu,
+         bernstein geaendert oder zum Loeschen vorgemerkt, rot haengengeblieben,
+         blass hinausgeschickt. Der Klartext haengt im title, der Fehler steht
+         zusaetzlich als Wort in der Zeile. */
+      .zeile[data-status="erfasst"] { background: var(--se-accent-soft); }
+      .zeile[data-status="erfasst"]::before,
+      .zeile[data-status="schreibt"]::before { background: var(--se-accent); }
+      .zeile[data-status="geaendert"]::before,
+      .zeile[data-status="loeschung"]::before { background: var(--se-amber); }
       .zeile[data-status="loeschung"] { background: var(--se-red-shell); }
-      .zeile[data-status="schreibt"] {
-        box-shadow: inset 3px 0 0 var(--se-accent);
-        animation: se-schreibt 1.1s ease-in-out infinite;
-      }
-      /* Hinausgeschickt: derselbe Balken wie eine Vormerkung, nur blass — die
-         Zeile ist erledigt, aber noch unbestaetigt. Kein Wort in der Zeile. */
-      .zeile[data-status="geschrieben"] {
-        box-shadow: inset 3px 0 0 var(--se-faint);
-        color: var(--se-muted);
-      }
-      .zeile[data-status="fehler"] {
-        box-shadow: inset 3px 0 0 var(--se-red);
-        background: var(--se-red-shell);
-      }
+      .zeile[data-status="schreibt"] { animation: se-schreibt 1.1s ease-in-out infinite; }
+      /* Hinausgeschickt: die Zeile ist erledigt, aber noch unbestaetigt. */
+      .zeile[data-status="geschrieben"] { color: var(--se-muted); }
+      .zeile[data-status="fehler"] { background: var(--se-red-shell); }
+      .zeile[data-status="fehler"]::before { background: var(--se-red); }
       @keyframes se-schreibt { 50% { opacity: 0.55; } }
       @media (prefers-reduced-motion: reduce) {
         .zeile[data-status="schreibt"] { animation: none; }
@@ -424,6 +506,18 @@ export const tabelleStil = css`
       .zeile.erfassung > div {
         padding: 0 calc(var(--se-zell-x) - var(--se-eingabe-x) - var(--se-border));
       }
+      .zeile > div.tippbar:first-of-type,
+      .zeile.erfassung > div:first-of-type {
+        padding-left: calc(var(--se-zell-x) + 14px - var(--se-eingabe-x) - var(--se-border));
+      }
+
+      /* Automatisch gefuellt (aus dem gewaehlten Satz oder der Rechnung):
+         kursiv und petrol, damit man sieht, was die Maske beigesteuert hat. */
+      .erf-eingabe.auto {
+        color: var(--se-accent);
+        font-style: italic;
+        background: var(--se-accent-soft);
+      }
 
       .zell-eingabe,
       .erf-eingabe {
@@ -464,10 +558,7 @@ export const tabelleStil = css`
         display: flex;
         align-items: baseline;
         gap: 12px;
-        margin-left: auto;
-        padding-left: 12px;
       }
-      .summen + .seiten-nav { padding-left: 12px; }
       .summe-titel { color: var(--se-muted); }
       .summen b {
         color: var(--se-ink);

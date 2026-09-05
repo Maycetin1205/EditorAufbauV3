@@ -132,6 +132,11 @@ export class ErfassungsLauf {
     this._markeVonHand = false
   }
 
+  // Der Wert kommt aus dem gewaehlten Satz oder der Rechnung, nicht von Hand.
+  istAutomatisch(umfeld: ErfassungsUmfeld, index: number): boolean {
+    return !this.getippt.has(index) && this.wertVon(umfeld, index) !== ''
+  }
+
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
     const listeOffen = this._tippSpalte === index && this._vorschlaege.length > 0
     // Tab ist die Weiter-Taste — IMMER; das grosse Fenster oeffnen nur Enter

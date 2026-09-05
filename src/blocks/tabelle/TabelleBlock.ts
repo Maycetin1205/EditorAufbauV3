@@ -44,7 +44,8 @@ import {
 } from './spalten'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
-import { meldeVormerkungen } from '../shared/vormerkStand'
+import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
+import { meldeVormerkungen, vormerkStandVon, vormerkSumme } from '../shared/vormerkStand'
 import { AnsichtsStand } from './ansichtsStand'
 import { aktiviereZeile, zeileDoppelt } from './zeilenAktivierung'
 import { BreitenStand } from './spaltenBreite'
@@ -91,6 +92,11 @@ export class TabelleBlock extends BasicBlock {
     // die Einzelheiten dazu" (Handmaske Rahmen00001 V11: BW-Befehl
     // TABELLEPOS_DETAILS mit der Satznummer).
     { key: 'onRowDblClick', name: 'Zeile doppelt geklickt' },
+
+    // Die Kette, die die erfassten Zeilen ins ERP schreibt. Sie haengt an der
+    // Tabelle und laeuft ueber den Buchen-Knopf im Fuss (und F5), nicht ueber
+    // einen fremden Knopf, den der Bauer erst hinstellen muss.
+    { key: 'onBuchen', name: 'Buchen' },
   ]
 
   static readonly listenBindung: ListenBindung = SPALTEN_BINDUNG
@@ -491,10 +497,44 @@ export class TabelleBlock extends BasicBlock {
     this.fokussiereErfassungsZelle(0)
   }
 
+  // Der Buchen-Knopf im Fuss zaehlt wie ein Schreiben-Knopf: was seine Kette
+  // (Aktionen → Buchen) noch zu schreiben hat. Ohne Kette gibt es keinen
+  // Knopf; im Editor steht er als Vorschau da, sobald die Erfassung an ist.
+  private buchenStand(): { offen: number } | null {
+    if (this.imEditor) return this.erfassungAn ? { offen: 0 } : null
+    const zahlen = vormerkStandVon(this, 'onBuchen')
+    return zahlen === undefined ? null : { offen: vormerkSumme(zahlen) }
+  }
+
+  private buche(): void {
+    if (this.imEditor) return
+    runEvent(this, 'onBuchen', {}).catch(meldeKettenFehler)
+  }
+
+  // Einfg fuehrt in die Erfassungszeile, F5 bucht: Tasten der Maske, nicht
+  // einer Zelle. Bei mehreren Tabellen gilt die, in der die Taste gedrueckt
+  // wurde, sonst die erste mit Erfassungszeile.
+  private readonly maskenTaste = (e: KeyboardEvent): void => {
+    if (this.imEditor || (e.key !== 'Insert' && e.key !== 'F5')) return
+    const tabellen = Array.from(this.ownerDocument.querySelectorAll<TabelleBlock>('ff-tabelle'))
+    const pfad = e.composedPath()
+    const zustaendig = tabellen.find((t) => pfad.includes(t))
+      ?? tabellen.find((t) => t.erfassungAn)
+    if (zustaendig !== this) return
+    if (e.key === 'Insert' && this.erfassungAn) {
+      e.preventDefault()
+      this.fokussiereErfassungsZelle(0)
+    } else if (e.key === 'F5' && this.buchenStand() !== null) {
+      e.preventDefault()
+      this.buche()
+    }
+  }
+
   override connectedCallback(): void {
     super.connectedCallback()
     if (this._besitz === 'softengine') connectTable(this)
     document.addEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
+    document.addEventListener('keydown', this.maskenTaste)
     this._ansicht.beobachte()
   }
 
@@ -529,6 +569,7 @@ export class TabelleBlock extends BasicBlock {
     super.disconnectedCallback()
     this._wahl.loese()
     document.removeEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
+    document.removeEventListener('keydown', this.maskenTaste)
     this._ansicht.loese()
     schliesseNachschlagenFuer(this)
     disconnectTable(this)
@@ -667,15 +708,13 @@ export class TabelleBlock extends BasicBlock {
         seiten: ansicht.seiten,
         blaettert: this.blaettern === 'ja',
         summen: ansicht.summen,
-        // Dieselbe Zahl wie der Knopf: der liest `erfassteZeilen` ueber
-        // vormerkStand. `_erfassung.zeilen` waere eine zweite — sie zaehlt
-        // die schon geschriebenen Zeilen mit und die getippte nicht.
-        erfasst: this.erfassteZeilen.length,
-        geaendert: this._zeilen.vorgemerkteAenderungen(),
-        geloescht: this._zeilen.vorgemerkteLoeschungen(),
         leer: ansicht.leer,
+        erfassungAn: this.erfassungAn,
+        imEditor: this.imEditor,
+        buchen: this.buchenStand(),
       }, {
         blaettere: (zu) => this._ansicht.blaettere(zu),
+        buche: () => this.buche(),
       })}
       ${this.imEditor && this.spaltenListe()[this.fensterDialogIndex] !== undefined
         ? this.fensterDialogTpl(this.fensterDialogIndex)
