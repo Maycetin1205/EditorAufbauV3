@@ -188,6 +188,33 @@ export function keinVerlust(roh: unknown, rein: unknown): boolean {
     .every((k) => Object.prototype.hasOwnProperty.call(b, k) && keinVerlust(a[k], b[k]))
 }
 
+// Wo genau die Datei etwas enthaelt, das der Lader nicht uebernimmt: Eintrag
+// (Klarname) und Angabe. Eine Meldung ohne diese Stelle laesst den Bediener
+// mit einer Datei stehen, die er nicht reparieren kann.
+export function ersteAbweichung(roh: unknown, rein: unknown): string {
+  if (Array.isArray(roh)) {
+    if (!Array.isArray(rein) || roh.length !== rein.length) return 'die Anzahl der Einträge'
+    for (let i = 0; i < roh.length; i++) {
+      if (keinVerlust(roh[i], rein[i])) continue
+      const e = roh[i] as Record<string, unknown> | null
+      const name = e && typeof e.name === 'string' ? `„${e.name}"` : `Eintrag ${i + 1}`
+      return `${name} → ${ersteAbweichung(roh[i], rein[i])}`
+    }
+    return ''
+  }
+  if (roh && typeof roh === 'object' && rein && typeof rein === 'object') {
+    const a = roh as Record<string, unknown>
+    const b = rein as Record<string, unknown>
+    for (const k of Object.keys(a)) {
+      if (a[k] === undefined) continue
+      if (!Object.prototype.hasOwnProperty.call(b, k)) return `„${k}" (unbekannte Angabe)`
+      if (!keinVerlust(a[k], b[k])) return `„${k}" → ${ersteAbweichung(a[k], b[k])}`
+    }
+    return ''
+  }
+  return `${JSON.stringify(roh)} wird als ${JSON.stringify(rein)} gelesen`
+}
+
 function ohneGeleerte(
   props: unknown,
   bausteinId: string,

@@ -10,6 +10,7 @@ import {
 } from '../../core/data/sourceLinks'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
+import { oeffneDatencenter } from '../zentrale/oeffnen'
 import { useAbschnitt } from './abschnittStand'
 import { PickerControl } from './controls/PickerControl'
 import { SchluesselPaarZeilen } from './SchluesselPaarZeilen'
@@ -127,6 +128,17 @@ export function QuellenListe({ block }: QuellenListeProps) {
       onWaehle={onWert}
     />
   )
+
+  // Ohne eine einzige Quelle in der Bibliothek waere der Waehler ein Knopf mit
+  // einem Eintrag „Keine". Stattdessen der Weg dorthin, wo Quellen entstehen.
+  if (bibliothek.length === 0) {
+    return (
+      <Gruppe titel="Datenquellen" offen={offen} onSchalte={schalte}>
+        <p className="text-ui text-matt">Noch keine Datenquelle in der Bibliothek.</p>
+        <Knopf className="self-start" onClick={oeffneDatencenter}>Datencenter öffnen</Knopf>
+      </Gruppe>
+    )
+  }
 
   return (
     <Gruppe titel="Datenquellen" offen={offen} onSchalte={schalte}>

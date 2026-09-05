@@ -11,7 +11,7 @@ import { pruefeRelationsVorlagen, type RelationTemplate } from '../core/data/rel
 import { downloadFile } from '../lib/dateiDownload'
 import { dataSourceStore } from './DataSourceStore'
 import type { Editor } from './Editor'
-import { keinVerlust, pruefeBaumStand } from './ladeKette'
+import { ersteAbweichung, keinVerlust, pruefeBaumStand } from './ladeKette'
 import { meldungen } from './meldungen'
 import { CURRENT_SCHEMA_VERSION } from './migrations'
 import { type EntfernGrund } from './migrationenRoh'
@@ -95,10 +95,23 @@ export async function ladeMaskeAusDatei(editor: Editor, datei: File): Promise<vo
   meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
 }
 
+// Aeltere Masken speicherten in der Hol-Relation die Liste `zusatzFelder`
+// mit. Die errechnet der Export aus den benutzten Feldern; sie ist kein
+// Bestand der Maske, ohne sie geht nichts verloren.
+function ohneErrechnetes(eintrag: unknown): unknown {
+  if (!eintrag || typeof eintrag !== 'object') return eintrag
+  const e = eintrag as Record<string, unknown>
+  if (!e.ladeRelation || typeof e.ladeRelation !== 'object') return eintrag
+  const lade = { ...(e.ladeRelation as Record<string, unknown>) }
+  delete lade.zusatzFelder
+  return { ...e, ladeRelation: lade }
+}
+
 function bibliothekPruefen<T>(
   roh: unknown,
   pruefe: (raw: unknown) => { liste: T[]; probleme: EintragProblem[] },
   klarname: string,
+  bereinige: (eintrag: unknown) => unknown = (eintrag) => eintrag,
 ): { ok: true; liste: T[] } | { ok: false; grund: string; probleme: LadeProblem[] } {
   if (!Array.isArray(roh)) {
     return {
@@ -107,14 +120,17 @@ function bibliothekPruefen<T>(
       probleme: [{ bereich: klarname, stelle: '', grund: 'der Abschnitt fehlt oder ist unlesbar' }],
     }
   }
-  const { liste, probleme } = pruefe(roh)
-  if (!keinVerlust(roh, liste)) {
+  const bereinigt = roh.map(bereinige)
+  const { liste, probleme } = pruefe(bereinigt)
+  if (!keinVerlust(bereinigt, liste)) {
+    const stelle = ersteAbweichung(bereinigt, liste)
     return {
       ok: false,
-      grund: `Die Datei ist beschädigt: im Abschnitt „${klarname}" stimmen Angaben nicht. `
-        + 'Sie wird nicht geladen, damit nicht unbemerkt Teile deiner Maske verlorengehen.',
-
-      probleme: mitBereich(klarname, probleme),
+      grund: `Die Datei ist beschädigt: im Abschnitt „${klarname}" stimmt eine Angabe nicht: `
+        + `${stelle}. Sie wird nicht geladen, damit nicht unbemerkt Teile deiner Maske verlorengehen.`,
+      probleme: probleme.length > 0
+        ? mitBereich(klarname, probleme)
+        : [{ bereich: klarname, stelle: '', grund: stelle }],
     }
   }
   return { ok: true, liste }
@@ -195,7 +211,7 @@ function auspacken(text: string): AuspackErgebnis {
   }
   const baum = stand.baum
 
-  const quellen = bibliothekPruefen(o.datenquellen, pruefeDatenquellen, BEREICH_QUELLEN)
+  const quellen = bibliothekPruefen(o.datenquellen, pruefeDatenquellen, BEREICH_QUELLEN, ohneErrechnetes)
   if (!quellen.ok) return { ok: false, grund: quellen.grund, probleme: quellen.probleme }
   const relationen = bibliothekPruefen(o.relationen, pruefeRelationsVorlagen, BEREICH_RELATIONEN)
   if (!relationen.ok) return { ok: false, grund: relationen.grund, probleme: relationen.probleme }

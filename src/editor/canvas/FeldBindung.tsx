@@ -20,6 +20,7 @@ import { wendeProps } from '../../state/propsPatch'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
+import { oeffneDatencenter } from '../zentrale/oeffnen'
 import { FieldPicker, type PickerGruppe } from './FieldPicker'
 import { bindingCode, useBindingPicker } from './useBindingPicker'
 
@@ -94,8 +95,10 @@ export function useFeldBindung({
   )
   const hatQuelle = quellen.length > 0
 
-  const bibliotheksAngebot =
-    !hatQuelle && bibliothek.length > 0 && quellenTraeger(editor.tree, block.id) !== undefined
+  // Auch ohne eine einzige Datenquelle in der Bibliothek geht der Picker auf:
+  // er sagt dann, dass eine fehlt, und fuehrt ins Datencenter. Ein Klick, der
+  // nichts tut, liesse den Bediener raten, was er falsch macht.
+  const bibliotheksAngebot = !hatQuelle && quellenTraeger(editor.tree, block.id) !== undefined
   const hatAngebot = hatQuelle || bibliotheksAngebot
 
   const { picker, closePicker, onClick, onDoubleClick } = useBindingPicker({
@@ -187,6 +190,7 @@ export function useFeldBindung({
   const quellenWahl = !bibliotheksAngebot ? undefined : {
     hinweis: 'Erst die Hauptquelle wählen.',
     eintraege: bibliothek.map((s) => ({ wert: s.id, name: s.name, kennung: quellenKennung(s) })),
+    onDatencenter: oeffneDatencenter,
     onWaehle: (quelleId: string) => {
       const traeger = quellenTraeger(editor.tree, blockRef.current.id)
       if (quelleId === '' || !traeger) return

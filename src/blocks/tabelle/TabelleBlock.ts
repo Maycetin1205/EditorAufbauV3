@@ -118,7 +118,9 @@ export class TabelleBlock extends BasicBlock {
   }
   static override readonly customProperties = TABELLE_EIGENSCHAFTEN
 
-  static readonly raster = { startW: 14, startH: 8, minW: 6, minH: 4 }
+  // Eine neue Tabelle nimmt die ganze Breite und zeigt gleich ein Dutzend
+  // Zeilen — so, wie sie in einer Maske am Ende fast immer steht.
+  static readonly raster = { startW: 24, startH: 14, minW: 6, minH: 4 }
 
   @property({
     converter: {

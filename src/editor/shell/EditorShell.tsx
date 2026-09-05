@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useKeyboardShortcuts } from '../../state/useKeyboardShortcuts'
 import { Canvas } from '../canvas/Canvas'
@@ -6,6 +6,7 @@ import { SeitenLeiste } from '../canvas/SeitenLeiste'
 import { Inspector } from '../inspector/Inspector'
 import { Sidebar } from '../sidebar/Sidebar'
 import { Kommandozentrale } from '../zentrale/Kommandozentrale'
+import { beiDatencenterWunsch } from '../zentrale/oeffnen'
 import {
   begrenzeBreite,
   BREITEN_SCHRITT,
@@ -24,6 +25,8 @@ export function EditorShell() {
 
   const [datencenterOffen, setDatencenterOffen] = useState(false)
   const [paletteOffen, setPaletteOffen] = useState(true)
+
+  useEffect(() => beiDatencenterWunsch(() => setDatencenterOffen(true)), [])
 
   // Der gemerkte Stand wird EINMAL beim Aufbau gelesen (useState mit
   // Funktion), nicht bei jedem Zeichnen.

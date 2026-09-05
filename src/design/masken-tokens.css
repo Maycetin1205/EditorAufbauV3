@@ -1,70 +1,71 @@
-/* Die Werte der Maske. Vorbild ist ab 2026-08-27 die Handmaske
-   Rahmen00001 V11 (Nutzer-Entscheidung "aussehen auch"): kuehl, petrol,
-   dicht — die Optik, die in BueroWARE tatsaechlich laeuft. Wo die Handmaske
-   einen Wert nicht kennt (Status-Farben), bleibt der alte stehen; geraten
-   wird keiner. */
+/* Die Werte der Maske: kuehl, petrol, dicht — die Optik, die in BueroWARE
+   laeuft. Alles, was die Bausteine an Farbe, Schrift und Mass brauchen, steht
+   hier; ein Baustein erfindet keinen eigenen Wert. */
 :root {
 
-  --se-bg:        #eef3f6;
+  --se-bg:        #f3f8fa;
   --se-panel:     #ffffff;
-  --se-panel-2:   #f6fafb;
+  --se-panel-2:   #f6fbfc;
 
-  --se-ink:       #243b4f;
-  --se-muted:     #69808f;
-  --se-faint:     #a8bac6;
+  --se-ink:       #1b2d3e;
+  --se-muted:     #5f7386;
+  --se-faint:     #9fb3c0;
 
-  --se-line:      #d9e4ea;
-  --se-line-soft: #e9f0f4;
+  --se-line:      #d8e5ea;
+  --se-line-soft: #e8f0f4;
 
-  --se-scrim:     rgba(36, 59, 79, 0.45);
+  --se-scrim:     rgba(27, 45, 62, 0.45);
 
-  --se-accent:      #0e8ea2;
-  --se-accent-dark: #0b7181;
-  --se-accent-soft: #e6f4f7;
+  --se-accent:      #00778f;
+  --se-accent-dark: #00647a;
+  --se-accent-soft: #e8f6f9;
 
-  /* Die gewaehlte Zeile, das Zebra und der Zeilen-Hover der Handmaske. */
-  --se-auswahl:     #ddeef2;
-  --se-zebra:       #f8fbfc;
-  --se-hover:       #eff6f8;
+  /* Die gewaehlte Zeile, das Zebra und der Zeilen-Hover. */
+  --se-auswahl:     #d3eef5;
+  --se-zebra:       #f7fbfc;
+  --se-hover:       #eef7f9;
 
   --se-red:         #b3261e;
   --se-red-soft:    #fdecea;
 
-  /* Bernstein heisst "vorgemerkt, noch nicht geschrieben" — in der Handmaske
-     die geaenderte Zelle und die neue Zeile. */
+  /* Bernstein heisst "vorgemerkt, noch nicht geschrieben": die geaenderte
+     Zelle und die neue Zeile. */
   --se-amber:       #f0a53a;
   --se-amber-soft:  #fff6e1;
 
-  /* Status-Farben kennt die Handmaske nicht: unveraendert stehengelassen. */
   --se-blue:        #5e93be;
   --se-blue-soft:   #e2edf5;
   --se-violet:      #9784c1;
   --se-violet-soft: #ece7f4;
-  --se-green:       #6e9b69;
-  --se-green-soft:  #e5eede;
+  --se-green:       #1f7a4d;
+  --se-green-soft:  #e2f3ea;
 
   --se-red-shell:   #fdf3f2;  --se-red-line:   #f0cdc9;
   --se-amber-shell: #fffdf4;  --se-amber-line: #ecd9a4;
   --se-blue-shell:  #f5f9fc;  --se-blue-line:  #d2e2ee;
-  --se-green-shell: #f7faf3;  --se-green-line: #d8e5cf;
+  --se-green-shell: #f6fbf8;  --se-green-line: #cfe6d8;
 
   --se-card-bg:     #ffffff;
-  --se-card-line:   #d9e4ea;
+  --se-card-line:   #d8e5ea;
 
   --se-border: 1px;
 
   --se-r-sm:   4px;
   --se-r-md:   6px;
-  --se-r-lg:   8px;
+  --se-r-lg:   10px;
 
-  --se-schatten: 0 1px 3px rgba(36, 59, 79, 0.08);
+  --se-schatten: 0 1px 2px rgba(27, 45, 62, 0.05), 0 4px 12px rgba(27, 45, 62, 0.06);
 
   --se-font: "Segoe UI Variable Text", "Segoe UI", system-ui, Tahoma, sans-serif;
   --se-mono: "IBM Plex Mono", Consolas, monospace;
-  --se-fs:    13px;
-  --se-fs-sm: 12px;
-  --se-fs-xs: 10.5px;
-  --se-fs-lg: 14px;
+  --se-fs:      13px;
+  --se-fs-sm:   12px;
+  --se-fs-xs:   10.5px;
+  --se-fs-lg:   14px;
+
+  /* Spaltentitel: eine Stufe kleiner als der Inhalt, damit zwei Zeilen Titel
+     in den Kopf passen. */
+  --se-fs-kopf: 11.5px;
 
   --se-lh: 1.4;
 

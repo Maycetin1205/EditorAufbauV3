@@ -3,6 +3,7 @@ import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
 import { spaltenWahlTpl, type SpaltenWahlHandeln, type SpaltenWahlLage } from './spaltenWahl'
 import { markiereTreffer } from '../shared/textMarke'
+import { alsZahl } from './sortierung'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './tabelleEigenschaften'
@@ -181,7 +182,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
             @contextmenu=${lage.spaltenwahlAn
               ? (e: MouseEvent) => tun.oeffneSpaltenwahl(e)
               : nothing}
-          >${s.titel}${!lage.editable && lage.sortSpalte === lage.plaetze[i]
+          ><span class="kopf-text">${s.titel}</span>${!lage.editable && lage.sortSpalte === lage.plaetze[i]
             ? html`<span class="sort-pfeil">${lage.sortAuf ? ' ▲' : ' ▼'}</span>`
             : ''}</div>`,
         )}
@@ -275,8 +276,12 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               </div>`
               }
               // Was die Suche gefunden hat, soll man auch SEHEN.
+              const klassen = [
+                s.versteckt === true ? 'versteckt' : '',
+                rohIndex !== null && alsZahl(wert) !== null ? 'zahl' : '',
+              ].filter((k) => k !== '').join(' ')
               return html`<div
-                class=${s.versteckt === true ? 'versteckt' : nothing}
+                class=${klassen === '' ? nothing : klassen}
                 role="cell"
                 data-ff-editable=${kopfGriff ? '' : nothing}
                 data-ff-eintrag=${kopfGriff && ansichtIndex === 0 ? platz : nothing}
@@ -312,7 +317,10 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           style=${styleMap(lage.cols)}
           @click=${lage.imEditor || fest ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
         >
-          ${lage.spalten.map((_s, i) => html`<div role="cell">${werte[lage.plaetze[i]] ?? ''}</div>`)}
+          ${lage.spalten.map((_s, i) => {
+            const wert = werte[lage.plaetze[i]] ?? ''
+            return html`<div class=${alsZahl(wert) !== null ? 'zahl' : nothing} role="cell">${wert}</div>`
+          })}
           ${lage.imEditor ? nothing : html`<button
               class="zeile-weg"
               type="button"

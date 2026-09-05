@@ -9,6 +9,10 @@ export const tabelleStil = css`
         --se-zell-x: 10px;
         --se-eingabe-x: 4px;
 
+        /* Der Kopf traegt zwei Zeilen Titel, damit „Behandlungsmenge" nicht
+           als „Behandl…" neben „Behandl…" steht. */
+        --kopf-hoehe: 36px;
+
         position: relative;
         box-sizing: border-box;
         display: flex;
@@ -50,7 +54,7 @@ export const tabelleStil = css`
 
       .kopf {
         display: grid;
-        height: var(--takt);
+        height: var(--kopf-hoehe);
         box-sizing: border-box;
       }
       .zeile {
@@ -66,8 +70,9 @@ export const tabelleStil = css`
         flex: none;
         background: var(--se-panel-2);
         border-bottom: var(--se-border) solid var(--se-line);
-        font-size: var(--se-fs-sm);
+        font-size: var(--se-fs-kopf);
         font-weight: 600;
+        color: var(--se-muted);
       }
 
       .koerper {
@@ -117,9 +122,6 @@ export const tabelleStil = css`
         flex: 1 1 auto;
         align-content: center;
       }
-      .lineal > div { border-right: 1px solid var(--se-line-soft); }
-      .lineal > div:last-child { border-right: none; }
-
       .zeile {
         border-bottom: 1px solid var(--se-line-soft);
         background: var(--se-panel);
@@ -178,22 +180,33 @@ export const tabelleStil = css`
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        border-right: 1px solid var(--se-line-soft);
       }
 
-      .kopf > div { line-height: calc(var(--takt) - 1px); }
-      /* Die letzte ZELLE, nicht das letzte Kind: hinter den Zellen stehen noch
-         die Greifstreifen (Kopf) bzw. das Loeschkreuz (Zeile). Mit
-         :last-child traf die Regel dann gar nichts mehr, und die letzte Spalte
-         behielt ihren Trennstrich vor der Tafelkante. */
-      .kopf > div:last-of-type,
-      .zeile > div:last-of-type { border-right: none; }
+      /* Zahlen stehen rechts auf einer Kante, Ziffern in fester Breite. */
+      .zeile > div.zahl {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Der Titel darf auf zwei Zeilen umbrechen; erst danach wird gekuerzt. */
       .kopf > div {
+        display: flex;
+        align-items: center;
+        line-height: 1.25;
+        white-space: normal;
         cursor: pointer;
         user-select: none;
 
         /* Traeger des Greifstreifens (unten). */
         position: relative;
+      }
+      .kopf-text {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        /* Ein Wort bricht nur, wenn es allein nicht in die Spalte passt. */
+        overflow-wrap: break-word;
       }
 
       /* Der Greifstreifen ist ein eigenes Kind der Kopfzeile und sitzt in
@@ -428,7 +441,10 @@ export const tabelleStil = css`
       }
       .zell-eingabe:focus,
       .erf-eingabe:focus { outline: none; }
-      .erf-eingabe::placeholder { color: var(--se-faint); }
+      /* Die Platzhalter der Erfassungszeile erscheinen erst, wenn der Bediener
+         in ihr steht: ruhig, solange er liest; Orientierung, sobald er tippt. */
+      .erf-eingabe::placeholder { color: transparent; }
+      .zeile.erfassung:focus-within .erf-eingabe::placeholder { color: var(--se-faint); }
 
       /* Die Vormerkung ist etwas anderes als ein Eingabefeld: sie sagt, dass
          hier etwas UNGESCHRIEBENES steht, und muss sichtbar bleiben. */

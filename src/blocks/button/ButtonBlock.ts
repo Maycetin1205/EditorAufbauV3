@@ -16,7 +16,7 @@ export class ButtonBlock extends BasicBlock {
   static readonly tagName = 'ff-button'
   static readonly displayName = 'Schaltfläche'
   static readonly category: BlockCategory = 'eingabe'
-  static readonly defaultProps = { label: 'Klick mich' }
+  static readonly defaultProps = { label: 'Schaltfläche' }
 
   static readonly resizableWidth = false
 
@@ -57,11 +57,12 @@ export class ButtonBlock extends BasicBlock {
     `,
   ]
 
-  @property() label = 'Klick mich'
+  @property() label = 'Schaltfläche'
 
-  // Liest die Kette dieses Knopfs Vormerkungen, steht ihre Zahl im Label und
-  // der Knopf ist bei Null aus — er haette nichts zu tun. undefined heisst:
-  // gewoehnlicher Knopf. Im Editor bleibt es dabei, dort gibt es keine Daten.
+  // Liest die Kette dieses Knopfs Vormerkungen, steht ihre Zahl im Label,
+  // sobald es welche gibt; bei Null ist der Knopf aus und heisst schlicht,
+  // wie er heisst. undefined heisst: gewoehnlicher Knopf. Im Editor bleibt es
+  // dabei, dort gibt es keine Daten.
   @property({ attribute: false }) vormerkungen: VormerkZahlen | undefined = undefined
 
   private readonly zaehleVormerkungen = (): void => {
@@ -75,7 +76,7 @@ export class ButtonBlock extends BasicBlock {
       data-ff-editable
       ?disabled=${zahlen !== undefined && offen === 0}
       @dblclick=${(e: MouseEvent) => this.inlineEdit(e, 'label')}
-    >${zahlen === undefined ? this.label : `${this.label} (${offen})`}</button>`
+    >${zahlen === undefined || offen === 0 ? this.label : `${this.label} (${offen})`}</button>`
   }
 
   override connectedCallback(): void {

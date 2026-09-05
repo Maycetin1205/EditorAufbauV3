@@ -79,6 +79,10 @@ interface FieldPickerProps {
     hinweis: string
     eintraege: readonly { wert: string; name: string; kennung?: string }[]
     onWaehle: (quelleId: string) => void
+
+    // Ohne eine einzige Quelle in der Bibliothek fuehrt der Picker dorthin,
+    // wo sie angelegt wird.
+    onDatencenter?: () => void
   }
 
   current?: string
@@ -270,17 +274,29 @@ export function FieldPicker({
         </p>
 
         {quellenWahl ? (
-          <>
-            <p className="px-1.5 text-ui text-matt">{quellenWahl.hinweis}</p>
-            <Trenner />
-            <Liste
-              suchbar={quellenWahl.eintraege.length > 8}
-              gruppen={[{ key: 'quellen', eintraege: quellenWahl.eintraege }]}
-              wert=""
-              leerHinweis="Keine Datenquelle in der Bibliothek."
-              onWaehle={quellenWahl.onWaehle}
-            />
-          </>
+          quellenWahl.eintraege.length === 0 ? (
+            <div className="flex flex-col gap-2 px-1.5 pb-1">
+              <p className="text-ui text-matt">
+                Noch keine Datenquelle. Lege im Datencenter an, woher die Daten kommen.
+              </p>
+              {quellenWahl.onDatencenter && (
+                <Knopf art="primaer" className="self-start" onClick={quellenWahl.onDatencenter}>
+                  Datencenter öffnen
+                </Knopf>
+              )}
+            </div>
+          ) : (
+            <>
+              <p className="px-1.5 text-ui text-matt">{quellenWahl.hinweis}</p>
+              <Trenner />
+              <Liste
+                suchbar={quellenWahl.eintraege.length > 8}
+                gruppen={[{ key: 'quellen', eintraege: quellenWahl.eintraege }]}
+                wert=""
+                onWaehle={quellenWahl.onWaehle}
+              />
+            </>
+          )
         ) : (
           <>
         {/* Der Titel ist der NAME des Dings, keine Einstellung unter anderen —
