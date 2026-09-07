@@ -277,12 +277,14 @@ export function exportMask(
     '',
     '/* Grundgeruest + Wurzel-Raster (identisch zum Editor-Canvas, rasterFlaecheStyle) */',
     'html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }',
-    // Farbe und Schrift traegt die Wurzel, nicht der body: SoftEngine laedt hinter
-    // der Maske SERoot.css und setzt html/body neu.
+    // Farbe und Schrift haengen an der Wurzel, nicht am body, und jeder Baustein
+    // erbt sie ausdruecklich: SoftEngines Rahmen faerbt html/body selbst und gibt
+    // mit `*` jedem Element Tahoma 12px.
     `.ff-root { box-sizing: border-box; width: 100%; height: 100%; overflow: auto;`
       + ` background: var(--se-bg); font-family: var(--se-font); font-size: var(--se-fs);`
       + ` line-height: var(--se-lh); color: var(--se-ink);`
       + ` ${rasterFlaecheCss()}; padding: ${wurzelPadding}; }`,
+    '.ff-root * { font-family: inherit; font-size: inherit; }',
     '</style>',
     '</head>',
     '<body>',
