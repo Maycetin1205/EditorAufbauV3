@@ -116,11 +116,19 @@ export function meldeAnstoss(): void {
   klingeln(false)
 }
 
-// Nach dem Schreiben will der Bediener den neuen Stand sehen: wir stossen die
-// Datenbasis an und zeichnen neu. Ob SoftEngine daraufhin wirklich liefert, ist
-// nicht belegt (kontrakte.md 7).
+// Nach dem Schreiben will der Bediener den neuen Stand sehen. Nachliefern kann
+// nur SoftEngine selbst: ReloadInputJSON holt die Eingabedatei neu, der
+// Modul-Lebenszyklus leert bloss die eigene Seite (kontrakte.md 7).
 export function frischeDatenAnfordern(): void {
-  refreshDataBasis()
+  const g = seGlobal()
+  let angefordert = false
+  try {
+    if (typeof g.ReloadInputJSON === 'function') {
+      g.ReloadInputJSON()
+      angefordert = true
+    }
+  } catch { /* nicht in SE */ }
+  if (!angefordert) refreshDataBasis()
   klingeln(false)
 }
 

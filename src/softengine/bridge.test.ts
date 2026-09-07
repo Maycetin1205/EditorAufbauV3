@@ -18,7 +18,7 @@ vi.useFakeTimers()
 let schiebe: ((raw: unknown) => void) | undefined
 g.basisHTML_REGISTER = (cb: (raw: unknown) => void) => { schiebe = cb }
 
-const { bootSe, meldeAnstoss, onSeDaten } = await import('./bridge')
+const { bootSe, frischeDatenAnfordern, meldeAnstoss, onSeDaten } = await import('./bridge')
 
 const gerufen: string[] = []
 let wirft = false
@@ -75,4 +75,19 @@ test('ein fehlerfrei verteilter Stand wird nicht noch einmal verteilt', () => {
 test('ein Anstoss ist keine Lieferung', () => {
   meldeAnstoss()
   expect(gerufen).toEqual(['A', 'B:anstoss'])
+})
+
+// Nachliefern kann nur SoftEngine: das Leeren der Module allein brachte nie
+// neue Daten.
+test('nach dem Schreiben wird die Eingabedatei neu bestellt', () => {
+  const bestellt: string[] = []
+  g.ReloadInputJSON = () => { bestellt.push('ReloadInputJSON') }
+  g.ResetDataBasis = () => { bestellt.push('ResetDataBasis') }
+  frischeDatenAnfordern()
+  expect(bestellt).toEqual(['ReloadInputJSON'])
+  expect(gerufen).toEqual(['A', 'B:anstoss'])
+
+  delete g.ReloadInputJSON
+  frischeDatenAnfordern()
+  expect(bestellt).toEqual(['ReloadInputJSON', 'ResetDataBasis'])
 })

@@ -204,9 +204,11 @@ aus der Liste heraus und kann sie nicht scheitern lassen.
   `PUT_RELATION[174!…!<Satznr>!…]`.
 - Belegter Fehlerfall: schickt man Feldnamen statt Werte, landen sie als
   INHALTE in SoftEngine — `PUT_RELATION[82!0!L!…!STSPALTE!!TEXT!!EPREIS!…]`.
-- ⚠ Ob ein Anstoss der Datenbasis nach dem Schreiben SoftEngine zu einer neuen
-  Lieferung bewegt, ist an KEINER echten Maske belegt (die Handmaske schreibt
-  gar nicht zurueck). Das entscheidet ein Echttest.
+- ⚠ Nach dem Schreiben bestellt die Maske die Eingabedatei neu
+  (`ReloadInputJSON()`, aus SoftEngines Auslieferung gelesen); ohne diese
+  Funktion bleibt der Modul-Lebenszyklus als Rueckfall. Ob SoftEngine daraufhin
+  wirklich neu liefert, ist an KEINER echten Maske belegt (die Handmaske
+  schreibt gar nicht zurueck). Das entscheidet ein Echttest.
 - Gilt in: `core/data/relations.ts`, `blocks/shared/seAktionen.ts`.
 
 ## 8. Positionen zur Laufzeit lesen (Hol-Relation)
