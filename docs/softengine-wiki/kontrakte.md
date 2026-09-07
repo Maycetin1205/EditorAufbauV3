@@ -15,6 +15,8 @@ fehlt, wird nicht geraten, sondern getestet.
   Datei gar nicht erst.
 - Eine Maske ist EINE Datei — Bilder und Schriften werden eingebettet, nie
   nachgeladen.
+- Drei SE-Marker traegt jede Maske: `JWHtmlStart` in Zeile 1, `JWHtmlEnde` in
+  der letzten und `EditorPfad` im Skript-Tag der Bruecke (`export/validator.ts`).
 
 ## 2. Anmeldung und Datenempfang
 
@@ -27,6 +29,10 @@ fehlt, wird nicht geraten, sondern getestet.
 - GET-Antworten kommen über den REGISTER-Callback; `SEDATA.Message<N>` ist
   der Rückfallweg. Eine leere Antwort `{"RESULT":""}` ist eine Antwort (kein
   Treffer), kein Schweigen.
+- SoftEngine ruft die Maske beim Neuaufbau ueber `Erstellen` (alias `initData`)
+  und beim Nachschieben ueber `ReloadData`. Vor neuen Daten gehoert der
+  Modul-Lebenszyklus `ResetDataBasis()` + `InitialisiereDatenBasis()`, angemeldet
+  wird mit `InitialisiereSchnittstelle()` (aus dem SE-Wiki, nicht per Echttest).
 - Gilt in: `softengine/bridge.ts`, `softengine/relations.ts`.
 
 ## 3. Feldcodes
