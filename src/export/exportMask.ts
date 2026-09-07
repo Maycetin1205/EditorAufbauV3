@@ -277,8 +277,12 @@ export function exportMask(
     '',
     '/* Grundgeruest + Wurzel-Raster (identisch zum Editor-Canvas, rasterFlaecheStyle) */',
     'html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }',
-    'body { background: var(--se-bg); font-family: var(--se-font); font-size: var(--se-fs); line-height: var(--se-lh); color: var(--se-ink); }',
-    `.ff-root { box-sizing: border-box; width: 100%; height: 100%; overflow: auto; ${rasterFlaecheCss()}; padding: ${wurzelPadding}; }`,
+    // Farbe und Schrift traegt die Wurzel, nicht der body: SoftEngine laedt hinter
+    // der Maske SERoot.css und setzt html/body neu.
+    `.ff-root { box-sizing: border-box; width: 100%; height: 100%; overflow: auto;`
+      + ` background: var(--se-bg); font-family: var(--se-font); font-size: var(--se-fs);`
+      + ` line-height: var(--se-lh); color: var(--se-ink);`
+      + ` ${rasterFlaecheCss()}; padding: ${wurzelPadding}; }`,
     '</style>',
     '</head>',
     '<body>',

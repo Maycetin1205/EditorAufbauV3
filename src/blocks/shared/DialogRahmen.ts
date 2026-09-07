@@ -59,6 +59,7 @@ export class DialogRahmen extends LitElement {
       display: block;
       font-family: var(--se-font);
       font-size: var(--se-fs);
+      line-height: var(--se-lh);
       color: var(--se-ink);
     }
 
