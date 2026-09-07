@@ -33,14 +33,9 @@ export function validateMaskHtml(html: string): CheckResult[] {
 
   const styles = (html.match(/<style[\s>]/g) ?? []).length
   const scripts = (html.match(/<script[\s>]/g) ?? []).length
-  const interfaceScripts = (html.match(
-    /<script src="<!--SOFTENGINE-VAR!EditorPfad-->\/JS\/JS\/basis\.html\.interface\.js"><\/script>/g,
-  ) ?? []).length
-  const inlineScripts = (html.match(/<script>/g) ?? []).length
   check('genau 1 <style>', styles === 1, `gefunden: ${styles}`)
-  check('genau 2 <script>', scripts === 2, `gefunden: ${scripts}`)
-  check('SoftEngine-Interface vorhanden', interfaceScripts === 1, `gefunden: ${interfaceScripts}`)
-  check('genau 1 eigene Runtime', inlineScripts === 1, `gefunden: ${inlineScripts}`)
+  // Die Bruecke laedt JWHtmlStart: das eine Skript der Maske ist ihre Runtime.
+  check('genau 1 <script>', scripts === 1, `gefunden: ${scripts}`)
 
   const inlineBody = /<script>\n([\s\S]*?)\n<\/script>/.exec(html)?.[1] ?? ''
   check(

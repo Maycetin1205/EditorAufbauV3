@@ -15,8 +15,8 @@ fehlt, wird nicht geraten, sondern getestet.
   Datei gar nicht erst.
 - Eine Maske ist EINE Datei — Bilder und Schriften werden eingebettet, nie
   nachgeladen.
-- Drei SE-Marker traegt jede Maske: `JWHtmlStart` in Zeile 1, `JWHtmlEnde` in
-  der letzten und `EditorPfad` im Skript-Tag der Bruecke (`export/validator.ts`).
+- Zwei SE-Marker traegt jede Maske: `JWHtmlStart` in Zeile 1 und `JWHtmlEnde` in
+  der letzten (`export/validator.ts`). Ein Skript traegt sie: ihre eigene Runtime.
 
 ## 2. Anmeldung und Datenempfang
 
@@ -287,8 +287,12 @@ steht hier nur als Wissen:
 - Altes WinUI hat **keinen `ResizeObserver`** — Rückfall ist Pflicht
   (`blocks/tabelle/seitengroesse.ts`).
 - HTML5-Drag ändert in SoftEngine nur den Mauszeiger.
-- `<!--SOFTENGINE-VAR!EditorPfad-->/JS/JS/basis.html.interface.js` existiert und
-  arbeitet (belegt 2026-07-28, WinUI). Ob der Tag nötig ist, ist ungeklärt.
+- Die Bruecke `basis.html.interface.js` laedt `JWHtmlStart` selbst; der Export
+  schreibt keinen eigenen Skript-Tag mehr dafür. Der Pfad `EditorPfad/JS/JS/…`
+  arbeitete (belegt 2026-07-28, WinUI), ist aber der von selib 1.5.0 — in 2.0.0
+  liegt die Datei direkt unter `EditorPfad` (aus SoftEngines Auslieferung
+  gelesen, nicht per Echttest). Fehlt die Bruecke, meldet die Maske
+  „SoftEngine-Anschluss nicht gefunden".
 - Ein Skript im Maskenordner (`<script src="fftest.js">`) wird ebenfalls
   geladen (belegt 2026-08-28). Der Export nutzt das nicht.
 - Nebenbeobachtung: `CONECT` wird ZWEIMAL gesendet, Empfang trotzdem nur

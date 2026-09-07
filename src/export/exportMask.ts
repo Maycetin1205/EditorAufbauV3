@@ -58,8 +58,6 @@ import {
   stripCssComments,
 } from './serializer'
 
-const SE_INTERFACE_SCRIPT = '<script src="<!--SOFTENGINE-VAR!EditorPfad-->/JS/JS/basis.html.interface.js"></script>'
-
 const LAYOUT_ATTR_AUSNAHME = new Set(['width', 'height', 'rasterX', 'rasterY', 'rasterW', 'rasterH'])
 
 const EIGENE_QUELLE_PROPS = new Set([QUELLE_PROP, WEITERE_QUELLEN_PROP])
@@ -274,7 +272,6 @@ export function exportMask(
     '<head>',
     '<meta charset="UTF-8" />',
     `<title>${escapeHtmlText(title)}</title>`,
-    SE_INTERFACE_SCRIPT,
     '<style>',
     tokensCss,
     '',

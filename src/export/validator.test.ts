@@ -39,12 +39,9 @@ describe('kaputte Maske', () => {
     expect(beanstandet(html)).toContain('Start-Marker Zeile 1')
   })
 
-  test('fehlendes Interface-Script', () => {
-    const html = echterExport().replace(
-      '<script src="<!--SOFTENGINE-VAR!EditorPfad-->/JS/JS/basis.html.interface.js"></script>\n',
-      '',
-    )
-    expect(beanstandet(html)).toContain('SoftEngine-Interface vorhanden')
+  test('zweiter Skript-Tag: die Maske traegt nur ihre eigene Runtime', () => {
+    const html = echterExport().replace('<script>', '<script src="fremd.js"></script>\n<script>')
+    expect(beanstandet(html)).toContain('genau 1 <script>')
   })
 
   test('Runtime-Buendel fehlt: die Maske waere stumm', () => {
