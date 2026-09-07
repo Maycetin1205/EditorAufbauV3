@@ -1,7 +1,12 @@
-// Zeilen anfassen: Fokus mit den Pfeiltasten bewegen, eine Zeile aktivieren.
-import { geberIdVon, klareAuswahl, setzeAuswahl as globalSetzeAuswahl } from '../shared/auswahl'
+// Welche Zeile dran ist, wie der Fokus dorthin kommt, was ein Klick ausloest.
+import {
+  auswahlFuer,
+  geberIdVon,
+  merkmalVon,
+  waehleAuswahl,
+} from '../shared/auswahl'
 import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
-import { zeilenIndexVon, type RuntimeTableElement } from './seRuntime'
+import { zeilenIndexVon } from './seRuntime'
 
 export const ZEILE_AKTIVIERT_EVENT = 'ff-zeile-aktiviert'
 
@@ -21,6 +26,62 @@ function sendeZeileAktiviert(el: HTMLElement, detail: ZeileAktiviertDetail): voi
     bubbles: true,
     composed: true,
   }))
+}
+
+// Die eine Stelle, die die gewaehlte Zeile haelt. Traegt die Tabelle eine
+// Kennung, ist die gemeinsame Auswahl der Speicher; ohne Kennung merkt sie
+// sich das Merkmal selbst. Gemerkt wird nie der Platz: ein Datenstoss
+// verschiebt ihn.
+export class ZeilenWahl {
+  private readonly baustein: HTMLElement
+
+  private eigenesMerkmal = ''
+
+  // Der Platz wird je Zeilenliste einmal gesucht: das Merkmal einer Zeile
+  // entsteht aus ihrem ganzen Inhalt, und gerendert wird oft.
+  private letzterPlatz: { zeilen: readonly unknown[]; merkmal: string; platz: number } | null = null
+
+  constructor(baustein: HTMLElement) {
+    this.baustein = baustein
+  }
+
+  private get geberId(): string {
+    return geberIdVon(this.baustein)
+  }
+
+  private get merkmal(): string {
+    const id = this.geberId
+    return id === '' ? this.eigenesMerkmal : merkmalVon(auswahlFuer(id))
+  }
+
+  platzIn(zeilen: readonly unknown[]): number {
+    const merkmal = this.merkmal
+    if (merkmal === '') return -1
+    const letzter = this.letzterPlatz
+    if (letzter !== null && letzter.zeilen === zeilen && letzter.merkmal === merkmal) {
+      return letzter.platz
+    }
+    const platz = zeilen.findIndex((zeile) => merkmalVon(zeile) === merkmal)
+    this.letzterPlatz = { zeilen, merkmal, platz }
+    return platz
+  }
+
+  // Dieselbe Zeile noch einmal nimmt die Wahl zurueck. Antwort: steht sie jetzt.
+  schalte(zeile: unknown): boolean {
+    const merkmal = merkmalVon(zeile)
+    const id = this.geberId
+    if (id === '') {
+      this.eigenesMerkmal = this.eigenesMerkmal === merkmal ? '' : merkmal
+      return this.eigenesMerkmal !== ''
+    }
+    waehleAuswahl(id, zeile)
+    return merkmal !== '' && merkmalVon(auswahlFuer(id)) === merkmal
+  }
+
+  vergiss(): void {
+    this.eigenesMerkmal = ''
+    this.letzterPlatz = null
+  }
 }
 
 export function fokussierterRohIndex(wurzel: ShadowRoot | null): number | null | undefined {
@@ -78,6 +139,7 @@ export function stelleZeilenFokusHer(wurzel: ShadowRoot | null, rohIndex: number
 // Im Editor loest der Klick nichts davon aus: dort ist er Bedienung des Editors.
 export function aktiviereZeile(
   el: HTMLElement,
+  wahl: ZeilenWahl,
   rohzeilen: readonly unknown[],
   rohIndex: number | null,
   ansichtIndex: number,
@@ -86,22 +148,13 @@ export function aktiviereZeile(
   const rohzeile = rohzeilen[rohIndex]
   if (rohzeile === undefined) return
 
-  const table = el as RuntimeTableElement
-  const istSchonGewaehlt = table.auswahlIndex === rohIndex
-
-  const neuerIndex = istSchonGewaehlt ? -1 : rohIndex
-  table.auswahlIndex = neuerIndex
-
-  const geberId = geberIdVon(el)
-  if (istSchonGewaehlt) {
-    if (geberId !== '') klareAuswahl(geberId)
+  if (!wahl.schalte(rohzeile)) {
     sendeZeileAktiviert(el, { rohzeile, rohIndex: -1, ansichtIndex })
-  } else {
-    if (geberId !== '') globalSetzeAuswahl(geberId, rohzeile, true)
-    sendeZeileAktiviert(el, { rohzeile, rohIndex, ansichtIndex })
-    runEvent(el, 'onRowClick', { PINDEX: zeilenIndexVon(el, rohzeile) })
-      .catch(meldeKettenFehler)
+    return
   }
+  sendeZeileAktiviert(el, { rohzeile, rohIndex, ansichtIndex })
+  runEvent(el, 'onRowClick', { PINDEX: zeilenIndexVon(el, rohzeile) })
+    .catch(meldeKettenFehler)
 }
 
 export function zeileDoppelt(

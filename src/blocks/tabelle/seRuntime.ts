@@ -9,7 +9,6 @@ import { tryCoerceSpalten, type Spalte } from './spalten'
 export interface RuntimeTableElement extends HTMLElement {
   datenzeilen: string[][]
   rohzeilen: unknown[]
-  auswahlIndex: number
   durchAuswahlGefiltert: boolean
   datenGeliefert: boolean
 
@@ -48,13 +47,13 @@ function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
 
   const { rows, gefiltert } = zeilenNachAuswahl(el, vorspann.zeilen)
 
-  const auswahlIndex = auswahlWiederfinden(geberIdVon(el), rows, (r) => r)[0] ?? -1
+  // Ist die gewaehlte Zeile aus der Liste gefallen, faellt hier die Wahl.
+  auswahlWiederfinden(geberIdVon(el), rows, (r) => r)
 
   const lies = vorspann.lies
 
   el.datenGeliefert = true
   el.rohzeilen = rows
-  el.auswahlIndex = auswahlIndex
   el.durchAuswahlGefiltert = gefiltert
   el.datenzeilen = rows.map((row) => spalten.map((s) => (s.feld === '' ? '' : lies(row, s.feld))))
 }

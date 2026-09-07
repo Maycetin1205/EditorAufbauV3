@@ -48,7 +48,7 @@ import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
 import { meldeVormerkungen, vormerkStandVon, vormerkSumme } from '../shared/vormerkStand'
 import { AnsichtsStand } from './ansichtsStand'
-import { aktiviereZeile, zeileDoppelt } from './zeilenAktivierung'
+import { aktiviereZeile, ZeilenWahl, zeileDoppelt } from './zeilenAktivierung'
 import { BreitenStand } from './spaltenBreite'
 import { SpaltenWahlStand } from './spaltenWahl'
 import { ZEILEN_HOEHE } from './seitengroesse'
@@ -148,8 +148,6 @@ export class TabelleBlock extends BasicBlock {
 
   @property({ attribute: false }) rohzeilen: unknown[] = []
 
-  @property({ attribute: false }) auswahlIndex = -1
-
   @property({ attribute: false }) durchAuswahlGefiltert = false
 
   @property({ attribute: false }) datenGeliefert = false
@@ -186,6 +184,8 @@ export class TabelleBlock extends BasicBlock {
     breitenVergessen: () => this._breiten.vergessen(),
   })
 
+  private readonly _zeilenWahl = new ZeilenWahl(this)
+
   private readonly _zeilen = new ZeilenBearbeitung({
     baustein: this,
     spalten: () => this.spaltenListe(),
@@ -217,7 +217,7 @@ export class TabelleBlock extends BasicBlock {
     this.rohzeilen = abgeleitet.rohzeilen
     this.datenzeilen = abgeleitet.datenzeilen
     this.datenGeliefert = true
-    this.auswahlIndex = -1
+    this._zeilenWahl.vergiss()
     this.durchAuswahlGefiltert = false
     this._ansicht.nachPush()
     this.requestUpdate()
@@ -227,7 +227,7 @@ export class TabelleBlock extends BasicBlock {
     this.rohzeilen = []
     this.datenzeilen = []
     this.datenGeliefert = false
-    this.auswahlIndex = -1
+    this._zeilenWahl.vergiss()
     this.durchAuswahlGefiltert = false
     this._ansicht.zuruecksetzen()
     this._erfassung.zuruecksetzen()
@@ -561,7 +561,7 @@ export class TabelleBlock extends BasicBlock {
         linealTakte: ansicht.linealTakte,
         datenzeilen: this.datenzeilen,
         hatQuelle: ansicht.hatQuelle,
-        auswahlIndex: this.auswahlIndex,
+        auswahlIndex: this._zeilenWahl.platzIn(this.rohzeilen),
         aendernMoeglich: !this.imEditor && ansicht.hatQuelle && hatSatzNummer(this),
         loeschbar: this.loeschbar === 'ja'
           && !this.imEditor
@@ -595,8 +595,10 @@ export class TabelleBlock extends BasicBlock {
         klickKopf: (i) => {
           if (!this.editable) this._ansicht.klickSortiere(i)
         },
-        aktiviereZeile: (rohIndex, ansichtIndex) =>
-          aktiviereZeile(this, this.rohzeilen, rohIndex, ansichtIndex),
+        aktiviereZeile: (rohIndex, ansichtIndex) => {
+          aktiviereZeile(this, this._zeilenWahl, this.rohzeilen, rohIndex, ansichtIndex)
+          this.requestUpdate()
+        },
         zeileDoppelt: (rohIndex) => zeileDoppelt(this, this.rohzeilen, rohIndex),
         nimmErfassteZeile: (index) => {
           if (this._erfassung.entferne(index)) this.requestUpdate()
