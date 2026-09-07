@@ -5,14 +5,8 @@ import {
   type Eintrag,
 } from './nachschlagen'
 import { getField } from '../../softengine/data'
-import {
-  bewegteMarke,
-  gueltigeMarke,
-  passendeVorschlaege,
-  tastenFolge,
-  VORSCHLAEGE_MAX,
-  type TastenFolge,
-} from '../shared/vorschlagListe'
+import { passendeVorschlaege, VORSCHLAEGE_MAX } from '../shared/vorschlagListe'
+import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
 import {
   loeseRechnung,
   platzText,
@@ -43,28 +37,22 @@ export class ErfassungsLauf {
 
   private _tippSpalte = -1
 
-  private _marke = 0
-
-  private _listeZu = false
-
   private _listeAuf = -1
 
-  private _markeVonHand = false
+  private readonly liste = new VorschlagStand<Eintrag>()
 
   private _gerechnet: { index: number; wert: string } | null = null
-
-  private _vorschlaege: Eintrag[] = []
 
   get tippSpalte(): number {
     return this._tippSpalte
   }
 
   get marke(): number {
-    return this._marke
+    return this.liste.marke
   }
 
   get vorschlaege(): readonly Eintrag[] {
-    return this._vorschlaege
+    return this.liste.treffer
   }
 
   wertVon(umfeld: ErfassungsUmfeld, index: number): string {
@@ -119,18 +107,14 @@ export class ErfassungsLauf {
   tippe(index: number, text: string): void {
     this.getippt.set(index, text)
     this._tippSpalte = index
-    this._marke = 0
-    this._markeVonHand = false
-    this._listeZu = false
+    this.liste.vonVorn()
   }
 
   verlasse(index: number): void {
     if (this._tippSpalte !== index) return
     this._tippSpalte = -1
-    this._listeZu = false
     this._listeAuf = -1
-    this._marke = 0
-    this._markeVonHand = false
+    this.liste.ruhe()
   }
 
   istAutomatisch(umfeld: ErfassungsUmfeld, index: number): boolean {
@@ -138,10 +122,10 @@ export class ErfassungsLauf {
   }
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
-    const listeOffen = this._tippSpalte === index && this._vorschlaege.length > 0
+    const listeOffen = this._tippSpalte === index && this.liste.offen
     // Tab ist immer die Weiter-Taste; das grosse Fenster oeffnen nur Enter und F4.
     if (taste === 'Tab') {
-      if (listeOffen && (this._markeVonHand || this._vorschlaege.length === 1)) taste = 'Enter'
+      if (listeOffen && this.liste.eindeutig) taste = 'Enter'
       else return 'weiter'
     }
     if (taste === 'F4') {
@@ -154,18 +138,8 @@ export class ErfassungsLauf {
     if (taste === 'ArrowDown' && !listeOffen) {
       return zielIn(umfeld, index).art === 'verknuepft' ? 'liste-auf' : 'nichts'
     }
-    const folge = tastenFolge(taste, {
-      listeOffen,
-      feldLeer: wert === '',
-      treffer: this._vorschlaege.length,
-      markeVonHand: this._markeVonHand,
-    })
-    if (folge === 'marke-hoch' || folge === 'marke-runter') {
-      const schritt = folge === 'marke-hoch' ? -1 : 1
-      this._marke = bewegteMarke(this._marke, this._vorschlaege.length, schritt)
-      this._markeVonHand = true
-    }
-    else if (folge === 'liste-zu') { this._listeZu = true; this._listeAuf = -1 }
+    const folge = this.liste.folgeFuer(taste, { listeOffen, feldLeer: wert === '' })
+    if (folge === 'liste-zu') this._listeAuf = -1
     // Enter im LEEREN Feld springt weiter.
     else if (folge === 'fenster' && wert === '') return 'weiter'
     else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
@@ -178,10 +152,8 @@ export class ErfassungsLauf {
 
   oeffneListe(index: number): void {
     this._tippSpalte = index
-    this._listeZu = false
     this._listeAuf = index
-    this._marke = 0
-    this._markeVonHand = true
+    this.liste.aufmachen()
   }
 
   naechsteLeere(umfeld: ErfassungsUmfeld, ab: number): number {
@@ -205,13 +177,11 @@ export class ErfassungsLauf {
     if (ziel.quelleId !== '' && this.gewaehlt.has(ziel.quelleId)) {
       this.setze(umfeld, ziel.quelleId, undefined)
     }
-    this._listeZu = false
-    this._marke = 0
-    this._markeVonHand = false
+    this.liste.vonVorn()
   }
 
   setzeMarke(marke: number): void {
-    this._marke = marke
+    this.liste.setzeMarke(marke)
   }
 
   uebernimm(umfeld: ErfassungsUmfeld, index: number, satz: unknown): void {
@@ -226,9 +196,7 @@ export class ErfassungsLauf {
     }
     this.gleicheAb(umfeld)
     this._tippSpalte = -1
-    this._marke = 0
-    this._markeVonHand = false
-    this._listeZu = false
+    this.liste.ruhe()
   }
 
   private setze(umfeld: ErfassungsUmfeld, quelleId: string, satz: unknown): void {
@@ -355,23 +323,18 @@ export class ErfassungsLauf {
     this.vonHand.clear()
     this._gerechnet = null
     this._tippSpalte = -1
-    this._marke = 0
-    this._markeVonHand = false
-    this._listeZu = false
     this._listeAuf = -1
-    this._vorschlaege = []
+    this.liste.ruhe()
   }
 
-  // Einmal je Darstellung: Tastatur und Anzeige muessen denselben Stand sehen.
   aktualisiereVorschlaege(umfeld: ErfassungsUmfeld): void {
     this.rechne(umfeld)
-    this._vorschlaege = this.berechne(umfeld)
-    this._marke = gueltigeMarke(this._marke, this._vorschlaege.length)
+    this.liste.zeige(this.berechne(umfeld))
   }
 
   private berechne(umfeld: ErfassungsUmfeld): Eintrag[] {
     const index = this._tippSpalte
-    if (this._listeZu || zielIn(umfeld, index).art === 'frei') return []
+    if (this.liste.zugemacht || zielIn(umfeld, index).art === 'frei') return []
     const getippt = this.getippt.get(index) ?? ''
     if (getippt === '') {
       // Aufgemacht heisst alles zeigen, sonst bleibt die Liste dem Getippten vorbehalten.

@@ -52,52 +52,6 @@ export function passendeVorschlaege<T extends Vorschlag>(
   return ordneVorschlaege(treffer, getippt).slice(0, max)
 }
 
-// Die Marke laeuft um: unter dem letzten Treffer geht es oben wieder los.
-export function bewegteMarke(marke: number, anzahl: number, schritt: 1 | -1): number {
-  if (anzahl <= 0) return 0
-  return (((marke + schritt) % anzahl) + anzahl) % anzahl
-}
-
-// Eine Marke hinter dem Ende waere eine Uebernahme ins Leere.
-export function gueltigeMarke(marke: number, anzahl: number): number {
-  if (anzahl <= 0) return 0
-  return marke < 0 || marke >= anzahl ? 0 : marke
-}
-
-// Was eine Taste an der Liste bedeutet, als eigene Entscheidung: die
-// Erfassungszeile der Tabelle braucht genau dieselbe.
-export type TastenFolge =
-  | 'marke-hoch'
-  | 'marke-runter'
-  | 'uebernehmen'
-  | 'liste-zu'
-  | 'fenster'
-  | 'nichts'
-
-export function tastenFolge(taste: string, args: {
-  listeOffen: boolean
-
-  feldLeer: boolean
-
-  treffer: number
-
-  // Hat der Bediener selbst ausgesucht, gilt seine Wahl.
-  markeVonHand: boolean
-}): TastenFolge {
-  if (taste === 'ArrowDown') return args.listeOffen ? 'marke-runter' : 'nichts'
-  if (taste === 'ArrowUp') return args.listeOffen ? 'marke-hoch' : 'nichts'
-  if (taste === 'Escape') return args.listeOffen ? 'liste-zu' : 'nichts'
-  if (taste !== 'Enter') return 'nichts'
-  // Genau ein Treffer ist keine Auswahl, sondern das Ergebnis; bei mehreren geht
-  // das grosse Fenster auf, statt stumm den ersten zu nehmen.
-  if (args.listeOffen) {
-    return args.markeVonHand || args.treffer === 1 ? 'uebernehmen' : 'fenster'
-  }
-    // Getippter Text ohne Treffer laesst das Fenster ZU: sonst belohnt es den
-    // Tippfehler und der Bediener verliert seinen Text aus den Augen.
-  return args.feldLeer ? 'fenster' : 'nichts'
-}
-
 // Die Liste darf breiter werden als ihr Halter, bleibt links verankert und
 // waechst nach links, wenn sie rechts ueber die Flaeche tritt.
 function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
