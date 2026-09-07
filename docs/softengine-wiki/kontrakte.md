@@ -232,8 +232,10 @@ Belegt 2026-08-10/11, Echttests:
 
 ## 9. START_TOOL
 
-- `sendBWLinkIntern('0,START_TOOL,<nr>[,<params URL-kodiert>]')`
-- Fallback `basisHTML_SND_MSG('START_TOOL', { NR, PARAMS })`
+- `basisHTML_SND_MSG('START_TOOL', { NR, PARAMS })`
+- Fallback `sendBWLinkIntern('0,START_TOOL,<nr>[,<params URL-kodiert>]')` — dieser
+  Weg verwirft die Parameter (aus SoftEngines eigener Maskenbibliothek gelesen,
+  nicht per Echttest).
 - Werkzeug-Nummern sind je Installation individuell → Daten, nie Code.
 - Gilt in: `blocks/shared/seAktionen.ts`.
 

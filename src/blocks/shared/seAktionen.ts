@@ -51,20 +51,22 @@ function seBwLink(befehl: string): boolean {
   return false
 }
 
+// Die Nachricht traegt die Parameter, der BW-Link wirft sie weg: darum erst der
+// Nachrichten-Weg und nur ohne ihn der Link.
 function seStartTool(nr: string, params: readonly string[]): boolean {
   if (nr.trim() === '') return false
   const g = seGlobal()
-  try {
-    if (typeof g.sendBWLinkIntern === 'function') {
-      g.sendBWLinkIntern(buildStartToolLink(nr, params))
-      return true
-    }
-  } catch { /* faellt auf den obj-Weg zurueck, wie die Referenz */ }
   try {
     if (typeof g.basisHTML_SND_MSG === 'function') {
       const obj: Record<string, unknown> = { NR: nr }
       if (params.length > 0) obj.PARAMS = [...params]
       g.basisHTML_SND_MSG('START_TOOL', obj)
+      return true
+    }
+  } catch { /* faellt auf den Link zurueck */ }
+  try {
+    if (typeof g.sendBWLinkIntern === 'function') {
+      g.sendBWLinkIntern(buildStartToolLink(nr, params))
       return true
     }
   } catch { /* nicht in SE */ }
