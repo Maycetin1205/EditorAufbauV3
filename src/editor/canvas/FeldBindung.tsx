@@ -1,3 +1,4 @@
+// Der Feld-Waehler des Editors: eine Stelle oder einen Listeneintrag an ein Feld binden.
 import { useCallback, useEffect, useState, type ReactNode, type RefObject } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
@@ -52,10 +53,8 @@ function pickerGruppen(quellen: readonly QuelleInReichweite[]): PickerGruppe[] {
         quelleId: q.source.id,
         name: q.source.name,
         kennung: quellenKennung(q.source),
-        // Die linke Seite eines Paares gehoert der PARTNER-Quelle. Solange
-        // alles sternfoermig an der ersten hing, war das dasselbe; haengt
-        // Quelle 3 an Quelle 2, schlug der Klartext sonst im falschen
-        // Feldbestand nach und blieb leer.
+    // Die linke Seite eines Paares gehoert der PARTNER-Quelle; sonst schlaegt der
+    // Klartext im falschen Feldbestand nach und bleibt leer.
         hinweis: paarKlartext(
           q.paare ?? [],
           q.partnerId ? quellen.find((x) => x.source.id === q.partnerId)?.source : erste,
@@ -95,9 +94,8 @@ export function useFeldBindung({
   )
   const hatQuelle = quellen.length > 0
 
-  // Auch ohne eine einzige Datenquelle in der Bibliothek geht der Picker auf:
-  // er sagt dann, dass eine fehlt, und fuehrt ins Datencenter. Ein Klick, der
-  // nichts tut, liesse den Bediener raten, was er falsch macht.
+  // Auch ohne eine einzige Datenquelle geht der Picker auf: er sagt dann, dass
+  // eine fehlt, und fuehrt ins Datencenter.
   const bibliotheksAngebot = !hatQuelle && quellenTraeger(editor.tree, block.id) !== undefined
   const hatAngebot = hatQuelle || bibliotheksAngebot
 
@@ -120,9 +118,8 @@ export function useFeldBindung({
   const closeListenPicker = useCallback(() => setListenPicker(null), [])
   if (!selected && listenPicker !== null) setListenPicker(null)
 
-  // listenBindung.quelleProp: die Felder kommen NUR aus der Bibliotheks-
-  // Quelle, deren id in dieser Block-Eigenschaft steht (z. B. das
-  // Nachschlage-Feld) — nie aus den Quellen in Reichweite.
+  // listenBindung.quelleProp: die Felder kommen NUR aus der Quelle, deren id in
+  // dieser Block-Eigenschaft steht, nie aus den Quellen in Reichweite.
   const quelleAusProp = listenBindung?.quelleProp === undefined
     ? undefined
     : bibliothek.find((s) => s.id === String(block.props[listenBindung.quelleProp ?? ''] ?? ''))
@@ -144,10 +141,8 @@ export function useFeldBindung({
 
       if (detail?.prop !== listenBindung.prop || typeof detail.index !== 'number') return
       const index = detail.index
-      // Ein zweiter Klick auf DENSELBEN Kopf macht wieder zu. Der Kopf gilt
-      // dem Fenster als Anker, sonst haette der Zeigerdruck es schon
-      // geschlossen und der Klick danach sofort wieder geoeffnet — netto
-      // passierte nichts. Ein anderer Kopf schaltet um statt zu schliessen.
+    // Ein zweiter Klick auf DENSELBEN Kopf macht wieder zu; ein anderer Kopf
+    // schaltet um statt zu schliessen.
       setListenPicker((vorher) => (vorher !== null && vorher.index === index ? null : {
         index,
         top: Math.max(8, detail.top ?? 0),
@@ -159,15 +154,10 @@ export function useFeldBindung({
     return () => el.removeEventListener('ff-listen-bind', handler)
   }, [containerRef, listenBindung])
 
-  // Das Unterfenster zeichnet der BAUSTEIN, nicht der Editor: es ist dieselbe
-  // Flaeche, die das Formularfeld ueber die Lupe oeffnet, und sie lebt im
-  // Schatten-DOM des Bausteins. Der Editor merkt sich nur, welcher Eintrag
-  // dran ist; der Effekt unten traegt es am Element ein. Ueber den Umweg,
-  // weil das DOM waehrend des Zeichnens nichts zu suchen hat.
-  //
-  // Der Auftrag ist ein frisches Objekt je Klick, keine blosse Nummer: sonst
-  // liefe der Effekt beim zweiten Oeffnen DERSELBEN Spalte nicht noch einmal,
-  // und ein zwischendurch geschlossenes Fenster bliebe zu.
+  // Das Unterfenster zeichnet der BAUSTEIN, nicht der Editor: es lebt in seinem
+  // Schatten-DOM. Der Editor merkt sich nur, welcher Eintrag dran ist, und der
+  // Effekt traegt es am Element ein. Der Auftrag ist ein frisches Objekt je Klick,
+  // sonst liefe der Effekt beim zweiten Oeffnen derselben Spalte nicht wieder.
   const [unterFenster, setUnterFenster] = useState<{ index: number } | null>(null)
 
   useEffect(() => {
@@ -184,9 +174,8 @@ export function useFeldBindung({
   const gruppen = pickerGruppen(quellen)
 
   // Erste Stufe, solange der Baustein keine Hauptquelle hat: die Quellen der
-  // Bibliothek. Staenden hier ALLE Felder ALLER Quellen, bestimmte die Wahl
-  // eines Feldes nebenbei still die Hauptquelle — der Bediener saehe eine
-  // Wand aus Feldern und traefe eine Entscheidung, die ihm keiner ansagt.
+  // Bibliothek. Staenden hier alle Felder aller Quellen, bestimmte die Wahl eines
+  // Feldes nebenbei still die Hauptquelle.
   const quellenWahl = !bibliotheksAngebot ? undefined : {
     hinweis: 'Erst die Hauptquelle wählen.',
     eintraege: bibliothek.map((s) => ({ wert: s.id, name: s.name, kennung: quellenKennung(s) })),
@@ -199,8 +188,7 @@ export function useFeldBindung({
   }
 
   // Solange die Eigenschaft leer ist (Automatik), gilt die vom Baustein
-  // mitgeschickte Anzeige-Liste — erst das Wählen schreibt sie als richtige
-  // Eigenschaft fest.
+  // mitgeschickte Anzeige-Liste.
   type PickerStand = { index: number; liste?: unknown }
 
   const eintraegeVon = (picker: PickerStand): Record<string, unknown>[] => {
@@ -210,12 +198,9 @@ export function useFeldBindung({
   }
 
   // Nimmt ein GANZES Paket von Schluesseln: `block.props` ist der Stand des
-  // letzten Rendervorgangs und aendert sich innerhalb desselben nicht — zwei
-  // Aufrufe hintereinander laesen beide denselben alten Stand, und der zweite
-  // ueberschriebe den ersten. Ein Aufruf ist zugleich EIN Undo-Schritt.
-  // `undefined` LOESCHT den Schluessel: ein leer gewaehltes Feld soll nicht
-  // als '' im Eintrag stehenbleiben — es reiste sonst in jede Maskendatei und
-  // in den Export mit.
+  // letzten Rendervorgangs, zwei Aufrufe hintereinander lesen beide denselben
+  // alten Stand. `undefined` LOESCHT den Schluessel, damit ein leer gewaehltes
+  // Feld nicht als '' in jede Maskendatei mitreist.
   const schreibeInEintrag = (picker: PickerStand, teil: Record<string, unknown>): void => {
     if (!listenBindung) return
     const next = eintraegeVon(picker)
@@ -251,7 +236,7 @@ export function useFeldBindung({
         const eintrag = liste[listenPicker.index]
         if (!eintrag) return null
 
-        // quelleProp-Modus: eine Gruppe, nackte Feldcodes (quelleId '').
+    // quelleProp-Modus: eine Gruppe, nackte Feldcodes.
         const proQuelle = quelleAusProp !== undefined
         const listenGruppen: PickerGruppe[] = proQuelle
           ? [{
@@ -265,10 +250,8 @@ export function useFeldBindung({
         const standardTitel = listenStandardTitel(listenBindung, listenPicker.index)
         return (
           <FieldPicker
-            // Ein anderer Spaltenkopf = frisches Fenster. Ohne `key` bleibt das
-            // Fenster am Leben und behaelt sein Schreibziel: wer einmal
-            // „Nachschlagen" angeklickt hatte, band bei der naechsten Spalte
-            // wieder das Fuellfeld — Titel und Zelle blieben leer.
+          // Ein anderer Spaltenkopf = frisches Fenster. Ohne `key` behielte es sein
+          // Schreibziel und band bei der naechsten Spalte wieder das Fuellfeld.
             key={listenPicker.index}
             spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
             gruppen={listenGruppen}
@@ -306,8 +289,8 @@ export function useFeldBindung({
               hinweis: listenBindung.eintragsUnterFenster.hinweis,
               onOeffne: () => {
                 setUnterFenster({ index: listenPicker.index })
-                // Der Spaltenkopf-Picker macht zu: sonst laegen zwei
-                // Einstellflaechen fuer dieselbe Spalte uebereinander.
+            // Der Spaltenkopf-Picker macht zu: sonst laegen zwei Einstellflaechen
+            // fuer dieselbe Spalte uebereinander.
                 setListenPicker(null)
               },
             }}
@@ -329,16 +312,9 @@ export function useFeldBindung({
                 const ziel = next[listenPicker.index]
                 if (!ziel) return
 
-                // Die Feldwahl setzt den Titel IMMER auf den Klarnamen des
-                // Feldes. Umbenennen geht danach jederzeit — bis zur naechsten
-                // Feldwahl, dann fuehrt wieder das Feld.
-                //
-                // Die Gegenregel — ein selbst getippter Name bleibt stehen, die
-                // Wahl setzt den Titel nur, solange er noch „Spalte 3" heisst —
-                // ist bewusst verworfen: bei ihr waehlt man ein Feld aus, und
-                // die Spaltenueberschrift bleibt trotzdem gleich. Die Kehrseite
-                // ist bekannt und in Kauf genommen: wer eine Spalte benannt hat
-                // und danach umbindet, muss den Namen neu tippen.
+  // Die Feldwahl setzt den Titel IMMER auf den Klarnamen des Feldes. Umbenennen
+  // geht danach jederzeit, bis zur naechsten Feldwahl. Kehrseite: wer eine Spalte
+  // benannt hat und danach umbindet, muss den Namen neu tippen.
                 const klarname = (feldWert: string): string => (proQuelle
                   ? (quelleAusProp.fields.find((f) => f.code === feldWert)?.label ?? '')
                   : klarnameVon(feldWert, quellen)) || feldWert
@@ -347,11 +323,8 @@ export function useFeldBindung({
                 ziel[listenBindung.feldKey] = wert
                 editor.updateProperty(block.id, listenBindung.prop, next)
               })
-              // Das Fenster bleibt OFFEN. Es ist die Einstellflaeche der
-              // Spalte, kein einmaliger Feldwaehler: nach dem Feld will man
-              // meist noch die Darstellung, das Nachschlage-Feld oder einen
-              // Schalter setzen. Zu geht es ueber Esc, einen Klick daneben oder
-              // einen anderen Spaltenkopf.
+          // Das Fenster bleibt OFFEN: es ist die Einstellflaeche der Spalte, kein
+          // einmaliger Feldwaehler.
             }}
             onClose={closeListenPicker}
           />

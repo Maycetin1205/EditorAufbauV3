@@ -1,3 +1,4 @@
+// Die Positionen einer Quelle Zeile fuer Zeile per Hol-Relation holen.
 import { meldeAnstoss } from './bridge'
 import { getField, type RuntimeLadeRelation } from './data'
 import { geholteZeilenFuer, setzeGeholteZeilen } from './geholteZeilen'
@@ -49,9 +50,8 @@ async function frage(
   )
 }
 
-// Die Hol-Rufe laufen 'still': bei bis zu 999 Positionen blinkte der Balken
-// sonst ununterbrochen. Der Abbruch selbst muss trotzdem sichtbar sein —
-// ohne ihn saehe der Bediener eine kurze Liste, die wie die ganze aussieht.
+// Die Hol-Rufe laufen 'still': bei bis zu 999 Positionen blinkte der Balken sonst
+// ununterbrochen. Der Abbruch selbst muss sichtbar sein.
 function meldeAbbruch(nr: string, posNr: number, grund: string): void {
   meldeFehler(
     `Positionen laden bei Zeile ${posNr} abgebrochen (Relation Nr. ${nr}): ${grund} `
@@ -95,9 +95,8 @@ export function ladeZeilenPerRelation(
       const antwort = await frage(lade, schluessel, posNr, SCHNITT_POS, SCHNITT_LEN)
       if (generationen.get(quelle.id) !== gen) return
 
-      // Ein gescheiterter Ruf liefert einen LEEREN Satz — der ist von einem
-      // echten Listenende nicht zu unterscheiden. Weiterzumachen hiesse, die
-      // halbe Liste als ganze auszugeben.
+  // Ein gescheiterter Ruf liefert einen LEEREN Satz, von einem echten Listenende
+  // nicht zu unterscheiden. Weiterzumachen gaebe die halbe Liste als ganze aus.
       if (antwort.fehler !== undefined) {
         meldeAbbruch(lade.nr, posNr, antwort.fehler)
         return

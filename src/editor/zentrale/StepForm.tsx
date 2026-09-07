@@ -1,3 +1,4 @@
+// Das Formular eines Ketten-Schritts: Art, Relation, Parameter.
 import { useMemo, useReducer, useRef } from 'react'
 import { Plus } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
@@ -73,8 +74,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
   const [entwurf, dispatch] = useReducer(reducer, undefined, () => entwurfAus(step, vorlagen))
   const pickerAnker = useRef<HTMLElement | null>(null)
 
-  // Die Wahlmoeglichkeiten haengen am Baustein-Baum, nicht am Getippten:
-  // ohne Memo laeuft jeder Tastendruck durch den ganzen Baum.
+  // Die Wahlmoeglichkeiten haengen am Baustein-Baum, nicht am Getippten: ohne
+  // Memo laeuft jeder Tastendruck durch den ganzen Baum.
   const auswahlen = useMemo(() => {
     const blockValues: BlockValueOption[] = actionValueTargets(baum).map(({ node, spot }) => {
       const def = getBlockDefinition(node.type)
@@ -96,8 +97,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
       geberIds: geber.map((g) => g.blockId),
       erfassungen: erfassungsOptionen(erfassungsTraegerImBaum(baum), quellen),
 
-      // Dieselbe Form wie die Erfassungen: Baustein + seine Spalten. Nur die
-      // Frage ist eine andere — wer traegt AENDERBARE Spalten?
+    // Dieselbe Form wie die Erfassungen, nur die Frage ist eine andere: wer
+    // traegt AENDERBARE Spalten?
       aenderungen: erfassungsOptionen(aenderungsTraegerImBaum(baum), quellen),
 
       loeschungen: erfassungsOptionen(loeschTraegerImBaum(baum), quellen),
@@ -164,8 +165,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
       && relation.params.some((raw) => feldUebernahmeArt(raw) === 'len')
     : false
 
-  // Übernommen wird als fixed-Wert (feldUebernehmen) — der Haken im Picker
-  // entsteht also aus den POS/LEN-Parametern, nicht aus einer Feld-Bindung.
+  // Uebernommen wird als fixed-Wert: der Haken im Picker entsteht aus den
+  // POS/LEN-Parametern, nicht aus einer Feld-Bindung.
   const uebernommenerWert = (art: 'pos' | 'len'): string | null => {
     if (!relation) return null
     const index = relation.params.findIndex((raw) => feldUebernahmeArt(raw) === art)
@@ -180,7 +181,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
     : ''
 
   function oeffneUebernahmePicker(ziel: FeldUebernahmeZiel, anchor: HTMLElement) {
-    // Zweiter Druck auf denselben Griff macht die Liste wieder zu.
+      // Zweiter Druck auf denselben Griff macht die Liste wieder zu.
     if (entwurf.pickerZiel === ziel && pickerAnker.current === anchor) {
       dispatch({ art: 'picker', ziel: null })
       return
@@ -224,8 +225,8 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
       />
 
       {(entwurf.typ === 'POPUP_OPEN' || entwurf.typ === 'POPUP_CLOSE') && (
-        /* Kein Leer-Eintrag: ohne Popup meldet stepProblem "kein Popup" —
-           dieser Zustand darf also nicht waehlbar sein. */
+          // Kein Leer-Eintrag: ohne Popup meldet stepProblem „kein Popup", dieser
+          // Zustand darf also nicht waehlbar sein.
         <PickerControl
           label="Popup"
           fehler={fehlerText}

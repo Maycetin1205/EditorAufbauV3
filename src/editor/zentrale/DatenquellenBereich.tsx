@@ -1,3 +1,4 @@
+// Der Datenquellen-Bereich des Datencenters: Liste, Anlegen, Kopieren, Loeschen.
 import { useRef, useState, type ReactNode } from 'react'
 import { FileUp, Plus, TriangleAlert } from '@/ui/zeichen'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
@@ -19,8 +20,8 @@ import { DtkImportForm } from './DtkImportForm'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { ikonFuer } from './helfer'
 
-// „Belege (Kopie)", und wenn es die schon gibt: „Belege (Kopie 2)" usw. —
-// zwei gleichnamige Quellen wären im Feld-Picker nicht zu unterscheiden.
+// „Belege (Kopie)", und wenn es die schon gibt: „Belege (Kopie 2)" — zwei
+// gleichnamige Quellen waeren im Feld-Picker nicht zu unterscheiden.
 function kopieName(name: string, vergeben: readonly string[]): string {
   const basis = `${name} (Kopie)`
   if (!vergeben.includes(basis)) return basis
@@ -66,11 +67,8 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
 
   const kennung = (s: DataSource): string => quellenKennung(s)
 
-  // Zum Testen und Weiterverbiegen, ohne alle Felder von Hand nachzutragen —
-  // die Maskendatei zu laden ersetzt ja den GANZEN Stand.
-  // Die Kopie ist eigenständig; Bausteine zeigen weiter auf das Original.
-  // store.add klont tief und setzt die eigene Kennung ZULETZT — die alte id
-  // im Spread wird also sicher überschrieben.
+  // Die Kopie ist eigenstaendig; Bausteine zeigen weiter auf das Original.
+  // store.add klont tief und setzt die eigene Kennung zuletzt.
   function dupliziere(s: DataSource) {
     const kopie = store.add({
       ...s,
@@ -80,15 +78,13 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
     setModus('lesen')
   }
 
-  // Ohne Rueckfrage: Strg+Z holt die Quelle zurueck. Bausteine, die sie
-  // benutzen, bleiben stehen; ihre Daten-Bindungen ruhen.
+  // Ohne Rueckfrage: Strg+Z holt die Quelle zurueck. Bausteine, die sie benutzen,
+  // bleiben stehen; ihre Daten-Bindungen ruhen.
   function loeschen(s: DataSource) {
     store.remove(s.id)
     setModus('lesen')
   }
 
-  // Derselbe Aufbau wie jedes Fenster mit Liste und Detail (ListeDetail):
-  // Bereiche links, Liste mit Kopf, Detail rechts.
   return (
     <>
       <ListeDetail

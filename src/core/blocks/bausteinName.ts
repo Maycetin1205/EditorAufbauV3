@@ -1,3 +1,4 @@
+// Wie ein Baustein in Wahllisten heisst, wenn er keinen eigenen Namen traegt.
 import type { BlockNode } from './BlockData'
 import { bindingProp } from './BlockDefinition'
 import { getBlockDefinition } from './blockRegistry'
@@ -25,11 +26,9 @@ function eigenerText(
   return ''
 }
 
-// Die Props, deren gespeicherten Text der Bediener gerade GAR NICHT sieht: an
-// einer gebundenen Stelle schreibt der Editor den Klarnamen des gebundenen
-// Feldes in die Vorschau-Prop (useLitElement) — im Feld steht also der
-// Klarname, nicht der Platzhalter. Ein Name aus dem ueberdeckten Text
-// widerspraeche dem Bild: im Waehler hiessen die Bausteine anders als im Feld.
+// Die Props, deren Text der Bediener gerade nicht sieht: an einer gebundenen
+// Stelle steht im Feld der Klarname des Feldes. Ein Name aus dem verdeckten Text
+// widerspraeche dem Bild.
 function verdeckteProps(node: BlockNode): Set<string> {
   const raus = new Set<string>()
   for (const stelle of bindbareStellenVon(node)) {

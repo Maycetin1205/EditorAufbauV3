@@ -1,3 +1,4 @@
+// Der gemeinsame Anschluss eines Bausteins an den SoftEngine-Datenstrom.
 import { bootSe, hasSeData, onSeDaten } from '../../softengine/bridge'
 import { aufAuswahlHoeren } from './auswahl'
 import { aufTagHoeren } from './gewaehlterTag'
@@ -10,10 +11,8 @@ export interface DatenAnschluss<T extends HTMLElement> {
 }
 
 export function macheDatenAnschluss<T extends HTMLElement>(opts: {
-  // `lieferung` sagt, ob wirklich neue Daten aus SoftEngine gekommen sind.
-  // Ein Auswahlwechsel, ein Tageswechsel oder ein blosser Anstoss nach dem
-  // Schreiben sind KEINE Lieferung — wer daran etwas verwirft, verwirft es
-  // ohne Beweis.
+  // Ein Auswahlwechsel, ein Tageswechsel oder ein Anstoss nach dem Schreiben
+  // sind KEINE Lieferung; wer daran etwas verwirft, verwirft es ohne Beweis.
   hydriere: (el: T, lieferung: boolean) => void
 
   verdrahte?: (el: T) => void

@@ -1,3 +1,4 @@
+// Der eine Waehler des Inspectors: Knopf plus suchbare Liste.
 import { useRef, useState, type ReactNode } from 'react'
 import { ChevronDown } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
@@ -13,7 +14,6 @@ export interface PickerControlProps {
   hinweis?: string
   fehler?: ReactNode
 
-  // Vorlesename des aufklappenden Fensters.
   bezeichnung: string
   gruppen: readonly ListeGruppe[]
   wert: string
@@ -25,10 +25,8 @@ export interface PickerControlProps {
   onWaehle: (wert: string) => void
 }
 
-// Der eine Waehler des Inspectors: `Wahl` (natives select) kann nicht
-// suchen, und eine Datenquelle hat hunderte Felder. Also Popover + Liste,
-// wie es der Kommentar in Wahl.tsx vorgibt — aber an EINER Stelle, nicht
-// in jedem Panel neu.
+// `Wahl` (natives select) kann nicht suchen, und eine Datenquelle hat hunderte
+// Felder. Also Popover und Liste, aber an EINER Stelle.
 export function PickerControl({
   label,
   hinweis,
@@ -46,15 +44,12 @@ export function PickerControl({
 
   const treffer = gruppen.flatMap((g) => g.eintraege).find((e) => e.wert === wert)
 
-  // Ein Wert, den keine Gruppe kennt (geloeschtes Feld, geloeschte Quelle),
-  // faellt rot auf statt lautlos als „nichts gewaehlt" zu erscheinen.
+  // Ein Wert, den keine Gruppe kennt, faellt rot auf statt lautlos als „nichts
+  // gewaehlt" zu erscheinen.
   const unbekannt = wert !== '' && treffer === undefined
 
-  // Der geschlossene Knopf zeigt NUR den Klarnamen. Stuende die Kennung
-  // daneben, naehme sie sich bis zur halben Breite, und der Name stuende
-  // zugeklappt abgehackt da, waehrend er in der offenen Liste gut lesbar ist.
-  // Die Kennung steht in der Liste und zusaetzlich im Tooltip — der Klarname
-  // fuehrt, die Kennung bleibt erreichbar.
+  // Der geschlossene Knopf zeigt NUR den Klarnamen; die Kennung naehme sich bis
+  // zur halben Breite. Sie steht in der Liste und im Tooltip.
   const gezeigt = unbekannt ? 'fehlt' : (treffer?.name ?? leerText ?? platzhalter)
   const tooltip = unbekannt
     ? `Nicht mehr vorhanden: ${wert}`

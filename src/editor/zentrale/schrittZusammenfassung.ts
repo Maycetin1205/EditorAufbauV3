@@ -1,3 +1,4 @@
+// Der Kurztext eines Ketten-Schritts fuer die Liste.
 import type { BlockTree } from '../../core/blocks/BlockData'
 import { bausteinName } from '../../core/blocks/bausteinName'
 import type { ActionParamBinding, ActionStep } from '../../core/data/aktionen'

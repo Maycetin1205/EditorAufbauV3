@@ -1,3 +1,4 @@
+// Je Parameter-Quelle ein Eintrag: was sie heisst, woraus sie waehlt, wie sie startet.
 import type { ListeEintrag } from '@/ui/werkbank/Liste'
 import {
   ACTION_PARAM_SOURCES,
@@ -17,16 +18,13 @@ import {
 } from './bindungen'
 import type { BindungsStart, ParameterWahlen, QuellenEintrag } from './wahlen'
 
-// Steht nur eine Tabelle (ein Baustein) zur Wahl, ist sie gemeint — sonst
-// klickt der Bediener eine Liste mit genau einem Eintrag auf.
+// Steht nur eine Tabelle zur Wahl, ist sie gemeint.
 function einziger(liste: readonly { blockId: string }[]): BindungsStart {
   return liste.length === 1 ? { blockId: liste[0].blockId, value: '' } : { value: '' }
 }
 
-// Geschluesselt ueber ALLE gespeicherten Quellen, `aus` eingeschlossen: das
-// Record erzwingt einen Eintrag je Quelle. Endete die Zeichnung stattdessen in
-// einem Auffang-Textfeld, saehe eine neue Quelle dort aus wie ein Freitext,
-// ohne dass irgendwas anschluege.
+// Geschluesselt ueber ALLE Quellen, `aus` eingeschlossen: das Record erzwingt
+// einen Eintrag je Quelle, sonst saehe eine neue Quelle wie ein Freitext aus.
 export const PARAM_QUELLEN: Record<ActionParamSource, QuellenEintrag> = {
   fixed: {
     name: 'Fest',
@@ -101,9 +99,8 @@ export function neueBindung(
   return { source, ...(PARAM_QUELLEN[source].start?.(wahlen) ?? { value: '' }) }
 }
 
-// `aus` steht nicht in der Wahl: weggelassen wird ueber das Kreuz an der
-// Zeile. Ist der Parameter schon weggelassen, muss die Quelle trotzdem
-// erscheinen, sonst zeigte der Waehler eine rohe Kennung.
+// `aus` steht nicht in der Wahl: weggelassen wird ueber das Kreuz an der Zeile.
+// Ist der Parameter schon weggelassen, muss die Quelle trotzdem erscheinen.
 export function herkunftsEintraege(
   binding: ActionParamBinding,
   wahlen: ParameterWahlen,

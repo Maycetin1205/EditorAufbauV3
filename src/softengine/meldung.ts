@@ -1,3 +1,4 @@
+// Laufzeitfehler in den Meldungsbalken der Maske legen.
 const ANZEIGE_MS = 8000
 
 let balken: HTMLElement | null = null

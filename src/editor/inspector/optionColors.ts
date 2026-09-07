@@ -1,3 +1,4 @@
+// Die Farben, aus denen der Inspector waehlen laesst.
 const OPTION_COLORS: Record<string, string> = {
   info: 'var(--se-blue)',      // „Hinweis“
   success: 'var(--se-green)',  // „Erfolg“

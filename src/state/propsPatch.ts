@@ -1,8 +1,7 @@
+// Mehrere Eigenschaften eines Bausteins in EINER Geste setzen.
 import type { Editor } from './Editor'
 
-// Mehrere Eigenschaften eines Bausteins in EINER Geste setzen — so, wie die
-// reinen Editier-Vorgaenge der Registry (listenBindung.eintragNeu/-Weg) sie
-// liefern. Leerer Patch heisst: nichts erlaubt, nichts passiert.
+// Leerer Patch heisst: nichts erlaubt, nichts passiert.
 export function wendeProps(
   editor: Editor,
   id: string,

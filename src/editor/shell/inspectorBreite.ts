@@ -1,15 +1,12 @@
+// Die Breite des Inspectors — eine Voreinstellung des Arbeitsplatzes.
 import type { PointerEvent as ReactPointerEvent } from 'react'
 
-// Die Breite des Inspectors ist eine VOREINSTELLUNG des Arbeitsplatzes, kein
-// Teil der Maske: sie geht nicht in den Baum, nicht in die Historie und nicht
-// in den Export. Darum liegt sie unter einem eigenen Schluessel und nicht im
-// Speicher der Maske.
+// Sie geht nicht in den Baum, nicht in die Historie und nicht in den Export,
+// darum ein eigener Schluessel.
 const SCHLUESSEL = 'aufbau_editor_inspector_breite'
 
-// PIXEL, kein rem. Alles in rem haengt an der Grundgroesse (index.css,
-// 13.5px) — eine Panelbreite in rem wuerde sich also aendern, sobald jemand
-// an der Schrift dreht. Genau die Falle, die bei der Grundgroesse selbst
-// schon zugeschlagen hat: `w-80` sind nicht 320 px, sondern 270.
+// PIXEL, kein rem: alles in rem haengt an der Grundgroesse und wuerde sich
+// aendern, sobald jemand an der Schrift dreht.
 export const INSPECTOR_MIN = 300
 export const INSPECTOR_MAX = 600
 const INSPECTOR_STANDARD = 400
@@ -25,7 +22,7 @@ export function leseBreite(): number {
     const roh = localStorage.getItem(SCHLUESSEL)
     return roh === null ? INSPECTOR_STANDARD : begrenzeBreite(Number(roh))
   } catch {
-    // Speicher gesperrt (Privatmodus) — dann eben jedes Mal die Vorgabe.
+    // Speicher gesperrt — dann eben jedes Mal die Vorgabe.
     return INSPECTOR_STANDARD
   }
 }
@@ -36,17 +33,13 @@ export function merkeBreite(breite: number): void {
       localStorage.setItem(SCHLUESSEL, String(breite))
     }
   } catch {
-    // Nicht merken zu koennen ist kein Grund, den Zug scheitern zu lassen —
-    // die gezogene Breite gilt fuer diese Sitzung trotzdem.
+  // Nicht merken zu koennen ist kein Grund, den Zug scheitern zu lassen.
   }
 }
 
-// Der Griff sitzt an der LINKEN Kante des Panels. Nach links ziehen macht
-// breiter, darum das umgekehrte Vorzeichen gegenueber der Mausbewegung.
-//
-// Bewusst NICHT ueber `canvas/zieheGroesse`: die schreibt ihr Ergebnis in den
-// Baum und klammert es zu einem Undo-Schritt. Hier gibt es nichts
-// rueckgaengig zu machen, weil nichts an der Maske haengt.
+// Der Griff sitzt an der LINKEN Kante: nach links ziehen macht breiter, darum das
+// umgekehrte Vorzeichen. Bewusst nicht ueber canvas/zieheGroesse: hier haengt
+// nichts an der Maske, es gibt nichts rueckgaengig zu machen.
 export function starteBreitenZug(
   e: ReactPointerEvent<HTMLElement>,
   startBreite: number,
@@ -59,8 +52,7 @@ export function starteBreitenZug(
   const startX = e.clientX
   let letzte = startBreite
 
-  // Ohne das markiert der Zug quer ueber die Flaeche jeden Text, den er
-  // ueberstreicht.
+  // Ohne das markiert der Zug jeden Text, den er ueberstreicht.
   const auswahlVorher = document.body.style.userSelect
   document.body.style.userSelect = 'none'
 
@@ -101,5 +93,5 @@ export function starteBreitenZug(
   window.addEventListener('blur', beiAbbruch)
 }
 
-// Pfeiltasten am Griff — ohne sie ist die Breite nur mit der Maus erreichbar.
+// Pfeiltasten am Griff: ohne sie ist die Breite nur mit der Maus erreichbar.
 export const BREITEN_SCHRITT = 16

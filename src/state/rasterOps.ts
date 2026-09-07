@@ -1,3 +1,4 @@
+// Bausteine im Raster verschieben, groesser ziehen und umhaengen.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { createBlockSubtree } from '../core/blocks/blockFactory'
 import { canContain, getBlockDefinition } from '../core/blocks/blockRegistry'
@@ -120,8 +121,7 @@ export function zelleneinzug(
 
   if (gleicheFlaeche && nx === cur.x && ny === cur.y && w === cur.w && h === cur.h) return null
   // Ohne bekannten alten und neuen Elternteil laesst sich der Baustein nicht
-  // umhaengen: er zeigte sonst auf eine Flaeche, die ihn nicht kennt — und
-  // Canvas wie Export gehen ueber childIds, der Baustein waere verwaist.
+  // umhaengen: Canvas und Export gehen ueber childIds, er waere verwaist.
   if (!gleicheFlaeche && (!node.parentId || !tree[node.parentId] || !tree[parentId])) return null
   const next: BlockTree = { ...tree }
   if (!gleicheFlaeche && node.parentId && next[node.parentId]) {

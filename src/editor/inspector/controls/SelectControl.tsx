@@ -1,3 +1,4 @@
+// Eine Wahl aus einer Liste als natives Auswahlfeld.
 import type { PropertySelectOption } from '../../../core/blocks/PropertyDescription'
 import { Wahl } from '@/ui/werkbank/Wahl'
 import { Zeile } from '@/ui/werkbank/Zeile'

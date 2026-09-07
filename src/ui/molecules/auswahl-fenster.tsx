@@ -1,3 +1,4 @@
+// Das kleine Auswahlfenster, das an einem Griff haengt.
 import {
   useEffect,
   useLayoutEffect,
@@ -17,10 +18,8 @@ interface AuswahlFensterProps {
   oben: number
   links: number
 
-  // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
-  // schliesst hier nicht — sonst raeumt dieser Druck das Fenster ab und der
-  // Klick unmittelbar danach oeffnet es wieder: das Fenster liesse sich mit
-  // seinem eigenen Knopf nicht zumachen.
+  // Ein Zeigerdruck auf den Griff schliesst hier nicht: sonst raeumt der Druck
+  // das Fenster ab und der Klick danach oeffnet es wieder.
   anker?: RefObject<HTMLElement | null>
 
   className: string

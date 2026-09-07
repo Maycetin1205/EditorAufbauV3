@@ -1,3 +1,4 @@
+// Bevor ein beschaedigter Stand ueberschrieben wird: eine Kopie im Browserspeicher.
 import { meldungen } from './meldungen'
 
 const BACKUP_SUFFIX = '__notfallkopie'
@@ -13,11 +14,9 @@ function freierSchluessel(praefix: string): string {
   return key
 }
 
-// Jede Beschaedigung bekommt ihre EIGENE Kopie: ein Einmal-Waechter liess die
-// zweite, andere Beschaedigung verschwinden. Denselben Inhalt legt der Editor
-// trotzdem nur einmal ab, sonst fuellt jeder Neustart den Browser-Speicher.
-// Rueckgabe: der geschriebene Schluessel, oder null, wenn nichts gesichert
-// werden konnte — dann darf keine Meldung „gesichert" behaupten.
+// Jede Beschaedigung bekommt ihre EIGENE Kopie; denselben Inhalt legt der Editor
+// nur einmal ab, sonst fuellt jeder Neustart den Speicher. null heisst, es konnte
+// nichts gesichert werden — dann darf keine Meldung „gesichert" behaupten.
 export function legeKopieAn(storageKey: string, raw: string): string | null {
   try {
     const praefix = backupKeyFor(storageKey)

@@ -1,3 +1,4 @@
+// Oeffnet den Feld-Waehler fuer eine gebundene Stelle.
 import { useEffect, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, RefObject } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'

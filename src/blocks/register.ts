@@ -1,3 +1,4 @@
+// Meldet alle Bausteine an; ohne diese Datei kennt die Maske keinen.
 import './ansicht/AnsichtBlock'
 import './bild/BildBlock'
 import './button/ButtonBlock'

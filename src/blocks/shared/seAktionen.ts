@@ -1,3 +1,4 @@
+// Eine Aktionskette laufen lassen: Abschnitte bilden, Schritte senden, je Zeile berichten.
 import { ACTION_VALUE_ID_ATTR, parseBlockEvents, type RuntimeStep } from '../../core/data/aktionen'
 import type {
   AenderungsTraegerElement,
@@ -29,10 +30,8 @@ function buildStartToolLink(nr: string, params: readonly string[]): string {
   return link
 }
 
-// Beide Sende-Wege sagen, ob der Ruf HINAUSGING. Schluckten sie jeden Fehler
-// (kein Bruecken-Objekt, Aufruf wirft), liefe die Kette weiter, als stuende
-// das Werkzeug schon — GET/PUT melden an derselben Stelle „keine Verbindung
-// zu SoftEngine".
+// Beide Sende-Wege sagen, ob der Ruf HINAUSGING: schluckten sie den Fehler,
+// liefe die Kette weiter, als stuende das Werkzeug schon.
 function seBwLink(befehl: string): boolean {
   const zeile = befehl.trim()
   if (zeile === '') return false
@@ -116,16 +115,14 @@ const ZELLEN_HERKUNFT: Record<string, VormerkArt> = {
 interface Abschnitt {
   art: ListenArt
 
-  // Der Baustein, dessen Liste den Takt gibt. Leer bei 'einmal'.
   blockId: string
 
-  // Die Plaetze IN DER GANZEN KETTE — die Schrittzahl bleibt dadurch
-  // stabil, auch wenn nur ein Teil laeuft.
+  // Die Plaetze IN DER GANZEN KETTE: die Schrittzahl bleibt stabil, auch wenn
+  // nur ein Teil laeuft.
   plaetze: Set<number>
 }
 
-// Woher DIESER Schritt seine Zellen liest. Kein Bausteintyp kommt vor: es
-// zaehlt allein, was in seinen Parametern steht.
+// Kein Bausteintyp kommt vor: es zaehlt allein, was in den Parametern steht.
 function zeilenBezug(step: RuntimeStep): { art: VormerkArt; blockId: string } | null {
   if (step.type !== 'RELATION') return null
   let treffer: { art: VormerkArt; blockId: string } | null = null
@@ -141,10 +138,8 @@ function zeilenBezug(step: RuntimeStep): { art: VormerkArt; blockId: string } | 
   return treffer
 }
 
-// Aufeinanderfolgende Schritte gehoeren zusammen. Ein Schritt ohne
-// Zeilen-Bezug haengt sich an den laufenden Abschnitt an — sonst risse das
-// Muster „Satz anlegen, dann seine Felder schreiben" auseinander, in dem der
-// zweite Schritt vom Ergebnis des ersten lebt.
+// Ein Schritt ohne Zeilen-Bezug haengt sich an den laufenden Abschnitt an, sonst
+// risse „Satz anlegen, dann seine Felder schreiben" auseinander.
 export function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
   const raus: Abschnitt[] = []
   for (const [platz, step] of steps.entries()) {
@@ -164,24 +159,21 @@ export function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
   return raus
 }
 
-// Was ein Baustein KANN, steht in seiner Deklaration — hier ist jedes Stueck
-// des Vertrags optional, damit die Kette auch einen Baustein bedienen kann,
-// der nur eine der drei Listen fuehrt.
+// Jedes Stueck des Vertrags ist optional, damit die Kette auch einen Baustein
+// bedienen kann, der nur eine der drei Listen fuehrt.
 type ZeilenTraeger = HTMLElement
   & Partial<ErfassungsTraegerElement>
   & Partial<AenderungsTraegerElement>
   & Partial<LoeschTraegerElement>
   & Partial<LaufBerichtElement>
 
-// Die EINE Stelle, die data-ff-block-id in ein Element aufloest.
 export function sucheTraeger(root: ParentNode, blockId: string): ZeilenTraeger | undefined {
   return Array.from(root.querySelectorAll<HTMLElement>(`[${ACTION_VALUE_ID_ATTR}]`))
     .find((el) => el.getAttribute(ACTION_VALUE_ID_ATTR) === blockId)
 }
 
-// Eine Zeile, wie die Kette sie abarbeitet. satz ist die Satznummer ({PINDEX})
-// und leer, solange die Zeile im ERP nicht existiert; schluessel ist ihre
-// Kennung im Bericht und immer gesetzt.
+// satz ist die Satznummer ({PINDEX}) und leer, solange die Zeile im ERP nicht
+// existiert; schluessel ist ihre Kennung im Bericht und immer gesetzt.
 interface LaufZeile {
   satz: string
   schluessel: string
@@ -191,21 +183,13 @@ interface LaufZeile {
 export interface LaufErgebnis {
   geschrieben: boolean
 
-  // Leer = durchgelaufen. Sonst der Klartext, an dem es haengengeblieben ist.
   fehler: string
 
   mitschrift: Mitschrift
 }
 
-// Was ein Lauf an Ergebnissen hinterlaesst. Sie reisen von einem Abschnitt in
-// den naechsten: eine Kette „einmal die Belegnummer holen, dann je Zeile eine
-// Position schreiben" besteht aus ZWEI Abschnitten, und ohne das Weiterreichen
-// bekaeme der Schreib-Schritt fuer „Ergebnis von Schritt 1" nichts — still,
-// ohne Meldung, mit einem leeren Parameter im PUT.
-//
-// Weitergereicht wird nur, was ein EINMAL-Abschnitt hinterlaesst. Was eine
-// Zeile erarbeitet, gehoert ihr allein: sonst saehe Zeile 2 die Ergebnisse
-// von Zeile 1.
+// Was ein Lauf hinterlaesst. Weitergereicht wird nur, was ein EINMAL-Abschnitt
+// erarbeitet hat: was eine Zeile erarbeitet, gehoert ihr allein.
 export interface Mitschrift {
   values: Record<string, string | undefined>
 
@@ -234,9 +218,8 @@ function zeilenDerListe(traeger: ZeilenTraeger, art: VormerkArt): LaufZeile[] | 
   return roh.map((z) => ({ satz: z.satz, schluessel: z.satz, werte: z.werte }))
 }
 
-// Die Satznummer der Zeile, die gerade dran ist. Beim Loeschen zusaetzlich als
-// {DROP_PINDEX}: eine Loesch-Relation nennt ihre Satznummer anders als eine
-// Schreib-Relation, und der Bediener soll den Unterschied nicht kennen muessen.
+// Beim Loeschen zusaetzlich als {DROP_PINDEX}: eine Loesch-Relation nennt ihre
+// Satznummer anders als eine Schreib-Relation.
 function zeilenKontext(
   context: RelationContext,
   art: VormerkArt,
@@ -255,11 +238,9 @@ export async function laufeSchritte(
   context: RelationContext,
   zeilenZelle: ((blockId: string, spaltenIndex: number) => string) | undefined,
 
-  // Welche Schritte in DIESEM Lauf drankommen (Platz in der Kette).
-  // undefined = alle.
+  // Welche Schritte in DIESEM Lauf drankommen; undefined = alle.
   nur?: ReadonlySet<number>,
 
-  // Was frueheren Abschnitte hinterlassen haben (s. Mitschrift).
   start?: Mitschrift,
 ): Promise<LaufErgebnis> {
   let geschrieben = false
@@ -271,8 +252,7 @@ export async function laufeSchritte(
   let previousResult = start?.previousResult ?? ''
 
   // Voll besetzt statt angehaengt: ein uebersprungener Schritt darf nicht das
-  // Ergebnis ueberschreiben, das ein frueherer Abschnitt an seinem Platz
-  // hinterlassen hat.
+  // Ergebnis eines frueheren Abschnitts an seinem Platz ueberschreiben.
   const stepResults: string[] = steps.map((_, i) => start?.stepResults[i] ?? '')
 
   const rohErgebnisse: unknown[] = steps.map((_, i) => start?.rohErgebnisse[i])
@@ -308,16 +288,15 @@ export async function laufeSchritte(
       continue
     }
     const relation = findRuntimeRelation(seGlobal().FF_RELATIONS, step.relationId)
-    // Ohne Vorlage kann der Schritt nichts tun. Ihn zu ueberspringen hiesse,
-    // die Schritte dahinter auf ein Ergebnis zu setzen, das nie kam — still.
+      // Ihn zu ueberspringen hiesse, die Schritte dahinter auf ein Ergebnis zu
+      // setzen, das nie kam — still.
     if (!relation) {
       const text = `Schritt ${platz + 1} der Kette: seine Relation fehlt in dieser Maske.`
       meldeFehler(text)
       return { geschrieben, fehler: text, mitschrift: mitschrift() }
     }
 
-    // Eine Zeile ohne Satznummer laesst sich nicht adressieren: ein PUT mit
-    // leerem {PINDEX} schriebe ins Nichts, und ein PUT meldet nichts zurueck.
+    // Ein PUT mit leerem {PINDEX} schriebe ins Nichts und meldet nichts zurueck.
     const brauchtSatz = [...step.params, ...step.extraParams]
       .some((b) => b.source === 'context' && b.value === 'PINDEX')
     if (brauchtSatz && (values.PINDEX ?? '') === '') {
@@ -344,8 +323,8 @@ export async function laufeSchritte(
 
     if (relation.verb === 'GET_RELATION') previousResult = result
     else geschrieben = true
-    // Der Ruf ging nicht hinaus oder blieb unbeantwortet. Weiterlaufen hiesse,
-    // die naechsten Schritte auf ein Ergebnis zu setzen, das es nicht gibt.
+      // Weiterlaufen hiesse, die naechsten Schritte auf ein Ergebnis zu setzen,
+      // das es nicht gibt.
     if (antwort.fehler !== undefined && antwort.fehler !== '') {
       return { geschrieben, fehler: antwort.fehler, mitschrift: mitschrift() }
     }
@@ -376,8 +355,6 @@ export async function runEvent(
     let geschrieben = false
     let abgebrochen = false
 
-    // Was die Einmal-Abschnitte erarbeitet haben, reist mit: „Ergebnis von
-    // Schritt N" muss auch in den Zeilen-Schritten etwas liefern.
     let mitschrift: Mitschrift | undefined
     for (const abschnitt of abschnitte) {
       if (abschnitt.art === 'einmal') {
@@ -399,23 +376,22 @@ export async function runEvent(
         meldeFehler('Den Baustein, dessen Zellen die Kette liest, gibt es in dieser Maske nicht.')
         break
       }
-      // Keine Zeile: nichts zu schreiben, kein Lauf. Kein Fehler — der
-      // Bediener sieht in der Tabelle, dass nichts ansteht.
+      // Keine Zeile heisst kein Lauf und kein Fehler: der Bediener sieht in der
+      // Tabelle, dass nichts ansteht.
       if (zeilen.length === 0) continue
       const bericht = { traeger, art: abschnitt.art, fertige: [] as string[] }
       berichte.push(bericht)
       for (const zeile of zeilen) {
         traeger.zeileSchreibt?.(abschnitt.art, zeile.schluessel)
         // Die Mitschrift wird hier nur GELESEN: was eine Zeile erarbeitet,
-        // gehoert ihr allein — sonst saehe Zeile 2 die Ergebnisse von Zeile 1.
+        // gehoert ihr allein.
         const ergebnis = await laufeSchritte(el, steps, zeilenKontext(context, abschnitt.art, zeile),
           (blockId, spaltenIndex) =>
             (blockId === abschnitt.blockId ? String(zeile.werte[spaltenIndex] ?? '') : ''),
           abschnitt.plaetze, mitschrift)
         if (ergebnis.geschrieben) geschrieben = true
-        // Haengengeblieben: die Zeile behaelt ihre Vormerkung und traegt die
-        // Meldung. Die Zeilen dahinter bleiben unangetastet stehen — sonst
-        // naehme ein Fehler in Zeile 3 auch den Zeilen 4-10 ihre Chance.
+        // Haengengeblieben: die Zeilen dahinter bleiben unangetastet stehen,
+        // sonst naehme ein Fehler in Zeile 3 auch den Zeilen 4-10 ihre Chance.
         if (ergebnis.fehler !== '') {
           traeger.zeileGescheitert?.(abschnitt.art, zeile.schluessel, ergebnis.fehler)
           abgebrochen = true
@@ -428,8 +404,7 @@ export async function runEvent(
     // Ausgetragen wird erst, wenn ALLE Abschnitte durch sind: ein spaeterer
     // Abschnitt kann dieselbe Liste noch einmal lesen.
     for (const { traeger, art, fertige } of berichte) traeger.laufFertig?.(art, fertige)
-    // Geschrieben heisst: der Stand auf dem Schirm ist von gestern. Die Maske
-    // holt sich den neuen — ohne dass jemand eine Kette dafuer bauen muss.
+    // Geschrieben heisst: der Stand auf dem Schirm ist von gestern.
     if (geschrieben) frischeDatenAnfordern()
   } finally {
     locks.delete(eventKey)

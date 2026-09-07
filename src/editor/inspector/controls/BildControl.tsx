@@ -1,3 +1,4 @@
+// Die Bildwahl im Inspector: waehlen, verkleinern, einbetten.
 import { useRef, useState } from 'react'
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { meldungen } from '../../../state/meldungen'

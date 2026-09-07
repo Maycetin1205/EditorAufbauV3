@@ -1,3 +1,4 @@
+// Alles, woraus ein Parameter seinen Wert ziehen kann, als ein Buendel.
 import type { ReactElement } from 'react'
 import type {
   ActionParamBinding,
@@ -11,7 +12,6 @@ import type {
   ErfassungsOption,
 } from '../helfer'
 
-// Alles, woraus ein Parameter seinen Wert ziehen kann — als EIN Buendel.
 export interface ParameterWahlen {
   dataSources: readonly DataSource[]
   blockValues: readonly BlockValueOption[]
@@ -21,9 +21,8 @@ export interface ParameterWahlen {
   loeschungen: readonly ErfassungsOption[]
   schritte: readonly ErgebnisSchritt[]
 
-  // Wenn gesetzt: nur diese Herkuenfte stehen zur Wahl. Eine Datenquelle holt
-  // ohne Baustein und ohne laufende Kette — dort waere „Gewaehlte Zeile" oder
-  // „Ergebnis von Schritt" kein gesperrter Eintrag, sondern ein sinnloser.
+  // Wenn gesetzt: nur diese Herkuenfte stehen zur Wahl. Fuer eine Datenquelle
+  // waere „Gewaehlte Zeile" kein gesperrter Eintrag, sondern ein sinnloser.
   erlaubt?: readonly ActionParamSource[]
 }
 
@@ -35,11 +34,10 @@ export interface BindungsProps {
   onChange: (binding: ActionParamBinding) => void
 }
 
-// Der Startwert beim Umschalten der Herkunft — ohne `source`, damit ein
-// Eintrag der Registry sich nicht auf eine fremde Quelle schreiben kann.
+// Der Startwert beim Umschalten der Herkunft, ohne `source`: ein Eintrag der
+// Registry soll sich nicht auf eine fremde Quelle schreiben koennen.
 export type BindungsStart = Omit<ActionParamBinding, 'source'>
 
-// Was eine Parameter-Quelle ausmacht, an EINER Stelle je Quelle.
 export interface QuellenEintrag {
   name: string
   Control: (props: BindungsProps) => ReactElement

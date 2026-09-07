@@ -1,3 +1,4 @@
+// Ein natives Auswahlfeld mit Klarname und Kennung.
 import { forwardRef, type SelectHTMLAttributes } from 'react'
 import { ChevronDown } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
@@ -7,7 +8,6 @@ export interface WahlOption {
   wert: string
   name: string
 
-  // Steht rechts in der Zeile, technisch (Feldcode, Nummer).
   kennung?: string
   deaktiviert?: boolean
 }
@@ -22,9 +22,8 @@ export interface WahlProps
   onWaehle: (wert: string) => void
 }
 
-// Ein natives <select>: Tastatur, Vorlesehilfe und die Liste des Systems
-// gibt es damit ohne eine einzige Zeile Fensterlogik. Wo gesucht werden
-// muss, ist `Popover` + `Liste` das richtige Ding, nicht dieses hier.
+// Ein natives <select>: Tastatur, Vorlesehilfe und Systemliste ohne eine Zeile
+// Fensterlogik. Wo gesucht werden muss, sind Popover und Liste das richtige Ding.
 export const Wahl = forwardRef<HTMLSelectElement, WahlProps>(
   ({ optionen, wert, leerText, onWaehle, className, ...rest }, ref) => {
     const unbekannt = wert !== '' && !optionen.some((o) => o.wert === wert)

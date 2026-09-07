@@ -1,3 +1,4 @@
+// Fragen an den Baustein-Baum: wer gibt eine Auswahl, wer erfasst, wer aendert, wer rechnet.
 import { ROOT_ID, type BlockNode, type BlockTree } from './BlockData'
 import type { ActionValueSpot, BindableSpot } from './BlockDefinition'
 import { getBlockDefinition } from './blockRegistry'
@@ -78,12 +79,9 @@ export function auswahlQuelleIdVon(node: BlockNode | undefined): string {
   return typeof wert === 'string' ? wert : ''
 }
 
-// Geber ist, wer satzWahl deklariert UND eine Quelle aufloest. Die
-// wenn-Bedingung der satzWahl waehlt dabei nur, WELCHE Eigenschaft die
-// Quelle nennt (auswahlQuelleIdVon faellt sonst auf `source` zurueck) —
-// sie ist KEIN Schalter fuer die Faehigkeit: auch ein gebundenes
-// Formularfeld gibt seine angezeigte Zeile, nicht nur das Nachschlage-Feld
-// seine gewaehlte.
+// Geber ist, wer satzWahl deklariert UND eine Quelle aufloest. Die wenn-Bedingung
+// waehlt nur, WELCHE Eigenschaft die Quelle nennt, sie ist kein Schalter fuer die
+// Faehigkeit.
 export function istAuswahlGeber(node: BlockNode | undefined): boolean {
   if (!node) return false
   if (!getBlockDefinition(node.type)?.satzWahl) return false
@@ -107,9 +105,8 @@ export function auswahlGeberImBaum(tree: BlockTree): BlockNode[] {
   return result
 }
 
-// Bausteine, deren Erfassungszeile gerade AN ist (Faehigkeit kannErfassen,
-// gelesen aus der Registry, kein Bausteintyp-Sondercode). Nur ihre
-// Zellen kann eine Kette als „Wert aus Erfassungszelle" lesen.
+// Nur die Zellen dieser Bausteine kann eine Kette als „Wert aus Erfassungszelle"
+// lesen.
 export function erfassungsTraegerImBaum(tree: BlockTree): BlockNode[] {
   const result: BlockNode[] = []
   const visit = (node: BlockNode | undefined): void => {
@@ -122,7 +119,6 @@ export function erfassungsTraegerImBaum(tree: BlockTree): BlockNode[] {
   return result
 }
 
-// Bausteine, an denen der Bediener Zeilen zum Loeschen vormerken kann.
 export function loeschTraegerImBaum(tree: BlockTree): BlockNode[] {
   const result: BlockNode[] = []
   const visit = (node: BlockNode | undefined): void => {
@@ -139,9 +135,8 @@ export function traegtLoeschungen(node: BlockNode): boolean {
   return kann !== undefined && propertySichtbar(kann.wenn, node.props)
 }
 
-// Traegt dieser Baustein mindestens einen aenderbaren Listeneintrag? Gelesen
-// wird ueber die Registry (aenderungsSchluessel) und die Liste des Bausteins —
-// kein Bausteintyp kommt hier vor.
+// Gelesen wird ueber die Registry und die Liste des Bausteins; kein Bausteintyp
+// kommt hier vor.
 export function traegtAenderungen(node: BlockNode): boolean {
   const def = getBlockDefinition(node.type)
   const schluessel = def?.aenderungsSchluessel
@@ -151,9 +146,8 @@ export function traegtAenderungen(node: BlockNode): boolean {
   if (!Array.isArray(roh)) return false
   const schalter = (bindung.eintragsSchalter ?? []).find((s) => s.key === schluessel)
   if (!schalter) return false
-  // Aenderbar ist ein Eintrag, dessen Schalter fuer seine Darstellung ueberhaupt
-  // gilt, der ansteht (Standard eingerechnet) und der an einem Feld haengt —
-  // eine ungebundene Spalte hat nichts zu schreiben.
+  // Aenderbar ist ein Eintrag, dessen Schalter gilt, der ansteht und der an einem
+  // Feld haengt: eine ungebundene Spalte hat nichts zu schreiben.
   return roh.some((x) => {
     if (!x || typeof x !== 'object') return false
     const eintrag = x as Record<string, unknown>
@@ -163,7 +157,6 @@ export function traegtAenderungen(node: BlockNode): boolean {
   })
 }
 
-// Bausteine, die einer Kette geaenderte Zeilen geben koennen.
 export function aenderungsTraegerImBaum(tree: BlockTree): BlockNode[] {
   const result: BlockNode[] = []
   const visit = (node: BlockNode | undefined): void => {
@@ -190,9 +183,8 @@ export function firstDescendantOfType(
   return undefined
 }
 
-// Rechnen kann, was gerade eine Erfassungszeile HAT: Listen-Baustein mit
-// kannErfassen (Registry-Frage, kein Typ-Name), dessen Bedingung erfuellt
-// ist. Ohne Erfassungszeile gibt es nichts zu rechnen.
+// Rechnen kann, was gerade eine Erfassungszeile HAT. Ohne sie gibt es nichts zu
+// rechnen.
 export function kannRechnen(node: BlockNode): boolean {
   const def = getBlockDefinition(node.type)
   if (!def?.listenBindung || !def.kannErfassen) return false

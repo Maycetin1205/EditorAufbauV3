@@ -1,3 +1,4 @@
+// Die vier Statusfarben und der Chip, der sie traegt.
 import { css } from 'lit'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 

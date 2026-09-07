@@ -1,3 +1,4 @@
+// Ein kleiner Beobachter: melden, wenn sich ein Stand geaendert hat.
 type Listener<T> = (data: T) => void
 
 export class Subject<T = void> {

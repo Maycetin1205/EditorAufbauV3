@@ -1,3 +1,4 @@
+// Die Farbwahl im Inspector als Reihe von Farbfeldern.
 import type { PropertySelectOption } from '../../../core/blocks/PropertyDescription'
 import { Farbfeld } from '@/ui/werkbank/Farbfeld'
 import { Zeile } from '@/ui/werkbank/Zeile'

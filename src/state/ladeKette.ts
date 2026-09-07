@@ -1,3 +1,4 @@
+// Einen gespeicherten Stand laden: Rohdaten, Schemastufen, Pruefung, Verlustmeldung.
 import { ROOT_ID, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { MASKEN_NAME_PROP } from '../core/blocks/maskenName'
@@ -40,7 +41,6 @@ export function sanitizeTree(
   const onDropType = meldungen?.typVerworfen
 
   // Die Wurzel traegt genau eine Eigenschaft, die mitreist: den Maskennamen.
-  // Alles andere an ihr ist Aufbau und entsteht neu.
   const rohWurzelProps = src[ROOT_ID]?.props
   const rohName = rohWurzelProps && typeof rohWurzelProps === 'object'
     ? (rohWurzelProps as Record<string, unknown>)[MASKEN_NAME_PROP]
@@ -75,10 +75,8 @@ export function sanitizeTree(
     }
 
     const events = sanitizeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key))
-    // Eine Kette, die die Pruefung nicht besteht, faellt KOMPLETT weg. Das
-    // darf nicht still passieren: der Knopf bliebe im Baum und taete nichts,
-    // und der naechste Auto-Speicher schriebe den gekuerzten Stand fest —
-    // der Datei-Weg lehnt denselben Stand dagegen laut ab (keinVerlust).
+    // Eine Kette, die die Pruefung nicht besteht, faellt KOMPLETT weg. Still darf
+    // das nicht passieren: der Knopf bliebe im Baum und taete nichts.
     if (node.events && typeof node.events === 'object' && !Array.isArray(node.events)) {
       for (const [key, kette] of Object.entries(node.events as Record<string, unknown>)) {
         if (Array.isArray(kette) && kette.length > 0 && events?.[key] === undefined) {
@@ -117,7 +115,6 @@ export interface BaumErgebnis {
 
   verworfen: Map<string, number>
 
-  // Aktionsketten, die beim Laden die Pruefung nicht bestanden und wegfielen.
   verloreneKetten: number
 }
 
@@ -188,9 +185,9 @@ export function keinVerlust(roh: unknown, rein: unknown): boolean {
     .every((k) => Object.prototype.hasOwnProperty.call(b, k) && keinVerlust(a[k], b[k]))
 }
 
-// Wo genau die Datei etwas enthaelt, das der Lader nicht uebernimmt: Eintrag
-// (Klarname) und Angabe. Eine Meldung ohne diese Stelle laesst den Bediener
-// mit einer Datei stehen, die er nicht reparieren kann.
+// Wo genau die Datei etwas enthaelt, das der Lader nicht uebernimmt. Eine Meldung
+// ohne diese Stelle laesst den Bediener mit einer Datei stehen, die er nicht
+// reparieren kann.
 export function ersteAbweichung(roh: unknown, rein: unknown): string {
   if (Array.isArray(roh)) {
     if (!Array.isArray(rein) || roh.length !== rein.length) return 'die Anzahl der Einträge'
@@ -311,8 +308,7 @@ export type AblehnGrund =
 
 export type LadeAusgang =
   | { art: 'ok'; baum: BaumErgebnis }
-  // Heil, aber eine Schemastufe lief: der Stand muss unter der neuen Version
-  // neu gespeichert werden.
+  // Heil, aber eine Schemastufe lief: der Stand muss neu gespeichert werden.
   | { art: 'migriert'; baum: BaumErgebnis }
   | { art: 'abgelehnt'; ursache: AblehnGrund; probleme: LadeProblem[] }
 

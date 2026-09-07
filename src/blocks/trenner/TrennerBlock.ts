@@ -1,3 +1,4 @@
+// Baustein Trennlinie: teilt eine Flaeche sichtbar auf.
 import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'

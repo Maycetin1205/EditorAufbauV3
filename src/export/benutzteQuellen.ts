@@ -1,3 +1,4 @@
+// Welche Quellen und Felder die Maske wirklich liest — danach wird bestellt.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import {
   bindingProp,
@@ -61,10 +62,8 @@ export function collectDataSources(
   }
   visit(tree[ROOT_ID])
 
-  // Eine holende Quelle kann ihre Parameter aus einer ANDEREN Quelle ziehen.
-  // Die muss mit in die Maske, sonst faende die Laufzeit sie nicht und der
-  // Parameter ginge still leer hinaus. Der Index-Lauf schliesst mit ein, was
-  // dabei selbst noch dazukommt.
+  // Eine holende Quelle kann ihre Parameter aus einer ANDEREN Quelle ziehen; die
+  // muss mit in die Maske, sonst ginge der Parameter still leer hinaus.
   for (let i = 0; i < acc.length; i++) {
     for (const { quelleId } of quellenAusHolWert(acc[i])) add(quelleId)
   }
@@ -109,12 +108,9 @@ export function benutzteFelderJeQuelle(
     if (def?.listenBindung) {
       const b = def.listenBindung
 
-      // Traegt die Bindung ein `quelleProp`, speichern ihre Eintraege den
-      // NACKTEN Feldcode EINER benannten Quelle (Nachschlage-Fenster). Dann
-      // waere es falsch, ihn wie eine Bindung ueber die Quellen in
-      // Reichweite aufzuloesen — er gehoert zu genau dieser Quelle, sonst
-      // bestellt der Export ihre Felder gar nicht und die Spalte bleibt in
-      // SoftEngine leer.
+    // Traegt die Bindung ein `quelleProp`, speichern ihre Eintraege den NACKTEN
+    // Feldcode einer benannten Quelle. Ihn wie eine Bindung aufzuloesen waere
+    // falsch: dann bestellt der Export ihre Felder gar nicht.
       const eigeneQuelle = b.quelleProp === undefined
         ? undefined
         : String(node.props[b.quelleProp] ?? '')
@@ -125,9 +121,8 @@ export function benutzteFelderJeQuelle(
 
       for (const eintrag of listeLesen(node.props[b.prop], b)) {
         merkeEintragsFeld(eintrag[b.feldKey])
-        // Das Fuellfeld zeigt auf eine HILFSQUELLE. Bliebe es hier aussen
-        // vor, bestellte der Export ihre Felder nicht und die Erfassungszeile
-        // faende in SoftEngine nichts zum Vorschlagen.
+        // Das Fuellfeld zeigt auf eine HILFSQUELLE; bliebe es aussen vor, faende
+        // die Erfassungszeile in SoftEngine nichts zum Vorschlagen.
         for (const { wert } of feldWahlenLesen(b, eintrag)) merkeEintragsFeld(wert)
       }
     }
@@ -135,9 +130,8 @@ export function benutzteFelderJeQuelle(
     for (const prop of def?.customProperties ?? []) {
       if (prop.kind !== 'field') continue
       if (!propertySichtbar(prop.visibleWhen, node.props)) continue
-      // Ohne `quelleProp` steht im Wert dieselbe Form wie in einer Bindung
-      // (`quelle::code`) — er muss aufgeloest werden, sonst bestellt der Export
-      // den ganzen Token als Feldcode bei der Quelle in Reichweite.
+      // Ohne `quelleProp` steht im Wert dieselbe Form wie in einer Bindung; er
+      // muss aufgeloest werden, sonst bestellt der Export den ganzen Token.
       if (prop.quelleProp === undefined) merkeBindung(node.props[prop.attributeName])
       else merke(String(node.props[prop.quelleProp] ?? ''), node.props[prop.attributeName])
     }
@@ -146,10 +140,8 @@ export function benutzteFelderJeQuelle(
       const erste = typeof node.props.source === 'string' ? node.props.source : ''
       for (const q of weitereQuellenAus(node.props[WEITERE_QUELLEN_PROP])) {
         if (!quelleBrauchbar(q)) continue
-        // Die linke Seite eines Paares gehoert der PARTNER-Quelle, nicht
-        // zwangslaeufig der ersten: haengt Quelle 3 an Quelle 2, muss der
-        // Export das Schluesselfeld bei Quelle 2 bestellen. Sonst kaeme es
-        // nicht mit, und die Verknuepfung liefe in SoftEngine ins Leere.
+  // Die linke Seite eines Paares gehoert der PARTNER-Quelle, nicht zwangslaeufig
+  // der ersten: sonst kaeme das Schluesselfeld nicht mit.
         const partner = q.partnerId === '' ? erste : q.partnerId
         for (const paar of vollstaendigePaare(q)) {
           merke(partner, paar.fromField)
@@ -187,11 +179,9 @@ export function benutzteFelderJeQuelle(
   visit(tree[ROOT_ID])
 
   // Woraus eine holende Quelle ihre Parameter zieht, steht an der QUELLE und
-  // nicht im Baum. Ohne diese Runde bestellte der Export das Feld nicht, und
-  // der Parameter ginge in SoftEngine leer hinaus. Nur die Quellen, die die
-  // Maske benutzt: eine Quelle, die bloss in der Bibliothek liegt, darf keiner
-  // benutzten Quelle Felder unterschieben — SoftEngine bestellt sonst mehr,
-  // als die Maske braucht.
+  // nicht im Baum; ohne diese Runde ginge der Parameter leer hinaus. Nur die
+  // Quellen, die die Maske benutzt: eine bloss in der Bibliothek liegende darf
+  // keiner benutzten Quelle Felder unterschieben.
   for (const source of collectDataSources(tree, sources)) {
     for (const { quelleId, code } of quellenAusHolWert(source)) merke(quelleId, code)
   }

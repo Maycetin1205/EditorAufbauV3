@@ -1,3 +1,4 @@
+// Was jedes Baustein-Element koennen muss, damit Editor und Maske es benutzen koennen.
 import type {
   ActionValueSpot,
   BindableSpot,

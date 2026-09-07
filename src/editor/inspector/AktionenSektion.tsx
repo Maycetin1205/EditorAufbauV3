@@ -1,3 +1,4 @@
+// Die Aktionsketten eines Bausteins im Inspector.
 import { useState } from 'react'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import type { BlockNode } from '../../core/blocks/BlockData'

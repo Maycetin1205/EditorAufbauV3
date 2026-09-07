@@ -1,3 +1,4 @@
+// Die Datenquellen einer Maske: Form, Alias, Satznummer und was bei SoftEngine bestellt wird.
 import { QUELLEN_TRENNER, zerlegeBindung } from '../blocks/BlockDefinition'
 import { holWertFor, pruefeHolWert, type HolWert } from './holWert'
 import type { EintragProblem } from './ladeProblem'
@@ -58,7 +59,6 @@ export interface DataSource {
 
   ladeRelation?: LadeRelation
 
-  // Die Quelle holt ihren Wert selbst, mit EINEM Relations-Ruf.
   holWert?: HolWert
 
   feldVorsatz?: string
@@ -66,9 +66,8 @@ export interface DataSource {
   fields: readonly DataSourceField[]
 }
 
-// Diese Quelle wartet auf keine Lieferung — sie fragt selbst. Beide Wege
-// (Relation 69 fuer Positionen, EIN Ruf fuer einen Wert) stehen darum nicht
-// in der SEvariablen-Bestellung.
+// Diese Quelle wartet auf keine Lieferung, sie fragt selbst; darum steht sie
+// nicht in der SEvariablen-Bestellung.
 export function holtSelbst(source: DataSource): boolean {
   return ladeRelationFor(source) !== null || holWertFor(source) !== null
 }
@@ -89,20 +88,16 @@ export function istOffenerSatz(source: DataSource): boolean {
   return artFuer(source.kind).varMoeglich && source.lieferung === 'offenerSatz'
 }
 
-// Die EINE Frage "welches Feld traegt die Satznummer dieser Zeile?". Arten
-// ohne Satznummer geben '' — sonst bestellte der Export einen Feldcode, den
+// Arten ohne Satznummer geben '': sonst bestellte der Export einen Feldcode, den
 // ihre Quelle nicht kennt, und die Tabelle boete Aendern und Loeschen an.
 export function satzNummerVon(source: DataSource): string {
   if (!artFuer(source.kind).satzNummerMoeglich) return ''
   return (source.indexField ?? '').trim()
 }
 
-// SoftEngine legt die Zeilen einer Quelle unter ihrem ALIAS ab, und die
-// Laufzeit sucht sie ueber genau diesen Namen (softengine/data.ts, sameAlias:
-// getrimmt und klein geschrieben) — der erste Treffer gewinnt. Zwei gleich
-// benannte Quellen zeigten damit stumm dieselben Daten. Das Formular laesst
-// Doppelnamen nicht mehr zu; Staende, die schon welche tragen, macht der
-// Export hier maschinell eindeutig.
+// SoftEngine legt die Zeilen unter dem ALIAS ab, und die Laufzeit sucht sie ueber
+// genau diesen Namen; der erste Treffer gewinnt. Zwei gleich benannte Quellen
+// zeigten stumm dieselben Daten, darum macht der Export sie eindeutig.
 export function alias(name: string): string {
   return name.trim().toLowerCase()
 }
@@ -133,11 +128,8 @@ export function felderFor(
     }
     return codes
   }
-  // Bestellt wird, was die Maske wirklich liest — nicht, was die Quelle an
-  // Feldern kennt. SoftEngine schlaegt zu JEDEM gelieferten Wert nach
-  // (GET_RELATION 1911), die Menge bestimmt allein unsere Bestellung.
-  // Reihenfolge: die Vorne-Codes, dann die Felder der Quelle in ihrer
-  // Reihenfolge, dann gebundene Codes, die (noch) nicht in der Liste stehen.
+  // Bestellt wird, was die Maske wirklich liest, nicht was die Quelle kennt:
+  // SoftEngine schlaegt zu jedem gelieferten Wert nach.
   const nurBenutzte = (vorne: readonly string[], gelesen: ReadonlySet<string>): string[] => {
     const codes = [...vorne]
     for (const f of source.fields) {
@@ -149,17 +141,14 @@ export function felderFor(
     return mitSchluesseln(codes)
   }
 
-  // Aus dem indexField loest sich {PINDEX} auf. An eine Spalte gebunden ist
-  // die Satznummer fast nie, bestellt werden muss sie trotzdem: fehlt sie,
-  // liefert SoftEngine sie nicht, und Aendern wie Loeschen schreibt ins
-  // Nichts — still, denn ein PUT ist ein Einweg-Ruf.
+  // Aus dem indexField loest sich {PINDEX} auf. Gebunden ist es fast nie,
+  // bestellt werden muss es trotzdem: sonst schreibt Aendern ins Nichts.
   const index = satzNummerVon(source)
   const vorne = index === '' ? [] : [index]
 
   if (artFuer(source.kind).felderEinzeln) {
-    // Ohne bekannte Verwendung bleibt es bei der ganzen Liste: '*' ist bei
-    // diesen Arten nicht erlaubt, und eine leere Bestellung waere ein
-    // stiller Ausfall.
+    // Ohne bekannte Verwendung bleibt es bei der ganzen Liste: eine leere
+    // Bestellung waere ein stiller Ausfall.
     if (!benutzt || benutzt.size === 0) {
       return mitSchluesseln(source.fields.map((f) => f.code)).join(',')
     }
@@ -170,9 +159,8 @@ export function felderFor(
 
   const codes = nurBenutzte(vorne, benutzt)
 
-  // Der Rueckfall auf '*' gehoert allein hierher: oben ist '*' nicht erlaubt,
-  // und dort sind Codes ohne pos_len normal (DataSet-Spalten, ERP-Abfragen
-  // mit Feldvorsatz) — die Pruefung wuerde jede solche Bestellung kippen.
+  // Der Rueckfall auf '*' gehoert allein hierher: oben ist '*' nicht erlaubt, und
+  // dort sind Codes ohne pos_len normal.
   return codes.every((code) => POS_LEN.test(code)) ? codes.join(',') : '*'
 }
 
@@ -251,10 +239,8 @@ export function pruefeDatenquellen(
       weg('die Art der Datenquelle fehlt oder ist unbekannt')
       continue
     }
-    // Arten ohne feste Tabellen-ID (IDB) tragen sie als eigene Kennung. Fehlt
-    // sie, bestellte der Export einen SEFILELOOP-Eintrag mit ID:"" — SoftEngine
-    // findet dazu nichts und bricht laut Kontrakt die ganze Loop-Liste ab.
-    // Lieber hier melden als still eine unbrauchbare Bestellung schreiben.
+    // Fehlt sie, bestellte der Export einen SEFILELOOP-Eintrag mit leerer ID, und
+    // SoftEngine bricht dann die ganze Loop-Liste ab.
     if (tabellenKennungNoetig(artFuer(e.kind as DataSourceKind))
       && (typeof e.idbId !== 'string' || e.idbId.trim() === '')) {
       weg('die Tabellen-Kennung fehlt (z. B. IDB0001)')

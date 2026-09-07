@@ -1,3 +1,4 @@
+// Der Entwurf eines Ketten-Schritts, solange sein Formular offen steht.
 import {
   defaultRelationParams,
   type ActionParamBinding,
@@ -8,8 +9,8 @@ import type { RelationTemplate } from '../../core/data/relations'
 import type { FeldUebernahmeZiel, UebernahmeTreffer } from './feldUebernahme'
 
 export interface SchrittEntwurf {
-  // Einmal beim Oeffnen vergeben. Zoege jeder Render eine neue UUID, pruefte
-  // die Anzeige einen anderen Schritt, als Speichern schreibt.
+  // Einmal beim Oeffnen vergeben: zoege jeder Render eine neue, pruefte die
+  // Anzeige einen anderen Schritt, als Speichern schreibt.
   id: string
 
   typ: StepTypeKey
@@ -20,7 +21,6 @@ export interface SchrittEntwurf {
   relationParams: ActionParamBinding[]
   extraParams: ActionParamBinding[]
 
-  // Suchtext der Relationsliste.
   suche: string
 
   // Fehler stehen erst am Formular, wenn Speichern einmal gedrueckt wurde.
@@ -64,8 +64,8 @@ function anfangsParams(
   relation: RelationTemplate | undefined,
 ): ActionParamBinding[] {
   if (!step) return []
-  // Die Vorlage hat seit dem Speichern Parameter bekommen oder verloren:
-  // dann zaehlt die Vorlage, nicht der alte Stand.
+    // Die Vorlage hat Parameter bekommen oder verloren: dann zaehlt die Vorlage,
+    // nicht der alte Stand.
   if (relation && step.params.length !== relation.params.length) {
     return defaultRelationParams(relation)
   }
@@ -80,8 +80,8 @@ export function bindungFuer(
   return entwurf.relationParams[index] ?? vorgaben[index] ?? { source: 'fixed', value: '' }
 }
 
-// Auf Vorlagenlaenge bringen, ohne das Getippte zu verlieren: eine Relation
-// kann sich aendern, waehrend das Formular offen steht.
+// Auf Vorlagenlaenge bringen, ohne das Getippte zu verlieren: eine Relation kann
+// sich aendern, waehrend das Formular offen steht.
 function aufLaenge(
   aktuell: readonly ActionParamBinding[],
   relation: RelationTemplate | undefined,
@@ -120,7 +120,7 @@ export type SchrittAktion =
   | { art: 'zeigeFehler' }
 
 // Die Vorlagen stecken im Reducer statt in jeder Aktion: nur sie wissen, wie
-// viele Parameter es gibt und was ein zurueckgeholter Parameter wieder wird.
+// viele Parameter es gibt.
 export function schrittReducer(relationen: readonly RelationTemplate[]) {
   return (entwurf: SchrittEntwurf, aktion: SchrittAktion): SchrittEntwurf => {
     const relation = vorlageVon(relationen, entwurf.relationId)
@@ -198,8 +198,8 @@ export function kandidatAus(
   vorher: ActionStep | undefined,
 ): ActionStep {
   const { id, typ } = entwurf
-  // Das Formular zeigt toolParams/resultKey nicht an (Entscheidung: nur die
-  // Nummer) — geladene Werte darf Speichern trotzdem nicht wegwerfen.
+    // Das Formular zeigt toolParams und resultKey nicht an; geladene Werte darf
+    // Speichern trotzdem nicht wegwerfen.
   if (typ === 'POPUP_OPEN' || typ === 'POPUP_CLOSE') {
     return {
       id,

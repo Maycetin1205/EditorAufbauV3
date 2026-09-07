@@ -1,3 +1,4 @@
+// Schreibt die Maskendatei: aus dem Baustein-Baum wird HTML fuer SoftEngine.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { bindingProp, listeFuerExport, listeLesen } from '../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
@@ -77,10 +78,9 @@ interface TemplateCtx {
   id: string | undefined
 }
 
-// Spalten-Kennung -> Platz fuer die Ketten-Parameter (aktionen.ts,
-// ZELLEN_PARAM_QUELLEN): generisch ueber die Listen-Bindung des Ziel-
-// Bausteins, kein Bausteintyp-Sondercode. Unbekannt -> '-1',
-// die Laufzeit liefert dann den leeren Wert — dieselbe Antwort wie ueberall.
+// Spalten-Kennung -> Platz fuer die Ketten-Parameter, generisch ueber die
+// Listen-Bindung des Ziel-Bausteins. Unbekannt gibt '-1', die Laufzeit liefert
+// dann den leeren Wert.
 function spaltenIndexFuer(tree: BlockTree): (blockId: string, kennung: string) => string {
   return (blockId, kennung) => {
     const ziel = tree[blockId]
@@ -165,9 +165,8 @@ function nodeToHtml(
   const aktionen = serializeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key), popupName, spaltenIndex)
   const aktionenAttr = aktionen ? ` data-ff-aktionen="${escapeHtmlAttr(aktionen)}"` : ''
   // Die EINE Kennung eines Bausteins in der Maske. Sie traegt, wer fuer eine
-  // Kette adressierbar sein muss — Werte-Stellen, Erfassungszeile, Traeger
-  // geaenderter oder geloeschter Zeilen — und wer eine Zeile gibt
-  // (Auswahl-Geber). Alle Leser der Laufzeit greifen ueber dieses Attribut.
+  // Kette adressierbar sein muss und wer eine Zeile gibt; alle Leser der
+  // Laufzeit greifen ueber dieses Attribut.
   const adressierbar = (def.actionValueSpots?.length ?? 0) > 0
     || (def.kannErfassen !== undefined && propertySichtbar(def.kannErfassen.wenn, node.props))
     || traegtAenderungen(node)
@@ -191,13 +190,9 @@ function nodeToHtml(
   const children = node.childIds
     .map((id) => tree[id])
     .filter((c): c is BlockNode => Boolean(c))
-    // Ist dieser Knoten eine FLAECHE, liegen seine Kinder in Zellen: die
-    // Ansicht gibt die Rasterebene der Maskenwurzel durch (sie hat keinen
-    // eigenen Kasten, display:contents), das Popup oeffnet mit seinem Rumpf
-    // eine EIGENE Flaeche. Alles andere reicht Fluss weiter. Gefragt wird
-    // die eine Stelle, die auch `Editor.addBlock` und der Canvas fragen —
-    // wuerde der Export hier eigenstaendig raten, saessen die Bausteine in
-    // SoftEngine woanders als im Editor.
+    // Ist dieser Knoten eine FLAECHE, liegen seine Kinder in Zellen. Gefragt
+    // wird die eine Stelle, die auch der Editor fragt: raet der Export selbst,
+    // sitzen die Bausteine in SoftEngine woanders als im Editor.
     .map((c) => nodeToHtml(tree, c, childDirection, depth + 1, popupName, spaltenIndex, sources, childCtx, istRasterFlaeche(node)))
     .filter((html) => html !== '')
     .join('\n')
@@ -223,13 +218,12 @@ export function exportMask(
   const blocks = (root?.childIds ?? [])
     .map((id) => tree[id])
     .filter((n): n is BlockNode => Boolean(n))
-    // Direkte Wurzel-Kinder = Raster-Ebene (rasterEbene=true).
     .map((n) => nodeToHtml(tree, n, 'column', 2, popupName, spaltenIndex, sources, undefined, true))
     .join('\n')
 
-  // Eindeutige Namen VOR beiden Verbrauchern: die SEFILELOOP-Bestellung
-  // (baueSevariablen) und FF_DATA_SOURCES muessen denselben Namen tragen,
-  // sonst sucht die Laufzeit einen Alias, den SoftEngine nie geliefert hat.
+  // Eindeutige Namen VOR beiden Verbrauchern: Bestellung und FF_DATA_SOURCES
+  // muessen denselben Namen tragen, sonst sucht die Laufzeit einen Alias, den
+  // SoftEngine nie geliefert hat.
   const used = mitEindeutigenNamen(collectDataSources(tree, sources))
 
   const benutzteFelder = benutzteFelderJeQuelle(tree, sources)
@@ -253,8 +247,6 @@ export function exportMask(
         ...(lade
           ? { ladeRelation: { ...lade, zusatzFelder: felderHinterSchnitt(benutzteFelder.get(s.id)) } }
           : {}),
-        // Die Feldnamen reisen mit: nur so weiss der Wert-Lader, unter
-        // welchem Namen die Antwort abzulegen ist.
         ...(hol ? { holWert: { ...hol, felder: s.fields.map((f) => f.code) } } : {}),
       }
     })) + ';',

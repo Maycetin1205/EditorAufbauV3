@@ -1,3 +1,4 @@
+// Seiten und Ansichten der Maske: anlegen, umbenennen, wechseln, loeschen.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 

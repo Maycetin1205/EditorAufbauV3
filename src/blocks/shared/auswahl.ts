@@ -1,3 +1,4 @@
+// Welche Zeile gerade gewaehlt ist, je Auswahl-Geber, und wer davon erfaehrt.
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import { AUSWAHL_FOLGE_PROP, type AuswahlFolge } from '../../core/data/auswahlFolge'
 import { getField } from '../../softengine/data'
@@ -12,23 +13,18 @@ export function merkmalVon(zeile: unknown): string {
   }
 }
 
-// Die Wahl-Nummer sagt, WANN gewaehlt wurde: zeigen zwei Bausteine dieselbe
-// Quelle, gewinnt die juengste Wahl (s. gewaehlteZeileDerQuelle).
+// Die Wahl-Nummer sagt, WANN gewaehlt wurde: bei zwei Bausteinen derselben
+// Quelle gewinnt die juengste Wahl.
 const zustand = new Map<string, { zeile: unknown; merkmal: string; nummer: number }>()
 const hoerer = new Set<(durchBedienung: boolean) => void>()
 const zuruecksetzer = new Set<() => void>()
 
 let wahlZaehler = 0
 
-// Ob eine Auswahl-Aenderung vom BEDIENER kam (Zeilenklick, Satz im
-// Nachschlage-Fenster) oder aus einem Programm-Lauf (Hydrieren), reist als
-// Argument MIT der Meldung zu jedem Hoerer. Die holenden Quellen lesen das als
-// Bremse gegen Kreis-Feuer: nur eine Bedienung darf dieselbe Zeile beliebig
-// oft neu laden lassen — sonst schaukeln sich zwei Geber gegenseitig hoch und
-// Relation 69 feuert im Halbsekundentakt gegen das ERP. Als globales Flag
-// taugt die Herkunft nicht: das ueberschriebe der ERSTE Hoerer (Hydrierung
-// eines Folge-Felds ruft setzeAuswahl), bevor der zweite liest, und der
-// dritte Klick auf denselben Beleg holte keine Positionen mehr.
+// Ob eine Auswahl-Aenderung vom BEDIENER kam oder aus einem Programm-Lauf,
+// reist als Argument mit der Meldung: die holenden Quellen lesen es als Bremse
+// gegen Kreis-Feuer. Als globales Flag taugt es nicht, der erste Hoerer
+// ueberschriebe es, bevor der zweite liest.
 let meldungLaeuft = false
 let nachmeldung = false
 let nachBedienung = false
@@ -70,8 +66,6 @@ export function auswahlNummer(geberId: string): number {
   return zustand.get(geberId)?.nummer ?? 0
 }
 
-// Die eine Baustein-Kennung der Maske (exportMask schreibt sie fuer jeden
-// adressierbaren Baustein, den Auswahl-Geber eingeschlossen).
 export function geberIdVon(el: Element): string {
   return el.getAttribute(ACTION_VALUE_ID_ATTR) ?? ''
 }
@@ -102,9 +96,8 @@ export function waehleAuswahl(geberId: string, zeile: unknown): void {
   melde(true)
 }
 
-// Setzt die Auswahl ohne Umschalten (nochmal derselbe Satz bleibt gewaehlt).
-// `durchBedienung` sagt, ob ein Mensch den Satz gewaehlt hat (Nachschlagen,
-// Vorschlag) — die Hydrierung laesst es weg.
+// Setzt die Auswahl ohne Umschalten. `durchBedienung` sagt, ob ein Mensch den
+// Satz gewaehlt hat; die Hydrierung laesst es weg.
 export function setzeAuswahl(geberId: string, zeile: unknown, durchBedienung = false): void {
   if (geberId === '') return
   const merkmal = merkmalVon(zeile)

@@ -1,3 +1,4 @@
+// Einen Baustein samt Kindern kopieren, mit neuen Kennungen.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { type ActionParamBinding, type ActionStep, type BlockEventsMap } from '../core/data/aktionen'

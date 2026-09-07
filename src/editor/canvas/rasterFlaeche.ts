@@ -1,3 +1,4 @@
+// Ob ein Baustein eine eigene Rasterflaeche aufmacht.
 export function flaecheVon(wrapper: HTMLElement): HTMLElement | null {
   return wrapper.assignedSlot?.parentElement ?? wrapper.parentElement
 }

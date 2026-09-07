@@ -1,11 +1,6 @@
-// Umlaute und Akzente auf ihren Grundbuchstaben zurueckfuehren: wer „muller"
-// tippt, sucht Mueller, und wer „AERMEL" tippt, sucht Ärmel. Ohne das faellt
-// jeder Treffer mit Umlaut aus der Liste, sobald der Bediener die Taste nicht
-// trifft — im Lager tippt niemand Umlaute mit.
-//
-// Zusaetzlich ss/ß, weil das kein Akzent ist und die Zerlegung es nicht
-// erwischt. Getrennt ausgestellt, damit Suche und Sortierung DASSELBE
-// Verstaendnis von „gleich" haben (vorschlagListe.ts).
+// Text fuer Suche und Sortierung vergleichbar machen: Umlaute und Akzente auf
+// ihren Grundbuchstaben, ss fuer ss. Suche und Sortierung brauchen dasselbe
+// Verstaendnis von „gleich".
 export function schlichtText(text: string): string {
   return text
     .toLowerCase()

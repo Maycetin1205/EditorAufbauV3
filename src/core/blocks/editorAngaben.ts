@@ -1,3 +1,4 @@
+// Die Angaben, die nur der Editor zu einem Bausteintyp braucht (Symbol).
 export type BausteinSymbol = (eigenschaften: {
   size?: number | string
   className?: string

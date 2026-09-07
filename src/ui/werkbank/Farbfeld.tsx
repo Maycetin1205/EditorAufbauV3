@@ -1,31 +1,21 @@
+// Ein Farbfleck zum Anklicken; die gewaehlte Farbe traegt Ring und Haekchen.
 import { Check } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
 
 export interface FarbfeldProps {
-  // Die Farbe selbst. Sie kommt als fertiger CSS-Wert, nicht als Klasse:
-  // welche Farben zur Wahl stehen, entscheidet die Maske, nicht der Bausatz.
-  //
-  // Fehlt sie, bleibt das Feld leer (nur Rahmen). Das ist kein Sonderfall zum
-  // Abfangen, sondern das Ehrlichste, was ein Farbfeld ohne Farbe zeigen kann.
+  // Die Farbe als fertiger CSS-Wert, nicht als Klasse: welche Farben zur Wahl
+  // stehen, entscheidet die Maske. Fehlt sie, bleibt das Feld leer.
   farbe?: string
 
-  // Der Klarname der Farbe. Pflicht, denn zu sehen ist nur ein Fleck — ohne
-  // Namen ist die Wahl fuer die Vorlesehilfe und im Tooltip stumm.
+  // Der Klarname der Farbe. Pflicht, denn zu sehen ist nur ein Fleck.
   name: string
 
   gewaehlt: boolean
   onWaehle: () => void
 }
 
-// Ein Farbfleck zum Anklicken: die gewaehlte Farbe traegt einen Ring und ein
-// Haekchen.
-//
-// Warum das Haekchen und nicht nur der Ring: bei hellen Farben ist der Ring
-// gut zu sehen, bei dunklen kaum — und wer Farben schlecht unterscheidet,
-// sieht am Ring allein gar nicht, welche Kachel gemeint ist. Das Haekchen
-// sagt es unabhaengig von der Farbe. Es ist weiss (`text-grund`), weil die
-// Farbwahl aus kraeftigen Farben besteht; auf einer sehr hellen Farbe ist es
-// schwach — dann traegt der Ring.
+// Das Haekchen sagt unabhaengig von der Farbe, welche Kachel gemeint ist: bei
+// dunklen Farben ist der Ring kaum zu sehen.
 export function Farbfeld({ farbe, name, gewaehlt, onWaehle }: FarbfeldProps) {
   return (
     <button

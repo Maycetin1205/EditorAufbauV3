@@ -1,3 +1,4 @@
+// Eine Zeile in einem Popover: Menuepunkt der Werkzeugleiste wie Feld-Zeile des Waehlers.
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -10,24 +11,15 @@ const ART: Record<MenueZeileArt, { farbe: string; schweben: string }> = {
 
 export interface MenueZeileProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
-  // Das Zeichen links vom Text. Nicht jede Zeile hat eines.
   zeichen?: ReactNode
 
-  // Die Zeile, auf der die Wahl gerade steht.
   aktiv?: boolean
   art?: MenueZeileArt
   children: ReactNode
 }
 
-// Eine Zeile in einem Popover: der Menuepunkt der Werkzeugleiste ebenso wie
-// die Feld-Zeile des Feld-Waehlers. Beide waren dieselbe Sache mit eigenen
-// Klassenlisten — die Werkzeugleiste trug sie als Konstante MENUEZEILE, der
-// Feld-Waehler wortgleich noch einmal. Wortgleich heisst: bis jemand eine
-// davon anfasst.
-//
-// Ihre Rolle bekommt die Zeile vom Aufrufer (`role="menuitem"` im Menue,
-// `aria-pressed` in der Wahl): fuer die Vorlesehilfe ist ein Menuepunkt
-// etwas anderes als eine Wahl, zu sehen ist dasselbe.
+// Ihre Rolle bekommt die Zeile vom Aufrufer (role="menuitem" im Menue,
+// aria-pressed in der Wahl): zu sehen ist dasselbe, fuer die Vorlesehilfe nicht.
 export function MenueZeile({
   zeichen,
   aktiv = false,

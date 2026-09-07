@@ -1,3 +1,4 @@
+// Die Reiter der Seiten und Ansichten ueber der Leinwand.
 import { Trash } from '@/ui/zeichen'
 import { Fragment, useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'

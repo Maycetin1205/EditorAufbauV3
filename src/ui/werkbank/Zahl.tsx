@@ -1,3 +1,4 @@
+// Ein Zahlenfeld mit Einheit.
 import { forwardRef, type InputHTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 import { EINGABE_KANTE } from './Feld'
@@ -12,9 +13,8 @@ export const Zahl = forwardRef<HTMLInputElement, ZahlProps>(
     <span className="relative inline-flex shrink-0 items-center">
       <input
         ref={ref}
-        // Ein Textfeld mit Zahlen-Tastatur, KEIN type="number": das schluckt
-        // je Browser das Komma, und die Komma-Ersetzung der Aufrufer wurde
-        // nie erreicht. Was eine Zahl ist, entscheidet der Aufrufer.
+      // Ein Textfeld mit Zahlen-Tastatur, KEIN type="number": das schluckt je
+      // Browser das Komma. Was eine Zahl ist, entscheidet der Aufrufer.
         type="text"
         inputMode="decimal"
         className={cn(

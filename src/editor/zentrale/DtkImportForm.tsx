@@ -1,3 +1,4 @@
+// Der DTK-Import: aus einer SoftEngine-Ausgabe Datenquellen anlegen.
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Ankreuz } from '@/ui/werkbank/Ankreuz'

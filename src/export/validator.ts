@@ -1,3 +1,4 @@
+// Prueft die Dateiform der Maske: SE-Marker, LF, reines ASCII.
 export const START_MARKER = '<!--SOFTENGINE-VAR!JWHtmlStart-->'
 export const END_MARKER = '<!--SOFTENGINE-VAR!JWHtmlEnde-->'
 

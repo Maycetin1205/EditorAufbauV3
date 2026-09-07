@@ -1,3 +1,4 @@
+// Ein Fenster, das unter seinem Anker haengt und sich selbst hinmisst.
 import {
   useEffect,
   useLayoutEffect,
@@ -15,14 +16,14 @@ export interface PopoverProps {
   bezeichnung: string
 
   // Das Ding, unter dem das Fenster haengt. Die Messung passiert HIER, ein
-  // einziges Mal — kein Aufrufer rechnet mehr mit getBoundingClientRect.
+  // einziges Mal.
   anker: RefObject<HTMLElement | null>
 
   breite?: number
   maxHoehe?: number
 
-  // Die Flaeche und die Bausteine hoeren selbst auf Escape. Ein Fenster
-  // darueber muss die Taste abfangen, sonst raeumt der Klick dahinter mit auf.
+  // Ein Fenster darueber muss Escape abfangen, sonst raeumt die Taste das
+  // darunter mit auf.
   escapeAbfangen?: boolean
   onClose: () => void
   children: ReactNode
@@ -49,7 +50,7 @@ export function Popover({
       const eigen = el.getBoundingClientRect()
       const maxLeft = Math.max(RAND, window.innerWidth - RAND - eigen.width)
       const maxTop = Math.max(RAND, window.innerHeight - RAND - eigen.height)
-      // Kein Platz mehr unter dem Anker: dann darueber, nicht halb aus dem Bild.
+  // Kein Platz mehr unter dem Anker: dann darueber, nicht halb aus dem Bild.
       const untenPasst = a.bottom + 4 <= maxTop
       const top = untenPasst ? a.bottom + 4 : Math.max(RAND, a.top - 4 - eigen.height)
       const links = Math.max(RAND, Math.min(a.left, maxLeft))
@@ -114,9 +115,8 @@ export function Popover({
       }}
       className={cn(
         'overflow-y-auto rounded border border-linie bg-panel p-1 text-tinte shadow-overlay',
-        // Vor der Messung unsichtbar, aber NICHT `invisible`: was
-        // visibility:hidden traegt, nimmt keinen Fokus an — ein Suchfeld
-        // darin bliebe beim Aufklappen leer stehen.
+        // Vor der Messung unsichtbar, aber nicht `invisible`: was
+        // visibility:hidden traegt, nimmt keinen Fokus an.
         platz === null && 'opacity-0',
       )}
     >

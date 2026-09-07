@@ -1,3 +1,4 @@
+// Startet den Editor im Browser.
 import './index.css'
 import './design/masken-tokens.css'
 import './blocks/registerEditorAngaben'

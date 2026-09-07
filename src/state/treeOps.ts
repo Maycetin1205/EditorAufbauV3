@@ -1,3 +1,4 @@
+// Die kleinen Griffe am Baum: Knoten holen, setzen, Kinder ordnen.
 import {
   ROOT_ID,
   ROOT_TYPE,

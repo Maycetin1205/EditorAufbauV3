@@ -1,3 +1,4 @@
+// Das Aussehen der Karte.
 import { css } from 'lit'
 
 export const kartenStil = css`

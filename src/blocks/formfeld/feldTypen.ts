@@ -1,3 +1,4 @@
+// Die Typen eines Formularfelds und der Platzhalter zu jedem.
 const FELD_TYPEN = ['text', 'number', 'textarea', 'select', 'date', 'time', 'checkbox', 'nachschlagen'] as const
 export type FeldTyp = (typeof FELD_TYPEN)[number]
 
@@ -13,7 +14,5 @@ export const PH_KLASSE: Partial<Record<FeldTyp, string>> = {
   select: 'ph-select',
   date: 'ph-nativ',
   time: 'ph-nativ',
-  // endet vor der Lupe — sonst deckt der im Editor klickbare Platzhalter
-  // zwei Drittel der Lupe ab (dasselbe Muster wie ph-select vorm Pfeil)
   nachschlagen: 'ph-nachschlag',
 }

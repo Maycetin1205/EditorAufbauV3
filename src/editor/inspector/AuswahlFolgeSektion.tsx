@@ -1,3 +1,4 @@
+// „Folgt der Auswahl von …" im Inspector.
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import type { ListeEintrag } from '@/ui/werkbank/Liste'
 import type { BlockNode } from '../../core/blocks/BlockData'

@@ -1,3 +1,4 @@
+// Der Balken unter der Leinwand: Stand und Meldungen.
 import { bausteinName } from '../../core/blocks/bausteinName'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'

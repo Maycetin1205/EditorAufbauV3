@@ -1,3 +1,4 @@
+// Eine waehlbare Liste mit Klarnamen, Kennung und optionaler Suche.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Search } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
@@ -7,8 +8,6 @@ export interface ListeEintrag {
   wert: string
   name: string
 
-  // Rechts in der Zeile, technisch (Feldcode, Nummer): der Klarname fuehrt,
-  // die Kennung steht daneben.
   kennung?: string
   deaktiviert?: boolean
 }
@@ -29,8 +28,7 @@ export interface ListeProps {
   leerText?: string
   leerHinweis?: string
 
-  // Suchfeld ueber der Liste. Eine Datenquelle kann hunderte Felder haben —
-  // ohne Suche ist die Wahl darin Rollen auf gut Glueck.
+  // Suchfeld ueber der Liste. Eine Datenquelle kann hunderte Felder haben.
   suchbar?: boolean
   onWaehle: (wert: string) => void
 }
@@ -119,8 +117,7 @@ export function Liste({
                 type="button"
                 disabled={e.deaktiviert}
 
-                // Abgeschnittener Text ist ohne Tooltip nicht mehr lesbar —
-                // ein Feld-Klarname kann laenger sein als die Zeile.
+          // Abgeschnittener Text ist ohne Tooltip nicht mehr lesbar.
                 title={e.kennung === undefined || e.kennung === ''
                   ? e.name
                   : `${e.name} — ${e.kennung}`}

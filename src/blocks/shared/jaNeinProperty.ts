@@ -1,11 +1,8 @@
+// Die eine Stelle fuer eine Ja/Nein-Eigenschaft im Inspector.
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 
-// Die EINE Stelle fuer eine Ja/Nein-Eigenschaft: gleiche Antwortliste,
-// gleiche Reihenfolge, gleiche Darstellung.
-//
-// Die REIHENFOLGE der Optionen ist ein Kontrakt: erste = aus, zweite = ein.
-// Der Inspector zeichnet daraus eine Kachel (controls/KachelControl) und
-// liest die beiden Werte hier heraus, statt "ja"/"nein" selbst zu kennen.
+// Die eine Stelle fuer eine Ja/Nein-Eigenschaft. Die REIHENFOLGE der Optionen
+// ist ein Kontrakt: erste = aus, zweite = ein; der Inspector liest sie hier heraus.
 export function jaNeinProperty(
   attributeName: string,
   name: string,

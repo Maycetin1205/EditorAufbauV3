@@ -1,3 +1,4 @@
+// Gibt den Editor-Zustand an die Oberflaeche weiter.
 import type { ReactNode } from 'react'
 import type { Editor } from './Editor'
 import { EditorContext } from './EditorContext'

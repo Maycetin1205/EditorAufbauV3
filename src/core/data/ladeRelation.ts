@@ -1,3 +1,4 @@
+// Die Hol-Relation einer Quelle: welche Relation ihre Zeilen liefert.
 import { artFuer, type DataSourceKind } from './quellenArten'
 
 export interface LadeRelation {

@@ -1,3 +1,4 @@
+// Eine Beschriftung mit ihrem Bedienelement, einspaltig: Beschriftung oben.
 import { useId, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -8,36 +9,24 @@ export interface ZeileKind {
 }
 
 export interface ZeileProps {
-  // Steht UEBER dem Bedienelement, nicht daneben. Ohne Beschriftung nimmt
-  // das Element die Zeile allein.
+  // Steht UEBER dem Bedienelement. Ohne Beschriftung nimmt das Element die Zeile
+  // allein.
   label?: ReactNode
 
-  // Erklaerung. Sie haengt als Tooltip an der Beschriftung, statt eine
-  // zweite Textzeile zu kosten — im Inspector sind viele solche Zeilen
-  // untereinander.
+  // Erklaerung. Sie haengt als Tooltip an der Beschriftung, statt eine zweite
+  // Textzeile zu kosten.
   hinweis?: string
   fehler?: ReactNode
 
-  // Nimmt die GANZE Reihe, auch dort, wo zwei Zeilen nebeneinander stehen
-  // (Inspector, sobald das Panel zweimal 240 px hergibt). Fuer Bedienelemente,
-  // die von Natur aus breit sind: mehrzeiliger Text, Bild, Farbkacheln.
+  // Nimmt die GANZE Reihe, auch wo zwei Zeilen nebeneinander stehen: fuer
+  // Bedienelemente, die von Natur aus breit sind.
   breit?: boolean
   className?: string
   children: (kind: ZeileKind) => ReactNode
 }
 
-// Eine Beschriftung mit ihrem Bedienelement — EINSPALTIG, Beschriftung oben.
-//
-// Staende die Beschriftung links in einem 2fr/3fr-Raster, blieben ihr im
-// schmalen Inspector nur gut ein Dutzend Zeichen: fast jede Beschriftung
-// braeche auf zwei Zeilen um, die Zeilen wuerden unterschiedlich hoch — genau
-// der ungleiche Takt, den man als „kaputt" liest. Dem Bedienelement bliebe
-// gleichzeitig zu wenig Platz, und in den Waehlern staenden Klarnamen
-// abgeschnitten. Uebereinander bekommen beide die volle Breite.
-//
-// Beschriftung und Wert sind gleich GROSS und unterscheiden sich nur in der
-// Farbe — so steht es in der Schriftskala (tailwind.config: „Rangfolge macht
-// der Editor ueber Fettung und Farbe, nicht ueber ein Achtel Millimeter").
+// Uebereinander, weil links im schmalen Inspector nur ein Dutzend Zeichen fuer
+// die Beschriftung blieben und die Zeilen unterschiedlich hoch wuerden.
 export function Zeile({ label, hinweis, fehler, breit = false, className, children }: ZeileProps) {
   const id = useId()
   const fehlerId = fehler ? `${id}-fehler` : undefined

@@ -1,3 +1,4 @@
+// Die Schemastufen eines gespeicherten Standes, nach normalizeProps.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import {

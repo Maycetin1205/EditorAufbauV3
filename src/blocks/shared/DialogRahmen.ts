@@ -1,13 +1,12 @@
+// Der Rahmen jedes Fensters: Titel, Schliessen, Tasten und die zwei Zieh-Anfasser.
 import { css, html, LitElement, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 
 export const DIALOG_RAHMEN_TAG = 'ff-dialog-rahmen'
 export const DIALOG_SCHLIESSEN_EVENT = 'ff-dialog-schliessen'
 
-// Gemeldet beim Ziehen an einem Anfasser: `breite`/`hoehe` in Pixeln, dazu
-// wo im Zug wir stehen. Der Rahmen aendert sich NICHT selbst — er meldet nur,
-// und wer ihn benutzt, speichert und gibt die neue Groesse zurueck. Sonst
-// gaebe es zwei Wahrheiten ueber dieselbe Zahl.
+// Der Rahmen aendert sich NICHT selbst: er meldet nur, und wer ihn benutzt,
+// speichert und gibt die neue Groesse zurueck.
 const DIALOG_GROESSE_EVENT = 'ff-dialog-groesse'
 
 export interface DialogGroesseDetail {
@@ -15,9 +14,8 @@ export interface DialogGroesseDetail {
 
   wert: number
 
-  // 'beginn'/'laeuft'/'ende' klammern EINEN Zug. 'standard' ist der
-  // Doppelklick auf den Anfasser: `wert` gilt dann nicht — der Empfaenger
-  // nimmt seinen eigenen Startwert, denn nur er kennt ihn.
+  // 'standard' ist der Doppelklick auf den Anfasser; `wert` gilt dann nicht,
+  // der Empfaenger nimmt seinen eigenen Startwert.
   geste: 'beginn' | 'laeuft' | 'ende' | 'standard'
 }
 
@@ -151,9 +149,8 @@ export class DialogRahmen extends LitElement {
   @property({ type: Boolean, attribute: 'ohne-modal' }) ohneModal = false
   @property({ type: Boolean, reflect: true, attribute: 'inhalt-fest' }) inhaltFest = false
 
-  // Gesetzt zeigt der Rahmen zwei Anfasser und meldet das Ziehen. Nur der
-  // Editor setzt das — zur Laufzeit hat der Bediener an der Groesse nichts
-  // zu stellen.
+  // Nur der Editor setzt das: zur Laufzeit hat der Bediener an der Groesse
+  // nichts zu stellen.
   @property({ type: Boolean, reflect: true }) ziehbar = false
 
   private escapeRegistriert = false
@@ -184,8 +181,7 @@ export class DialogRahmen extends LitElement {
     const startPos = achse === 'breite' ? event.clientX : event.clientY
 
     // Die Kante wandert nur halb so weit wie der Zeiger: das Fenster steht
-    // mittig, waechst also nach BEIDEN Seiten. Derselbe Faktor 2 wie beim
-    // Popup-Anfasser im Editor.
+    // mittig und waechst nach beiden Seiten.
     let letzter = Math.max(min, Math.round(start))
     let gemeldet = false
 

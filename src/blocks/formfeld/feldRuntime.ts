@@ -1,3 +1,4 @@
+// Das Formularfeld am SoftEngine-Datenstrom: Wert setzen und die Zeile weitergeben.
 import { bindingAttr } from '../../core/blocks/BlockDefinition'
 import { satzIndexVon, setField } from '../../softengine/data'
 import { geberIdVon, klareAuswahl, setzeAuswahl } from '../shared/auswahl'
@@ -45,9 +46,8 @@ function hydrateField(field: RuntimeFieldElement): void {
   const stelle = leseGebundeneStelle(field, bindingAttr('value'))
   if (stelle.art !== 'wert') {
     fieldData.delete(field)
-    // Ein gebundenes Feld ist Geber seiner ANGEZEIGTEN Zeile — zeigt es
-    // keine, gibt es auch keine. Ohne Kennung (kein Geber) sind beide Rufe
-    // stumm.
+  // Ein gebundenes Feld ist Geber seiner ANGEZEIGTEN Zeile; zeigt es keine, gibt
+  // es auch keine.
     klareAuswahl(geberIdVon(field))
 
     if (stelle.art === 'ohneZeile') field.value = ''
@@ -60,10 +60,7 @@ function hydrateField(field: RuntimeFieldElement): void {
   if (quelleId === '') fieldData.set(field, { row: zeile, code: reinerCode, pindex })
   else fieldData.delete(field)
   field.value = wert
-  // Die angezeigte Zeile veroeffentlichen — folgt das Feld selbst einer
-  // Auswahl, ist das bereits die gefundene Partnerzeile (gebundeneStelle
-  // liest ueber ersteZeileNachAuswahl). Gleiches Merkmal = stiller Ruf,
-  // darum kreist die Hydrier-Kette nicht.
+  // Gleiches Merkmal = stiller Ruf, darum kreist die Hydrier-Kette nicht.
   setzeAuswahl(geberIdVon(field), zeile)
 }
 

@@ -1,36 +1,26 @@
+// Wie eine Baustein-Eigenschaft im Inspector aussieht und was sie speichert.
 export type PropertyKind =
   | 'text'
   | 'textarea'
   | 'select'
   | 'number'
   | 'segment'
-  // jaNein ist eine EIGENE Art und kein segment mit zwei Optionen: der
-  // Inspector zeichnet es als Kachel statt als Zeile, und das ist eine
-  // Entscheidung ueber die FORM, keine ueber die Werte. Gespeichert werden
-  // weiter die zwei Zeichenketten aus blocks/shared/jaNeinProperty, damit
-  // exportierte Masken unveraendert bleiben.
+// jaNein ist eine eigene Art und kein segment mit zwei Optionen: der Inspector
+// zeichnet eine Kachel statt einer Zeile. Gespeichert werden weiter die zwei
+// Zeichenketten, damit exportierte Masken unveraendert bleiben.
   | 'jaNein'
   | 'field'
-  // quelle speichert die id einer DATENQUELLE — eine ZWEITE Quelle am
-  // Baustein, fuer einen eigenen Zweck neben der Quelle, aus der er seinen
-  // Inhalt liest (acceptsDataSource). Beispiel: die Liste, aus der das
-  // Nachschlage-Feld waehlen laesst. Der Export sammelt sie mit in die
-  // SEFILELOOP; ohne das schickte SoftEngine ihre Daten nie und das Fenster
-  // bliebe in der fertigen Maske leer.
+// quelle speichert die id einer Datenquelle: eine ZWEITE Quelle am Baustein
+// neben der, aus der er seinen Inhalt liest. Der Export sammelt sie mit in die
+// SEFILELOOP, sonst bliebe das Fenster in der fertigen Maske leer.
   | 'quelle'
   | 'relation'
-  // seite speichert die id einer SEITE DIESER MASKE (Hauptseite oder
-  // Ansicht) — waehlbar ist nur, was es in der Maske gibt: keine freien
-  // Links, keine externen Ziele.
-  // Die id ist ein Editor-Technikwert und bleibt daheim (nurImEditor); was
-  // die fertige Maske braucht, ist der KLARNAME der Seite — er wandert wie
-  // beim Feld-Control ueber klarnameProp in eine eigene Prop.
+// seite speichert die id einer Seite DIESER Maske. Die id bleibt daheim; was die
+// fertige Maske braucht, ist der Klarname, und der wandert ueber klarnameProp.
   | 'seite'
-  // bild speichert eine BILDDATEI als eingebetteten Daten-URI. Der Wert
-  // ist der fertige `data:`-String — die Maske laedt nie etwas nach, und eine
-  // Maske bleibt EINE Datei. Das Waehlen und das stille Verkleinern macht das
-  // Inspector-Control (controls/BildControl); der Baustein bekommt nur das
-  // Ergebnis, damit kein Dateidialog im Runtime-Buendel landet.
+// bild speichert eine Bilddatei als eingebetteten Daten-URI: die Maske laedt nie
+// etwas nach. Waehlen und Verkleinern macht das Inspector-Control, damit kein
+// Dateidialog im Runtime-Buendel landet.
   | 'bild'
 
 export interface PropertySelectOption {

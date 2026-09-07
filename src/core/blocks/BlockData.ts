@@ -1,3 +1,4 @@
+// Die Form des Baustein-Baums: ein Knoten je Baustein, die Wurzel heisst root.
 import type { BlockEventsMap } from '../data/aktionen'
 
 export interface BlockNode {

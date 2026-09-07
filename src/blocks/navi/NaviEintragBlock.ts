@@ -1,3 +1,4 @@
+// Baustein Navi-Eintrag: ein Punkt der Navi, der auf eine Ansicht zeigt.
 import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'

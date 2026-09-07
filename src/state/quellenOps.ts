@@ -1,3 +1,4 @@
+// Eine Datenquelle an einem Baustein setzen und die Folgen im Baum.
 import type { BlockNode, BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { propertySichtbar } from '../core/blocks/PropertyDescription'

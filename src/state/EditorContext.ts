@@ -1,3 +1,4 @@
+// Der React-Kontext, ueber den die Oberflaeche an den Editor kommt.
 import { createContext, useContext } from 'react'
 import type { Editor } from './Editor'
 

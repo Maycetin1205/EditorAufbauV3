@@ -1,3 +1,4 @@
+// Die Zeichen der Zungenreihen im Inspector.
 import { createElement, type ReactElement } from 'react'
 import {
   AlignCenter,

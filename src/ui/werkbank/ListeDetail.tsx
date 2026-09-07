@@ -1,25 +1,22 @@
+// Der eine Aufbau fuer Fenster mit Liste und Detail (Datencenter, Kettenfenster).
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface ListeDetailProps {
-  // Schmale Bereichsleiste ganz links (Datencenter: Datenquellen, Relationen).
   bereiche?: ReactNode
 
-  // Kopf der Listenspalte: Anlegen-Knopf, Suche, Filter. Knoepfe darin
-  // tragen `className="w-full"`.
+  // Kopf der Listenspalte: Anlegen-Knopf, Suche, Filter.
   listeKopf?: ReactNode
   liste: ReactNode
   detail: ReactNode
 
-  // Fuer Listen, die ihre Zeilen selbst rahmen (z. B. eine <ol> mit
-  // Trennlinien) und darum keinen Innenabstand wollen.
+  // Fuer Listen, die ihre Zeilen selbst rahmen und darum keinen Innenabstand
+  // wollen.
   listeOhneRand?: boolean
 }
 
-// Der EINE Aufbau fuer Fenster mit Liste und Detail: Bereiche links
-// (optional), Liste mit Kopf, Detail rechts. Muss direktes Kind eines
-// randlosen Dialogs sein — der stellt die Flex-Zeile und die Hoehe.
-// Datencenter und Kettenfenster benutzen genau dieses Teil.
+// Muss direktes Kind eines randlosen Dialogs sein: der stellt die Flex-Zeile und
+// die Hoehe.
 export function ListeDetail({
   bereiche, listeKopf, liste, detail, listeOhneRand = false,
 }: ListeDetailProps) {

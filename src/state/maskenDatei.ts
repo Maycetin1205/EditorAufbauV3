@@ -1,3 +1,4 @@
+// Eine Maske als Datei speichern und wieder laden.
 import { ROOT_ID, type BlockTree } from '../core/blocks/BlockData'
 import { pruefeDatenquellen, type DataSource } from '../core/data/dataSources'
 import {
@@ -68,8 +69,8 @@ export function speichereMaskeAlsDatei(editor: Editor): void {
   downloadFile(`aufbau-maske-${heute}.json`, text, 'application/json')
 }
 
-// Laedt eine Maskendatei in den Editor. Ohne Rueckfrage: das Laden ist ein
-// Undo-Schritt, Strg+Z bringt die vorige Maske samt Bibliotheken zurueck.
+// Ohne Rueckfrage: das Laden ist ein Undo-Schritt, Strg+Z bringt die vorige
+// Maske samt Bibliotheken zurueck.
 export async function ladeMaskeAusDatei(editor: Editor, datei: File): Promise<void> {
   let text: string
   try {
@@ -95,9 +96,8 @@ export async function ladeMaskeAusDatei(editor: Editor, datei: File): Promise<vo
   meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
 }
 
-// Aeltere Masken speicherten in der Hol-Relation die Liste `zusatzFelder`
-// mit. Die errechnet der Export aus den benutzten Feldern; sie ist kein
-// Bestand der Maske, ohne sie geht nichts verloren.
+// Aeltere Masken speicherten in der Hol-Relation eine Feldliste mit. Die
+// errechnet der Export aus den benutzten Feldern, ohne sie geht nichts verloren.
 function ohneErrechnetes(eintrag: unknown): unknown {
   if (!eintrag || typeof eintrag !== 'object') return eintrag
   const e = eintrag as Record<string, unknown>

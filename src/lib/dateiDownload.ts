@@ -1,3 +1,4 @@
+// Eine Datei zum Speichern anbieten.
 export function downloadFile(name: string, content: string, type: string): void {
   const url = URL.createObjectURL(new Blob([content], { type }))
   const a = document.createElement('a')

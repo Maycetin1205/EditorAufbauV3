@@ -1,3 +1,4 @@
+// Die Datenquellen-Bibliothek der Maske.
 import { pruefeDatenquellen, type DataSource } from '../core/data/dataSources'
 import { VorlagenStore, type VorlagenBauplan } from './VorlagenStore'
 
@@ -7,7 +8,7 @@ const BAUPLAN: VorlagenBauplan<DataSource> = {
   klarnameLesen: 'Datenquellen',
   klarnameSchreiben: 'Datenquellen',
   pruefe: pruefeDatenquellen,
-  // Bewusst kein Startbestand — nicht wieder einbauen.
+  // Bewusst kein Startbestand.
 }
 
 export class DataSourceStore extends VorlagenStore<DataSource> {

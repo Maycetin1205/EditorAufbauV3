@@ -1,3 +1,4 @@
+// Das Ziehen an Breite und Hoehe eines Bausteins.
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'

@@ -1,3 +1,4 @@
+// Wohin ein gezogener Baustein im Raster faellt.
 import type { DragEvent } from 'react'
 import { canContain, getBlockDefinition } from '../../core/blocks/blockRegistry'
 import { RASTER, rasterSpecOf } from '../../core/blocks/rasterLayout'

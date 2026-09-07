@@ -1,3 +1,4 @@
+// Der Zugang der Oberflaeche zur Relations-Bibliothek.
 import { useSyncExternalStore } from 'react'
 import { relationStore } from './RelationStore'
 

@@ -1,3 +1,4 @@
+// Die weiteren Quellen eines Bausteins: welcher Satz zu einer Zeile gehoert.
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, getField, rowsFor } from '../../softengine/data'
 import { WEITERE_QUELLEN_PROP, type SchluesselPaar } from '../../core/data/sourceLinks'
@@ -30,15 +31,9 @@ function schluesselAus(werte: readonly string[]): string {
   return teile.join(SCHLUESSEL_TRENNER)
 }
 
-// Die Verknüpfungen dieses Bausteins: je Quelle die Schlüsselpaare und die
-// Quelle, mit der sie verbinden („Welche Felder verbinden die beiden
-// Datenquellen?"). `partnerId` leer = die Hauptquelle. Auch die
-// Erfassungszeile der Tabelle liest das — es ist die EINE Angabe dazu.
-//
-// Eintraege OHNE Paar bleiben stehen: das Paar ist freiwillig, eine Quelle
-// ohne Paar ist eine reine Nachschlagequelle (der Bediener sucht den Satz von
-// Hand). In einer schon vorhandenen Datenzeile kann sie nichts anzeigen — es
-// gibt keinen Schlüssel, an dem der Satz haengt.
+// Je Quelle die Schluesselpaare und die Quelle, mit der sie verbinden.
+// Eintraege OHNE Paar bleiben stehen: eine Quelle ohne Paar ist eine reine
+// Nachschlagequelle.
 export function verknuepfungenVon(
   el: HTMLElement,
 ): { quelleId: string; partnerId: string; keyPairs: SchluesselPaar[] }[] {
@@ -72,13 +67,9 @@ export function macheFeldLeser(el: HTMLElement): FeldLeser {
     })
   }
 
-  // Der zur Zeile gehoerende Satz EINER Quelle. Leere Kennung = die Zeile
-  // selbst (Hauptquelle). Sonst wird erst der Satz der PARTNER-Quelle geholt
-  // und dessen Felder liefern den Schluessel — so traegt eine Kette
-  // (Hauptquelle → 2 → 3) genauso wie ein Stern, in dem jede Quelle direkt
-  // an der Hauptquelle haengt.
-  // `laufend` bricht einen Kreis ab (2 zeigt auf 3, 3 zurueck auf 2): der
-  // Kreis liefert dann keinen Satz statt die Maske haengen zu lassen.
+// Leere Kennung = die Zeile selbst. Sonst wird erst der Satz der PARTNER-Quelle
+// geholt, dessen Felder liefern den Schluessel; so traegt eine Kette genauso wie
+// ein Stern. `laufend` bricht einen Kreis ab, statt die Maske haengen zu lassen.
   const satzVon = (quelleId: string, row: unknown, laufend: Set<string>): unknown => {
     if (quelleId === '') return row
     const eintrag = nachschlag.get(quelleId)

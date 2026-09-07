@@ -1,3 +1,4 @@
+// Ein Popup auf der Leinwand: eigene Flaeche, verschiebbarer Anker.
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { DIALOG_RAND, DIALOG_SCHLIESSEN_EVENT } from '../../blocks/shared/DialogRahmen'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'

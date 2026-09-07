@@ -1,15 +1,10 @@
-// Der EINE Inline-Umbenennen-Griff (Doppelklick auf einen Text): das Ziel
-// wird voruebergehend editierbar, Enter/Blur schliesst ab, Escape bricht ab.
-// Was mit dem neuen Text passiert, entscheidet der Aufrufer: gibt sein
-// `uebernehmen` false zurueck, stellt der Griff den alten Anzeigestand
-// wieder her.
+// Der Inline-Umbenennen-Griff: Doppelklick auf einen Text, Enter schliesst ab.
 export function starteUmbenennen(
   ziel: HTMLElement,
   uebernehmen: (neu: string, original: string) => boolean,
 ): void {
   const original = ziel.textContent ?? ''
-  // Die Text-Knoten selbst merken, nicht nur den String: beim Tippen
-  // mutiert der Browser die vorhandenen Knoten, und Lit besitzt sie —
+  // Die Text-Knoten selbst merken, nicht nur den String: Lit besitzt sie, und
   // beim Wiederherstellen muessen exakt dieselben Knoten zurueck.
   const originalKnoten = Array.from(ziel.childNodes)
   const originalTexte = originalKnoten.map((n) => n.textContent ?? '')
@@ -28,10 +23,8 @@ export function starteUmbenennen(
     })
   }
 
-  // Die Leertaste ist auf einem Knopf fuer den Browser "Knopf druecken": er
-  // verbraucht sie und tippt dann KEIN Leerzeichen ein. Wird hier in einem
-  // Knopf geschrieben (Schaltflaeche), setzen wir das Zeichen selbst; ueberall
-  // sonst tippt der Browser richtig, und dieser Weg bleibt unangetastet.
+  // Die Leertaste ist auf einem Knopf fuer den Browser „Knopf druecken": er
+  // verbraucht sie und tippt kein Leerzeichen; dort setzen wir das Zeichen selbst.
   const imKnopf = ziel.closest('button') !== null
 
   const tippeLeerzeichen = (): void => {
@@ -39,7 +32,6 @@ export function starteUmbenennen(
     const markierung = wurzel.getSelection?.() ?? window.getSelection()
     const stelle = markierung?.rangeCount ? markierung.getRangeAt(0) : null
     if (!markierung || !stelle || !ziel.contains(stelle.startContainer)) return
-    // Markierter Text wird ersetzt, genau wie beim gewoehnlichen Tippen.
     if (!stelle.collapsed) stelle.deleteContents()
     const knoten = stelle.startContainer
     if (knoten instanceof Text) {
@@ -73,7 +65,7 @@ export function starteUmbenennen(
       abschluss(false)
     } else if (e.key === ' ' && imKnopf) {
       if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return
-      // preventDefault haelt zugleich den Knopfdruck auf (s. imKnopf oben).
+    // preventDefault haelt zugleich den Knopfdruck auf (s. imKnopf oben).
       e.preventDefault()
       tippeLeerzeichen()
     }

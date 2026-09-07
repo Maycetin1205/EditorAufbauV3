@@ -1,3 +1,4 @@
+// Die Navi in der fertigen Maske: aktiven Punkt halten und die Ansicht wechseln.
 import { SEITEN_WECHSEL_EVENT, type SeitenWechselDetail } from '../../core/blocks/seitenWechsel'
 import { AnsichtBlock } from '../ansicht/AnsichtBlock'
 import { NaviEintragBlock } from './NaviEintragBlock'

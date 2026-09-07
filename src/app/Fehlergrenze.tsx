@@ -1,3 +1,4 @@
+// Faengt einen Absturz der Oberflaeche ab und zeigt ihn an.
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { Knopf } from '@/ui/werkbank/Knopf'
 

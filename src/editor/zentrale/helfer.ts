@@ -1,3 +1,4 @@
+// Gemeinsame Helfer der Kommandozentrale: Klartexte, Optionen, Zaehlungen.
 import { Boxes, Database, FileText, Users } from '@/ui/zeichen'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { bausteinName } from '../../core/blocks/bausteinName'
@@ -29,9 +30,8 @@ export const RELATION_GRUPPEN: PropertySelectOption[] = [
   { value: 'schreiben', label: 'Schreiben' },
 ]
 
-// Zwei Texte je Platzhalter, weil zwei Stellen ihn zeigen: `name` steht in
-// Menuezeilen (dort ist ein Satz zu lang und reisst die Zeile auf),
-// `hinweis` in der Parameter-Tabelle der Relation.
+// Zwei Texte je Platzhalter, weil zwei Stellen ihn zeigen: `name` in Menuezeilen,
+// `hinweis` in der Parameter-Tabelle.
 export const PLATZHALTER_KLARTEXT: Record<string, { name: string; hinweis: string }> = {
   FELD_POS: {
     name: 'Feld-Position',
@@ -97,16 +97,14 @@ export interface AuswahlGeberOption {
   felder: readonly DataSourceField[]
 }
 
-// Eine Tabelle mit eingeschalteter Erfassungszeile, deren Zellen eine Kette
-// als „Wert aus Erfassungszelle" lesen kann (G4). Die Spalten kommen generisch
-// aus der Listen-Bindung des Bausteins — kein Bausteintyp-Sondercode.
+// Eine Tabelle mit eingeschalteter Erfassungszeile. Die Spalten kommen generisch
+// aus der Listen-Bindung des Bausteins.
 export interface ErfassungsOption {
   blockId: string
   label: string
 
   // Angesprochen wird die Spalte ueber ihre dauerhafte KENNUNG, nie ueber den
-  // Platz — der verrutscht beim Verschieben/Loeschen (aktionen.ts,
-  // ZELLEN_PARAM_QUELLEN). Eintraege ohne Kennung sind nicht adressierbar.
+  // Platz; Eintraege ohne Kennung sind nicht adressierbar.
   spalten: readonly { kennung: string; titel: string }[]
 }
 

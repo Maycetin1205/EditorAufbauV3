@@ -1,3 +1,4 @@
+// Wie eine Relations-Vorlage in Listen heisst.
 import { formatRelationSyntax, type RelationTemplate } from '../../core/data/relations'
 
 export function istUngetaufteVorlage(entry: RelationTemplate): boolean {

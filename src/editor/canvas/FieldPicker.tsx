@@ -1,3 +1,4 @@
+// Das Fenster, in dem ein Feld (oder erst seine Quelle) gewaehlt wird.
 import { useEffect, useState, type RefObject } from 'react'
 import { AuswahlFenster } from '@/ui/molecules/auswahl-fenster'
 import { cn } from '@/lib/utils'
@@ -11,7 +12,6 @@ import { Trenner } from '@/ui/werkbank/Trenner'
 import { bindungMitQuelle } from '../../core/blocks/BlockDefinition'
 import type { DataSourceField } from '../../core/data/dataSources'
 import type { Eingabesitzung } from '../inspector/controls/eingabeSitzung'
-
 
 export interface PickerGruppe {
   quelleId: string
@@ -27,8 +27,8 @@ export interface PickerGruppe {
 export interface PickerTitel {
   wert: string
 
-  // Worauf ein leer getippter Titel zurueckfaellt: eine namenlose Spalte
-  // haette sonst einen leeren Kopf.
+  // Worauf ein leer getippter Titel zurueckfaellt: eine namenlose Spalte haette
+  // sonst einen leeren Kopf.
   standard: string
   onAendern: (titel: string) => void
 
@@ -54,8 +54,8 @@ export interface PickerFeld {
 
   aktuell: string
 
-  // Nur Hilfsquellen zur Wahl. Die Hauptquelle steht immer an erster Stelle
-  // in `gruppen` und traegt die leere Kennung.
+  // Nur Hilfsquellen zur Wahl. Die Hauptquelle steht immer an erster Stelle und
+  // traegt die leere Kennung.
   nurFremdeQuellen?: boolean
   onWaehle: (wert: string) => void
 }
@@ -68,44 +68,36 @@ interface FieldPickerProps {
 
   schalter?: readonly PickerSchalter[]
 
-  // Weitere Feld-Wahlen neben dem Hauptfeld (Fuellfeld).
   weitereFelder?: readonly PickerFeld[]
 
-  // Erste Stufe: der Baustein hat noch keine Hauptquelle. Dann zeigt das
-  // Fenster QUELLEN statt Feldern — sonst steht der Bediener vor allen Feldern
-  // aller Quellen der Bibliothek, und ein Klick darin bestimmt nebenbei still
-  // die Hauptquelle des Bausteins. Erst waehlen, dann binden.
+  // Erste Stufe ohne Hauptquelle: das Fenster zeigt QUELLEN statt Feldern, sonst
+  // bestimmte ein Klick nebenbei still die Hauptquelle.
   quellenWahl?: {
     hinweis: string
     eintraege: readonly { wert: string; name: string; kennung?: string }[]
     onWaehle: (quelleId: string) => void
 
-    // Ohne eine einzige Quelle in der Bibliothek fuehrt der Picker dorthin,
-    // wo sie angelegt wird.
+  // Ohne eine einzige Quelle fuehrt der Picker dorthin, wo sie angelegt wird.
     onDatencenter?: () => void
   }
 
   current?: string
 
-  // Diesen Eintrag (die Spalte) streichen — als Fusszeile des Fensters. Das
-  // Kreuz am Spaltenkopf gibt es nicht mehr: es lag bei schmalen Spalten
-  // ueber dem Titel.
+  // Diesen Eintrag streichen, als Fusszeile: ein Kreuz am Spaltenkopf lag bei
+  // schmalen Spalten ueber dem Titel.
   onEntfernen?: () => void
   entfernenLabel?: string
 
-  // Weiterfuehrende Einstellung dieses Eintrags, die ein eigenes Fenster
-  // braucht (Tabellenspalte: das Suchfenster ihrer Erfassungszelle). Steht in
-  // der Fusszeile neben der Streich-Taste, damit sie immer zu sehen ist.
+  // Weiterfuehrende Einstellung dieses Eintrags, die ein eigenes Fenster braucht.
+  // Steht in der Fusszeile, damit sie immer zu sehen ist.
   weiter?: {
     label: string
     hinweis?: string
     onOeffne: () => void
   }
 
-  // Der Griff, aus dem das Fenster aufgegangen ist. Ein Zeigerdruck DARAUF
-  // schliesst nicht — sonst raeumt dieser Druck das Fenster ab und der Klick
-  // unmittelbar danach oeffnet es wieder: es liesse sich mit seinem eigenen
-  // Griff nicht zumachen.
+  // Ein Zeigerdruck auf den Griff schliesst nicht: sonst raeumt der Druck das
+  // Fenster ab und der Klick danach oeffnet es wieder.
   anker?: RefObject<HTMLElement | null>
 
   top: number
@@ -126,9 +118,8 @@ interface Anzeige {
   unbekannt: boolean
 }
 
-// Was in einer Feld-Zeile steht. Ein Wert, den keine Gruppe (mehr) kennt,
-// faellt rot auf, statt lautlos als „nicht gebunden" zu erscheinen — sonst
-// merkt niemand, dass die Quelle das Feld verloren hat.
+// Ein Wert, den keine Gruppe kennt, faellt rot auf, statt lautlos als „nicht
+// gebunden" zu erscheinen.
 function anzeigeVon(wert: string, gruppen: readonly PickerGruppe[]): Anzeige {
   if (wert === '') return { name: NICHT_GEBUNDEN, leer: true, unbekannt: false }
   for (const g of gruppen) {
@@ -162,10 +153,8 @@ interface FeldZeileProps {
   onAktiv: () => void
 }
 
-// Jede Feld-Wahl ist eine Zeile, die die EINE Liste unten auf sich zieht —
-// kein zweites Fenster im Fenster. Ein Popover im Popover schliesst sonst
-// beide, weil das aeussere jeden Zeigerdruck ausserhalb seiner selbst als
-// „woanders hin geklickt" liest.
+// Jede Feld-Wahl zieht die EINE Liste unten auf sich, kein zweites Fenster im
+// Fenster: ein Popover im Popover schliesst beide.
 function FeldZeile({ label, hinweis, anzeige, aktiv, onAktiv }: FeldZeileProps) {
   return (
     <MenueZeile
@@ -212,8 +201,8 @@ export function FieldPicker({
   entfernenLabel,
   weiter,
 }: FieldPickerProps) {
-  // Schließt das Fenster ohne blur (Escape, Außenklick), bliebe die offene
-  // Tipp-Klammer sonst stehen — und Undo wäre für den Rest der Sitzung stumm.
+  // Schliesst das Fenster ohne blur, bliebe die offene Tipp-Klammer stehen — und
+  // Undo waere fuer den Rest der Sitzung stumm.
   const titelSitzung = titel?.sitzung
   useEffect(() => () => {
     titelSitzung?.beenden()
@@ -234,17 +223,14 @@ export function FieldPicker({
   ]
   const aktiv = ziele.find((z) => z.key === zielKey) ?? ziele[0]
 
-  // ALLE Hilfsquellen auf einmal, nach Quelle gruppiert — die Liste kann das
-  // und hat eine Suche. Eine Stufe „erst Quelle, dann Feld" taugt hier nicht:
-  // nach der Wahl einer Quelle sieht der Bediener die anderen nicht mehr und
-  // haelt sie fuer nicht angeboten. Die Stufe bleibt nur dort, wo sie etwas
-  // verhindert: solange der Baustein gar keine Hauptquelle hat (quellenWahl).
+  // ALLE Hilfsquellen auf einmal, nach Quelle gruppiert: nach der Wahl einer
+  // Quelle saehe der Bediener die anderen nicht mehr und hielte sie fuer nicht
+  // angeboten. Die Stufe bleibt nur, solange es keine Hauptquelle gibt.
   const sichtbareGruppen = aktiv.nurFremdeQuellen === true
     ? gruppen.filter((g) => g.quelleId !== '')
     : gruppen
 
   const hatTut = (schalter?.length ?? 0) > 0
-
 
   const feldZeile = (ziel: PickerFeld) => (
     <FeldZeile
@@ -381,8 +367,8 @@ export function FieldPicker({
           </>
         )}
         {(weiter !== undefined || onEntfernen !== undefined) && (
-          // Klebt am unteren Rand des rollenden Fensters: beide Tasten sind
-          // immer zu sehen, egal wie lang die Feldliste ist.
+      // Klebt am unteren Rand: beide Tasten sind immer zu sehen, egal wie lang die
+      // Feldliste ist.
           <div className="sticky bottom-0 -mb-1 flex items-center justify-between gap-2 border-t border-linie bg-panel px-1.5 py-1.5">
             {weiter !== undefined ? (
               <Knopf title={weiter.hinweis} onClick={weiter.onOeffne}>{weiter.label}</Knopf>

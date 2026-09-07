@@ -1,3 +1,4 @@
+// Der Zugang der Oberflaeche zur Datenquellen-Bibliothek.
 import { useSyncExternalStore } from 'react'
 import { dataSourceStore } from './DataSourceStore'
 

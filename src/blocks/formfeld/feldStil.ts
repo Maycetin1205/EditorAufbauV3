@@ -1,3 +1,4 @@
+// Das Aussehen des Formularfelds und seiner Platzhalter.
 import { css } from 'lit'
 
 export const feldStil = css`
@@ -83,9 +84,8 @@ export const feldStil = css`
     right: 25px;
   }
 
-  /* Gleiches Recht wie .ph-select: der Platzhalter endet am Innenrand des
-     Feldes (padding-right 34px) und laesst die 30px-Lupe frei — im Editor
-     ist er klickbar und wuerde sie sonst fast ganz verdecken. */
+  /* Der Platzhalter laesst die Lupe frei: im Editor ist er klickbar und wuerde
+     sie sonst fast ganz verdecken. */
   .ph-nachschlag { right: 34px; }
 
   .huelle.leer input[type="date"]:not(:focus)::-webkit-datetime-edit,
@@ -110,10 +110,9 @@ export const feldStil = css`
   .nachschlag { position: relative; }
   .nachschlag .ctrl { padding-right: 34px; border-style: dashed; }
 
-  /* Die offene Vorschlagsliste haengt unten aus dem Feld heraus. Raster-
-     Kinder stapeln in DOM-Reihenfolge — ohne diesen Vorrang laege die Liste
-     unter dem naechsten Baustein. Nur solange sie offen ist (das Attribut
-     setzt der Baustein in updated()), also ohne Nebenwirkung auf das Raster. */
+  /* Die offene Vorschlagsliste haengt unten aus dem Feld heraus; Raster-Kinder
+     stapeln in DOM-Reihenfolge, ohne diesen Vorrang laege sie unter dem
+     naechsten Baustein. */
   :host([data-ff-liste]) { position: relative; z-index: 5; }
 
   .lupe {

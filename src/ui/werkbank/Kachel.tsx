@@ -1,8 +1,8 @@
+// Ein Ja/Nein als anklickbare Kachel statt als Zeile mit Umschalter.
 import { Check } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
 
 export interface KachelProps {
-  // Die Beschriftung IST die Kachel — sie nennt, was der Baustein kann.
   beschriftung: string
   an: boolean
   hinweis?: string
@@ -10,17 +10,9 @@ export interface KachelProps {
   onSchalte: (an: boolean) => void
 }
 
-// Ein Ja/Nein als anklickbare Kachel statt als Zeile mit Umschalter.
-//
-// Warum: ein Baustein hat mehrere davon (die Tabelle fuenf). Als Zeilen
-// untereinander kosten sie fuenf Zeilen Hoehe, obwohl jede nur ein Bit
-// traegt, und ein Zweiknopf „Nein | Ja" verlangt, dass man erkennt, WELCHE
-// Haelfte dunkel ist — zwei Woerter fuer ein Bit. Als Kacheln stehen sie
-// nebeneinander, und man sieht auf einen Blick, was der Baustein kann und
-// was davon an ist.
-//
-// Das Haekchen bleibt im Aus-Zustand als unsichtbarer Platzhalter stehen:
-// sonst huepfte die Kachel beim Schalten in der Breite.
+// Ein Baustein hat mehrere davon; nebeneinander sieht man auf einen Blick, was
+// er kann und was davon an ist. Das Haekchen bleibt im Aus-Zustand als
+// unsichtbarer Platzhalter stehen, sonst huepft die Kachel in der Breite.
 export function Kachel({ beschriftung, an, hinweis, id, onSchalte }: KachelProps) {
   return (
     <button

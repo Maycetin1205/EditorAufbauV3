@@ -1,3 +1,4 @@
+// Die Form einer Fundstelle beim Laden oder Pruefen einer Maske.
 export interface EintragProblem {
   stelle: string
   grund: string

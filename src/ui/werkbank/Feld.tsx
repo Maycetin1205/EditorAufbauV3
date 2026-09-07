@@ -1,3 +1,4 @@
+// Das Eingabefeld der Werkbank und die Kante, die jedes Eingabeding traegt.
 import {
   forwardRef,
   type InputHTMLAttributes,

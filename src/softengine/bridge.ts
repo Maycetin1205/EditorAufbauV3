@@ -1,3 +1,4 @@
+// Die Bruecke zu SoftEngine: anmelden, Pushes annehmen, den Datenstand verteilen.
 import { isRecord, messagePayload, payloadDaten, type UnknownRecord } from './data'
 
 import { meldeFehler } from './meldung'
@@ -27,23 +28,19 @@ function refreshDataBasis(): void {
 }
 
 // Der Schalter sagt, ob wirklich NEUE Daten da sind. Nur dann darf eine
-// geschriebene Zeile aus der Maske verschwinden: ein blosser Anstoss
-// (meldeAnstoss, frischeDatenAnfordern) beweist keine Lieferung.
+// geschriebene Zeile aus der Maske verschwinden.
 const zuhoerer = new Set<(lieferung: boolean) => void>()
 const antwortZuhoerer = new Set<(raw: unknown) => void>()
 
-// Die ERP schiebt weiter, waehrend der Bediener tippt. Zeichnete die Maske
-// dabei neu, spraenge ihm die Schreibmarke aus der Zelle. Belegt an der
-// Handmaske Rahmen00001 V11: sie merkt sich den Push und wendet ihn erst an,
-// wenn kein Feld mehr den Fokus hat (dort mit 800 ms Nachlauf).
+// Die ERP schiebt weiter, waehrend der Bediener tippt; zeichnete die Maske dabei
+// neu, spraenge ihm die Schreibmarke aus der Zelle (kontrakte.md 16).
 const NACHLAUF_MS = 800
 
 let ausstehend = false
 let ausstehendeLieferung = false
 let nachlauf: ReturnType<typeof setInterval> | null = null
 
-// Das wirklich fokussierte Element — durch die Schatten-Wurzeln hindurch,
-// denn jeder Baustein traegt seine Eingaben in seiner eigenen.
+// Das wirklich fokussierte Element, durch die Schatten-Wurzeln hindurch.
 function tiefstesAktives(): Element | null {
   let el: Element | null = document.activeElement
   while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement
@@ -88,10 +85,9 @@ export function onSeAntwort(cb: (raw: unknown) => void): () => void {
   return () => { antwortZuhoerer.delete(cb) }
 }
 
-// Ein werfender Baustein darf weder die uebrigen Zuhoerer abschneiden noch
-// den Empfang stilllegen. Er meldet nur, dass diese Runde unvollstaendig war:
-// dann bleibt die Signatur ungesetzt und derselbe Stand wird beim naechsten
-// Schub noch einmal verteilt, statt als schon gezeigt verworfen zu werden.
+// Ein werfender Baustein darf weder die uebrigen Zuhoerer abschneiden noch den
+// Empfang stilllegen. Bleibt die Signatur ungesetzt, wird derselbe Stand beim
+// naechsten Schub noch einmal verteilt.
 function verteile(lieferung: boolean): void {
   let vollstaendig = true
   zuhoerer.forEach((cb) => {
@@ -115,26 +111,22 @@ function klingeln(lieferung: boolean): void {
 }
 
 // Anstoss OHNE Lieferungs-Beweis: die Maske zeichnet neu, aber kein Baustein
-// darf daran etwas verwerfen (s. datenAnschluss). Eine Lieferung meldet allein
-// der Push-Weg, der sie belegen kann.
+// darf daran etwas verwerfen.
 export function meldeAnstoss(): void {
   klingeln(false)
 }
 
-// Nach dem Schreiben will der Bediener den neuen Stand sehen. SoftEngine
-// schiebt von sich aus — wir stossen ihre Datenbasis an und zeichnen neu.
-// ⚠ Ob der Anstoss SoftEngine wirklich zu einer neuen Lieferung bewegt, ist
-// an KEINER echten Maske belegt (die Handmaske Rahmen00001 V11 schreibt gar
-// nicht zurueck). Das laesst sich nur in SoftEngine selbst pruefen.
+// Nach dem Schreiben will der Bediener den neuen Stand sehen: wir stossen die
+// Datenbasis an und zeichnen neu. Ob SoftEngine daraufhin wirklich liefert, ist
+// nicht belegt (kontrakte.md 7).
 export function frischeDatenAnfordern(): void {
   refreshDataBasis()
   klingeln(false)
 }
 
 // „Sind das andere Daten als zuletzt?" — dieselbe Signatur wie im Push-Weg.
-// SoftEngine ruft Erstellen/ReloadData auch dann, wenn sich nichts geaendert
-// hat; daran darf keine hinausgeschickte Zeile verschwinden. Eine leere
-// Signatur heisst „zu gross zum Vergleichen" und gilt als neu.
+// SoftEngine ruft auch dann, wenn sich nichts geaendert hat, und daran darf keine
+// hinausgeschickte Zeile verschwinden.
 function datenSindNeu(): boolean {
   const g = seGlobal()
   const roh = isRecord(g.SEDATA) ? g.SEDATA.Daten : undefined
@@ -151,11 +143,9 @@ function antwortKlingeln(raw: unknown): void {
   })
 }
 
-// Jeder Push traegt den GANZEN Datenstand, auch wenn sich nichts geaendert
-// hat — die Handmaske vergleicht deshalb eine Signatur und zeichnet nur bei
-// echter Aenderung neu. Sehr grosse Staende werden nicht signiert (der
-// Vergleich kostete dann mehr als das Neuzeichnen): eine leere Signatur
-// heisst „unbekannt" und zeichnet immer.
+// Jeder Push traegt den ganzen Datenstand. Sehr grosse Staende werden nicht
+// signiert, der Vergleich kostete mehr als das Neuzeichnen: eine leere Signatur
+// heisst unbekannt und zeichnet immer.
 const SIGNATUR_GRENZE = 2_000_000
 
 let letzteSignatur = ''
@@ -195,8 +185,8 @@ function registerSe(tries = 0): void {
       g.basisHTML_REGISTER((data: unknown) => { seConsume(data) }, document.title, '1.0')
       return
     } catch (error) {
-      // Die Funktion ist da, aber das Interface noch nicht bereit: weiter
-      // versuchen statt aufgeben — aufgegeben hiesse eine Maske ohne Daten.
+      // Die Funktion ist da, das Interface noch nicht bereit: weiter versuchen,
+      // aufgeben hiesse eine Maske ohne Daten.
       if (tries >= 400) {
         meldeFehler(
           'SoftEngine-Anmeldung fehlgeschlagen: '
@@ -213,11 +203,9 @@ function registerSe(tries = 0): void {
   }
 }
 
-// Gibt die ERP der Maske den Fokus, ruft sie basisHTML_DoSetFocusToHTML.
-// Die Bruecke weiss NICHT, welcher Baustein ihn nimmt (Regel: softengine
-// kennt keinen Baustein) — sie fragt per Ereignis. Wer ihn nimmt, ruft
-// preventDefault; nimmt ihn keiner, faellt der Fokus an die ERP zurueck.
-// Bei mehreren Bewerbern gewinnt der zuerst angemeldete.
+// Gibt die ERP der Maske den Fokus, fragt die Bruecke per Ereignis, wer ihn
+// nimmt: sie kennt keinen Baustein. Wer ihn nimmt, ruft preventDefault; nimmt ihn
+// keiner, faellt der Fokus an die ERP zurueck.
 export const SE_FOKUS_EVENT = 'ff-se-fokus'
 
 function fokusBrueckeBauen(): void {

@@ -1,3 +1,4 @@
+// Das Nachschlage-Fenster: dieselbe Flaeche fuer die Editor-Lupe und die Laufzeit-Wahl.
 import { html, nothing, render, type TemplateResult } from 'lit'
 import type { ListenBindung } from '../../core/blocks/listenBindung'
 import { seGlobal } from '../../softengine/bridge'
@@ -17,17 +18,11 @@ import {
   type ZeileAktiviertDetail,
 } from '../tabelle/zeilenAktivierung'
 
-// Das Startmass des Nachschlage-Fensters. Geteilt, weil die Erfassungszeile
-// der Tabelle dasselbe Fenster oeffnet und zwei getrennte Zahlen sofort
-// auseinanderliefen.
 export const FENSTER_BREITE = 520
 export const FENSTER_HOEHE = 380
 
-// Das Startmass ist fuer ZWEI Spalten gemacht (Angezeigt + Wert). Die
-// Erfassungszeile gibt alle Spalten ihrer Quelle mit, das koennen sechs sein —
-// ein festes Mass quetschte sie zusammen, und die Tabelle rollte waagerecht.
-// Die Untergrenze ist das Startmass, damit ein Zwei-Spalten-Fenster nicht
-// schrumpft; die Obergrenze haelt es auf einem normalen Schirm.
+// Das Startmass ist fuer ZWEI Spalten gemacht; die Erfassungszeile gibt alle
+// Spalten ihrer Quelle mit, das koennen sechs sein.
 export function fensterBreiteFuer(spalten: number): number {
   return Math.min(900, Math.max(FENSTER_BREITE, 160 + 180 * spalten))
 }
@@ -39,8 +34,6 @@ export function nachschlagFeldTpl(args: {
   onVerlassen: () => void
   onLupe: () => void
 
-  // Die Vorschlagsliste haengt im selben Halter wie die Lupe: sie
-  // steht unter dem Feld und deckt zu, was darunter liegt.
   liste: TemplateResult | typeof nothing
 }): TemplateResult {
   return html`<div class="nachschlag">
@@ -63,9 +56,8 @@ export function nachschlagFeldTpl(args: {
   </div>`
 }
 
-// Die Spalten des Fensters wohnen am FELD und werden am Ding eingestellt
-// (Lupe im Editor). Leer = Automatik: eine Spalte (Wert) bzw. zwei
-// (Angezeigt + Wert), je nachdem ob ein eigenes Anzeigefeld gesetzt ist.
+// Die Spalten des Fensters wohnen am FELD und werden an der Lupe eingestellt.
+// Leer heisst Automatik: eine Spalte, mit eigenem Anzeigefeld zwei.
 export const NACHSCHLAG_SPALTEN_BINDUNG: ListenBindung = {
   prop: 'nachschlagSpalten',
   titelKey: 'titel',
@@ -82,7 +74,6 @@ export function coerceNachschlagSpalten(v: unknown): Spalte[] {
       return []
     }
   }
-  // Anders als die Tabelle darf das Feld LEER sein: leer heisst Automatik.
   return Array.isArray(v) && v.length > 0 ? coerceSpalten(v) : []
 }
 
@@ -99,17 +90,15 @@ export interface NachschlagenArgs {
   hoehe: number
   onUebernehmen: (anzeige: string, wert: string, satz: unknown) => void
 
-  // Gesetzt: der Aufrufer hat seine Eintraege schon (Erfassungszeile) — dann
-  // zeigt das Fenster GENAU dieselben Saetze wie die Vorschlagsliste daneben.
+  // Gesetzt: der Aufrufer hat seine Eintraege schon, dann zeigt das Fenster genau
+  // dieselben Saetze wie die Vorschlagsliste daneben.
   eintraege?: readonly Eintrag[]
 
-  // Wohin der Fokus nach dem Schliessen zurueckgeht. Ohne Angabe die erste
-  // Lupe des Bausteins; die Erfassungszeile hat mehrere und nennt ihre.
+  // Ohne Angabe die erste Lupe des Bausteins; die Erfassungszeile hat mehrere.
   rueckFokus?: HTMLElement | null
 
-  // Was der Bediener schon getippt hat. Es steht beim Aufmachen in der Suche
-  // des Fensters — sonst faengt er dort von vorne an, obwohl das Fenster
-  // gerade WEGEN seines Suchworts aufgegangen ist.
+  // Was der Bediener schon getippt hat; es steht beim Aufmachen in der Suche des
+  // Fensters.
   suchtext?: string
 }
 
@@ -128,9 +117,7 @@ export interface NachschlagEinstellung {
   spalten: readonly Spalte[]
 }
 
-// Was im FELD steht, ist die erste Spalte des Fensters. Ohne eigene
-// Spalten zeigt das Fenster nur „Gespeichert wird" — dann ist der
-// gespeicherte Wert selbst die Anzeige.
+// Was im FELD steht, ist die erste Spalte des Fensters.
 function anzeigeFeldVon(spalten: readonly Spalte[], speicherFeld: string): string {
   const erste = spalten[0]
   return erste === undefined ? speicherFeld : erste.feld
@@ -176,11 +163,9 @@ export type EintraegeErgebnis =
   | { ok: true; eintraege: Eintrag[] }
   | { ok: false; grund: 'unvollstaendig' | 'quelleFehlt' }
 
-// Die Saetze EINER Bibliotheks-Quelle zur Laufzeit, ungefiltert. Getrennt von
-// holeEintraege, weil die Erfassungszeile der Tabelle dieselben Saetze braucht,
-// aber NICHT die Auswahl-Folgen ihres Bausteins: die gehoeren dort zur Quelle
-// der Tabelle, nicht zur Nachschlage-Quelle, und wuerden mit deren Feldcodes
-// jeden Nachschlage-Satz wegfiltern.
+// Getrennt von holeEintraege: die Erfassungszeile braucht dieselben Saetze, aber
+// NICHT die Auswahl-Folgen ihres Bausteins — die wuerden jeden Nachschlage-Satz
+// wegfiltern.
 export function quellenZeilen(quelleId: string): unknown[] | null {
   const quelle = findRuntimeDataSource(seGlobal().FF_DATA_SOURCES, quelleId)
   if (!quelle) return null
@@ -224,8 +209,7 @@ export function folgeBeimVerlassen(
   return getippt === bestaetigteAnzeige ? 'nichts' : 'zurueck'
 }
 
-// `offen` ist der Lit-Halter am document.body, in den das Laufzeit-Fenster
-// gerendert wird — ihn entfernen raeumt Fenster samt Listenern ab.
+// Der Lit-Halter am document.body; ihn zu entfernen raeumt Fenster und Listener ab.
 let offen: HTMLElement | null = null
 let offenFuer: HTMLElement | null = null
 let rueckFokus: HTMLElement | null = null
@@ -243,23 +227,19 @@ function schliesse(mitFokus = true): void {
   ziel?.focus()
 }
 
-// Stirbt das Feld (Maskenabbau), darf sein Fenster nicht als Waise am
-// document.body weiterleben — samt keydown-Listener des Dialograhmens.
+// Stirbt das Feld, darf sein Fenster nicht als Waise am document.body
+// weiterleben — samt keydown-Listener des Dialograhmens.
 export function schliesseNachschlagenFuer(el: HTMLElement): void {
   if (offenFuer === el) schliesse(false)
 }
 
 type SpaltenQuelle = Pick<NachschlagenArgs, 'speicherFeld' | 'speicherTitel'>
 
-// Die Automatik: EINE Spalte, „Gespeichert wird". feld traegt den Code,
-// damit derselbe Stand auch als Startpunkt im Einstell-Fenster dient; die
-// Laufzeit-Zellen kommen bei der Automatik trotzdem aus den fertigen
-// Eintraegen (anzeige/wert). Wer mehr Spalten will, stellt sie an der Lupe
-// ein — die erste davon ist dann, was im Feld steht.
+// Die Automatik: EINE Spalte, „Gespeichert wird". Wer mehr will, stellt sie an
+// der Lupe ein; die erste davon ist dann, was im Feld steht.
 export function automatikSpalten(args: SpaltenQuelle): Spalte[] {
   const titel = args.speicherTitel !== '' ? args.speicherTitel : 'Wert'
-  // Ohne Kennung: die Fenster-Spalten des Formularfelds adressiert nichts
-  // (kein kennungKey an seiner Bindung) — beim Speichern fuellt coerceSpalten.
+  // Ohne Kennung: die Fenster-Spalten des Formularfelds adressiert nichts.
   return [{ kennung: '', titel, feld: args.speicherFeld }]
 }
 
@@ -272,20 +252,13 @@ interface FensterArgs {
   inhalt: TemplateResult
   onSchliessen: () => void
 
-  // Gesetzt = Editor-Weg (Spalten stellen): das Fenster ist ziehbar
-  // (Groesse am Ding, gemeldet ueber onGroesse) und liegt mit z-index 40
-  // UNTER den Editor-Overlays (der Rahmen-Standard ist das Viewport-
-  // Maximum); pointerdown/dblclick bleiben im Fenster, damit Klicks den
-  // Baustein nicht ziehen oder waehlen (Ausnahme der Zug-Regel, s.
-  // rasterMove). Ohne `editor` traegt das Fenster den Laufzeit-Marker
-  // data-ff-nachschlagen.
+  // Gesetzt = Editor-Weg: das Fenster ist ziehbar und liegt unter den
+  // Editor-Overlays; pointerdown und dblclick bleiben drin, damit Klicks den
+  // Baustein nicht ziehen oder waehlen.
   editor?: { onGroesse: (detail: DialogGroesseDetail) => void }
 }
 
-// Das EINE Nachschlage-Fenster: Editor-Lupe (Spalten stellen) und
-// Laufzeit-Lupe (Saetze waehlen) bauen hier dasselbe Geruest — die zwei
-// Wege unterscheiden sich nur im Tabellen-Inhalt und in den benannten
-// `editor`-Extras oben, nicht in zwei Kopien.
+// Editor-Lupe und Laufzeit-Lupe bauen hier dasselbe Geruest, nicht zwei Kopien.
 function fensterTpl(args: FensterArgs): TemplateResult {
   const stop = (e: Event): void => e.stopPropagation()
   const editor = args.editor
@@ -320,10 +293,8 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
     anzeigeFeldVon(eigene, args.speicherFeld),
     args.speicherFeld,
   )
-  // Das Nachschlage-Fenster IST eine Tabelle — also kann der Bediener sich
-  // hier dasselbe einrichten wie ueberall: Rechtsklick auf den Spaltenkopf
-  // nimmt Spalten weg, ein Klick sortiert, und beides ueberlebt das
-  // Schliessen.
+  // Das Fenster IST eine Tabelle: Spalten wegnehmen und sortieren gilt auch hier,
+  // und beides ueberlebt das Schliessen.
   return html`<ff-tabelle
     fuellt
     suche="ja"
@@ -356,8 +327,6 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
 
   schliesse(false)
 
-  // Der Halter ist layout-neutral (display:contents); das Fenster darin
-  // steht ohnehin fix im Viewport.
   const halter = document.createElement('div')
   halter.style.display = 'contents'
   render(fensterTpl({
@@ -409,12 +378,9 @@ export interface SpaltenStellenArgs {
   onSchliessen: () => void
 }
 
-// Editor-Weg der Lupe: dasselbe Fenster wie zur Laufzeit (fensterTpl),
-// aber die Tabelle laeuft im Editor-Modus (Striche statt Daten)
-// und traegt ihre eigene Spalten-Bedienung: +/- oben rechts, Doppelklick
-// = umbenennen, Klick auf den Titel = Feld waehlen. Lebt im Shadow-DOM
-// des Feldes, damit die Aenderungen als normale Ereignisse beim Editor
-// ankommen (Undo).
+// Editor-Weg der Lupe: dasselbe Fenster, aber die Tabelle im Editor-Modus mit
+// ihrer Spalten-Bedienung. Sie lebt im Shadow-DOM des Feldes, damit die
+// Aenderungen als normale Ereignisse beim Editor ankommen (Undo).
 export function spaltenStellenTpl(args: SpaltenStellenArgs): TemplateResult {
   return fensterTpl({
     titel: args.titel,

@@ -1,3 +1,4 @@
+// Ein Zahlenwert im Inspector, mit Einheit und Grenzen.
 import { useState } from 'react'
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { useEingabeSitzung } from './eingabeSitzung'

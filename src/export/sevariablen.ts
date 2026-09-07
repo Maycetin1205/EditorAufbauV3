@@ -1,3 +1,4 @@
+// Schreibt die SEvariablen: was die Maske bei SoftEngine bestellt.
 import {
   artFuer,
   felderFor,
@@ -11,10 +12,8 @@ import {
 } from '../core/data/dataSources'
 import { escapeNonAsciiJs } from './serializer'
 
-// Kopfsatz-Indizes und offene Saetze koennen auf DIESELBE Tabelle zeigen
-// (POS haengt an BEL_0_11, der Belegkopf IST BEL). Zwei VAR-Eintraege mit
-// derselben ID waeren eine doppelte Bestellung — die Felder gehoeren in EINEN
-// Eintrag, in der Reihenfolge ihres ersten Auftretens.
+// Kopfsatz-Index und offener Satz koennen auf DIESELBE Tabelle zeigen. Zwei
+// VAR-Eintraege mit derselben ID waeren eine doppelte Bestellung.
 function varZusammen(
   ...gruppen: { ID: string; FELDER: string }[][]
 ): { ID: string; FELDER: string }[] {
@@ -45,8 +44,7 @@ export function baueSevariablen(
   const perDataSet = bestellbar.filter((s) => artFuer(s.kind).bestellBlock === 'dataset')
 
   // Der offene Satz wird NICHT als Loop bestellt: SoftEngine liefert ihn im
-  // VAR-Abschnitt unter der Tabellen-ID (belegt an Rahmen00001 V11 — der
-  // Belegkopf dort liest Daten.Var.BEL). Ein Loop daneben waere eine zweite
+  // VAR-Abschnitt (kontrakte.md 6). Ein Loop daneben waere eine zweite
   // Bestellung derselben Werte.
   const offeneSaetze = bestellbar.filter(istOffenerSatz)
 
@@ -61,8 +59,8 @@ export function baueSevariablen(
     ALIAS: s.name,
     FELDER: felderFor(s, benutzteFelder.get(s.id), holSchluessel.get(s.id) ?? []),
   }))
-  // DataSets legen ihre Zeilen unter Daten.Tabellen.<ALIAS> ab — dieselbe
-  // Form wie MEMTAB, die rowsFor() schon liest (softengine/data.ts).
+  // DataSets legen ihre Zeilen unter Daten.Tabellen.<ALIAS> ab, dieselbe Form
+  // wie MEMTAB.
   const dataset = perDataSet.map((s) => ({
     ID: tableIdFor(s),
     ALIAS: s.name,

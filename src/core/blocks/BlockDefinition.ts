@@ -1,3 +1,4 @@
+// Was ein Bausteintyp dem Editor, dem Export und der Laufzeit ueber sich sagt.
 import type { BlockCategory } from './BlockComponent'
 import type { FlowDirection, FlowWidth } from './flowLayout'
 import type { RasterSpec } from './rasterLayout'
@@ -82,11 +83,8 @@ export interface BlockEventSpec {
   name: string
 }
 
-// Der Baustein gibt eine gewaehlte/angezeigte Zeile her (Auswahl-Geber).
-// `wenn` schaltet dabei NICHT die Faehigkeit, sondern waehlt nur die
-// Quell-Eigenschaft: sichtbar -> quelleProp, sonst Rueckfall auf `source`
-// (treeQuery/auswahlQuelleIdVon). So gibt das Nachschlage-Feld seine
-// gewaehlte Zeile und dasselbe Feld im Text-Modus seine gebundene.
+// Der Baustein gibt eine gewaehlte oder angezeigte Zeile her. `wenn` schaltet
+// dabei NICHT die Faehigkeit, sondern waehlt nur die Quell-Eigenschaft.
 export interface SatzWahl {
   quelleProp?: string
 
@@ -95,54 +93,42 @@ export interface SatzWahl {
 
 export type QuellenFaehigkeit = boolean | { wenn: PropertyVisibilityCondition }
 
-// Die Fähigkeit „Erfassungszeile": der Baustein nimmt neue Zeilen entgegen,
-// bevor sie im ERP existieren. `wenn` sagt, an welcher Eigenschaft der
-// Schalter hängt — Editor (Herkunfts-Wähler), Export (data-ff-block-id) und
-// Laufzeit lesen dieselbe Deklaration.
+// Die Faehigkeit „Erfassungszeile": der Baustein nimmt neue Zeilen entgegen,
+// bevor sie im ERP existieren. Editor, Export und Laufzeit lesen dieselbe
+// Deklaration.
 export interface ErfassungsFaehigkeit {
   wenn?: PropertyVisibilityCondition
 }
 
-// Die drei Vormerk-Listen eines Bausteins. Ueber diese Vokabel reden Kette,
-// Baustein und Statusbalken — der Ketten-Lauf kennt keinen Bausteintyp.
+// Die drei Vormerk-Listen. Ueber diese Vokabel reden Kette, Baustein und
+// Statusbalken; der Ketten-Lauf kennt keinen Bausteintyp.
 export type VormerkArt = 'erfasst' | 'geaendert' | 'geloescht'
 
-// Der Laufzeit-Vertrag eines Bausteins mit dieser Fähigkeit: die Kette am
-// Knopf liest die erfassten Zeilen (Werte je Spalte, in Spalten-Reihenfolge).
-// Rein als Typ — die Laufzeit findet den Baustein über data-ff-block-id, nie
-// über einen Import.
-//
-// erfassteSchluessel steht Platz fuer Platz neben erfassteZeilen: eine
-// erfasste Zeile hat noch keine Satznummer, und ihr PLATZ taugt nicht als
-// Kennung — nimmt der Bediener waehrend eines laufenden GET eine Zeile weg,
-// zeigte er hinterher auf die falsche.
+// Der Laufzeit-Vertrag eines Bausteins mit dieser Faehigkeit. Rein als Typ: die
+// Laufzeit findet den Baustein ueber data-ff-block-id, nie ueber einen Import.
+// erfassteSchluessel steht Platz fuer Platz neben erfassteZeilen, denn der PLATZ
+// taugt nicht als Kennung.
 export interface ErfassungsTraegerElement {
   erfassteZeilen: readonly (readonly string[])[]
   erfassteSchluessel: readonly string[]
 }
 
 // Und derselbe fuer Zeilen, die WEG sollen. Die Werte reisen mit, weil eine
-// Loesch-Relation mehr als die Satznummer verlangen kann (Belegart,
-// Belegnummer, Positionsnummer stehen in den Spalten).
+// Loesch-Relation mehr als die Satznummer verlangen kann.
 export interface LoeschTraegerElement {
   geloeschteZeilen: readonly { satz: string; werte: readonly string[] }[]
 }
 
-// Derselbe Vertrag fuer GEAENDERTE Zeilen: je Zeile ihre Satznummer (damit
-// die Kette weiss, WEN sie schreibt) und die Werte aller Spalten, mit der
-// Aenderung darin.
+// Derselbe Vertrag fuer GEAENDERTE Zeilen: je Zeile ihre Satznummer und die
+// Werte aller Spalten, mit der Aenderung darin.
 export interface AenderungsTraegerElement {
   geaenderteZeilen: readonly { satz: string; werte: readonly string[] }[]
 }
 
 // Der Bericht des Ketten-Laufs an den Baustein, dessen Liste er abarbeitet.
-// Ohne ihn waere ein Lauf alles-oder-nichts: ein Fehler in Zeile 3 von 10
-// naehme auch den Vormerkungen 4-10 ihre Chance.
-//
-// laufFertig kommt erst, wenn ALLE Abschnitte durch sind — ein spaeterer
-// Abschnitt darf dieselbe Liste noch einmal lesen. Es traegt die
-// geschriebenen Zeilen aus und nimmt jede „schreibt"-Marke dieser Liste
-// zurueck; die gescheiterte Zeile behaelt ihre.
+// Ohne ihn waere ein Lauf alles-oder-nichts: ein Fehler in Zeile 3 von 10 naehme
+// auch den Vormerkungen 4-10 ihre Chance. laufFertig kommt erst, wenn ALLE
+// Abschnitte durch sind.
 export interface LaufBerichtElement {
   zeileSchreibt: (art: VormerkArt, schluessel: string) => void
   zeileGescheitert: (art: VormerkArt, schluessel: string, meldung: string) => void
@@ -187,14 +173,10 @@ export interface BlockDefinition {
 
   kannErfassen?: ErfassungsFaehigkeit
 
-  // Wann dieser Baustein Zeilen zum Loeschen vormerken kann — dieselbe Form
-  // wie kannErfassen: eine Bedingung an einer Eigenschaft des Bausteins.
   kannLoeschen?: ErfassungsFaehigkeit
 
-  // Der Schluessel des Eintrags-Schalters, der einen Listeneintrag (z. B.
-  // eine Spalte) als aenderbar markiert. Gesetzt heisst: dieser Baustein
-  // kann einer Kette die GEAENDERTEN Zeilen geben — welcher Baustein das
-  // ist, steht damit in der Registry und nicht im Ketten-Code.
+  // Gesetzt heisst: dieser Baustein kann einer Kette die GEAENDERTEN Zeilen
+  // geben. Welcher das ist, steht damit in der Registry und nicht im Ketten-Code.
   aenderungsSchluessel?: string
 
   bindableSpots?: readonly BindableSpot[]

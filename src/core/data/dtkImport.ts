@@ -1,3 +1,4 @@
+// Liest eine DTK-Datei aus SoftEngine: Tabellen mit ihren Feldern.
 export interface DtkFeld {
   code: string
   label: string

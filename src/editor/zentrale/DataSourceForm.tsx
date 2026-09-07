@@ -1,3 +1,4 @@
+// Das Formular einer Datenquelle: Art, Kennung, Felder, Satznummer, Hol-Weg.
 import { useMemo, useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
@@ -103,16 +104,14 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
 
   const vorsatz = feldVorsatzFromInput(vorsatzEingabe)
 
-  // Der Vorsatz steckt in JEDEM Feldcode dieser Quelle. Wer die Art
-  // wechselt, soll ihn deshalb sehen und selbst entfernen — versteckte
-  // ihn das Formular (weil die neue Art keinen vorsieht), fielen die
-  // Codes beim Speichern still auf die Form ohne Vorsatz zurueck.
+  // Der Vorsatz steckt in JEDEM Feldcode dieser Quelle. Wer die Art wechselt,
+  // soll ihn sehen und selbst entfernen, sonst fielen die Codes beim Speichern
+  // still auf die Form ohne Vorsatz zurueck.
   const vorsatzEingeben = art.feldVorsatzMoeglich || vorsatz !== ''
   const holtZeilen = holenMoeglich && zeilenWeg === 'holen'
 
-  // Der offene Satz kommt aus dem VAR-Abschnitt und ist deshalb weder eine
-  // Schleife noch etwas, das die Maske sich holt — die beiden Wege schliessen
-  // sich aus. Wo die Art keinen offenen Satz kennt, gibt es die Frage nicht.
+  // Der offene Satz kommt aus dem VAR-Abschnitt: Schleife und offener Satz
+  // schliessen sich aus.
   const lieferungWaehlbar = art.varMoeglich && !holtZeilen
   const offenerSatz = lieferungWaehlbar && lieferung === 'offenerSatz'
 
@@ -125,9 +124,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
     [holVorlagen, holSuche],
   )
 
-  // Eine Quelle holt ohne Baustein und ohne laufende Kette — die uebrigen
-  // Herkuenfte haetten hier gar keinen Wert (s. HOL_WERT_QUELLEN). Die
-  // Baustein-Listen bleiben deshalb leer und werden nicht angeboten.
+  // Eine Quelle holt ohne Baustein und ohne laufende Kette; die uebrigen
+  // Herkuenfte haetten hier gar keinen Wert.
   const holWahlen: ParameterWahlen = {
     dataSources: geberOptionen,
     blockValues: [],
@@ -167,10 +165,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
     }
   }
 
-  // SoftEngine legt die Zeilen einer Quelle unter ihrem Namen ab, und die
-  // Laufzeit sucht sie ueber genau diesen Namen (softengine/data.ts) — der
-  // erste Treffer gewinnt. Zwei gleich benannte Quellen zeigten stumm
-  // dieselben Daten.
+  // SoftEngine legt die Zeilen unter dem Namen ab, und die Laufzeit sucht sie
+  // ueber genau diesen Namen; zwei gleich benannte zeigten stumm dieselben Daten.
   const nameDoppelt = store.list.some(
     (s) => s.id !== source?.id && alias(s.name) === alias(name),
   )
@@ -205,8 +201,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         : 'Zwei Felder haben dieselbe Position + Länge.')
     : ''
 
-  // Gewaehlt wird ein FELD der Quelle, nicht ein getippter Code: der Klarname
-  // steht vorn, der Feldcode daneben.
+    // Gewaehlt wird ein FELD der Quelle, nicht ein getippter Code.
   const satzNummerOptionen = [
     { value: '', label: 'Nicht gebunden' },
     ...zeilen
@@ -214,8 +209,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
       .filter((e) => e.code !== '' && e.label !== '')
       .map((e) => ({ value: e.code, label: e.label, detail: e.code })),
   ]
-  // Ein Wert, der zu keinem Feld gehoert, bleibt sichtbar statt still zu
-  // verschwinden — sonst aendert das blosse Oeffnen des Formulars die Quelle.
+      // Ein Wert, der zu keinem Feld gehoert, bleibt sichtbar statt still zu
+      // verschwinden: sonst aendert das blosse Oeffnen die Quelle.
   if (satzNummer !== '' && !satzNummerOptionen.some((o) => o.value === satzNummer)) {
     satzNummerOptionen.push({
       value: satzNummer, label: satzNummer, detail: 'kein Feld dieser Quelle',

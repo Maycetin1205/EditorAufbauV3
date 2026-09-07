@@ -1,3 +1,4 @@
+// Das Raster der Maskenflaeche: Spalten, Zeilen und der Platz eines Bausteins darin.
 import { propertySichtbar, type PropertyVisibilityCondition } from './PropertyDescription'
 import { styleToCss } from './styleCss'
 

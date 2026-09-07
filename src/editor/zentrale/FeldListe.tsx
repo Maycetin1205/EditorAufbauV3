@@ -1,3 +1,4 @@
+// Die Feldliste einer Datenquelle im Formular: Klarname, Position, Laenge.
 import { Plus, X } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -13,10 +14,9 @@ interface FeldListeProps {
   doppeltFehler: string
   zeigeFehler: boolean
 
-  // Quellen mit Klarnamen-Feldern (DataSet, Wert per Relation) sprechen ihre
-  // Spalten mit Namen an — dann steht hier ein Namensfeld statt der zwei
-  // Zahlenfelder. Wie die Spalte HEISST, sagt die Art (QuellenArt): „Spalte
-  // im DataSet" ueber einer Relations-Antwort war schlicht falsch.
+  // Quellen mit Klarnamen-Feldern sprechen ihre Spalten mit Namen an: dann steht
+  // hier ein Namensfeld statt der zwei Zahlenfelder. Wie die Spalte heisst, sagt
+  // die Art.
   spaltenNamen?: boolean
   spaltenLabel?: string
   spaltenBeispiel?: string

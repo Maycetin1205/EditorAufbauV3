@@ -1,3 +1,4 @@
+// Der eine Einstieg jeder Datenanzeige: Quelle finden, Zeilen holen, Feldleser bauen.
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, rowsFor, type RuntimeDataSource } from '../../softengine/data'
 import { macheFeldLeser, type FeldLeser } from './fremdeQuellen'
@@ -7,16 +8,12 @@ import { zeilenAmTag } from './tagFilter'
 export interface DatenVorspann {
   quelle: RuntimeDataSource
 
-  // Die Zeilen der Quelle, Tagesfilter bereits angewandt.
   zeilen: unknown[]
 
   lies: FeldLeser
 }
 
-// Der EINE Einstieg jeder Datenanzeige (Tabelle, Kanban, kuenftige):
-// die am Baustein angeschlossene Quelle finden, ihre Zeilen holen, den
-// Tagesfilter anwenden und den Feldleser bauen. null = keine (oder eine
-// in der Maske unbekannte) Quelle angeschlossen.
+// null = keine oder eine in der Maske unbekannte Quelle angeschlossen.
 export function holeDatenVorspann(el: HTMLElement): DatenVorspann | null {
   const sourceId = el.getAttribute('source') ?? ''
   if (sourceId === '') return null

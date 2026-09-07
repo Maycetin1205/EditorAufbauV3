@@ -178,6 +178,10 @@ aus der Liste heraus und kann sie nicht scheitern lassen.
   **stillschweigend** — die Tabelle bleibt leer, ohne Fehler.
   Gemessen 2026-08-07, drei Echttests: ohne VAR jedes Mal leer.
 - Bestellt wird nur das Feld, auf das der Kopfsatz zeigt.
+- Der offene Satz kommt NICHT als Loop, sondern im VAR-Abschnitt unter der
+  Tabellen-ID (`Daten.Var.BEL`). Wo der eigene Eintrag leer bleibt, gilt
+  `WINDOW_VARIABLE` — die Handmaske liest `B.BEL_3_8 || W.BEL_3_8`. Aus dem
+  Fenster zaehlt nur, was den Vorsatz dieser Tabelle traegt (`BEL_`).
 - Gilt in: `core/data/dataSources.ts` (`varAusKopfsaetzen`, `kopfsatzFor`).
 
 ## 7. Schreiben
@@ -194,6 +198,9 @@ aus der Liste heraus und kann sie nicht scheitern lassen.
   `PUT_RELATION[174!…!<Satznr>!…]`.
 - Belegter Fehlerfall: schickt man Feldnamen statt Werte, landen sie als
   INHALTE in SoftEngine — `PUT_RELATION[82!0!L!…!STSPALTE!!TEXT!!EPREIS!…]`.
+- ⚠ Ob ein Anstoss der Datenbasis nach dem Schreiben SoftEngine zu einer neuen
+  Lieferung bewegt, ist an KEINER echten Maske belegt (die Handmaske schreibt
+  gar nicht zurueck). Das entscheidet ein Echttest.
 - Gilt in: `core/data/relations.ts`, `blocks/shared/seAktionen.ts`.
 
 ## 8. Positionen zur Laufzeit lesen (Hol-Relation)
@@ -310,6 +317,10 @@ daran, damit die Bedienung beider Masken dieselbe ist.
   `<mark>` mit `#ffedb0`.
 - Senkrecht bewegt sich der Cursor durch DIESELBE Spalte (dort der "Anker"
   ueber der Mengen-Spalte).
+- Ein Push wird erst angewandt, wenn kein Feld mehr den Fokus hat (dort mit
+  800 ms Nachlauf) — sonst springt dem Bediener die Schreibmarke aus der Zelle.
+- Jeder Push traegt den GANZEN Datenstand, auch unveraendert; die Handmaske
+  vergleicht darum eine Signatur und zeichnet nur bei echter Aenderung neu.
 
 ---
 

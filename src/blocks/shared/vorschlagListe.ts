@@ -1,14 +1,9 @@
+// Die Tipp-Vorschlagsliste, geteilt von Formularfeld und Erfassungszeile.
 import { css, html, nothing, type TemplateResult } from 'lit'
 import { ref } from 'lit/directives/ref.js'
 import { schlichtText, zeilePasst } from './textSuche'
 
-// Die Tipp-Vorschlagsliste. Sie entsteht EINMAL hier und wird geteilt: das
-// Formularfeld „nachschlagen" zeigt sie, die Erfassungszeile der Tabelle
-// bekommt dieselbe. Geteilt sind Logik UND Aussehen — zwei Fassungen wuerden
-// auseinanderlaufen.
-
-// Mehr als acht Treffer liest niemand im Vorbeitippen; wer alle sehen will,
-// nimmt das grosse Fenster.
+// Mehr als acht Treffer liest niemand im Vorbeitippen.
 export const VORSCHLAEGE_MAX = 8
 
 export interface Vorschlag {
@@ -17,20 +12,12 @@ export interface Vorschlag {
   wert: string
 }
 
-// Gesucht wird in BEIDEM, Anzeige und gespeichertem Wert: Geuebte tippen
-// „bay" fuer Baytril, andere die Nummer. Leer getippt = KEINE
-// Liste — bei leerem Feld ist Enter der Weg ins grosse Fenster, und alle
-// Saetze untereinander waeren dort nur im Weg.
-// Umlaute sortieren wie ihr Grundbuchstabe (Ä bei A), Zahlen im Text nach
-// Groesse statt nach Ziffernfolge — sonst stuende Pos. 10 vor Pos. 2.
+// Gesucht wird in beidem, Anzeige und gespeichertem Wert. Leer getippt heisst
+// KEINE Liste: bei leerem Feld ist Enter der Weg ins grosse Fenster.
 const textVergleich = new Intl.Collator('de', { numeric: true, sensitivity: 'base' })
 
-// Wer „Schr" tippt, meint zuerst Schraube und Schraubendreher, nicht
-// Holzschraube. Also: erst was VORN anfaengt, dann der Rest — und beides in
-// sich alphabetisch, nicht in der Reihenfolge, in der SoftEngine die Saetze
-// liefert. Derselbe Massstab wie die Suche (textSuche.ts): Ä zaehlt als A.
-// Sonst stuende ein Treffer, den die Suche gefunden hat, in der Sortierung
-// ploetzlich nicht mehr „am Anfang".
+// Erst was VORN anfaengt, dann der Rest, beides in sich alphabetisch und nach
+// demselben Massstab wie die Suche.
 function beginntMit(eintrag: Vorschlag, getippt: string): boolean {
   const t = schlichtText(getippt.trim())
   if (t === '') return false
@@ -56,9 +43,8 @@ export function passendeVorschlaege<T extends Vorschlag>(
   max: number = VORSCHLAEGE_MAX,
 ): T[] {
   if (getippt.trim() === '') return []
-  // ALLE Treffer sammeln und erst DANN kuerzen: wer vorher abbricht, wirft
-  // womoeglich den besten Treffer weg, nur weil er in den Daten weit hinten
-  // steht.
+  // Alle Treffer sammeln und erst dann kuerzen: sonst faellt der beste weg, nur
+  // weil er in den Daten weit hinten steht.
   const treffer: T[] = []
   for (const eintrag of eintraege) {
     if (zeilePasst([eintrag.anzeige, eintrag.wert], getippt)) treffer.push(eintrag)
@@ -67,24 +53,19 @@ export function passendeVorschlaege<T extends Vorschlag>(
 }
 
 // Die Marke laeuft um: unter dem letzten Treffer geht es oben wieder los.
-// Ohne Treffer gibt es nichts zu markieren — dann steht sie auf 0.
 export function bewegteMarke(marke: number, anzahl: number, schritt: 1 | -1): number {
   if (anzahl <= 0) return 0
   return (((marke + schritt) % anzahl) + anzahl) % anzahl
 }
 
-// Jeder Tastendruck kann die Liste kuerzen; eine Marke hinter dem Ende waere
-// eine Uebernahme ins Leere. Sie faellt dann auf den ersten Treffer zurueck.
+// Eine Marke hinter dem Ende waere eine Uebernahme ins Leere.
 export function gueltigeMarke(marke: number, anzahl: number): number {
   if (anzahl <= 0) return 0
   return marke < 0 || marke >= anzahl ? 0 : marke
 }
 
-// Was eine Taste an der Vorschlagsliste bedeutet — als eigene Entscheidung,
-// weil die Erfassungszeile der Tabelle genau dieselbe braucht (dort
-// kommt nur der Sprung in die naechste Zelle hinzu) und weil sie sich so ohne
-// Feld und ohne Browser pruefen laesst. Benannte Schalter statt zwei
-// boolean hintereinander: vertauscht sieht man an der Aufrufstelle nicht.
+// Was eine Taste an der Liste bedeutet, als eigene Entscheidung: die
+// Erfassungszeile der Tabelle braucht genau dieselbe.
 export type TastenFolge =
   | 'marke-hoch'
   | 'marke-runter'
@@ -98,37 +79,27 @@ export function tastenFolge(taste: string, args: {
 
   feldLeer: boolean
 
-  // Wie viele Vorschlaege gerade dastehen. Die Liste zeigt hoechstens acht;
-  // bei Tausenden Saetzen ist der erste davon eine willkuerliche Wahl.
   treffer: number
 
-  // Hat der Bediener SELBST in der Liste ausgesucht (Pfeiltasten, Liste
-  // aufgemacht)? Dann gilt seine Wahl — sonst entscheidet die Trefferzahl.
+  // Hat der Bediener selbst ausgesucht, gilt seine Wahl.
   markeVonHand: boolean
 }): TastenFolge {
   if (taste === 'ArrowDown') return args.listeOffen ? 'marke-runter' : 'nichts'
   if (taste === 'ArrowUp') return args.listeOffen ? 'marke-hoch' : 'nichts'
   if (taste === 'Escape') return args.listeOffen ? 'liste-zu' : 'nichts'
   if (taste !== 'Enter') return 'nichts'
-  // Genau ein Treffer ist keine Auswahl, sondern das Ergebnis: Enter nimmt
-  // ihn. Bei mehreren stumm den ersten der acht zu nehmen waere bei
-  // tausenden Saetzen Raten — darum geht das grosse Fenster auf, das suchen,
-  // sortieren und blaettern kann.
+  // Genau ein Treffer ist keine Auswahl, sondern das Ergebnis; bei mehreren geht
+  // das grosse Fenster auf, statt stumm den ersten zu nehmen.
   if (args.listeOffen) {
     return args.markeVonHand || args.treffer === 1 ? 'uebernehmen' : 'fenster'
   }
-  // Enter im LEEREN Feld oeffnet das grosse Fenster.
-  // Getippter Text ohne Treffer laesst es ZU: sonst belohnt das Fenster den
-  // Tippfehler und der Bediener verliert seinen Text aus den Augen.
+    // Getippter Text ohne Treffer laesst das Fenster ZU: sonst belohnt es den
+    // Tippfehler und der Bediener verliert seinen Text aus den Augen.
   return args.feldLeer ? 'fenster' : 'nichts'
 }
 
-// Die Vorschlagsliste darf breiter werden als der Halter
-// (width: max-content, min-width: 100%), damit Artikelbezeichnungen bei
-// schmalen Spalten nicht abgeschnitten werden.
-// Regeln: sie bleibt links verankert und waechst nach rechts; sie wird nie
-// schmaler als der Halter; tritt sie rechts ueber den Rand der Flaeche
-// hinaus, waechst sie nach links (.nach-links).
+// Die Liste darf breiter werden als ihr Halter, bleibt links verankert und
+// waechst nach links, wenn sie rechts ueber die Flaeche tritt.
 function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
   let links = 0
   let rechts = typeof window !== 'undefined' && window.innerWidth > 0
@@ -137,8 +108,6 @@ function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
         ? document.documentElement.clientWidth
         : 10000)
 
-  // In einer Tabelle bildet der sichtbare Tabellenrahmen (.tabelle mit overflow: hidden)
-  // die aeussere Begrenzung:
   const tabelle = el.closest?.('.tabelle')
   if (tabelle instanceof (globalThis.HTMLElement ?? Object) && typeof tabelle.getBoundingClientRect === 'function') {
     const tRect = tabelle.getBoundingClientRect()
@@ -149,7 +118,6 @@ function flaecheGrenzen(el: HTMLElement): { links: number; rechts: number } {
     return { links, rechts }
   }
 
-  // Ausserhalb der Tabelle (z. B. am Formularfeld): Begrenzung durch Wurzel-Container / Fenster
   const wurzel = typeof el.getRootNode === 'function' ? el.getRootNode() : null
   if (wurzel instanceof (globalThis.ShadowRoot ?? Object) && (wurzel as ShadowRoot).host instanceof (globalThis.HTMLElement ?? Object)) {
     const eltern = (wurzel as ShadowRoot).host.parentElement
@@ -170,7 +138,6 @@ function richteVorschlaegeAus(el: HTMLElement): void {
   const eltern = el.parentElement
   if (!eltern) return
 
-  // Vor der Messung eventuelle alte Breiten-Begrenzung aufheben:
   el.style.maxWidth = ''
 
   const halterRect = typeof eltern.getBoundingClientRect === 'function'
@@ -186,13 +153,9 @@ function richteVorschlaegeAus(el: HTMLElement): void {
   const grenzen = flaecheGrenzen(el)
   const waereRechts = halterLinks + bedarf
 
-  // Uebertritt die Liste am linken Rand verankert den rechten Rand der Flaeche,
-  // waechst sie nach links (rechts buendig am Halter verankert):
   const nachLinks = waereRechts > grenzen.rechts
   el.classList.toggle('nach-links', nachLinks)
 
-  // Sie wird nie schmaler als der Halter, darf aber auch nach links gewachsen
-  // nicht ueber die Flaeche treten:
   const maxBreite = nachLinks
     ? Math.max(halterBreite, halterRechts - grenzen.links)
     : Math.max(halterBreite, grenzen.rechts - halterLinks)
@@ -211,9 +174,8 @@ export function vorschlagListeTpl(args: {
 
   onMarke: (index: number) => void
 }): TemplateResult {
-  // mousedown abfangen: ohne das verliert das Feld den Fokus, BEVOR der
-  // Klick ankommt — das Verlassen raeumt die Liste ab und der Klick landet
-  // im Leeren.
+  // mousedown abfangen: sonst verliert das Feld den Fokus, bevor der Klick
+  // ankommt, und das Verlassen raeumt die Liste ab.
   return html`<ul
     class="vorschlaege"
     ${ref((el) => {
@@ -238,9 +200,8 @@ export function vorschlagListeTpl(args: {
     }</li>`)}</ul>`
 }
 
-// Der Halter der Liste braucht `position: relative` und muss ueber seinen
-// Nachbarn liegen — das steht beim jeweiligen Baustein, weil nur er weiss,
-// welches Element sein Halter ist.
+// Der Halter der Liste braucht position: relative und muss ueber seinen
+// Nachbarn liegen; das steht beim jeweiligen Baustein.
 export const vorschlagStil = css`
   .vorschlaege {
     position: absolute;
@@ -263,8 +224,6 @@ export const vorschlagStil = css`
     color: var(--se-ink);
   }
 
-  /* Tritt die Liste ueber den rechten Rand der Flaeche hinaus, waechst sie
-     nach links statt weiter nach rechts. */
   .vorschlaege.nach-links {
     left: auto;
     right: 0;

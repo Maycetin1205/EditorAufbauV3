@@ -1,3 +1,4 @@
+// Die gelieferten Daten lesen: Quellen, Zeilen, Felder, Satznummern.
 import { pruefeHolWert, type HolWert } from '../core/data/holWert'
 import { POS_LEN, pruefeLadeRelation, type LadeRelation } from '../core/data/ladeRelation'
 import { geholteZeilenFuer } from './geholteZeilen'
@@ -10,9 +11,8 @@ export function isRecord(v: unknown): v is UnknownRecord {
 
 export type RuntimeLadeRelation = LadeRelation & { zusatzFelder: readonly string[] }
 
-// Die Feldnamen reisen MIT: FF_DATA_SOURCES traegt sonst keine Felder, und
-// ohne sie wuesste der Wert-Lader nicht, unter welchem Namen er die Antwort
-// ablegen soll.
+// Die Feldnamen reisen MIT: ohne sie wuesste der Wert-Lader nicht, unter welchem
+// Namen er die Antwort ablegen soll.
 export type RuntimeHolWert = HolWert & { felder: readonly string[] }
 
 export interface RuntimeDataSource {
@@ -21,8 +21,7 @@ export interface RuntimeDataSource {
   tableId: string
   indexField: string
 
-  // Diese Quelle ist nicht eine Liste, sondern DER Satz, der gerade offen
-  // ist. SoftEngine liefert ihn im VAR-Abschnitt statt als Zeilenschleife.
+  // Diese Quelle ist keine Liste, sondern DER Satz, der gerade offen ist.
   offenerSatz: boolean
   ladeRelation?: RuntimeLadeRelation
   holWert?: RuntimeHolWert
@@ -93,7 +92,7 @@ export function getField(row: unknown, code: string): string {
   return raw.substring(pos, pos + len).trim()
 }
 
-// Die Satznummer EINER Zeile — was Ketten als {PINDEX} weitergeben. Die EINE
+// Die Satznummer EINER Zeile, die Ketten als {PINDEX} weitergeben. Die eine
 // Stelle dafuer, statt einer Kopie je Baustein.
 export function satzIndexVon(source: { indexField: string }, row: unknown): string {
   return source.indexField === '' ? '' : getField(row, source.indexField)
@@ -160,14 +159,10 @@ function varBlockVon(daten: UnknownRecord): UnknownRecord | undefined {
   return undefined
 }
 
-// Der offene Satz liegt nicht als Zeilenliste vor, sondern im VAR-Abschnitt
-// unter der Tabellen-ID (Daten.Var.BEL). Belegt an der Handmaske Rahmen00001
-// V11: sie liest den Belegkopf genau dort und nimmt WINDOW_VARIABLE, wo der
-// eigene Eintrag leer bleibt (B.BEL_3_8 || W.BEL_3_8) — dasselbe hier. Aus
-// dem Fenster kommt nur, was zu DIESER Tabelle gehoert (Vorsatz 'BEL_'),
-// sonst zoege ein fremder Eintrag (BELERF_...) in den Satz ein.
-// Herausgereicht wird EINE Zeile, damit jede vorhandene Bindung unveraendert
-// weiterliest: gelesen wird ohnehin aus der ersten Zeile der Quelle.
+// Der offene Satz liegt im VAR-Abschnitt unter der Tabellen-ID, mit
+// WINDOW_VARIABLE als Rueckfall (kontrakte.md 6). Aus dem Fenster kommt nur, was
+// zu DIESER Tabelle gehoert, sonst zoege ein fremder Eintrag in den Satz ein.
+// Herausgereicht wird EINE Zeile, damit jede vorhandene Bindung weiterliest.
 function offenerSatzZeilen(seData: unknown, tableId: string): unknown[] {
   if (!isRecord(seData) || !isRecord(seData.Daten)) return []
   const id = tableId.trim()
@@ -197,9 +192,8 @@ export function rowsFor(
   alias: string,
   idbId: string,
 
-  // Der offene Satz kommt AUSSCHLIESSLICH aus dem VAR-Abschnitt. Ohne den
-  // Schalter bleibt VAR ungelesen: eine Listen-Quelle, deren Schleife gerade
-  // leer ist, soll nicht heimlich den Kopfsatz als Zeile ausgeben.
+  // Ohne den Schalter bleibt VAR ungelesen: eine Listen-Quelle mit leerer
+  // Schleife soll nicht heimlich den Kopfsatz als Zeile ausgeben.
   offenerSatz = false,
 ): unknown[] {
   if (!isRecord(seData) || !isRecord(seData.Daten)) return []

@@ -1,3 +1,4 @@
+// Die Meldungskaesten am unteren Rand des Editors.
 import { X } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { useMeldungen } from '../../state/useMeldungen'

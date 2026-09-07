@@ -1,3 +1,4 @@
+// Die Karte, in der ein Formular des Datencenters steht.
 import { useEffect, type ReactNode } from 'react'
 import { X } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'

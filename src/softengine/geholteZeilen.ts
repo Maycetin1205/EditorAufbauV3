@@ -1,3 +1,4 @@
+// Die Zeilen, die eine holende Quelle zur Laufzeit geholt hat.
 const speicher = new Map<string, unknown[]>()
 
 export function setzeGeholteZeilen(alias: string, zeilen: unknown[]): void {

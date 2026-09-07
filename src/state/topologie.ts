@@ -1,3 +1,4 @@
+// Der Baum als Ordnung: Vorfahren, Nachkommen, Reihenfolge.
 import { ROOT_ID, ROOT_TYPE, type BlockTree } from '../core/blocks/BlockData'
 import { canContain, getBlockDefinition } from '../core/blocks/blockRegistry'
 import { BEREICH_AUFBAU, type LadeProblem } from '../core/data/ladeProblem'

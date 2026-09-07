@@ -1,3 +1,4 @@
+// Die Meldungen im Balken: sammeln und wieder wegnehmen.
 import { Subject } from './Subject'
 
 export interface Meldung {
@@ -5,8 +6,8 @@ export interface Meldung {
   text: string
 }
 
-// Hoechstens so viele Meldungen auf einmal: die aeltesten weichen, sonst
-// wachsen die Kaesten aus dem Bild.
+// Hoechstens so viele auf einmal: die aeltesten weichen, sonst wachsen die
+// Kaesten aus dem Bild.
 const HOECHSTENS = 5
 
 class Meldungsstelle extends Subject<Meldungsstelle> {

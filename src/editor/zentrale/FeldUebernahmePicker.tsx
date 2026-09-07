@@ -1,3 +1,4 @@
+// Die Liste, aus der ein Feld als Parameter-Wert uebernommen wird.
 import { useMemo, type RefObject } from 'react'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Popover } from '@/ui/werkbank/Popover'
@@ -12,11 +13,11 @@ interface FeldUebernahmePickerProps {
   quellen: readonly DataSource[]
   ziel: FeldUebernahmeZiel
 
-  // Feldcode der bereits uebernommenen POS/LEN — nur zum Anhaken.
+  // Feldcode der bereits uebernommenen POS/LEN, nur zum Anhaken.
   current: string
 
-  // Der Griff, aus dem die Liste aufgegangen ist: das Popover misst sich
-  // daran und laesst den Druck darauf durch, sonst ginge sie sofort wieder auf.
+  // Der Griff, aus dem die Liste aufgegangen ist: das Popover misst sich daran
+  // und laesst den Druck darauf durch.
   anker: RefObject<HTMLElement | null>
   onPick: (sourceId: string, code: string) => void
   onClose: () => void
@@ -24,8 +25,8 @@ interface FeldUebernahmePickerProps {
 
 const TRENNER = '::'
 
-// Eine leere Liste darf nie ratenlassen, woran es liegt: sie zaehlt auf,
-// was sie angesehen hat.
+// Eine leere Liste darf nie ratenlassen, woran es liegt: sie zaehlt auf, was sie
+// angesehen hat.
 function leerHinweisFuer(
   quellen: readonly DataSource[],
   ziel: FeldUebernahmeZiel,
@@ -72,7 +73,7 @@ export function FeldUebernahmePicker({
     return [...nachQuelle.values()]
   }, [ziel, quellen])
 
-  // Uebernommen wird als POS/LEN-Wert — welche QUELLE das Feld hergab, steht
+  // Uebernommen wird als POS/LEN-Wert; welche Quelle das Feld hergab, steht
   // nirgends. Angehakt wird darum der erste Treffer mit diesem Feldcode.
   const gewaehlt = ziel === 'feld' && current !== ''
     ? gruppen.flatMap((g) => g.eintraege).find((e) => e.kennung === current)?.wert ?? ''

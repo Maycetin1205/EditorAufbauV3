@@ -1,3 +1,4 @@
+// Der Rahmen jedes Editor-Fensters: Kopf, Inhalt, Fuss, Escape.
 import { useEffect, useId, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from '@/ui/zeichen'
@@ -7,25 +8,20 @@ import { Knopf } from './Knopf'
 export interface DialogProps {
   titel: ReactNode
 
-  // Steht gedimmt hinter dem Titel (Zaehler, Ereignisname).
   nebenTitel?: ReactNode
 
-  // Links im Kopf neben dem Schliessen-Kreuz.
   aktionen?: ReactNode
 
-  // Eine Frage („wirklich loeschen?") nimmt nicht die ganze Flaeche.
   schmal?: boolean
 
-  // Ohne Innenabstand und ohne eigenen Scroller. Fuer Fenster, die ihre
-  // Scroll-Flaechen selbst mitbringen (Liste links, Detail rechts) — zwei
-  // Scroller ineinander rollen sonst gegeneinander.
+  // Ohne Innenabstand und ohne eigenen Scroller: fuer Fenster, die ihre
+  // Scroll-Flaechen selbst mitbringen.
   randlos?: boolean
 
-  // Ein Fenster UEBER einem Fenster muss Escape abfangen, sonst raeumt
-  // dieselbe Taste das darunter mit auf (gleiche Mechanik wie Popover).
+  // Ein Fenster UEBER einem Fenster muss Escape abfangen, sonst raeumt dieselbe
+  // Taste das darunter mit auf.
   escapeAbfangen?: boolean
 
-  // Fuss mit den Antwortknoepfen.
   fuss?: ReactNode
   onClose: () => void
   children: ReactNode
@@ -53,8 +49,8 @@ export function Dialog({
       }
       onClose()
     }
-    // `window` in der Fangphase liegt VOR jedem Lauscher am `document` —
-    // nur so kommt das obere Fenster zuerst an die Taste.
+      // `window` in der Fangphase liegt VOR jedem Lauscher am `document`: nur so
+      // kommt das obere Fenster zuerst an die Taste.
     if (escapeAbfangen) {
       window.addEventListener('keydown', taste, true)
       return () => window.removeEventListener('keydown', taste, true)
@@ -68,9 +64,8 @@ export function Dialog({
       role="dialog"
       aria-modal="true"
 
-      // Der Vorlesename haengt an der Kopfzeile, nicht an einer Kopie des
-      // Titels: so traegt er auch den Nebentitel („Klick · 3 Schritte") und
-      // funktioniert bei einem Titel, der kein reiner Text ist.
+      // Der Vorlesename haengt an der Kopfzeile, nicht an einer Kopie des Titels:
+      // so traegt er auch den Nebentitel.
       aria-labelledby={titelId}
       className={cn(
         'flex min-h-0 flex-col bg-grund',

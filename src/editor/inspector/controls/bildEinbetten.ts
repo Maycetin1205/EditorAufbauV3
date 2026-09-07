@@ -1,3 +1,4 @@
+// Eine Bilddatei verkleinern und als Daten-URI einbetten.
 const MAX_KANTE = 1024
 
 const JPEG_QUALITAET = 0.85

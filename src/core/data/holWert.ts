@@ -1,3 +1,4 @@
+// Eine Quelle, die ihren Wert selbst mit einem Relations-Ruf holt.
 import {
   pruefeParameterBindung,
   type ActionParamBinding,
@@ -5,15 +6,12 @@ import {
 } from './aktionen'
 import { artFuer, type DataSourceKind } from './quellenArten'
 
-// Woher ein Parameter DIESER Quelle seinen Wert ziehen darf. Eine Quelle holt
-// ohne Baustein und ohne laufende Kette: alles, was an einem Klick, einer
-// Zeile oder einem Schritt-Ergebnis haengt, gaebe es hier nicht und ginge
-// still leer hinaus.
+// Eine Quelle holt ohne Baustein und ohne laufende Kette: was an einem Klick,
+// einer Zeile oder einem Schritt-Ergebnis haengt, ginge hier still leer hinaus.
 export const HOL_WERT_QUELLEN = ['fixed', 'data_field', 'se_variable'] as const
 
 export function holWertQuelleErlaubt(source: ActionParamSource): boolean {
-  // 'aus' ist kein Angebot, nur Nachsicht mit Gespeichertem: ein
-  // weggelassener Parameter geht leer hinaus, und das ist gewollt.
+  // 'aus' ist kein Angebot, nur Nachsicht mit Gespeichertem.
   return source === 'aus' || (HOL_WERT_QUELLEN as readonly string[]).includes(source)
 }
 
@@ -32,9 +30,8 @@ export function pruefeHolWert(raw: unknown): HolWert | null {
   const params: ActionParamBinding[] = []
   for (const roh of e.params) {
     const binding = pruefeParameterBindung(roh)
-    // Ein unlesbarer oder hier sinnloser Parameter macht die ganze Angabe
-    // ungueltig. Ihn einzeln wegzulassen hiesse, die Relation mit einem
-    // stillschweigend verschobenen Parameter-Feld hinauszuschicken.
+  // Ein unlesbarer Parameter macht die ganze Angabe ungueltig: ihn einzeln
+  // wegzulassen verschoebe stumm das Parameter-Feld.
     if (!binding || !holWertQuelleErlaubt(binding.source)) return null
     params.push(binding)
   }
@@ -48,8 +45,8 @@ export function holWertFor(
   return source.holWert ?? null
 }
 
-// Die Quellen, aus denen ein Parameter dieser Quelle liest — sie muessen mit
-// in die Maske, sonst faende die Laufzeit sie nicht.
+// Die Quellen, aus denen ein Parameter liest: sie muessen mit in die Maske, sonst
+// faende die Laufzeit sie nicht.
 export function quellenAusHolWert(
   source: { kind: DataSourceKind; holWert?: HolWert },
 ): { quelleId: string; code: string }[] {

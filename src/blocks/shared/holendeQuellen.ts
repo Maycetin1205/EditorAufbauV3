@@ -1,3 +1,4 @@
+// Quellen, die ihre Zeilen erst auf eine Auswahl hin holen, samt Bremse gegen Kreis-Feuer.
 import type { BlockDefinition } from '../../core/blocks/BlockDefinition'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { propertySichtbar } from '../../core/blocks/PropertyDescription'
@@ -17,12 +18,9 @@ import {
 } from './auswahl'
 
 const letzterAbdruck = new Map<string, string>()
-// Die Bremse gegen Kreis-Feuer: je Quelle die Abdruecke, die OHNE Bedienung
-// (aus der Hydrier-Kette heraus) schon geladen wurden. Jeder darf so nur
-// EINMAL laden — erst ein echter Zeilenklick setzt die Spur zurueck. Ohne
-// das schaukeln sich zwei Geber derselben Quelle gegenseitig hoch: Laden ->
-// Hydrieren -> anderer Geber gewinnt -> Laden -> ... im Halbsekundentakt
-// gegen das ERP.
+// Die Bremse gegen Kreis-Feuer: je Quelle die Abdruecke, die ohne Bedienung
+// schon geladen wurden. Ohne sie schaukeln sich zwei Geber derselben Quelle
+// gegenseitig hoch und fragen im Halbsekundentakt gegen das ERP.
 const stillGeladen = new Map<string, Set<string>>()
 let verdrahtet = false
 
@@ -34,13 +32,9 @@ export function defsMitSatzWahl(): Map<string, BlockDefinition> {
   return map
 }
 
-// Welches Attribut DIESES Elements die Geber-Quelle nennt — dieselbe Regel
-// wie auswahlQuelleIdVon im Editor: die wenn-Bedingung der satzWahl waehlt
-// nur die Eigenschaft, erfuellt das Element sie nicht, gilt `source`. Gaelte
-// je Tag pauschal die quelleProp, wuerde ein TEXT-Formularfeld mit uebrig
-// gebliebener Nachschlage-Quelle zum falschen Geber der Beleg-Quelle, und
-// Relation 69 fragte Datenmuell ab. Der Export laesst Standardwerte weg,
-// darum springt fuer ein fehlendes Attribut der defaultProps-Wert ein.
+// Die wenn-Bedingung der satzWahl waehlt die Eigenschaft; erfuellt das Element
+// sie nicht, gilt `source`. Pauschal je Tag wuerde ein Text-Formularfeld mit
+// uebriger Nachschlage-Quelle zum falschen Geber.
 function quellenAttrFuer(el: Element, def: BlockDefinition): string {
   const wahl = def.satzWahl
   if (!wahl) return ''
@@ -54,12 +48,7 @@ function quellenAttrFuer(el: Element, def: BlockDefinition): string {
 }
 
 // Der letzte Klick gewinnt: zeigen mehrere Bausteine dieselbe Quelle, gilt die
-// juengste Auswahl — nicht der erste Baustein in DOM-Reihenfolge, sonst
-// bestimmte bei zwei Tabellen derselben Quelle der Zufall des Aufbaus, welche
-// Zeile geholt wird. Wird die juengste Wahl abgewaehlt, faellt sie auf die
-// naechstjuengere zurueck (ihr Eintrag ist weg). Die Wurzel ist uebergebbar
-// wie bei applyPopupStep — so ist die Auswahl ohne Fenster pruefbar; im
-// Produkt sucht sie im Dokument.
+// juengste Auswahl, nicht der erste Baustein in DOM-Reihenfolge.
 export function gewaehlteZeileDerQuelle(
   quelleId: string,
   defsJeTag: Map<string, BlockDefinition>,
@@ -81,10 +70,8 @@ export function gewaehlteZeileDerQuelle(
   return juengste?.zeile
 }
 
-// Die Lade-Entscheidung samt Bremse, als eigene Funktion pruefbar. Eine
-// Bedienung laedt immer (und beginnt die Spur neu, mit sich selbst darin);
-// eine Programm-Meldung laedt jeden Abdruck nur einmal — kommt derselbe
-// wieder, ist das der Kreis, und es passiert nichts mehr.
+// Eine Bedienung laedt immer und beginnt die Spur neu; eine Programm-Meldung
+// laedt jeden Abdruck nur einmal.
 export function darfLaden(quelleId: string, abdruck: string, durchBedienung: boolean): boolean {
   if (letzterAbdruck.get(quelleId) === abdruck) return false
   if (durchBedienung) {
@@ -118,8 +105,8 @@ function pruefeHolendeQuellen(durchBedienung: boolean): void {
   }
 }
 
-// Die Quellen, die EINEN Wert holen (Art „Wert per Relation"). Sie haengen an
-// keiner Auswahl: ihr Anlass ist eine neue Lieferung von SoftEngine.
+// Die Quellen, die EINEN Wert holen. Sie haengen an keiner Auswahl: ihr Anlass
+// ist eine neue Lieferung von SoftEngine.
 function holeWertQuellen(): void {
   const liste: unknown = seGlobal().FF_DATA_SOURCES
   if (!Array.isArray(liste)) return
@@ -136,16 +123,14 @@ export function verdrahteHolendeQuellen(): void {
   verdrahtet = true
   aufAuswahlHoeren(pruefeHolendeQuellen)
 
-  // NUR bei einer echten Lieferung. Das Ablegen der Antwort stoesst selbst an
-  // (meldeAnstoss), und ein Anstoss, der wieder holt, waere genau so ein
-  // Kreis — hier sogar unbremsbar, weil der Ruf keine Auswahl hat, an der
-  // ein Abdruck haengen koennte.
+// NUR bei einer echten Lieferung: das Ablegen der Antwort stoesst selbst an,
+// und ein Anstoss, der wieder holt, waere ein unbremsbarer Kreis.
   onSeDaten((lieferung) => { if (lieferung) holeWertQuellen() })
 
   // Stand die Lieferung schon, als der erste Baustein sich anschloss, kommt
   // fuer sie kein `lieferung`-Ruf mehr.
   if (hasSeData()) holeWertQuellen()
-  // Faellt die Auswahl komplett weg, muss der Abdruck mit weg: sonst gilt der
-  // alte Stand weiter als "schon geholt" und es wird nichts mehr neu geholt.
+// Faellt die Auswahl komplett weg, muss der Abdruck mit weg: sonst gilt der
+// alte Stand weiter als schon geholt.
   beimAuswahlZuruecksetzen(setzeLadeSpurZurueck)
 }

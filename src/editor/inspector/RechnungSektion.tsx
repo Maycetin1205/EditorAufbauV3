@@ -1,3 +1,4 @@
+// Die Rechnung der Erfassungszeile einstellen: welche Spalte welchen Platz traegt.
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Wahl, type WahlOption } from '@/ui/werkbank/Wahl'
@@ -16,10 +17,8 @@ import {
 import { useEditor } from '../../state/useEditor'
 import { useAbschnitt } from './abschnittStand'
 
-// Die Rechnung (Abgabemenge = Anzahl x Dosis x Tage) gehoert zur Tabelle,
-// deren Erfassungszeile sie rechnet — und wird darum HIER bedient, im
-// Inspector dieser Tabelle, nicht im Datencenter: sie ist nichts
-// Maskenweites. Der Baustein traegt nur das Ergebnis im Attribut `rechnung`.
+// Sie gehoert zur Tabelle, deren Erfassungszeile sie rechnet, und wird darum hier
+// bedient und nicht im Datencenter: sie ist nichts Maskenweites.
 
 const RICHTUNGEN: WahlOption[] = [
   { wert: 'auf', name: 'aufrunden' },
@@ -27,9 +26,8 @@ const RICHTUNGEN: WahlOption[] = [
   { wert: 'kfm', name: 'kaufmännisch' },
 ]
 
-// Die Spalten des Bausteins, so weit dieses Formular sie braucht: Titel als
-// Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das Belegfeld,
-// das kann doppelt vergeben sein und trifft dann stumm die falsche Spalte.
+// Titel als Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das
+// Belegfeld, das kann doppelt vergeben sein.
 function spaltenVon(node: BlockNode): { titel: string; kennung: string; versteckt: boolean }[] {
   const roh = node.props.spalten
   if (!Array.isArray(roh)) return []
@@ -52,23 +50,18 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
   const [offen, schalte] = useAbschnitt('rechnung')
   const ed = useEditor()
   const stand = rechnungVonAttribut(block.props.rechnung) ?? leereRechnung()
-  // Eine ausgeblendete Spalte steht dabei — die Rechnung rechnet in sie
-  // hinein, und die Kette schreibt sie. Sie ist aber gekennzeichnet: was der
-  // Bediener nie sieht, kann er auch nie selbst tippen. Als GEGEBENER Platz
-  // (Anzahl, Dosis, Tage) bliebe die Gleichung darum ewig unvollstaendig.
+  // Eine ausgeblendete Spalte steht dabei, aber gekennzeichnet: die Rechnung
+  // rechnet in sie hinein, tippen kann der Bediener sie nicht.
   const spaltenOptionen: WahlOption[] = spaltenVon(block).map((s) => ({
     wert: s.kennung,
     name: (s.titel === '' ? s.kennung : s.titel) + (s.versteckt ? ' (ausgeblendet)' : ''),
   }))
   const gesetzt = typeof block.props.rechnung === 'string' && block.props.rechnung.trim() !== ''
 
-  // Eine ausgeblendete Spalte kann der Bediener nie tippen — sie kann also
-  // immer nur der GERECHNETE Platz sein. Sitzen zwei Plaetze auf
-  // ausgeblendeten Spalten, hat die Gleichung zwei Luecken, und die Rechnung
-  // rechnet nie: sie fuellt genau eine. Das fiele sonst erst in SoftEngine
-  // auf, an einer Zelle, die einfach leer bleibt — nichts soll still
-  // scheitern. Welche Spalten ausgeblendet sind, entscheidet der Bediener —
-  // gesagt bekommt er nur, wenn sich zwei davon gegenseitig blockieren.
+  // Eine ausgeblendete Spalte kann der Bediener nie tippen, sie kann also nur der
+  // GERECHNETE Platz sein. Sitzen zwei Plaetze auf ausgeblendeten Spalten, hat die
+  // Gleichung zwei Luecken und die Rechnung rechnet nie — das fiele sonst erst in
+  // SoftEngine auf, an einer Zelle, die leer bleibt.
   const versteckteKennungen = new Set(
     spaltenVon(block).filter((sp) => sp.versteckt).map((sp) => sp.kennung),
   )

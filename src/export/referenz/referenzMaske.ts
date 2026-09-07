@@ -1,12 +1,11 @@
+// Die feste Referenzmaske des Referenzabzugs: jeder Bausteintyp einmal.
 import { ROOT_ID, ROOT_TYPE, type BlockNode, type BlockTree } from '../../core/blocks/BlockData'
 import type { DataSource } from '../../core/data/dataSources'
 import type { RelationTemplate } from '../../core/data/relations'
 import type { ActionStep } from '../../core/data/aktionen'
 import { WEITERE_QUELLEN_PROP } from '../../core/data/sourceLinks'
 
-// Die feste Referenzmaske des Referenzabzugs: jeder Bausteintyp einmal,
-// dazu gebundene Spalten, Hilfsquelle, Erfassung und eine Kette mit allen
-// Schritt-Arten. Feste Kennungen — der Export muss byte-gleich bleiben.
+// Feste Kennungen: der Export dieser Maske muss byte-gleich bleiben.
 
 export const REFERENZ_QUELLEN: readonly DataSource[] = [
   {

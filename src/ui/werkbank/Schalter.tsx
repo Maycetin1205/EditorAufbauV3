@@ -1,10 +1,10 @@
+// Ein Umschalter fuer Ja/Nein.
 import { cn } from '@/lib/utils'
 
 export interface SchalterProps {
   an: boolean
 
-  // Steht rechts neben dem Schalter. Fehlt sie, braucht der Schalter ein
-  // `bezeichnung` fuer die Vorlesehilfe.
+  // Fehlt sie, braucht der Schalter ein `bezeichnung` fuer die Vorlesehilfe.
   beschriftung?: string
   bezeichnung?: string
   hinweis?: string

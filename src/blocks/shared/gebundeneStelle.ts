@@ -1,3 +1,4 @@
+// Warum eine gebundene Stelle leer bleibt, in Worten fuer den Bediener.
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
 import { seGlobal } from '../../softengine/bridge'
 import {
@@ -12,12 +13,11 @@ import { macheFeldLeser } from './fremdeQuellen'
 export type GebundeneStelle =
 
   | { art: 'ungebunden' }
-  // Gebunden, aber die Quelle steckt nicht in der Maske (geloescht, nie
-  // mitexportiert). Der Preflight kennt den Fall, blockt den Export aber
-  // nicht — er erreicht also die laufende Maske.
+  // Gebunden, aber die Quelle steckt nicht in der Maske. Der Export blockt das
+  // nicht, der Fall erreicht also die laufende Maske.
   | { art: 'ohneQuelle' }
-  // Quelle da, aber keine Zeile: die Auswahl-Regel (shared/auswahl) liefert
-  // keine — nichts gewaehlt oder kein Partner in der eigenen Quelle.
+  // Quelle da, aber keine Zeile: nichts gewaehlt oder kein Partner in der
+  // eigenen Quelle.
   | { art: 'ohneZeile' }
   | {
     art: 'wert'

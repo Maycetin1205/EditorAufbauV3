@@ -1,3 +1,4 @@
+// Die Eigenschaften des Formularfelds, wie der Inspector sie zeigt.
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { jaNeinProperty } from '../shared/jaNeinProperty'
 
@@ -57,8 +58,7 @@ export const FELD_EIGENSCHAFTEN: PropertyDescription[] = [
     description: 'Feld, dessen Wert angezeigt wird.',
     kind: 'field',
 
-    // Dieselbe Bedingung wie am bindableSpot: das Ankreuzfeld bleibt
-    // unbindbar, bis der SE-Wert-Kontrakt (J/N? 1/0?) belegt ist.
+    // Das Ankreuzfeld bleibt unbindbar, bis der SE-Wert-Kontrakt belegt ist.
     visibleWhen: { attributeName: 'fieldType', keinesVon: ['checkbox', 'nachschlagen'] },
   },
   {

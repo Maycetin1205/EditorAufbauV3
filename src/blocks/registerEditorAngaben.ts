@@ -1,3 +1,4 @@
+// Die Editor-Angaben zu den Bausteinen: Symbole fuer Palette und Inspector.
 import './register'
 
 import { ergaenzeEditorAngaben } from '../core/blocks/editorAngaben'
@@ -27,8 +28,7 @@ import { TabelleBlock } from './tabelle/TabelleBlock'
 import { TextBlock } from './text/TextBlock'
 import { TrennerBlock } from './trenner/TrennerBlock'
 
-// Die Symbole der Bausteine fuer Palette und Inspector. Sie stehen hier und
-// nicht am Baustein, damit die Maske (runtime-entry) keinen Editor-Code traegt.
+// Sie stehen hier und nicht am Baustein, damit die Maske keinen Editor-Code traegt.
 const SYMBOLE = [
   [ButtonBlock.blockType, ZeichenSchaltflaeche],
   [CardBlock.blockType, ZeichenKarte],

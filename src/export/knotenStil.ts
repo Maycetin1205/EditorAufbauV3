@@ -1,3 +1,4 @@
+// Der Stil eines Bausteins in der exportierten Maske.
 import type { BlockNode } from '../core/blocks/BlockData'
 import {
   flowItemHeightStyle,

@@ -1,3 +1,4 @@
+// Der Vertrag fuer Bausteine mit einer Liste von Eintraegen (Spalten, Fensterspalten).
 import { zerlegeBindung } from './bindung'
 
 export interface ListenBindung {
@@ -7,35 +8,27 @@ export interface ListenBindung {
 
   feldKey: string
 
-  // Gesetzt: jeder Eintrag trägt unter diesem Schlüssel eine dauerhafte
-  // Kennung. Ketten-Parameter und Formulare zeigen dann auf SIE statt auf den
-  // Platz — der Export übersetzt zurück in den Platz (withoutEditorId).
-  // Platznummern verrutschen beim Löschen/Verschieben von Einträgen.
+  // Gesetzt: jeder Eintrag traegt hier eine dauerhafte Kennung, und Ketten und
+  // Formulare zeigen auf SIE statt auf den Platz, der beim Loeschen verrutscht.
   kennungKey?: string
 
   standardTitel: string
 
-  // Gesetzt: die Feld-Auswahl liest NUR die Bibliotheks-Quelle, deren id in
-  // dieser Block-Eigenschaft steht (z. B. nachschlagQuelle) — nicht die
-  // Quellen in Reichweite. Eintraege speichern den nackten Feldcode.
+  // Gesetzt: die Feld-Auswahl liest NUR die Quelle, deren id in dieser
+  // Eigenschaft steht, nicht die Quellen in Reichweite.
   quelleProp?: string
 
   eintragsSchalter?: readonly EintragsSchalter[]
 
   eintragsFeldWahl?: readonly EintragsFeldWahl[]
 
-  // Element-Eigenschaft, in die der EDITOR je Eintrag den Klarnamen seiner
-  // fremden Quelle schreibt (leer, wo alles aus der eigenen kommt). Sie steht
-  // bewusst NICHT in defaultProps des Bausteins — daran haengt, dass der
-  // Export sie nicht mitschreibt (exportMask liest `Object.keys(def.
-  // defaultProps)`). Die Angabe gehoert in den Editor und nie in die Maske;
-  // ein Test haelt das fest (export/herkunft.test.ts).
+  // Element-Eigenschaft, in die der EDITOR je Eintrag den Klarnamen der fremden
+  // Quelle schreibt. Sie steht bewusst NICHT in defaultProps: daran haengt, dass
+  // der Export sie nicht mitschreibt.
   herkunftProp?: string
 
-  // Editier-Vorgaenge als REINE Funktionen ueber den Props des Bausteins: sie
-  // geben die geaenderten Props zurueck (leer = nicht erlaubt). Der Editor
-  // ruft sie (Werkzeugleiste am Baustein, Feld-Picker); der Baustein zeichnet
-  // keine eigenen Knoepfe mehr in die Maske.
+  // Editier-Vorgaenge als reine Funktionen ueber den Props: sie geben die
+  // geaenderten Props zurueck, leer heisst nicht erlaubt.
   eintragNeu?: (props: Readonly<Record<string, unknown>>) => Record<string, unknown>
   eintragWeg?: (props: Readonly<Record<string, unknown>>, index: number) => Record<string, unknown>
   eintragVerschieben?: (
@@ -44,34 +37,24 @@ export interface ListenBindung {
     nach: number,
   ) => Record<string, unknown>
 
-  // Eine weiterfuehrende Einstellung des Eintrags, die der BAUSTEIN selbst
-  // zeichnet, weil sie ein eigenes Fenster braucht (Tabellenspalte: das
-  // Suchfenster ihrer Erfassungszelle — dieselbe Flaeche, die das
-  // Formularfeld ueber die Lupe oeffnet).
-  //
-  // Der Editor setzt dafuer nur `eigenschaft` am Custom-Element auf den Platz
-  // des Eintrags; alles Weitere macht der Baustein. Er ruft KEINE Methode:
-  // eine Eigenschaft ist der Weg, auf dem Lit ohnehin neu zeichnet, und sie
-  // ueberlebt den naechsten Rendervorgang.
+  // Eine weiterfuehrende Einstellung, die der BAUSTEIN selbst zeichnet, weil sie
+  // ein eigenes Fenster braucht. Der Editor setzt dafuer nur `eigenschaft` am
+  // Element: eine Eigenschaft ueberlebt den naechsten Rendervorgang, eine
+  // Methode nicht.
   eintragsUnterFenster?: {
     label: string
     hinweis?: string
     eigenschaft: string
   }
 
-  // CSS-Auswahl (im Schatten-DOM des Bausteins) der Stellen, an denen der
-  // Editor die Eintraege anfasst, in Listenreihenfolge. Der Editor legt seine
-  // Bedienung darueber (Klick = Feld-Picker, Ziehen = Umordnen); der Baustein
-  // zeichnet dafuer nichts und weiss nichts davon.
+  // CSS-Auswahl der Stellen, an denen der Editor die Eintraege anfasst. Er legt
+  // seine Bedienung darueber; der Baustein zeichnet dafuer nichts.
   eintragStellen?: string
 }
 
-// Ein ZWEITES Feld je Eintrag, unabhaengig von der gewaehlten Darstellung.
-// Die Belegerfassung braucht beides gleichzeitig: die Spalte ZEIGT und
-// SCHREIBT das Feld der Hauptquelle, das Fuellfeld holt den Wert beim
-// Erfassen aus einer Hilfsquelle. Ein Feldcode kann nicht beides sein.
-// `nurFremdeQuellen` haelt die Wahl bei den Hilfsquellen — ein Fuellfeld der
-// Hauptquelle waere dasselbe Feld ein zweites Mal.
+// Ein ZWEITES Feld je Eintrag: die Spalte zeigt und schreibt das Feld der
+// Hauptquelle, das Fuellfeld holt den Wert beim Erfassen aus einer Hilfsquelle.
+// `nurFremdeQuellen` haelt die Wahl bei den Hilfsquellen.
 export interface EintragsFeldWahl {
   key: string
 
@@ -82,26 +65,22 @@ export interface EintragsFeldWahl {
   nurFremdeQuellen?: boolean
 }
 
-// Ein Ja/Nein je Eintrag — z. B. „diese Spalte summieren".
 export interface EintragsSchalter {
   key: string
 
   label: string
 
-  // Wie der Schalter steht, solange niemand ihn angefasst hat. Ohne Angabe
-  // aus. Gespeichert wird nur die ABWEICHUNG davon (listeFuerExport) — sonst
-  // stuende in jedem Eintrag derselbe Wert.
+  // Gespeichert wird nur die ABWEICHUNG davon, sonst stuende in jedem Eintrag
+  // derselbe Wert.
   standard?: boolean
 
-  // Gilt nur, solange das Feld des Eintrags zur EIGENEN Quelle gehoert. Fuer
-  // „In der Zeile aenderbar" ist das Pflicht: eine Vormerkung wird ueber die
-  // Satznummer der Hauptquellen-Zeile gefuehrt (blocks/tabelle/aenderungen.ts),
-  // ein Feld einer Hilfsquelle waere also ein falsches Schreibziel.
+  // Gilt nur, solange das Feld zur EIGENEN Quelle gehoert: eine Vormerkung laeuft
+  // ueber die Satznummer der Hauptquellen-Zeile, ein fremdes Feld waere ein
+  // falsches Schreibziel.
   nurEigeneQuelle?: boolean
 
-  // Ein Wort fuer die zugeklappte Kopfzeile („Mehr · Summe, nicht
-  // aenderbar"). Das volle Label waere dort zu lang, und ohne den Hinweis
-  // merkt niemand, dass hinter dem Pfeil etwas vom Standard abweicht.
+  // Ein Wort fuer die zugeklappte Kopfzeile; ohne es merkt niemand, dass hinter
+  // dem Pfeil etwas vom Standard abweicht.
   kurz?: string
 }
 
@@ -113,12 +92,9 @@ export function schalterAn(
   return typeof wert === 'boolean' ? wert : schalter.standard === true
 }
 
-// Welche Schalter dieser Eintrag ueberhaupt zeigt.
-//
 // Die EINE Stelle dafuer: das Kopf-Fenster zeichnet danach, die Tabelle
-// entscheidet danach ueber das Tippen (spalteAenderbar), der Export danach
-// ueber die Adressierbarkeit (treeQuery/traegtAenderungen) und darueber, was
-// vom Schalterwert erhalten bleibt (listeFuerExport). Vier Leser, eine Regel.
+// entscheidet danach ueber das Tippen, der Export ueber die Adressierbarkeit und
+// darueber, was vom Schalterwert erhalten bleibt.
 export function schalterFuer(
   b: ListenBindung,
   eintrag: Record<string, unknown>,
@@ -130,10 +106,8 @@ export function schalterFuer(
     .filter((s) => !(s.nurEigeneQuelle === true && ausFremderQuelle))
 }
 
-// Die zusaetzlichen Feldwahlen eines Eintrags mit ihrem aktuellen Wert. EINE
-// Stelle fuer beide Leser: das Kopf-Fenster zeichnet danach, und der Export
-// bestellt danach die Felder der Hilfsquelle. Liefen die auseinander, faende
-// der Bediener sein Fuellfeld im Editor, waehrend die Maske es nie bekaeme.
+// EINE Stelle fuer beide Leser: das Kopf-Fenster zeichnet danach, der Export
+// bestellt danach die Felder der Hilfsquelle.
 export function feldWahlenLesen(
   b: ListenBindung,
   eintrag: Record<string, unknown>,
@@ -144,12 +118,9 @@ export function feldWahlenLesen(
   })
 }
 
-// Aus welcher FREMDEN Quelle ein Eintrag seinen Wert nimmt — leer, wenn alles
-// aus der eigenen kommt. Genau eine Frage, genau eine Antwort: die
-// zusaetzliche Feldwahl (das Fuellfeld) fuehrt, weil sie beim Erfassen zieht
-// und man sie dem Eintrag sonst nicht ansieht; erst danach zaehlt das
-// Hauptfeld. Steht nichts Fremdes drin, gibt es auch nichts anzuzeigen — eine
-// Spalte auf der Hauptquelle ist der Normalfall und braucht keine Fussnote.
+// Aus welcher FREMDEN Quelle ein Eintrag seinen Wert nimmt, leer bei der eigenen.
+// Das Fuellfeld fuehrt, weil es beim Erfassen zieht und man es dem Eintrag sonst
+// nicht ansieht.
 export function fremdeQuelleVon(
   b: ListenBindung,
   eintrag: Record<string, unknown>,
@@ -181,8 +152,7 @@ export function listeLesen(roh: unknown, b: ListenBindung): Record<string, unkno
   })
 }
 
-// Ein Schluessel eines Eintrags, der nur unter einer Bedingung in den Export
-// gehoert. Als Regeln und nicht als Aufzaehlung von Sonderfaellen.
+// Ein Schluessel, der nur unter einer Bedingung in den Export gehoert.
 interface BedingterSchluessel {
   key: string
   erlaubt: (eintrag: Record<string, unknown>) => boolean
@@ -191,9 +161,8 @@ interface BedingterSchluessel {
 function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
   const regeln: BedingterSchluessel[] = []
   for (const schalter of b.eintragsSchalter ?? []) {
-    // Behalten wird ein Schalterwert nur, wenn er sichtbar ist UND vom
-    // Standard abweicht. Ein ausdrueckliches „nein" bei Standard „ja" ist
-    // damit genauso wichtig wie ein ausdrueckliches „ja" bei Standard „nein".
+  // Behalten wird ein Schalterwert nur, wenn er sichtbar ist UND vom Standard
+  // abweicht.
     regeln.push({
       key: schalter.key,
       erlaubt: (e) => schalterFuer(b, e).includes(schalter)
@@ -203,15 +172,10 @@ function bedingteSchluessel(b: ListenBindung): BedingterSchluessel[] {
   return regeln
 }
 
-// Die EINE Stelle, die Eintrags-Kennungen ('s1', 's2', …) vergibt — der
-// Baustein (blocks/tabelle/spalten.ts) und die Roh-Migration
-// (state/migrationenRoh.ts) rufen sie beide. Fehlende und doppelte Kennungen
-// bekommen eine neue, die vorderste behaelt ihre; bestehende bleiben
-// unangetastet, an ihnen haengen Ketten-Parameter und Rechnung. Neue Kennung
-// = HOECHSTE vergebene + 1, nie die niedrigste Luecke: eine geloeschte Nummer
-// neu zu vergeben liesse alte Zeiger stumm auf die frische Spalte zeigen.
-// Eine Kennung, die nicht 'sN' ist, zaehlt nicht mit; mit ihr kollidieren die
-// neuen ohnehin nicht.
+// Die EINE Stelle, die Eintrags-Kennungen vergibt. Bestehende bleiben
+// unangetastet, an ihnen haengen Ketten-Parameter und Rechnung. Neue Kennung ist
+// die HOECHSTE plus 1, nie die niedrigste Luecke: eine neu vergebene Nummer
+// liesse alte Zeiger stumm auf die frische Spalte zeigen.
 export function kennungenVergeben(vorhanden: readonly string[]): string[] {
   const vergeben = new Set<string>()
   for (const roh of vorhanden) {

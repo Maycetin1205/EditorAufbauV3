@@ -1,9 +1,9 @@
+// Der Hinweis auf einer leeren Flaeche.
 import { MousePointerClick } from '@/ui/zeichen'
 import type { ReactElement } from 'react'
 
-// Liegt AUF der Maskenflaeche, ist aber Editor-Hilfe: deshalb in
-// Werkbank-Farben und mit gestrichelter Kante — man soll sehen, dass der
-// Hinweis nicht Teil der Maske ist.
+// Liegt AUF der Maskenflaeche, ist aber Editor-Hilfe: darum Werkbank-Farben und
+// gestrichelte Kante.
 export function LeerHinweis({ titel }: { titel: string }): ReactElement {
   return (
     <div

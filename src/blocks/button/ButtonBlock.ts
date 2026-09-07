@@ -1,3 +1,4 @@
+// Baustein Knopf: startet seine Aktionskette, zeigt offene Vormerkungen mit.
 import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
@@ -59,10 +60,8 @@ export class ButtonBlock extends BasicBlock {
 
   @property() label = 'Schaltfläche'
 
-  // Liest die Kette dieses Knopfs Vormerkungen, steht ihre Zahl im Label,
-  // sobald es welche gibt; bei Null ist der Knopf aus und heisst schlicht,
-  // wie er heisst. undefined heisst: gewoehnlicher Knopf. Im Editor bleibt es
-  // dabei, dort gibt es keine Daten.
+  // Liest die Kette dieses Knopfs Vormerkungen, steht ihre Zahl im Label.
+  // undefined heisst: gewoehnlicher Knopf.
   @property({ attribute: false }) vormerkungen: VormerkZahlen | undefined = undefined
 
   private readonly zaehleVormerkungen = (): void => {

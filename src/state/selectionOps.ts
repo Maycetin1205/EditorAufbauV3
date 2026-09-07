@@ -1,3 +1,4 @@
+// Welcher Baustein als naechster gewaehlt wird (Escape, Loeschen).
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { istSeitenBaustein, seiteVon } from './pageOps'
 
@@ -10,8 +11,8 @@ export function auswahlAufSeite(
   return seiteVon(tree, id) === seitenWurzel ? id : null
 }
 
-// Escape geht eine Ebene hoch: zum Elternteil, sofern er kein Seiten-Baustein
-// und nicht die Wurzel ist. Sonst wird die Auswahl aufgehoben (null).
+// Escape geht eine Ebene hoch, sofern der Elternteil kein Seiten-Baustein und
+// nicht die Wurzel ist. Sonst wird die Auswahl aufgehoben.
 export function elternZiel(tree: BlockTree, id: string): string | null {
   const node = tree[id]
   const eltern = node?.parentId ? tree[node.parentId] : undefined

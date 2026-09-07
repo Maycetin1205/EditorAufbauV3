@@ -1,3 +1,4 @@
+// Was der Bediener in die Felder einer Datenquelle tippt, sauber gelesen.
 import { QUELLEN_TRENNER } from '../blocks/BlockDefinition'
 import { artFuer, type DataSourceKind } from './quellenArten'
 
@@ -18,8 +19,7 @@ export function feldVorsatzFromInput(raw: string): string {
 const KENNUNG_IDB_KURZ = /^(?:IDB)?ID(\d{1,4})$/i
 const KENNUNG_FREI = /^[A-Za-z][A-Za-z0-9.]*$/
 
-// idbKurzform=false laesst 'ID0001' stehen: bei einem DataSet IST das die
-// Kennung, waehrend eine IDB-Tabelle ausgeschrieben 'IDBID0001' heisst.
+// idbKurzform=false laesst 'ID0001' stehen: bei einem DataSet IST das die Kennung.
 export function kennungFromInput(raw: string, idbKurzform = true): string {
   const t = raw.trim()
   const kurz = idbKurzform ? KENNUNG_IDB_KURZ.exec(t) : null
@@ -44,10 +44,9 @@ export function quellenKennung(source: { kind: DataSourceKind; idbId?: string })
   return feste !== '' ? feste : kennungAnzeige(source.idbId)
 }
 
-// Ein DataSet spricht seine Spalten mit der BEZEICHNUNG an. Erlaubt ist
-// darum fast alles (Leerzeichen, Umlaute) — nur kein Komma, denn FELDER
-// ist eine Komma-Liste, und nicht der Quellen-Trenner, weil die Bindung
-// „quelle::feld" damit mehrdeutig wuerde (pruefeDatenquellen wirft sie raus).
+// Ein DataSet spricht seine Spalten mit der Bezeichnung an. Kein Komma, denn
+// FELDER ist eine Komma-Liste, und nicht der Quellen-Trenner, weil „quelle::feld"
+// damit mehrdeutig wuerde.
 export function spaltenNameFromInput(raw: string): string {
   const t = raw.trim()
   if (t === '' || t.includes(',') || t.includes(QUELLEN_TRENNER)) return ''

@@ -1,3 +1,4 @@
+// Die Zeichen der Bausteine fuer Palette und Inspector.
 import type { ReactElement } from 'react'
 
 const ESPRESSO = '#3d2b22'

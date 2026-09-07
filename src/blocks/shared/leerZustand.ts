@@ -1,3 +1,4 @@
+// Was ein Baustein zeigt, wenn seine Quelle keine Zeile liefert.
 import { css, html, nothing, type TemplateResult } from 'lit'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 

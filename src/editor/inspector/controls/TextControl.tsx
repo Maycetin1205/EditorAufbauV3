@@ -1,3 +1,4 @@
+// Ein einzeiliger Text im Inspector.
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { useEingabeSitzung } from './eingabeSitzung'
 import { Feld } from '@/ui/werkbank/Feld'

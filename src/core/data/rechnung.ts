@@ -1,13 +1,8 @@
-// Die Rechnung der Belegerfassung:
-//   Abgabemenge = Anzahl x Dosis x Tage
-// Gerechnet wird der EINE leere Platz; Getipptes und aus Quellen Gefuelltes
-// gilt als gegeben.
+// Die Rechnung der Belegerfassung: gerechnet wird der EINE leere Platz,
+// Getipptes und aus Quellen Gefuelltes gilt als gegeben.
 //
-// Tiergewicht und "je kg" sind bewusst KEINE Plaetze: die Dosis gilt pro
-// Tier. Mit ihnen waere ein Artikel, bei dem in der IDB ein Koerpergewicht
-// steht (313_5, z. B. Baytril "5 ml / 50 kg"), nur zu rechnen, wenn der
-// Bediener zusaetzlich ein Tiergewicht tippte — sonst waeren es zwei Luecken
-// und die Rechnung schwiege. Nicht wieder einbauen.
+// Tiergewicht und „je kg" sind bewusst KEINE Plaetze: die Dosis gilt pro Tier.
+// Mit ihnen waeren es zwei Luecken und die Rechnung schwiege.
 
 export type RundungsRichtung = 'auf' | 'ab' | 'kfm'
 
@@ -17,10 +12,8 @@ export interface Rundung {
 }
 
 export interface RechnungsPlatz {
-  // Spalten-Referenz ueber die dauerhafte KENNUNG der Spalte (Spalte.kennung),
-  // nie ueber Platz oder Belegfeld: Plaetze verrutschen beim Verschieben/
-  // Loeschen, und ein doppelt vergebenes Belegfeld traefe stumm die falsche
-  // Spalte. Leer = Platz unbenutzt (Faktor 1).
+  // Ueber die dauerhafte KENNUNG der Spalte, nie ueber Platz oder Belegfeld.
+  // Leer = Platz unbenutzt (Faktor 1).
   spalte: string
   runden: Rundung
 }
@@ -36,10 +29,8 @@ export const PLATZ_NAMEN: Record<PlatzKey, string> = {
   tage: 'Behandlungstage',
 }
 
-// Einheiten trägt die Rechnung KEINE, auch keinen Umrechner an der
-// Abgabemenge: die Einheit kommt aus den Daten der Zeile (Behandlungseinheit)
-// und ist oft gar nicht umrechenbar ('Inj.', 'Stab') — getippt wird in genau
-// ihr.
+// Einheiten traegt die Rechnung keine: die Einheit kommt aus den Daten der Zeile
+// und ist oft nicht umrechenbar.
 export interface Rechnung {
   menge: RechnungsPlatz
   anzahl: RechnungsPlatz
@@ -52,16 +43,15 @@ const RUNDEN_STANDARD: Rundung = { stellen: 3, richtung: 'kfm' }
 export function leereRechnung(): Rechnung {
   return {
     menge: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-    // Tiere sind ganze Tiere; aufgerundet, damit keines leer ausgeht.
+  // Tiere sind ganze Tiere; aufgerundet, damit keines leer ausgeht.
     anzahl: { spalte: '', runden: { stellen: 0, richtung: 'auf' } },
     dosis: { spalte: '', runden: { ...RUNDEN_STANDARD } },
     tage: { spalte: '', runden: { ...RUNDEN_STANDARD } },
   }
 }
 
-// Getippte Zahl, deutsch und STRENG: Komma ist das Dezimalzeichen, Punkte
-// nur als gueltige Tausender-Gruppen. '0.750' ist KEINE davon und bleibt
-// ungelesen (null) — raten hiesse hier Faktor 1000 (Dosierfehler).
+// Getippte Zahl, deutsch und STRENG: '0.750' bleibt ungelesen, denn raten hiesse
+// hier Faktor 1000.
 const STRENG = /^-?\d+(,\d+)?$|^-?[1-9]\d{0,2}(\.\d{3})+(,\d+)?$/
 
 export function zahlStreng(text: string): number | null {
@@ -81,8 +71,8 @@ export function rundeWert(wert: number, runden: Rundung): number {
   return grob / f
 }
 
-// Gerechnete Werte reisen OHNE Tausender-Gruppierung ('2,7', '5000'): so
-// liest jeder Parser sie eindeutig zurueck.
+// Gerechnete Werte reisen ohne Tausender-Gruppierung, so liest jeder Parser sie
+// eindeutig zurueck.
 export function platzText(wert: number, stellen: number): string {
   return wert.toLocaleString('de-DE', {
     useGrouping: false,
@@ -91,7 +81,7 @@ export function platzText(wert: number, stellen: number): string {
   })
 }
 
-// null = leer (Luecke) · 'fehler' = belegt, aber nicht als Zahl lesbar.
+// null = leer (Luecke), 'fehler' = belegt, aber nicht als Zahl lesbar.
 export type PlatzWert = number | null | 'fehler'
 
 export function loeseRechnung(
@@ -115,8 +105,8 @@ export function loeseRechnung(
   if (luecken.length !== 1) return null
   const luecke = luecken[0]
 
-  // Ein unbelegter oder leerer Platz zaehlt als Faktor 1: die Luecke selbst
-  // steht so als 1 in der rechten Seite, und Teilen loest nach ihr auf.
+  // Ein unbelegter oder leerer Platz zaehlt als Faktor 1: die Luecke steht so als
+  // 1 in der rechten Seite, und Teilen loest nach ihr auf.
   const zahl = (k: PlatzKey): number => {
     const w = werte[k]
     return typeof w === 'number' ? w : 1
@@ -155,9 +145,8 @@ function alsPlatz(roh: unknown, standard: Rundung): RechnungsPlatz {
   }
 }
 
-// Liest das `rechnung`-Attribut der Tabelle (JSON-String im Baum/Export).
-// null nur, wenn gar nichts Brauchbares dasteht — eine Rechnung ohne
-// belegte Plaetze kommt coerct zurueck, damit das Formular nichts verliert.
+// null nur, wenn gar nichts Brauchbares dasteht: eine Rechnung ohne belegte
+// Plaetze kommt zurueck, damit das Formular nichts verliert.
 export function rechnungVonAttribut(roh: unknown): Rechnung | null {
   let wert: unknown = roh
   if (typeof roh === 'string') {
@@ -180,11 +169,9 @@ export function rechnungVonAttribut(roh: unknown): Rechnung | null {
   }
 }
 
-// Eine gestrichene Spalte darf keinen Zeiger hinterlassen: der Platz wird
-// leer und damit unbenutzt. Sonst rechnete die Maske weiter mit einer Spalte,
-// die es nicht mehr gibt — und die naechste neue Spalte kann dieselbe Kennung
-// wieder bekommen (Vergabe = hoechste + 1, spalten.ts). Unveraendert kommt
-// dieselbe Rechnung zurueck, damit der Aufrufer nichts zu schreiben braucht.
+// Eine gestrichene Spalte darf keinen Zeiger hinterlassen: der Platz wird leer
+// und damit unbenutzt, denn ihre Kennung kann eine neue Spalte wieder bekommen.
+// Unveraendert kommt dieselbe Rechnung zurueck.
 export function ohneSpalten(r: Rechnung, gestrichen: readonly string[]): Rechnung {
   const weg = new Set(gestrichen)
   if (!PLATZ_KEYS.some((k) => weg.has(r[k].spalte))) return r

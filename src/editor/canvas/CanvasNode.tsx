@@ -1,3 +1,4 @@
+// Ein Baustein auf der Leinwand samt seinen Kindern.
 import { Fragment, type DragEvent } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { canContain, getBlockDefinition } from '../../core/blocks/blockRegistry'

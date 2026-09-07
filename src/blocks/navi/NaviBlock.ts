@@ -1,3 +1,4 @@
+// Baustein Navi: die Leiste, die zwischen den Ansichten der Maske umschaltet.
 import { css, html, type TemplateResult } from 'lit'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'

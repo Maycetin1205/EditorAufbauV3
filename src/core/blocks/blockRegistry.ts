@@ -1,9 +1,10 @@
+// Die Registry der Bausteintypen: anmelden und wiederfinden.
 import type { BlockDefinition } from './BlockDefinition'
 
 const registry = new Map<string, BlockDefinition>()
 
-// Ein zweiter Baustein desselben Typs ist ein Baufehler, kein Betriebsfall:
-// er wuerde den ersten still verdraengen.
+  // Ein zweiter Baustein desselben Typs ist ein Baufehler: er wuerde den ersten
+  // still verdraengen.
 export function registerBlockType(def: BlockDefinition): void {
   if (registry.has(def.type)) {
     throw new Error(`Bausteintyp "${def.type}" ist schon angemeldet.`)

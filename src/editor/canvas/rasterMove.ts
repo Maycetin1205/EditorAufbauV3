@@ -1,3 +1,4 @@
+// Die Zug-Regel: Druecken und Bewegen zieht immer den Baustein.
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { RASTER, parseRasterPos } from '../../core/blocks/rasterLayout'
@@ -8,13 +9,9 @@ import { flaecheVon } from './rasterFlaeche'
 
 const ZUG_SCHWELLE = 4
 
-// Zug-Regel (eine fuer alle Bausteine): Druecken + Bewegen zieht IMMER den
-// Baustein, egal wo im Baustein gegriffen wird — darum fangen Baustein-Inhalte
-// den pointerdown NICHT mehr ab. Klicken ohne Bewegung bleibt Klicken: der Zug
-// wird erst ab ZUG_SCHWELLE aktiv, und nur dann wird der Folge-Klick
-// geschluckt. Ihren pointerdown behalten allein die Editor-Anfasser
-// (BlockHost/PopupSeite) und die Fenster (DialogRahmen/AuswahlFenster) — die
-// bedienen ihren Zug selbst bzw. sollen nie ziehen.
+// Klicken ohne Bewegung bleibt Klicken: der Zug wird erst ab der Schwelle aktiv,
+// und nur dann wird der Folge-Klick geschluckt. Ihren pointerdown behalten allein
+// die Editor-Anfasser und die Fenster.
 
 function schluckeKlick(ev: MouseEvent): void {
   ev.stopPropagation()
@@ -78,9 +75,8 @@ export function ziehePosition(
     aufraeumen()
     if (aktiv && letztes) {
       editor.moveNodeToCell(id, parentId, letztes.x, letztes.y)
-      // Der Klick unmittelbar nach dem Ziehen wird geschluckt. Folgt KEIN
-      // Klick (Maus ausserhalb losgelassen), raeumt der Timeout auf —
-      // sonst fraesse der once-Listener den naechsten Klick irgendwo.
+  // Der Klick unmittelbar nach dem Ziehen wird geschluckt. Folgt keiner, raeumt
+  // der Timeout auf, sonst frisst der Listener den naechsten Klick irgendwo.
       window.addEventListener('click', schluckeKlick, { capture: true, once: true })
       setTimeout(() => {
         window.removeEventListener('click', schluckeKlick, { capture: true })

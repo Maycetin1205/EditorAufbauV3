@@ -1,3 +1,4 @@
+// Die Kontexte, in denen der Editor laeuft.
 import { useEffect, useState, type ReactNode } from 'react'
 import { dataSourceStore } from '../state/DataSourceStore'
 import { Editor } from '../state/Editor'

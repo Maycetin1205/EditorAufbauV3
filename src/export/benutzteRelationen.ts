@@ -1,3 +1,4 @@
+// Welche Relations-Vorlagen die Maske braucht.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { relationIdsVon } from '../core/blocks/treeQuery'
 import { holWertFor, type DataSource } from '../core/data/dataSources'
@@ -7,9 +8,8 @@ export function collectRelations(
   tree: BlockTree,
   relations: readonly RelationTemplate[],
 
-  // Die benutzten Quellen. Eine Quelle der Art „Wert per Relation" ruft ihre
-  // Relation selbst — steht sie nicht in FF_RELATIONS, findet die Laufzeit
-  // sie nicht und meldet es.
+  // Eine Quelle der Art „Wert per Relation" ruft ihre Relation selbst; fehlt sie
+  // in FF_RELATIONS, findet die Laufzeit sie nicht.
   quellen: readonly DataSource[] = [],
 ): RelationTemplate[] {
   const seen = new Set<string>()

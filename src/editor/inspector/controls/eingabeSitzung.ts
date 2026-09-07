@@ -1,3 +1,4 @@
+// Klammert das Tippen in einem Feld zu EINEM Undo-Schritt.
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { gestenKlammer, type GestenKlammer } from '../../../state/history'
 
@@ -35,8 +36,7 @@ export function useEingabeSitzung(
 
   useEffect(() => beenden, [beenden])
 
-  // Ein STABILES Objekt: wer die Sitzung als Effekt-Abhaengigkeit fuehrt
-  // (FieldPicker), bekam sonst je Render ein neues und schloss die Klammer
-  // bei jedem Tastendruck — ein Undo-Schritt je Buchstabe.
+  // Ein STABILES Objekt: als Effekt-Abhaengigkeit gefuehrt schloss ein neues je
+  // Render die Klammer bei jedem Tastendruck.
   return useMemo(() => ({ beginnen, beenden }), [beginnen, beenden])
 }

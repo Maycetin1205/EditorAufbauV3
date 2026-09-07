@@ -1,3 +1,4 @@
+// Bringt die Maskendatei in die Form, die SoftEngine annimmt (Escaping, LF, ASCII).
 function escapeNonAsciiHtml(s: string): string {
   return Array.from(s)
     .map((c) => (/^[\n\t\x20-\x7E]$/.test(c) ? c : `&#x${c.codePointAt(0)!.toString(16).toUpperCase()};`))
@@ -25,11 +26,9 @@ export function guardScriptContent(js: string): string {
   return js.replace(/<\/script/gi, '<\\/script')
 }
 
-// Fuer die zwei JSON-Skripte (FF_DATA_SOURCES, FF_RELATIONS): dort steht jedes
-// `<` in einer JSON-Zeichenkette, und \u003C ist dieselbe Zeichenkette.
-// Damit kann kein getippter Text das Skript verlassen — auch nicht ueber die
-// "double escaped script"-Masche, die am </script-Schutz vorbeikommt.
-// NICHT fuers Runtime-Buendel: dort ist `<` echter Code (Vergleiche).
+// Fuer die zwei JSON-Skripte: dort steht jedes `<` in einer JSON-Zeichenkette,
+// und \u003C ist dieselbe Zeichenkette. Damit kann kein getippter Text das Skript
+// verlassen. NICHT fuers Runtime-Buendel: dort ist `<` echter Code.
 export function guardJsonScript(js: string): string {
   return js.replace(/</g, '\\u003C')
 }

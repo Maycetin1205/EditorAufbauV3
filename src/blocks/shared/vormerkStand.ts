@@ -1,3 +1,4 @@
+// Wie viel noch zu schreiben ist: gezaehlt an einer Stelle, gezeigt am Baustein und am Knopf.
 import { parseBlockEvents } from '../../core/data/aktionen'
 import type {
   AenderungsTraegerElement,
@@ -6,11 +7,6 @@ import type {
   VormerkArt,
 } from '../../core/blocks/BlockDefinition'
 import { abschnitteVon, sucheTraeger } from './seAktionen'
-
-// Wie viel noch offen ist. Der Baustein, der die Zeilen haelt, sagt es in
-// seiner Fusszeile; der Knopf, dessen Kette sie schreibt, sagt es in
-// denselben Worten. Beide lesen dieselbe Funktion — sonst haette der
-// Bediener zwei Zahlen vor sich und muesste raten, welche gilt.
 
 export const VORMERK_EVENT = 'ff-vormerkungen'
 
@@ -25,9 +21,8 @@ type VormerkTraeger = HTMLElement
   & Partial<AenderungsTraegerElement>
   & Partial<LoeschTraegerElement>
 
-// „1 neue Zeile, 2 geänderte Zeilen, 1 Löschung vorgemerkt". Gezaehlt werden
-// ZEILEN, nicht Zellen: die Summe ist zugleich die Zahl der Laeufe, die der
-// Knopf vor sich hat.
+// Gezaehlt werden ZEILEN, nicht Zellen: die Summe ist zugleich die Zahl der
+// Laeufe, die der Knopf vor sich hat.
 export function vormerkText(erfasst: number, geaendert: number, geloescht: number): string {
   const teile: string[] = []
   if (erfasst > 0) teile.push(erfasst === 1 ? '1 neue Zeile' : `${erfasst} neue Zeilen`)
@@ -50,10 +45,8 @@ function anzahlVon(traeger: VormerkTraeger, art: VormerkArt): number {
   return traeger.geloeschteZeilen?.length ?? 0
 }
 
-// Was DIESE Kette noch zu schreiben hat. Welche Listen das sind, steht in
-// ihren eigenen Parametern — kein Bausteintyp kommt vor. undefined heisst:
-// die Kette liest gar keine Vormerkungen, der Knopf bleibt ein gewoehnlicher
-// Knopf ohne Zaehler.
+// Welche Listen eine Kette liest, steht in ihren eigenen Parametern. undefined
+// heisst: sie liest keine Vormerkungen, der Knopf bleibt ohne Zaehler.
 export function vormerkStandVon(el: HTMLElement, eventKey: string): VormerkZahlen | undefined {
   const steps = parseBlockEvents(el.getAttribute('data-ff-aktionen'))[eventKey]
   if (!steps || steps.length === 0) return undefined
@@ -61,8 +54,7 @@ export function vormerkStandVon(el: HTMLElement, eventKey: string): VormerkZahle
   const gezaehlt = new Set<string>()
   for (const abschnitt of abschnitteVon(steps)) {
     if (abschnitt.art === 'einmal' || abschnitt.blockId === '') continue
-    // Dieselbe Liste kann in mehreren Abschnitten stehen (erst anlegen, dann
-    // nachtragen) — gezaehlt wird sie trotzdem nur einmal.
+  // Dieselbe Liste kann in mehreren Abschnitten stehen; gezaehlt wird sie einmal.
     const kennung = abschnitt.art + ' ' + abschnitt.blockId
     if (gezaehlt.has(kennung)) continue
     const traeger = sucheTraeger(el.ownerDocument ?? document, abschnitt.blockId)
@@ -75,7 +67,6 @@ export function vormerkStandVon(el: HTMLElement, eventKey: string): VormerkZahle
 
 const zuletzt = new WeakMap<HTMLElement, string>()
 
-// Der Baustein sagt der Maske, dass sich seine Vormerkungen geaendert haben.
 // Nur bei echter Aenderung: gemeldet wird bei jedem Rendern, und das passiert
 // bei jedem Tastendruck in einer aenderbaren Zelle.
 export function meldeVormerkungen(el: VormerkTraeger): void {

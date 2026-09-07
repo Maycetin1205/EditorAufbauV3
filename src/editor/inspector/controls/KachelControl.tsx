@@ -1,3 +1,4 @@
+// Ein Ja/Nein als Kachel im Inspector.
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { Kachel } from '@/ui/werkbank/Kachel'
 
@@ -7,10 +8,8 @@ interface KachelControlProps {
   onChange: (value: string) => void
 }
 
-// Welche zwei Werte ein Ja/Nein speichert, steht in der Eigenschaft selbst
-// (blocks/shared/jaNeinProperty: Nein an erster Stelle, Ja an zweiter) und
-// NICHT hier. Sonst kaennten zwei Stellen die Zeichenketten „ja"/„nein", und
-// die exportierte Maske haengt an genau diesen Werten.
+// Welche zwei Werte ein Ja/Nein speichert, steht in der Eigenschaft selbst und
+// nicht hier: die exportierte Maske haengt an genau diesen Werten.
 export function KachelControl({ property, value, onChange }: KachelControlProps) {
   const optionen = property.options ?? []
   const aus = optionen[0]?.value ?? 'nein'

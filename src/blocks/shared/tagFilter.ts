@@ -1,3 +1,4 @@
+// Die Zeilen eines Tages aus einer Quelle heraussuchen.
 import { getField } from '../../softengine/data'
 import { tagSchluessel } from './datumSchluessel'
 

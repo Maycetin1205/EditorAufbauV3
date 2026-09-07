@@ -1,3 +1,4 @@
+// Die Tastenkuerzel des Editors.
 import { useEffect } from 'react'
 import { useEditorInstance } from './EditorContext'
 import { loescheBaustein } from './loescheBaustein'
@@ -25,8 +26,8 @@ export function useKeyboardShortcuts() {
     const onKeyDown = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey
 
-      // Strg+S speichert die Maske als Datei, auch aus einem Eingabefeld
-      // heraus — sonst oeffnet der Browser seinen eigenen Speicherdialog.
+  // Strg+S speichert die Maske als Datei, auch aus einem Eingabefeld heraus:
+  // sonst oeffnet der Browser seinen eigenen Speicherdialog.
       if (mod && e.key.toLowerCase() === 's') {
         e.preventDefault()
         speichereMaskeAlsDatei(editor)
@@ -43,8 +44,8 @@ export function useKeyboardShortcuts() {
         return
       }
 
-      // Escape: eine Ebene hoch, oben angekommen die Auswahl aufheben. So ist
-      // jeder Container erreichbar, auch wenn seine Kinder ihn ganz bedecken.
+  // Escape: eine Ebene hoch, oben angekommen die Auswahl aufheben. So ist jeder
+  // Container erreichbar, auch wenn seine Kinder ihn ganz bedecken.
       if (!mod && e.key === 'Escape') {
         if (editor.selectedId === null || fensterOffen()) return
         editor.selectBlock(elternZiel(editor.tree, editor.selectedId))

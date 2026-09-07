@@ -1,3 +1,4 @@
+// Nach dem Streichen einer Spalte: Ketten-Parameter, die auf sie zeigten, abschalten.
 import type { BlockNode, BlockTree } from '../core/blocks/BlockData'
 import type { BlockDefinition } from '../core/blocks/BlockDefinition'
 import { listeLesen } from '../core/blocks/listenBindung'
@@ -7,15 +8,9 @@ import {
   type ActionStep,
 } from '../core/data/aktionen'
 
-// Wird eine Spalte gestrichen, zeigen Ketten-Parameter weiter auf ihre
-// Kennung. Sichtbar wird das nirgends: der Export macht daraus die Platznummer
-// -1 (exportMask.ts, spaltenIndexFuer) und die Laufzeit schreibt kommentarlos
-// einen Leerstring ins ERP. Darum wird der Zeiger beim Loeschen abgeraeumt.
+// Sichtbar wird ein verwaister Zeiger nirgends: der Export macht daraus die
+// Platznummer -1 und die Laufzeit schreibt kommentarlos einen Leerstring ins ERP.
 // Generisch ueber die Listen-Bindung, kein Bausteintyp-Sondercode.
-//
-// Damit ist zugleich egal, dass die naechste neue Spalte dieselbe Kennung
-// wieder bekommen kann (Vergabe = hoechste + 1, spalten.ts): nach dem Loeschen
-// zeigt nichts mehr auf sie.
 
 export function gestricheneKennungen(
   def: BlockDefinition | undefined,
@@ -47,8 +42,8 @@ function schrittOhneZeiger(
         && weg.has(b.value)
       if (!zeigt) return b
       getroffen++
-      // 'aus' ist die sichtbare Antwort: die Steuerung zeigt den Parameter
-      // ausgegraut, die Laufzeit liefert '' (relations.ts).
+  // 'aus' ist die sichtbare Antwort: die Steuerung zeigt den Parameter
+  // ausgegraut, die Laufzeit liefert ''.
       return { source: 'aus' as const, value: '' }
     })
   const params = abraeumen(schritt.params)
@@ -59,15 +54,13 @@ function schrittOhneZeiger(
 export interface Abgeraeumt {
   tree: BlockTree
 
-  // Wie viele Parameter auf wie vielen Bausteinen abgeschaltet wurden — der
-  // Editor sagt es dem Bediener, weil die Bausteine woanders stehen koennen.
+  // Der Editor sagt es dem Bediener, weil die Bausteine woanders stehen koennen.
   parameter: number
   bausteine: number
 }
 
-// Alle Ketten im Baum, die auf eine gestrichene Spalte DIESES Bausteins
-// zeigen, auf 'aus' stellen. Ketten stehen auf beliebigen Bausteinen, nicht
-// nur auf dem mit der Liste — darum laeuft das ueber den ganzen Baum.
+// Ketten stehen auf beliebigen Bausteinen, nicht nur auf dem mit der Liste,
+// darum laeuft das ueber den ganzen Baum.
 export function ohneSpaltenZeiger(
   tree: BlockTree,
   blockId: string,

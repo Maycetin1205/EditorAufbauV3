@@ -1,3 +1,4 @@
+// Relations-Rufe an SoftEngine: einer zur Zeit, mit Warteschlange und Verfallsmarke.
 import {
   RELATION_VERBS,
   type RelationTemplate,
@@ -18,9 +19,8 @@ export interface RelationAntwort {
 
   roh: unknown
 
-  // Gesetzt, wenn der Ruf gar nicht erst hinausging oder unbeantwortet blieb
-  // — derselbe Klartext, den der Balken zeigt. Leer heisst NICHT „die ERP hat
-  // uebernommen": ein PUT ist ein Einweg-Ruf, seine Ablehnung sieht niemand.
+  // Gesetzt, wenn der Ruf nicht hinausging oder unbeantwortet blieb. Leer heisst
+  // NICHT „die ERP hat uebernommen": ein PUT ist ein Einweg-Ruf.
   fehler?: string
 }
 
@@ -95,11 +95,9 @@ export function extractRelationResult(raw: unknown): string | undefined {
     const found = firstScalar(value[key], 0)
     if (found !== undefined) return found
   }
-  // Traegt die Nachricht den RESULT-Schluessel, IST sie die Antwort — auch
-  // leer (kein Treffer, leeres Feld). Bliebe der Job bei {"RESULT":""} offen,
-  // liefe er in den 20-s-Timeout, meldete „nicht geantwortet" und stellte
-  // die Verfallsmarke scharf, die dann die erste echte Antwort des NAECHSTEN
-  // Rufs verwuerfe.
+  // Traegt die Nachricht den RESULT-Schluessel, IST sie die Antwort, auch leer.
+  // Bliebe der Job offen, liefe er in den Timeout und stellte die Verfallsmarke
+  // scharf, die dann die erste echte Antwort des naechsten Rufs verwuerfe.
   for (const key of SATZ_SCHLUESSEL) {
     if (typeof value[key] === 'string') return ''
   }
@@ -202,15 +200,11 @@ let getBusy = false
 const GET_TIMEOUT_MS = 20_000
 const GET_POLL_MS = 100
 
-// Eine Antwort sagt nicht, auf welche Frage sie gehoert; es ist immer nur EIN
-// Ruf unterwegs. Laeuft er in den Timeout, ist seine Antwort trotzdem noch
-// unterwegs und loeste sonst den naechsten Frager mit fremden Daten auf —
-// darum verfaellt danach die naechste eintreffende Antwort. Je Weg einzeln,
-// weil Rueckruf und SEDATA-Nachlese denselben Ruf unabhaengig tragen.
-// Zwei Grenzen, damit die Marke nie selbst zum Fehler wird: kommt gar nichts
-// mehr, verfaellt sie nach VERFALL_MS; und wer selbst eine Antwort verfallen
-// liess und trotzdem in den Timeout laeuft, setzt keine neue — sonst
-// schluckte die Marke von da an jede Antwort.
+// Eine Antwort sagt nicht, auf welche Frage sie gehoert; es ist immer nur EIN Ruf
+// unterwegs. Laeuft er in den Timeout, ist seine Antwort noch unterwegs und loeste
+// sonst den naechsten Frager mit fremden Daten auf — darum verfaellt danach die
+// naechste eintreffende Antwort. Zwei Grenzen halten die Marke davon ab, selbst
+// zum Fehler zu werden.
 const VERFALL_MS = GET_TIMEOUT_MS
 let verfallenBis = 0
 let verfaelltRueckruf = false
@@ -236,9 +230,8 @@ function runNextGet(): void {
   let poll: ReturnType<typeof setInterval> | null = null
   let timeout: ReturnType<typeof setTimeout> | null = null
 
-  // `finish` gibt die Warteschlange in JEDEM Fall frei — auch wenn der Aufbau
-  // des Rufs selbst wirft. Bliebe `getBusy` stehen, laedt die Maske fuer den
-  // Rest der Sitzung keine Daten mehr, ohne dass irgendwer davon erfaehrt.
+  // `finish` gibt die Warteschlange in JEDEM Fall frei; bliebe sie stehen, laedt
+  // die Maske fuer den Rest der Sitzung keine Daten mehr.
   const finish = (wert: string, roh: unknown, fehler?: string): void => {
     if (settled) return
     settled = true
@@ -251,9 +244,8 @@ function runNextGet(): void {
     queueMicrotask(runNextGet)
   }
 
-  // Der Balken schweigt bei 'still' (Hintergrund-Nachladen), der Bericht an
-  // die Kette nie: sonst braeche ein Lauf ab, ohne dass jemand sagen kann,
-  // woran.
+  // Der Balken schweigt bei 'still', der Bericht an die Kette nie: sonst braeche
+  // ein Lauf ab, ohne dass jemand sagen kann, woran.
   const gescheitert = (text: string): void => {
     if (!job.optionen.still) meldeFehler(text)
     finish('', undefined, text)
@@ -281,7 +273,7 @@ function runNextGet(): void {
       if (verfaelltNachlese && markeGilt()) {
         verfaelltNachlese = false
         verfallenGenutzt = true
-        // Sonst faende der naechste Durchlauf dieselbe Nachricht erneut.
+      // Sonst faende der naechste Durchlauf dieselbe Nachricht erneut.
         before.add(nachricht.schluessel)
         return
       }
@@ -349,8 +341,8 @@ export interface RuntimeActionValues {
 
   gewaehlteZeile?: (geberId: string) => unknown
 
-  // Gesetzt, wenn die Kette gerade EINE Zeile abarbeitet — eine erfasste
-  // oder eine geaenderte: liefert den Zellwert der Spalte dieser Zeile.
+  // Gesetzt, wenn die Kette gerade EINE Zeile abarbeitet: liefert den Zellwert
+  // der Spalte dieser Zeile.
   zeilenZelle?: (blockId: string, spaltenIndex: number) => string
 }
 

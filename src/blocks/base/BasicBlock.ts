@@ -1,3 +1,4 @@
+// Die gemeinsame Grundlage jedes Bausteins: Anmeldung, Editor-Frage, Eigenschaften melden.
 import { css, LitElement, type CSSResultGroup } from 'lit'
 import { property } from 'lit/decorators.js'
 import type { BlockComponent, BlockComponentStatic } from '../../core/blocks/BlockComponent'
@@ -90,11 +91,8 @@ export abstract class BasicBlock extends LitElement implements BlockComponent {
     return (this.constructor as typeof BasicBlock).customProperties
   }
 
-  // Steht der Baustein auf der Leinwand des Editors oder in der fertigen
-  // Maske? Der Editor haengt `data-ff-editor` an (useLitElement.ts) — und die
-  // Frage danach stand als `hasAttribute('data-ff-editor')` an ueber 40
-  // Stellen ausgeschrieben. Ein Name dafuer, geerbt von jedem Baustein:
-  // Wer die Kennung je umbenennt, aendert eine Zeile statt vierzig.
+  // Steht der Baustein auf der Leinwand des Editors oder in der fertigen Maske?
+  // Ein Name dafuer, geerbt von jedem Baustein.
   get imEditor(): boolean {
     return this.hasAttribute('data-ff-editor')
   }
@@ -115,16 +113,12 @@ export abstract class BasicBlock extends LitElement implements BlockComponent {
         bubbles: true,
         composed: true,
       }))
-      // Der getippte Stand bleibt stehen, bis der Editor die Eigenschaft
-      // zurueckgibt und Lit neu rendert — ausser der Editor hat den Wert
-      // verworfen (leerer Seitenname): dann kommt nichts zurueck, und der
-      // alte Text muss selbst wieder hin.
+    // Der getippte Stand bleibt stehen, bis der Editor die Eigenschaft
+    // zurueckgibt; hat er sie verworfen, muss der alte Text selbst wieder hin.
       return detail.abgelehnt !== true
     })
   }
 
-  // Meldet die Klasse doppelt an: als Element fuer die Maske und als
-  // Bausteintyp fuer den Editor.
   static defineAndRegister(BlockClass: BlockComponentStatic): void {
     definiere(BlockClass)
     beschreibe(BlockClass)

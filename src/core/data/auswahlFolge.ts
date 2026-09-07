@@ -1,3 +1,4 @@
+// „Folgt der Auswahl von …": woran ein Baustein haengt und mit welchen Feldern.
 import {
   MAX_SCHLUESSELPAARE,
   vollstaendigePaare,

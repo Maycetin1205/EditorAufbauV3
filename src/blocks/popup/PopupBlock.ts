@@ -1,3 +1,4 @@
+// Baustein Popup: eine Flaeche, die als Fenster ueber der Maske aufgeht.
 import { css, html, unsafeCSS, type PropertyValues, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'

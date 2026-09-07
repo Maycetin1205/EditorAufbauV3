@@ -1,9 +1,8 @@
+// Der Name der Maske: eine Eigenschaft der Maskenwurzel.
 import { ROOT_ID, type BlockTree } from './BlockData'
 
-// Der Name der Maske: eine Eigenschaft der Maskenwurzel. Der Export schreibt
-// ihn als <title>, und genau der ist zugleich der Anmeldename der Maske bei
-// SoftEngine (document.title in softengine/bridge.ts). Alte Staende ohne
-// Namen laden unveraendert — die Vorgabe greift.
+// Der Export schreibt ihn als <title>, und genau der ist der Anmeldename der
+// Maske bei SoftEngine.
 export const MASKEN_NAME_PROP = 'maskenName'
 export const MASKEN_NAME_STANDARD = 'Maske'
 

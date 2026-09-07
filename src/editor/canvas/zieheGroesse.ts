@@ -1,3 +1,4 @@
+// Ein Zug am Baustein, der sein Ergebnis als ein Undo-Schritt in den Baum schreibt.
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Editor } from '../../state/Editor'
 

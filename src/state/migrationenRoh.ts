@@ -1,3 +1,4 @@
+// Schemastufen auf den Rohdaten eines gespeicherten Standes, vor normalizeProps.
 import { ROOT_ID } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { kennungenVergeben } from '../core/blocks/listenBindung'
@@ -121,13 +122,9 @@ export function migrateZeileAufloesen(src: Record<string, RohKnoten>): RohEntfer
   return entfernt
 }
 
-// V0: Das Nachschlage-Feld hat kein „Angezeigt wird" mehr —
-// was im Feld steht, ist die ERSTE Spalte seines Fensters. Ein alter Stand
-// mit eigenem Anzeigefeld und ohne eigene Spalten bekommt daraus genau die
-// zwei Spalten, die er bisher sah; sonst ginge die Einstellung still
-// verloren. Die Art der Spalte bleibt offen — `alsSpalte` setzt Text.
-// Laeuft auf den ROHDATEN, weil `normalizeProps` unbekannte Props
-// wegwirft, und raeumt die alten Props gleich mit weg, damit die
+// Das Nachschlage-Feld hat kein „Angezeigt wird" mehr: was im Feld steht, ist
+// die erste Spalte seines Fensters. Ein alter Stand bekommt daraus genau die zwei
+// Spalten, die er bisher sah, und die alten Props gleich mit weg, damit die
 // Verlustpruefung des Datei-Wegs nichts vermisst.
 export function migrateAnzeigeFeldAufSpalten(src: Record<string, RohKnoten>): void {
   for (const node of Object.values(src)) {
@@ -155,14 +152,9 @@ export function migrateAnzeigeFeldAufSpalten(src: Record<string, RohKnoten>): vo
   }
 }
 
-// V-Kennung: Jede Tabellen-Spalte traegt eine dauerhafte Kennung
-// (Spalte.kennung), und alles zeigt auf SIE: Ketten-Parameter (Wert aus
-// Erfassungs-/Aenderungs-/Loeschzelle, vorher Platznummer — verrutschte beim
-// Loeschen/Verschieben) und die Rechnung (vorher Belegfeld — doppelt vergeben
-// traf sie stumm die falsche Spalte). Laeuft auf den Rohdaten VOR
-// normalizeProps und ist absichtlich idempotent: vergebene Kennungen bleiben,
-// Ketten-Werte werden nur umgeschrieben, wenn sie noch eine Ziffernfolge
-// sind, die Rechnung nur, wo noch `feld` statt `spalte` steht.
+// Jede Tabellen-Spalte traegt eine dauerhafte Kennung, und Ketten-Parameter wie
+// Rechnung zeigen auf SIE. Absichtlich idempotent: vergebene Kennungen bleiben,
+// Ketten-Werte werden nur umgeschrieben, solange sie eine Ziffernfolge sind.
 const ZELLEN_QUELLEN_ROH = new Set(['erfassungszelle', 'aenderungszelle', 'loeschzelle'])
 
 const RECHNUNG_PLAETZE_ROH = ['menge', 'anzahl', 'dosis', 'tage'] as const
@@ -173,8 +165,8 @@ function rohSpalten(node: RohKnoten): Record<string, unknown>[] {
   return roh.filter((e): e is Record<string, unknown> => Boolean(e) && typeof e === 'object')
 }
 
-// Dieselbe Vergabe wie im Baustein (blocks/tabelle/spalten.ts), aus der EINEN
-// Stelle core/blocks/listenBindung.ts — hier auf den Rohdaten.
+// Dieselbe Vergabe wie im Baustein, aus der EINEN Stelle in listenBindung.ts,
+// hier auf den Rohdaten.
 function vergebeKennungen(spalten: readonly Record<string, unknown>[]): void {
   const kennungen = kennungenVergeben(
     spalten.map((e) => (typeof e.kennung === 'string' ? e.kennung : '')),
@@ -233,9 +225,8 @@ function schreibeRechnungUm(node: RohKnoten, spalten: readonly Record<string, un
       : kennungAnPlatz(spalten, spalten.findIndex((s) => s.feld === feld))
     delete p.feld
   }
-  // Ausgebaut und darum aus dem Attribut raus, sonst reisen die Reste in
-  // jedem Export weiter: der Einheiten-Umrechner und die beiden Plaetze
-  // Tiergewicht/je-kg (s. core/data/rechnung.ts).
+  // Ausgebaut und darum aus dem Attribut raus, sonst reisen die Reste in jedem
+  // Export weiter.
   delete r.einheitFeld
   delete r.einheiten
   delete r.gewicht
@@ -254,12 +245,9 @@ export function migrateSpaltenKennungen(src: Record<string, RohKnoten>): void {
   for (const node of tabellen) schreibeRechnungUm(node, rohSpalten(node))
 }
 
-// Die Erfassungszeile stellt nichts mehr je Zelle ein — was
-// eine Zelle tut, leitet sie aus der Bindung der Spalte und der Verknuepfung
-// des Bausteins ab. Die vier alten Zellen-Angaben fallen weg; sie muessen AUS
-// DEN ROHDATEN raus, sonst vermisst die Verlustpruefung sie beim Laden: sie
-// stecken IM Spalten-Eintrag und nicht in einer eigenen Prop, `normalizeProps`
-// wirft sie darum nicht weg — `alsSpalte` schon.
+// Die Erfassungszeile stellt nichts mehr je Zelle ein: was eine Zelle tut, leitet
+// sie aus der Bindung der Spalte ab. Die vier alten Angaben muessen aus den
+// ROHDATEN raus, sonst vermisst die Verlustpruefung sie beim Laden.
 export function migrateErfassungsRollenWeg(src: Record<string, RohKnoten>): void {
   for (const node of Object.values(src)) {
     if (!node || typeof node !== 'object' || node.type !== 'tabelle') continue

@@ -1,3 +1,4 @@
+// Felder einer Quelle als Vorschlag fuer die Parameter einer Relation.
 import type { ActionParamBinding } from '../../core/data/aktionen'
 import { defaultRelationParams } from '../../core/data/aktionen'
 import { tableIdFor, type DataSource } from '../../core/data/dataSources'
@@ -44,8 +45,8 @@ export function feldUebernahmeArt(raw: string): FeldUebernahmeParameterArt | nul
   return null
 }
 
-// Eine ERP-Abfrage darf ihren Feldern einen Vorsatz voranstellen
-// (feldVorsatzMoeglich); darunter steckt trotzdem Position_Laenge.
+// Eine ERP-Abfrage darf ihren Feldern einen Vorsatz voranstellen; darunter steckt
+// trotzdem Position_Laenge.
 function feldPosLen(
   source: DataSource,
   code: string,
@@ -55,10 +56,8 @@ function feldPosLen(
   return splitFieldCode(ohne)
 }
 
-// Position und Laenge sind Position und Laenge — welche ART die Quelle hat,
-// spielt dafuer keine Rolle. Ein Filter auf die Art sperrte jede Tabelle aus,
-// die nicht als IDB-Tabelle angelegt ist: eine ERP-Abfrage IDB.GET auf
-// dieselbe Tabelle fiele damit heraus.
+// Position und Laenge sind Position und Laenge: ein Filter auf die ART sperrte
+// jede Tabelle aus, die nicht als IDB-Tabelle angelegt ist.
 export function uebernahmeFelder(
   dataSources: readonly DataSource[],
 ): UebernahmeFeld[] {
@@ -79,8 +78,7 @@ export function uebernahmeFelder(
   return felder
 }
 
-// Fuer den RELID-Parameter zaehlt nur, dass die Quelle eine Tabellen-Kennung
-// hat: IDB-Kennung, ADR/ART/BEL/POS oder die eingetippte einer anderen Datei.
+// Fuer den RELID-Parameter zaehlt nur, dass die Quelle eine Tabellen-Kennung hat.
 export function uebernahmeTabellen(
   dataSources: readonly DataSource[],
 ): UebernahmeQuelle[] {

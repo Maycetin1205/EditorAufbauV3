@@ -1,3 +1,4 @@
+// Baustein Ansicht: eine Seite der Maske, zwischen denen die Navi umschaltet.
 import { css, html, type TemplateResult } from 'lit'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'

@@ -1,5 +1,5 @@
-// Das Datencenter gehoert der Shell. Wer es von woanders braucht (der
-// Feld-Picker ohne Datenquelle, der Inspector), bittet per Ereignis darum.
+// Das Datencenter gehoert der Shell; wer es von woanders braucht, bittet per
+// Ereignis darum.
 const EREIGNIS = 'ff-datencenter-oeffnen'
 
 export function oeffneDatencenter(): void {

@@ -1,3 +1,4 @@
+// Der Rand der Maske, in dem die Navi sitzt.
 import { getBlockDefinition } from './blockRegistry'
 import type { BlockNode, BlockTree } from './BlockData'
 

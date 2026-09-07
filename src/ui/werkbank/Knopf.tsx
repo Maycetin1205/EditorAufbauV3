@@ -1,3 +1,4 @@
+// Der Knopf der Werkbank, in seinen Arten und Groessen.
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -10,7 +11,7 @@ const FLAECHE: Record<KnopfArt, string> = {
 }
 
 // Ein Symbolknopf traegt keine eigene Flaeche, sonst stehen in einer
-// Werkzeugleiste zehn Kaesten neben-einander.
+// Werkzeugleiste zehn Kaesten nebeneinander.
 const NUR_ZEICHEN: Record<KnopfArt, string> = {
   primaer: 'bg-akzent text-grund hover:bg-akzent/85',
   still: 'text-matt hover:bg-control hover:text-tinte',
@@ -22,8 +23,8 @@ interface KnopfBasis extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'chil
   children: ReactNode
 }
 
-// Ein Knopf ohne Beschriftung braucht einen Namen fuer die Vorlesehilfe —
-// das erzwingt der Typ, nicht die Sorgfalt des Aufrufers.
+// Ein Knopf ohne Beschriftung braucht einen Namen fuer die Vorlesehilfe; das
+// erzwingt der Typ.
 export type KnopfProps =
   & KnopfBasis
   & ({ nurZeichen: true; 'aria-label': string } | { nurZeichen?: false })

@@ -1,3 +1,4 @@
+// Der Rahmen des Editors: Palette, Leinwand, Inspector, Balken.
 import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useKeyboardShortcuts } from '../../state/useKeyboardShortcuts'
@@ -28,12 +29,11 @@ export function EditorShell() {
 
   useEffect(() => beiDatencenterWunsch(() => setDatencenterOffen(true)), [])
 
-  // Der gemerkte Stand wird EINMAL beim Aufbau gelesen (useState mit
-  // Funktion), nicht bei jedem Zeichnen.
+  // Der gemerkte Stand wird EINMAL beim Aufbau gelesen, nicht bei jedem Zeichnen.
   const [inspektorBreite, setInspektorBreite] = useState(leseBreite)
 
-  // Waehrend des Zugs wird nur gezeichnet; gemerkt wird beim Loslassen und
-  // bei jedem Tastenschritt.
+  // Waehrend des Zugs wird nur gezeichnet; gemerkt wird beim Loslassen und bei
+  // jedem Tastenschritt.
   const setzeUndMerke = (breite: number): void => {
     setInspektorBreite(breite)
     merkeBreite(breite)

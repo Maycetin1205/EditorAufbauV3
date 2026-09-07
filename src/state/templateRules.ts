@@ -1,3 +1,4 @@
+// Welche Bausteine welche Kinder aufnehmen duerfen.
 import type { BlockNode, BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { firstDescendantOfType } from '../core/blocks/treeQuery'

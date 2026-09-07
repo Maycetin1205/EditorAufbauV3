@@ -1,3 +1,4 @@
+// Die Schritte einer Kette als Liste: Reihenfolge, Kurztext, Fundstellen.
 import { ArrowDown, ArrowUp, Copy, X } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -24,9 +25,8 @@ interface SchrittListeProps {
   onAendern?: (steps: ActionStep[]) => void
 }
 
-// Nur die Liste. Das Formular des gewaehlten Schritts steht rechts daneben
-// (KettenFenster, Aufbau ListeDetail) — klappte es unter der Zeile auf, saehe
-// das Fenster aus wie kein anderes im Editor.
+// Nur die Liste. Das Formular des gewaehlten Schritts steht rechts daneben:
+// klappte es unter der Zeile auf, saehe das Fenster aus wie kein anderes.
 export function SchrittListe({
   steps, aktivId, onWaehle, onAendern,
 }: SchrittListeProps) {
@@ -93,9 +93,8 @@ export function SchrittListe({
         const popupName = s.type === 'POPUP_OPEN' || s.type === 'POPUP_CLOSE'
           ? popupSeiten.find((seite) => seite.id === s.popupId)?.name
           : undefined
-        // Eine Relation mit eigenem Namen nennt IHN. Eine ungetaufte Vorlage
-        // heisst schlicht „Relation" — WELCHE es ist, sagt die Marke rechts in
-        // der Zeile.
+  // Eine Relation mit eigenem Namen nennt IHN; eine ungetaufte Vorlage heisst
+  // schlicht „Relation", und welche es ist, sagt die Marke rechts.
         const was = s.type === 'RELATION' && relation && !istUngetaufteVorlage(relation)
           ? relation.name
           : stepTypeName(s.type)

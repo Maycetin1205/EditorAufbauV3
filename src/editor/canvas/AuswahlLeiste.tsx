@@ -1,3 +1,4 @@
+// Die Werkzeugleiste am gewaehlten Baustein: Kind anlegen, Eintrag anfuegen, entfernen.
 import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { Minus, Plus } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -10,7 +11,6 @@ interface AuswahlLeisteProps {
   block: BlockNode
   def: BlockDefinition | undefined
 
-  // Der Rahmen des Bausteins im Canvas — an ihm wird gemessen, wo Platz ist.
   wirt: RefObject<HTMLElement | null>
 
   // Randbausteine (Navi) fuellen die Hoehe: dort liegt die Leiste innen.
@@ -20,7 +20,7 @@ interface AuswahlLeisteProps {
 
 type Lage = 'oben' | 'unten' | 'rechts' | 'innen'
 
-// Leiste (24) + Luft (6); und was sie mindestens an Breite braucht.
+// Leiste (24) plus Luft (6), und was sie mindestens an Breite braucht.
 const LEISTE = 30
 const BREITE = 150
 
@@ -33,10 +33,9 @@ function clipEltern(el: HTMLElement): HTMLElement | null {
   return null
 }
 
-// Ueber dem Baustein, wenn dort Platz ist; sonst darunter; ist der Baustein
-// dafuer zu schmal (Navi-Leiste), rechts daneben; sonst innen unten rechts.
-// Gemessen gegen den naechsten rollenden Vorfahren, denn der schneidet alles
-// ab, was ueber seinen Rand hinausragt.
+// Ueber dem Baustein, sonst darunter, bei schmalem Baustein rechts daneben,
+// zuletzt innen unten rechts. Gemessen gegen den naechsten rollenden Vorfahren,
+// denn der schneidet jeden Ueberhang ab.
 function lageFuer(el: HTMLElement | null, amRand: boolean): Lage {
   if (el === null) return 'innen'
   const r = el.getBoundingClientRect()
@@ -61,13 +60,12 @@ const STIL: Record<Lage, { top: string; bottom: string; right: string; left: str
 
 const halt = (e: { stopPropagation: () => void }): void => e.stopPropagation()
 
-// Die EINE Werkzeugleiste des gewaehlten Bausteins: Kind anlegen, Eintrag
-// (Spalte) anfuegen, Baustein entfernen. Zeichnete die Tabelle eigene Knoepfe
-// in die Maske, staenden sie bei schmalen Spalten ueber den Titeln.
+// Zeichnete die Tabelle eigene Knoepfe in die Maske, staenden sie bei schmalen
+// Spalten ueber den Titeln.
 export function AuswahlLeiste({ block, def, wirt, amRand }: AuswahlLeisteProps) {
   const editor = useEditorInstance()
-  // Die Lage wird gemessen und direkt ans Element geschrieben — kein
-  // Zustand, kein zweiter Render.
+  // Die Lage wird gemessen und direkt ans Element geschrieben: kein Zustand,
+  // kein zweiter Render.
   const leisteRef = useRef<HTMLDivElement | null>(null)
   useLayoutEffect(() => {
     const el = leisteRef.current

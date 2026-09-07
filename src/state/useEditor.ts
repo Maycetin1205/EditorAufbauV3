@@ -1,3 +1,4 @@
+// Der Zugang der Oberflaeche zum Editor-Zustand.
 import { useCallback, useSyncExternalStore } from 'react'
 import { useEditorInstance } from './EditorContext'
 

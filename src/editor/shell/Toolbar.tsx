@@ -1,3 +1,4 @@
+// Die Werkzeugleiste des Editors: Maskenname, Seiten, Datencenter, Export.
 import {
   Download,
   FolderOpen,
@@ -29,8 +30,8 @@ import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const ed = useEditor()
 
-  // Der Maskenname wird wie jede Eigenschaft im Baum gefuehrt (Undo, Speichern,
-  // Maskendatei) — eine Tipp-Sitzung ist EIN Undo-Schritt.
+  // Der Maskenname wird wie jede Eigenschaft im Baum gefuehrt; eine Tipp-Sitzung
+  // ist EIN Undo-Schritt.
   const nameSitzung = useEingabeSitzung(() => ed.beginTransaction(), () => ed.endTransaction())
   const maskenName = String(ed.tree[ROOT_ID]?.props[MASKEN_NAME_PROP] ?? '')
 

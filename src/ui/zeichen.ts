@@ -1,3 +1,4 @@
+// Die Zeichen der Oberflaeche, unter Namen erreichbar.
 import { createElement, forwardRef, type ReactElement, type SVGProps } from 'react'
 import { KNOTEN, type Knoten } from './zeichenDaten'
 

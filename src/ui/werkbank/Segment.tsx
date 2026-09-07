@@ -1,3 +1,4 @@
+// Eine Reihe von Zungen, aus denen genau eine gilt.
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 

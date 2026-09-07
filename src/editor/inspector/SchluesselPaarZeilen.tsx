@@ -1,3 +1,4 @@
+// Die Feldpaare, mit denen zwei Quellen verbunden werden.
 import { Plus, X } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import type { DataSourceField } from '../../core/data/dataSources'
@@ -29,9 +30,8 @@ export function SchluesselPaarZeilen({
   const setzePaar = (at: number, teil: Partial<SchluesselPaar>) =>
     onAendern(paare.map((p, i) => (i === at ? { ...p, ...teil } : p)))
 
-  // Der Waehler bringt die Suche mit — eine Quelle kann hunderte Felder
-  // haben. Und er zeigt einen Feldcode, den die Quelle nicht mehr kennt,
-  // rot statt wie das rohe <select> einfach leer.
+  // Der Waehler bringt die Suche mit und zeigt einen Feldcode, den die Quelle
+  // nicht mehr kennt, rot statt leer.
   const feldWaehler = (
     bezeichnung: string,
     felder: readonly DataSourceField[],

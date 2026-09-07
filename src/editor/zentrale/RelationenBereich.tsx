@@ -1,3 +1,4 @@
+// Der Relations-Bereich des Datencenters: Liste, Anlegen, Loeschen.
 import { useState, type ReactNode } from 'react'
 import { Plus, Search, Share2 } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
@@ -28,9 +29,8 @@ export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
   const quellen = useDataSources().list
   const [suche, setSuche] = useState('')
 
-  // Start auf dem Reiter, der etwas zu zeigen hat; danach gewinnt der Klick.
-  // (Eine dauerhafte Umleitung auf den vollen Reiter machte den Klick auf
-  // den leeren wirkungslos — der Reiter war ein toter Knopf.)
+  // Start auf dem Reiter, der etwas zu zeigen hat; danach gewinnt der Klick. Eine
+  // dauerhafte Umleitung machte den Klick auf den leeren Reiter wirkungslos.
   const [filter, setFilter] = useState<RelationGroup>(() =>
     store.list.some((r) => relationGroup(r) === 'lesen') || store.list.length === 0
       ? 'lesen'
@@ -58,15 +58,13 @@ export function RelationenBereich({ bereiche }: { bereiche?: ReactNode }) {
       .filter((n) => relationIdsVon(n).includes(id))
       .map((n) => bausteinName(n, quellen))
 
-  // Ohne Rueckfrage: Strg+Z holt die Relation zurueck. Bausteine, die sie
-  // rufen, bleiben stehen; ihr Schreibweg ruht.
+  // Ohne Rueckfrage: Strg+Z holt die Relation zurueck. Bausteine, die sie rufen,
+  // bleiben stehen; ihr Schreibweg ruht.
   function loeschen(r: RelationTemplate) {
     store.remove(r.id)
     setModus('lesen')
   }
 
-  // Derselbe Aufbau wie jedes Fenster mit Liste und Detail (ListeDetail):
-  // Bereiche links, Liste mit Kopf, Detail rechts.
   return (
     <>
       <ListeDetail

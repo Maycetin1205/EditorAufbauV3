@@ -1,3 +1,4 @@
+// Eine zuklappbare Gruppe mit Kopfzeile.
 import { useId, useState, type ReactNode } from 'react'
 import { ChevronDown } from '@/ui/zeichen'
 import { cn } from '@/lib/utils'
@@ -5,8 +6,7 @@ import { cn } from '@/lib/utils'
 export interface GruppeProps {
   titel: ReactNode
 
-  // Rechts im Kopf, z. B. ein Zaehler oder ein Knopf. Klicks darin klappen
-  // die Gruppe nicht auf.
+  // Rechts im Kopf. Klicks darin klappen die Gruppe nicht auf.
   aktionen?: ReactNode
 
   // Ohne `offen` fuehrt die Gruppe ihren Zustand selbst.

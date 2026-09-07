@@ -1,3 +1,4 @@
+// Die Bedienelemente je Parameter-Herkunft: woraus und was darin.
 import type { ReactNode } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'
 import type { ListeEintrag, ListeGruppe } from '@/ui/werkbank/Liste'
@@ -20,8 +21,7 @@ const PLATZHALTER_EINTRAEGE: ListeEintrag[] = AKTIONS_PLATZHALTER.map((wert) => 
   kennung: wert,
 }))
 
-// Vier Quellen fragen dasselbe zweimal: erst WORAUS (Datenquelle, Baustein,
-// Tabelle, Schritt), dann WAS DARIN (Feld, Spalte, Ergebnisfeld).
+// Vier Quellen fragen dasselbe zweimal: erst WORAUS, dann WAS DARIN.
 function Paar({ children }: { children: ReactNode }) {
   return <div className="grid grid-cols-2 gap-1.5">{children}</div>
 }
@@ -35,8 +35,8 @@ function feldGruppe(felder: readonly DataSourceField[], quelle?: DataSource): Li
   }
 }
 
-// Ein Baustein, den es nicht mehr gibt, muss im Waehler STEHEN — sonst
-// zeigte die Zeile dem Bediener eine rohe Baustein-Kennung.
+// Ein Baustein, den es nicht mehr gibt, muss im Waehler STEHEN: sonst zeigte die
+// Zeile eine rohe Baustein-Kennung.
 function bausteinEintraege(
   liste: readonly { blockId: string; label: string }[],
   blockId: string | undefined,

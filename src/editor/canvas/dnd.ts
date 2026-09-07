@@ -1,3 +1,4 @@
+// Die Kennungen, unter denen die Palette ihre Bausteine uebergibt.
 export const NEW_BLOCK_MIME = 'application/x-ff-new-block'
 
 const TYPED_PREFIX = `${NEW_BLOCK_MIME}--`

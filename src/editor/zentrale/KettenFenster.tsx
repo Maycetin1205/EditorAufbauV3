@@ -1,3 +1,4 @@
+// Das Fenster einer Aktionskette: Schritte links, Formular rechts.
 import { useState } from 'react'
 import { Plus } from '@/ui/zeichen'
 import { Dialog } from '@/ui/werkbank/Dialog'
@@ -41,8 +42,8 @@ export function KettenFenster({ block, eventKey, eventName, onClose }: KettenFen
     setOffeneId(step.id)
   }
 
-  // Rechts steht IMMER genau eines: das Formular des neuen Schritts, das
-  // des gewaehlten, oder der Hinweis, was zu tun ist.
+  // Rechts steht IMMER genau eines: das Formular des neuen Schritts, das des
+  // gewaehlten, oder der Hinweis, was zu tun ist.
   const detail = neu
     ? <StepForm key="neu" kette={kette} onClose={() => setNeu(false)} onSave={speichere} />
     : offen
@@ -61,8 +62,6 @@ export function KettenFenster({ block, eventKey, eventName, onClose }: KettenFen
           </p>
         )
 
-  // Derselbe Aufbau wie das Datencenter: Liste links mit dem Anlegen-Knopf
-  // im Kopf, Detail rechts. Ein Fenster-Aufbau fuer den ganzen Editor.
   return (
     <Dialog
       randlos

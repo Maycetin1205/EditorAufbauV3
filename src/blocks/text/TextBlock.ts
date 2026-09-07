@@ -1,3 +1,4 @@
+// Baustein Text: eine Zeile Text, frei getippt oder an ein Feld gebunden.
 import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'

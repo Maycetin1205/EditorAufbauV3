@@ -1,3 +1,4 @@
+// Eine Wahl aus wenigen Moeglichkeiten als Zungenreihe.
 import type { PropertySelectOption } from '../../../core/blocks/PropertyDescription'
 import { Segment } from '@/ui/werkbank/Segment'
 import { Zeile } from '@/ui/werkbank/Zeile'

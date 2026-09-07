@@ -1,3 +1,4 @@
+// Die Pfade der Zeichen; nur Daten, kein Verhalten.
 export type Knoten = [string, Record<string, string | number>]
 
 export const KNOTEN = {

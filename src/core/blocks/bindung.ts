@@ -1,8 +1,6 @@
 // Die Form einer Feldbindung: „Feldcode" heisst die eigene Quelle,
-// „quelleId::Feldcode" eine andere. Steht in einer EIGENEN Datei, weil
-// `listenBindung` sie braucht und `BlockDefinition` bereits `listenBindung`
-// importiert — ein direkter Import waere ein Ringschluss. `BlockDefinition`
-// reicht alles hier unveraendert weiter, kein Aufrufer merkt den Umzug.
+// „quelleId::Feldcode" eine andere. Eigene Datei, weil ein Import aus
+// BlockDefinition ein Ringschluss waere.
 
 export const QUELLEN_TRENNER = '::'
 

@@ -1,3 +1,4 @@
+// Die Editor-Bedienung der Listeneintraege, als Schicht ueber den Stellen des Bausteins.
 import { useEffect, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import { cn } from '@/lib/utils'
 import type { BlockNode } from '../../core/blocks/BlockData'
@@ -11,10 +12,8 @@ interface Stelle {
   width: number
   height: number
 
-  // Der Platz des Eintrags in der VOLLEN Liste des Bausteins — er steht im
-  // Attribut, nicht in der DOM-Reihenfolge. Heute zeichnet der Editor alle
-  // Eintraege, beides ist also gleich; zeichnete er je gefiltert (versteckte
-  // Spalten), traefe die Reihenfolge den falschen Eintrag.
+  // Der Platz des Eintrags in der VOLLEN Liste, aus dem Attribut und nicht aus
+  // der DOM-Reihenfolge: gefiltert gezeichnet traefe die Reihenfolge den falschen.
   platz: number
 }
 
@@ -23,21 +22,19 @@ interface SpaltenBedienungProps {
   bindung: ListenBindung
   selektor: string
 
-  // Der Lit-Baustein; seine Stellen werden im Schatten-DOM gemessen.
   element: HTMLElement | null
 
   // Bezugsrahmen fuer die Masse (BlockHost-Wurzel, position: relative).
   wirt: RefObject<HTMLElement | null>
 
-  // Empfaenger von `ff-listen-bind` — dort lauscht der Feld-Picker.
   container: RefObject<HTMLElement | null>
   onSelect?: (aufStelle: boolean) => void
 }
 
 const ZUG_SCHWELLE = 5
 
-// An jeder Zellkante gehoeren ein paar Pixel dem Breiten-Griff der Maske
-// (11 px um die Linie). Die Schicht laesst sie frei.
+// An jeder Zellkante gehoeren ein paar Pixel dem Breiten-Griff der Maske; die
+// Schicht laesst sie frei.
 const GRIFF_RAND = 6
 
 function messe(element: HTMLElement, wirt: HTMLElement, selektor: string): Stelle[] {
@@ -57,12 +54,9 @@ function messe(element: HTMLElement, wirt: HTMLElement, selektor: string): Stell
   })
 }
 
-// Die Bedienung der Eintraege (Spalten) eines Listen-Bausteins als Schicht
-// des EDITORS ueber den Stellen, die der Baustein markiert: Klick oeffnet den
-// Feld-Picker, Ziehen ordnet um. Der Baustein zeichnet dafuer nichts mehr,
-// die Maske traegt keinen Editor-Code. Die Stellen werden gemessen und dem
-// Baustein nachgefuehrt (Groesse, Spaltenbreiten, Umbau) — ueber Resize- und
-// MutationObserver, nie im Rendern.
+// Klick oeffnet den Feld-Picker, Ziehen ordnet um. Der Baustein zeichnet dafuer
+// nichts, die Maske traegt keinen Editor-Code. Die Stellen werden gemessen und
+// ueber Resize- und MutationObserver nachgefuehrt, nie im Rendern.
 export function SpaltenBedienung({
   block, bindung, selektor, element, wirt, container, onSelect,
 }: SpaltenBedienungProps) {
@@ -75,8 +69,8 @@ export function SpaltenBedienung({
     const rahmen = wirt.current
     if (!el || !rahmen || !el.shadowRoot) return
     const nachmessen = (): void => setStellen(messe(el, rahmen, selektor))
-    // Der ResizeObserver meldet sich beim Anmelden einmal von selbst — das
-    // ist die erste Messung.
+    // Der ResizeObserver meldet sich beim Anmelden einmal von selbst; das ist die
+    // erste Messung.
     const ro = new ResizeObserver(nachmessen)
     ro.observe(el)
     const mo = new MutationObserver(nachmessen)
@@ -110,7 +104,7 @@ export function SpaltenBedienung({
   }
 
   // Druecken und ziehen: ab der Schwelle wird der Klick zum Umordnen. Ohne
-  // Bewegung ist das Loslassen der Klick auf die Spalte (Feld-Picker).
+  // Bewegung ist das Loslassen der Klick auf die Spalte.
   const beiDruck = (index: number, e: ReactPointerEvent<HTMLDivElement>): void => {
     if (e.button !== 0) return
     e.stopPropagation()
@@ -154,8 +148,7 @@ export function SpaltenBedienung({
       }
       const verschieben = bindung.eintragVerschieben
       if (!verschieben) return
-      // Beide Zahlen im selben Raum: der Platz in der vollen Liste. Hinter
-      // der letzten Stelle steht der Platz dahinter.
+  // Beide Zahlen im selben Raum: der Platz in der vollen Liste.
       const von = stellen[index]?.platz ?? index
       const nachRoh = stellen[s]?.platz ?? (stellen[stellen.length - 1]?.platz ?? 0) + 1
       wendeProps(editor, block.id, verschieben(block.props, von, nachRoh > von ? nachRoh - 1 : nachRoh))

@@ -1,3 +1,4 @@
+// Das Formular einer Relations-Vorlage: Verb, Nummer, Parameter.
 import { useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'

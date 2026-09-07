@@ -1,3 +1,4 @@
+// Die weiteren Quellen eines Bausteins im Inspector: anlegen, verbinden, wegnehmen.
 import { Plus, X } from '@/ui/zeichen'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -44,8 +45,8 @@ export function QuellenListe({ block }: QuellenListeProps) {
     return bibliothek.filter((s) => !belegt.has(s.id))
   }
 
-  // Die Stellenbezeichnung einer Quelle DIESES Bausteins — dieselbe Zaehlung,
-  // die auch ueber den Waehlern steht.
+// Die Stellenbezeichnung einer Quelle DIESES Bausteins, dieselbe Zaehlung wie
+// ueber den Waehlern.
   function stelle(id: string): string {
     if (id === '') return 'verbundenen Datenquelle'
     if (id === erste) return 'Datenquelle 1'
@@ -53,23 +54,18 @@ export function QuellenListe({ block }: QuellenListeProps) {
     return at === -1 ? 'Datenquelle 1' : `Datenquelle ${at + 2}`
   }
 
-  // Woran diese Quelle haengt. Drei Zustaende, und sie muessen auseinander
-  // bleiben — sonst springt „keine" beim naechsten Zeichnen auf Datenquelle 1
-  // zurueck:
-  //   KEIN Feldpaar   -> gar keine Verbindung (reine Nachschlagequelle)
-  //   partnerId leer  -> die Hauptquelle (so lesen sich auch alte Masken)
-  //   partnerId gesetzt -> eine andere weitere Quelle (2 an 3, 3 an 4)
-  // Gezaehlt werden ALLE Paarzeilen, auch halb gefuellte: sonst kippte der
-  // Waehler beim Eintippen des ersten Feldes zurueck auf „keine".
+// Woran diese Quelle haengt: kein Feldpaar heisst gar keine Verbindung, leere
+// partnerId die Hauptquelle, gesetzte eine andere weitere Quelle. Gezaehlt werden
+// ALLE Paarzeilen, auch halb gefuellte, sonst kippt der Waehler beim Eintippen
+// des ersten Feldes zurueck auf „keine".
   function partnerVon(index: number): string {
     const eigen = weitere[index]
     if (!eigen || eigen.keyPairs.length === 0) return ''
     return eigen.partnerId === '' || eigen.partnerId === eigen.quelleId ? erste : eigen.partnerId
   }
 
-  // „keine" nimmt die Paare weg — ohne Paar gibt es nichts zu verbinden, die
-  // Angabe waere tote Einstellung. Eine Quelle waehlen legt umgekehrt die
-  // erste Paarzeile an, damit die beiden Feldwaehler ueberhaupt erscheinen.
+  // „keine" nimmt die Paare weg, sonst waere die Angabe tote Einstellung. Eine
+  // Quelle waehlen legt die erste Paarzeile an, damit die Feldwaehler erscheinen.
   function setzePartner(index: number, wert: string): void {
     const eigen = weitere[index]
     if (wert === '') {
@@ -109,8 +105,8 @@ export function QuellenListe({ block }: QuellenListeProps) {
     )
   }
 
-  // Eine fehlende Quelle braucht keine Kunst-Option mehr: der Waehler zeigt
-  // einen Wert, den er nicht kennt, von sich aus rot.
+  // Eine fehlende Quelle braucht keine Kunst-Option: der Waehler zeigt einen
+  // Wert, den er nicht kennt, von sich aus rot.
   const quellenAuswahl = (wert: string, titel: string, onWert: (v: string) => void) => (
     <PickerControl
       label={titel}
@@ -129,8 +125,8 @@ export function QuellenListe({ block }: QuellenListeProps) {
     />
   )
 
-  // Ohne eine einzige Quelle in der Bibliothek waere der Waehler ein Knopf mit
-  // einem Eintrag „Keine". Stattdessen der Weg dorthin, wo Quellen entstehen.
+    // Ohne eine einzige Quelle waere der Waehler ein Knopf mit einem Eintrag
+    // „Keine". Stattdessen der Weg dorthin, wo Quellen entstehen.
   if (bibliothek.length === 0) {
     return (
       <Gruppe titel="Datenquellen" offen={offen} onSchalte={schalte}>

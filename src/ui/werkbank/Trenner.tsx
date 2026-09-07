@@ -1,3 +1,4 @@
+// Eine Trennlinie zwischen Gruppen der Oberflaeche.
 import { cn } from '@/lib/utils'
 
 export function Trenner({

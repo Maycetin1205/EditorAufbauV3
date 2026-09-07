@@ -1,3 +1,4 @@
+// Waehlt zu einer Baustein-Eigenschaft das passende Bedienelement.
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
@@ -17,10 +18,9 @@ import { TextareaControl } from './controls/TextareaControl'
 import { TextControl } from './controls/TextControl'
 import { allOptionsHaveColor } from './optionColors'
 
-// Die zwei Rueckrufe, die der Inspector durchreicht: sie klammern eine
-// Eingabe zu EINEM Undo-Schritt. Nicht zu verwechseln mit der
-// `Eingabesitzung` in controls/eingabeSitzung — das ist der Hook, der
-// diese Rueckrufe fuer ein einzelnes Eingabefeld auf/zu macht.
+// Die zwei Rueckrufe, die der Inspector durchreicht: sie klammern eine Eingabe zu
+// EINEM Undo-Schritt. Nicht zu verwechseln mit der Eingabesitzung, dem Hook, der
+// sie fuer ein einzelnes Feld auf- und zumacht.
 export interface BearbeitungsRueckrufe {
   onBeginBearbeitung: () => void
   onEndeBearbeitung: () => void
@@ -36,9 +36,7 @@ export interface PropControlProps {
   kompakt?: boolean
 }
 
-// Was die vier Waehler-Arten voneinander unterscheidet — sonst nichts.
 interface WaehlerFall {
-  // Das Wort fuer die Vorlesehilfe: „Feld für Bezeichnung".
   nenner: string
   gruppen: ListeGruppe[]
   wert: string
@@ -83,14 +81,12 @@ export function PropControl({
         />
       )
     }
-    // Andere Arten haben keine Kompakt-Form — weiter in die volle Zeile.
   }
 
   if (property.requiresDataSource && !sourceInReach) return null
   if (kind === 'field' && !feldQuelle) return null
 
-  // Erst NACH den Sperren oben: "Suchzeile" und "Zeilen loeschbar" tragen
-  // requiresDataSource, und eine Kachel ohne Datenquelle waere ein Schalter
+  // Erst NACH den Sperren oben: eine Kachel ohne Datenquelle waere ein Schalter
   // fuer etwas, das es nicht gibt.
   if (kind === 'jaNein') {
     return <KachelControl property={property} value={value} onChange={set} />
@@ -124,9 +120,8 @@ export function PropControl({
                   ed.updateProperty(block.id, andere.klarnameProp, '')
                 }
               }
-              // Auch eine Liste, die ihre Feldcodes aus DIESER Quelle nimmt
-              // (Nachschlage-Spalten), zeigt nach dem Wechsel ins Leere —
-              // sie behielte sonst Codes der alten Quelle und exportierte sie.
+  // Auch eine Liste, die ihre Feldcodes aus DIESER Quelle nimmt, zeigt nach dem
+  // Wechsel ins Leere: sie behielte sonst Codes der alten Quelle.
               const liste = def?.listenBindung
               const alteListe = liste ? block.props[liste.prop] : undefined
               if (liste?.quelleProp === property.attributeName

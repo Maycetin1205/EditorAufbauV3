@@ -1,3 +1,4 @@
+// Das Datencenter: Datenquellen und Relationen der Maske.
 import { useState } from 'react'
 import { Database, Link2 } from '@/ui/zeichen'
 import { Dialog } from '@/ui/werkbank/Dialog'
@@ -24,8 +25,6 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
     relationen: String(relations.list.length),
   }
 
-  // Die Bereichsleiste geht als Slot in den gemeinsamen Fenster-Aufbau
-  // (ListeDetail) des jeweiligen Bereichs.
   const bereichsleiste = (
     <>
       {BEREICHE.map(({ key, name, icon }) => (

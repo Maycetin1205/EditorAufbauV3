@@ -1,3 +1,4 @@
+// Prueft einen Ketten-Schritt und sagt in Klartext, was ihm fehlt.
 import type { DataSource } from './dataSources'
 import type { RelationTemplate } from './relations'
 import { unknownPlaceholders } from './relations'

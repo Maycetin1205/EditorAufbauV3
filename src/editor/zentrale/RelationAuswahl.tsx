@@ -1,3 +1,4 @@
+// Die Wahl einer Relations-Vorlage fuer einen Schritt.
 import { useState } from 'react'
 import { Search, Share2 } from '@/ui/zeichen'
 import { Eintrag } from '@/ui/werkbank/Eintrag'
@@ -28,8 +29,8 @@ export function RelationAuswahl({
   onSuche: (value: string) => void
   onSelect: (id: string) => void
 }) {
-  // Start auf der Gruppe der gewählten Relation, sonst auf der nicht-leeren;
-  // danach gewinnt der Klick (s. RelationenBereich, gleiche Lehre).
+  // Start auf der Gruppe der gewaehlten Relation, sonst auf der nicht-leeren;
+  // danach gewinnt der Klick.
   const [tab, setTab] = useState<RelationGroup>(() => {
     const gewaehlt = eintraege.find((entry) => entry.id === relationId)
     if (gewaehlt) return relationGroup(gewaehlt)

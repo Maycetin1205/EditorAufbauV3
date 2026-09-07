@@ -1,3 +1,4 @@
+// Die Fluss-Angaben eines Bausteins: Richtung, Breite, Hoehe.
 import type { BlockDefinition } from './BlockDefinition'
 
 export type FlowDirection = 'column' | 'row'

@@ -1,3 +1,4 @@
+// Die Arten einer Datenquelle und was jede kann.
 export type DataSourceKind =
   | 'idb'
   | 'adressstamm'
@@ -33,44 +34,37 @@ export interface QuellenArt {
 
   relationLadenMoeglich: boolean
 
-  // Zeilen dieser Art tragen eine Satznummer: die Kennung, mit der eine
-  // EINZELNE Zeile zurueckgeschrieben wird ({PINDEX}). Reine Lesequellen
-  // (ERP-Abfrage, DataSet) haben keine — dort waere sie eine Bestellung
-  // ins Leere und macht in der Tabelle Aendern/Loeschen scheinbar moeglich.
+  // Zeilen dieser Art tragen eine Satznummer ({PINDEX}). Reine Lesequellen haben
+  // keine; dort machte sie Aendern und Loeschen scheinbar moeglich.
   satzNummerMoeglich: boolean
 
   varMoeglich: boolean
 
   bestellBlock: 'sefileloop' | 'erpapicall' | 'dataset'
 
-  // Die Felder dieser Art heissen mit Klarnamen (DataSet-Spalten, Feldnamen
-  // einer Relations-Antwort), nicht mit Position + Laenge. Steuert Eingabe
-  // UND Pruefung.
+  // Die Felder dieser Art heissen mit Klarnamen, nicht mit Position und Laenge.
+  // Steuert Eingabe UND Pruefung.
   spaltenNamen: boolean
 
-  // Wie die Namensspalte in der Feldliste heisst und was als Beispiel darin
-  // steht. Leer, wo `spaltenNamen` falsch ist. Die Wortwahl gehoert der Art:
-  // „Spalte im DataSet" ueber einer Relations-Antwort war schlicht falsch.
+  // Wie die Namensspalte in der Feldliste heisst; leer, wo `spaltenNamen` falsch
+  // ist. Die Wortwahl gehoert der Art.
   spaltenLabel: string
   spaltenBeispiel: string
 
-  // 'ID0001' zur IDB-Langform 'IDBID0001' ausschreiben. Bei DataSets
-  // ist 'ID0001' die echte Kennung und darf NICHT umgeschrieben werden.
+  // 'ID0001' zur IDB-Langform ausschreiben. Bei DataSets ist 'ID0001' die echte
+  // Kennung und bleibt stehen.
   idbKurzform: boolean
 
   feldVorsatzMoeglich: boolean
 
-  // Diese Art holt ihren Wert selbst per Relation, statt auf eine Lieferung
-  // von SoftEngine zu warten. Sie wird deshalb NIE bestellt — und braucht
-  // darum auch keine Tabellen-Kennung (s. tabellenKennungNoetig).
+  // Diese Art holt ihren Wert selbst per Relation und wird nie bestellt.
   holWertMoeglich: boolean
 
   standardFelder: readonly ArtFeld[]
 }
 
-// Ohne feste Tabellen-ID traegt die Quelle sie als eigene Kennung; fehlt sie,
-// bestellte der Export einen Loop mit ID:"" und SoftEngine braeche die ganze
-// Liste ab. Wer nichts bestellt, braucht die Kennung nicht.
+// Ohne feste Tabellen-ID traegt die Quelle sie als eigene Kennung; wer nichts
+// bestellt, braucht sie nicht.
 export function tabellenKennungNoetig(art: QuellenArt): boolean {
   return art.tabellenId === '' && !art.holWertMoeglich
 }
@@ -283,8 +277,7 @@ const ARTEN: Record<DataSourceKind, QuellenArt> = {
   },
 
   // Kein Loop, kein VAR-Abschnitt, keine Satznummer: EIN Relations-Ruf, seine
-  // Antwort als EINE Zeile. Die Felder heissen mit Klarnamen, weil eine
-  // Relations-Antwort keine Position-und-Laenge-Ordnung hat.
+  // Antwort als eine Zeile.
   relationswert: {
     id: 'relationswert',
     name: 'Wert per Relation',

@@ -1,3 +1,4 @@
+// Einen Baustein samt Kindern aus dem Baum nehmen.
 import { meldungen } from './meldungen'
 import type { Editor } from './Editor'
 

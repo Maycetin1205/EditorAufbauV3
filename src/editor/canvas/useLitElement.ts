@@ -1,3 +1,4 @@
+// Bindet ein Lit-Baustein-Element an den Editor-Baum: Attribute hin, Aenderungen zurueck.
 import { useEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
@@ -19,15 +20,12 @@ interface PropChangeDetail {
   attr: string
   value: unknown
 
-  // Ein Baustein, der eine ZUSAMMENHAENGENDE Handlung meldet (Ziehen), setzt
-  // sie: 'beginn' beim ersten, 'ende' beim letzten Wert. Der Editor klammert
-  // alles dazwischen zu EINEM Undo-Schritt — sonst waere ein Zug ueber 200
-  // Pixel auch 200 Mal Strg+Z.
+  // Ein Baustein, der eine ZUSAMMENHAENGENDE Handlung meldet (Ziehen), setzt sie:
+  // der Editor klammert alles dazwischen zu EINEM Undo-Schritt.
   geste?: 'beginn' | 'ende'
 
   // Vom Editor gesetzt, wenn er den Wert NICHT uebernommen hat. Das Ereignis
-  // laeuft synchron: der Baustein liest die Antwort direkt nach dem Senden
-  // und stellt seinen alten Text wieder her (BasicBlock.inlineEdit).
+  // laeuft synchron: der Baustein liest die Antwort direkt nach dem Senden.
   abgelehnt?: boolean
 }
 
@@ -94,8 +92,8 @@ export function useLitElement({
     el.addEventListener('ff-prop-change', onPropChange)
 
     return () => {
-      // Stirbt das Element mitten im Zug, bleibt die Klammer sonst offen und
-      // schluckt jede spaetere Aenderung in denselben Undo-Schritt.
+    // Stirbt das Element mitten im Zug, bleibt die Klammer sonst offen und
+    // schluckt jede spaetere Aenderung in denselben Undo-Schritt.
       klammer.current?.schliesse()
       klammer.current = null
       el.removeEventListener('ff-prop-change', onPropChange)
@@ -103,8 +101,6 @@ export function useLitElement({
       elementRef.current = null
       setElement(null)
     }
-    // editor ist app-lebenslang stabil (Provider) — der Effekt läuft
-    // weiterhin nur bei Typwechsel.
   }, [block.type, editor, blockRef])
 
   useEffect(() => {
@@ -131,11 +127,9 @@ export function useLitElement({
         elAny[bindingProp(spot.prop)] = ''
       }
     }
-    // Je Listeneintrag der Klarname seiner FREMDEN Quelle — leer, wo alles aus
-    // der eigenen kommt. Nur der Editor kennt die Bibliothek, also rechnet er
-    // es aus; der Baustein bekommt fertige Namen. Es geht als EIGENSCHAFT
-    // hinueber, nie als Attribut: der Export schreibt Attribute aus dem Baum
-    // und kann diese Angabe damit gar nicht erreichen.
+  // Je Listeneintrag der Klarname seiner FREMDEN Quelle. Nur der Editor kennt die
+  // Bibliothek, er rechnet es aus. Es geht als EIGENSCHAFT hinueber, nie als
+  // Attribut: der Export schreibt Attribute aus dem Baum.
     const bindung = getBlockDefinition(block.type)?.listenBindung
     const herkunftProp = bindung?.herkunftProp
     if (bindung && herkunftProp !== undefined) {

@@ -1,3 +1,4 @@
+// Der Browserspeicher: Stand sichern, laden, und melden, wenn etwas fehlt.
 import { type BlockTree } from '../core/blocks/BlockData'
 import { baumAusRohdaten } from './ladeKette'
 import { meldungen } from './meldungen'
@@ -22,7 +23,7 @@ try {
     localStorage.removeItem(backupKeyFor('aufbau_editor_verknuepfungen_v1'))
   }
 } catch {
-  // Speicher gesperrt — dann bleibt der tote Schlüssel eben liegen.
+  // Speicher gesperrt — dann bleibt der tote Schluessel eben liegen.
 }
 
 interface PersistedState {
@@ -53,9 +54,8 @@ export function meldeVerworfeneTypen(verworfen: Map<string, number>): void {
   )
 }
 
-// Eine Aktionskette, die beim Laden die Pruefung nicht besteht, faellt weg —
-// der Baustein bleibt stehen und tut nichts mehr. Das muss man erfahren, denn
-// der naechste Auto-Speicher schreibt den gekuerzten Stand fest.
+// Eine Aktionskette, die die Pruefung nicht besteht, faellt weg. Das muss man
+// erfahren, denn der naechste Auto-Speicher schreibt den gekuerzten Stand fest.
 function meldeVerloreneKetten(anzahl: number): void {
   if (anzahl === 0) return
   meldungen.melde(
@@ -65,9 +65,8 @@ function meldeVerloreneKetten(anzahl: number): void {
   )
 }
 
-// Gemeldet wird nur, wo wirklich etwas fehlt: die aufgelösten Hüllen
-// (Kanban-Vorlage, Zeile) haben ihre Kinder an Ort und Stelle behalten —
-// dafür einen Verlust zu melden wäre die nächste Unwahrheit.
+// Gemeldet wird nur, wo wirklich etwas fehlt: die aufgeloesten Huellen haben ihre
+// Kinder an Ort und Stelle behalten.
 const ENTFERN_TEXT: Partial<Record<EntfernGrund, (anzahl: number) => string>> = {
   'karte-ohne-spalte': (n) => `${n} Kanban-Karte(n), deren Spalte im Stand fehlte`,
   'knopf-in-tabelle': (n) => `${n} Knopf/Knöpfe, die in einer Tabelle lagen`,
@@ -93,9 +92,8 @@ export function meldeAbsichtlichEntfernte(
   )
 }
 
-// Ein Stand aus einem neueren Editor wird weder gelesen noch beim Start
-// zurückgeschrieben: das hiesige Verständnis würde ihn beim ersten Speichern
-// auf den alten Aufbau eindampfen.
+// Ein Stand aus einem neueren Editor wird weder gelesen noch zurueckgeschrieben:
+// das hiesige Verstaendnis wuerde ihn beim ersten Speichern eindampfen.
 function meldeZukunftsStand(raw: string, gespeichert: number): void {
   const backupKey = legeKopieAn(STORAGE_KEY, raw)
   meldungen.melde(
@@ -139,8 +137,8 @@ export function loadFromStorage(): LoadedState | null {
       backupUnreadableState(raw)
       return null
     }
-    // Faellt beim Laden etwas weg, schreibt der naechste Auto-Speicher den
-    // gekuerzten Stand fest. Vorher bekommt der volle Stand eine Notfallkopie.
+  // Faellt beim Laden etwas weg, schreibt der naechste Auto-Speicher den
+  // gekuerzten Stand fest. Vorher bekommt der volle Stand eine Notfallkopie.
     const verlust = baum.verworfen.size > 0
       || baum.verloreneKetten > 0
       || [...baum.absichtlichEntfernt.values()].some((grund) => ENTFERN_TEXT[grund] !== undefined)

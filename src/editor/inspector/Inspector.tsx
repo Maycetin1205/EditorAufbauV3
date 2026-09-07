@@ -1,3 +1,4 @@
+// Der Inspector: die Einstellungen des gewaehlten Bausteins.
 import { useMemo, type ReactNode } from 'react'
 import { Copy, MousePointer2 } from '@/ui/zeichen'
 import { bindingProp } from '../../core/blocks/BlockDefinition'
@@ -116,21 +117,16 @@ export function Inspector() {
   })
 
   // Nach unten wandert nur, was WIRKLICH auf ein Feld, eine Quelle oder eine
-  // Relation zeigt. `requiresDataSource` gehoert nicht dazu: es sagt bloss
-  // „ohne Quelle sinnlos" und steckt auch an gewoehnlichen Ja/Nein-Schaltern.
-  // Sortierte man danach, laegen bei der Tabelle fuenf gleichartige Schalter
-  // auf zwei Seiten des Trennstrichs, und die Einstellungen staenden woanders,
-  // als der Baustein sie aufschreibt.
+  // Relation zeigt. `requiresDataSource` gehoert nicht dazu: es steckt auch an
+  // gewoehnlichen Ja/Nein-Schaltern, die sonst auf zwei Seiten des Trennstrichs
+  // laegen.
   const dataProps = visibleProps.filter(
     (p) => p.kind === 'field' || p.kind === 'quelle' || p.kind === 'relation',
   )
   const generalProps = visibleProps.filter((p) => !dataProps.includes(p))
 
-  // Getrennt nach FORM, nicht nach Thema: ein Ja/Nein ist eine Kachel und
-  // steht neben seinesgleichen in einer Wand, ein Wert ist eine Zeile mit
-  // Beschriftung darueber. Truegen beide dieselbe Zeilenform, staenden bei der
-  // Tabelle fuenf gleich aussehende Pillen untereinander, in denen man erst
-  // lesen muesste, welche Haelfte dunkel ist.
+  // Getrennt nach FORM, nicht nach Thema: ein Ja/Nein ist eine Kachel und steht
+  // neben seinesgleichen, ein Wert ist eine Zeile mit Beschriftung darueber.
   const kachelProps = generalProps.filter((p) => p.kind === 'jaNein')
   const wertProps = generalProps.filter((p) => p.kind !== 'jaNein')
 
@@ -209,9 +205,8 @@ export function Inspector() {
 
         {generalProps.length === 0 && !showDataSection && !hatAktionen
           && !darfAuswahlFolgen(block) && (
-          // Sonst steht der Bediener vor einer leeren Flaeche und weiss nicht,
-          // ob der Baustein nichts kann oder der Editor kaputt ist. Zwei
-          // Woerter, kein Erzieh-Text.
+            // Sonst steht der Bediener vor einer leeren Flaeche und weiss nicht,
+            // ob der Baustein nichts kann oder der Editor kaputt ist.
           <p className="text-ui text-matt">Keine Einstellungen.</p>
         )}
 

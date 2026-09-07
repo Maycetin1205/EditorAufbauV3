@@ -1,3 +1,4 @@
+// Die Relations-Bibliothek der Maske.
 import {
   BUILTIN_RELATION_TEMPLATES,
   pruefeRelationsVorlagen,

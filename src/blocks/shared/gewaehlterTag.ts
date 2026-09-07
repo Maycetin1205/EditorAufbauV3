@@ -1,3 +1,4 @@
+// Der Tag, den die Maske gerade zeigt, und wer davon erfaehrt.
 import { tagSchluessel } from './datumSchluessel'
 
 let tag = ''

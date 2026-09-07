@@ -1,3 +1,4 @@
+// Die Relations-Vorlagen und wie ihre Parameter zur Laufzeit gefuellt werden.
 import type { EintragProblem } from './ladeProblem'
 
 export type RelationVerb = 'GET_RELATION' | 'PUT_RELATION' | 'PUTADD_RELATION'

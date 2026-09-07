@@ -1,3 +1,4 @@
+// Legt einen neuen Baustein samt seinen vorgesehenen Kindern an.
 import type { BlockNode, BlockTree } from './BlockData'
 import type { DefaultChildSpec } from './BlockDefinition'
 import { getBlockDefinition } from './blockRegistry'

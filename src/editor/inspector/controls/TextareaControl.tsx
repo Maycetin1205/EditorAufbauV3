@@ -1,3 +1,4 @@
+// Ein mehrzeiliger Text im Inspector.
 import type { PropertyDescription } from '../../../core/blocks/PropertyDescription'
 import { useEingabeSitzung } from './eingabeSitzung'
 import { FeldMehrzeilig } from '@/ui/werkbank/Feld'

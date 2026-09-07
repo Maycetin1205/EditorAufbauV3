@@ -1,3 +1,3 @@
-// Eigenes Modul, damit die Maske diese eine Zeichenkette haben kann, ohne
-// treeQuery (Editor-Abfragen ueber den ganzen Baum) mitzuziehen.
+// Der Name der Quellen-Eigenschaft. Eigenes Modul, damit die Maske ihn haben
+// kann, ohne treeQuery mitzuziehen.
 export const QUELLE_PROP = 'source'

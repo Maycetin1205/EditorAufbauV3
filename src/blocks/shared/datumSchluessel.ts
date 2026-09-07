@@ -1,3 +1,4 @@
+// Ein Datum als vergleichbarer Tagesschluessel.
 export function tagSchluessel(wert: unknown): string {
   const s = String(wert ?? '').trim()
   if (s === '') return ''

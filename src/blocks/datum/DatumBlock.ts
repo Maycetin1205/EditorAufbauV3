@@ -1,3 +1,4 @@
+// Baustein Datum: waehlt den Tag, den die Maske zeigt.
 import { css, html, type TemplateResult } from 'lit'
 import { state } from 'lit/decorators.js'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'

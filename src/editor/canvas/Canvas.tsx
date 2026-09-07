@@ -1,3 +1,4 @@
+// Die Leinwand: die Maskenflaeche im Editor mit ihren Seiten.
 import { useCallback, useMemo, useState, type DragEvent } from 'react'
 import { ROOT_ID } from '../../core/blocks/BlockData'
 import { ROOT_FLOW } from '../../core/blocks/flowLayout'

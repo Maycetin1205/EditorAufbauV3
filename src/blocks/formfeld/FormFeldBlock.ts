@@ -1,3 +1,4 @@
+// Baustein Formularfeld: eine Stelle fuer einen Wert, in sechs Typen plus Nachschlagen.
 import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
@@ -61,10 +62,8 @@ export class FormFeldBlock extends BasicBlock {
 
   static readonly kannAuswahlFolgen = true
 
-  // Das Feld GIBT seine Zeile: beim Typ Nachschlagen die im Fenster gewaehlte
-  // (Quelle = nachschlagQuelle), bei allen anderen Typen die angezeigte Zeile
-  // seiner Datenquelle (wenn unsichtbar -> Rueckfall auf `source`,
-  // treeQuery/auswahlQuelleIdVon; veroeffentlicht in feldRuntime).
+  // Das Feld GIBT seine Zeile: beim Typ Nachschlagen die im Fenster gewaehlte,
+  // sonst die angezeigte Zeile seiner Datenquelle.
   static readonly satzWahl: SatzWahl = {
     quelleProp: 'nachschlagQuelle',
     wenn: { attributeName: 'fieldType', equals: 'nachschlagen' },
@@ -142,20 +141,16 @@ export class FormFeldBlock extends BasicBlock {
 
   @state() private getippt: string | null = null
 
-  // Welcher Vorschlag Enter uebernehmen wuerde. Jeder Tastendruck setzt sie
-  // auf den ersten Treffer zurueck.
+  // Welcher Vorschlag Enter uebernehmen wuerde; jeder Tastendruck setzt sie zurueck.
   @state() private marke = 0
 
-  // Wie in der Erfassungszeile: nur eine SELBST getroffene Wahl schlaegt die
-  // Trefferzahl. Blosses Hinueberfahren mit der Maus tut das nicht.
+  // Nur eine SELBST getroffene Wahl schlaegt die Trefferzahl.
   private markeVonHand = false
 
-  // Escape macht die Liste zu, ohne das Getippte anzuruehren; das naechste
-  // Zeichen holt sie zurueck.
+  // Escape macht die Liste zu, ohne das Getippte anzuruehren.
   @state() private listeZu = false
 
-  // In willUpdate berechnet, damit render() und die Tastatur DENSELBEN Stand
-  // sehen — zwei Berechnungen koennten auseinanderlaufen.
+  // In willUpdate berechnet, damit render und die Tastatur denselben Stand sehen.
   private vorschlaege: Eintrag[] = []
 
   private satz: unknown = undefined
@@ -175,8 +170,8 @@ export class FormFeldBlock extends BasicBlock {
     this.dispatchEvent(new Event('change'))
   }
 
-  // `gebunden` sperrt das Umbenennen: an einer gebundenen Stelle zeigt der
-  // Platzhalter den Klarnamen des Feldes, Tippen ginge ins Leere.
+  // `gebunden` sperrt das Umbenennen: dort zeigt der Platzhalter den Klarnamen
+  // des Feldes, Tippen ginge ins Leere.
   private textTpl(cls: string, hidden = false, gebunden = false): TemplateResult {
     return html`<span
       class=${cls}
@@ -269,8 +264,8 @@ export class FormFeldBlock extends BasicBlock {
     })
   }
 
-  // Der Startpunkt im Einstell-Fenster: die gespeicherten Spalten, sonst
-  // der heutige Automatik-Stand als konkrete Zeilen.
+  // Der Startpunkt im Einstell-Fenster: die gespeicherten Spalten, sonst der
+  // heutige Automatik-Stand als konkrete Zeilen.
   private spaltenEffektiv(): Spalte[] {
     const eigene = coerceNachschlagSpalten(this.nachschlagSpalten)
     if (eigene.length > 0) return eigene
@@ -280,9 +275,8 @@ export class FormFeldBlock extends BasicBlock {
     })
   }
 
-  // Der EINE Weg, mit dem dieser Baustein eine Eigenschaft an den Editor
-  // meldet. `geste` gesetzt: der Editor klammert alles von 'beginn' bis
-  // 'ende' zu einem Undo-Schritt (Ziehen).
+  // Der eine Weg, mit dem dieser Baustein eine Eigenschaft an den Editor meldet.
+  // `geste` gesetzt: der Editor klammert 'beginn' bis 'ende' zu einem Undo-Schritt.
   private meldeProp(attr: string, value: unknown, geste?: 'beginn' | 'ende'): void {
     this.dispatchEvent(new CustomEvent('ff-prop-change', {
       detail: { attr, value, ...(geste === undefined ? {} : { geste }) },
@@ -298,9 +292,8 @@ export class FormFeldBlock extends BasicBlock {
       breite: this.fensterBreite,
       hoehe: this.fensterHoehe,
       onGroesse: (detail) => {
-        // Der Rahmen aendert sich nicht selbst: der Editor speichert und
-        // gibt die neue Groesse als Property zurueck. `geste` klammert den
-        // ganzen Zug zu EINEM Undo-Schritt.
+    // Der Rahmen aendert sich nicht selbst: der Editor speichert und gibt die
+    // neue Groesse zurueck. `geste` klammert den Zug zu einem Undo-Schritt.
         const attr = detail.achse === 'breite' ? 'fensterBreite' : 'fensterHoehe'
         if (detail.geste === 'standard') {
           this.meldeProp(attr, FormFeldBlock.defaultProps[attr])
@@ -313,13 +306,11 @@ export class FormFeldBlock extends BasicBlock {
         )
       },
       onAendern: (spalten) => {
-        // Vom Baustein selbst gemeldet, damit der Editor sie als normale
-        // Eigenschafts-Aenderung speichert (Undo inklusive).
         this.meldeProp('nachschlagSpalten', spalten)
       },
       onFeldWahl: (detail) => {
-        // detail traegt die ANGEZEIGTE Liste mit (auch den Automatik-Stand):
-        // der Editor braucht sie, solange nachschlagSpalten selbst leer ist.
+    // detail traegt die ANGEZEIGTE Liste mit, auch den Automatik-Stand: der
+    // Editor braucht sie, solange nachschlagSpalten leer ist.
         this.dispatchEvent(new CustomEvent('ff-listen-bind', {
           detail: { prop: 'nachschlagSpalten', ...detail },
           bubbles: true,
@@ -332,8 +323,8 @@ export class FormFeldBlock extends BasicBlock {
 
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed)
-    // Der Einstell-Dialog gehoert zum Typ „nachschlagen" — beim Typwechsel
-    // bliebe er sonst offen (oder spraenge beim Rueckwechsel wieder auf).
+    // Der Einstell-Dialog gehoert zum Typ „nachschlagen" und bliebe beim
+    // Typwechsel sonst offen.
     if (changed.has('fieldType') && coerceFeldTyp(this.fieldType) !== 'nachschlagen') {
       this.spaltenDialog = false
     }
@@ -343,21 +334,17 @@ export class FormFeldBlock extends BasicBlock {
 
   protected override updated(changed: PropertyValues): void {
     super.updated(changed)
-    // Die Liste haengt unten aus dem Baustein heraus. Raster-Kinder stapeln
-    // in DOM-Reihenfolge, also muss dieses Feld solange ueber seinen
-    // Nachbarn liegen — sonst verschwindet die Liste unter dem naechsten
-    // Baustein (der Stil dazu steht in feldStil).
+    // Die Liste haengt unten aus dem Baustein heraus; Raster-Kinder stapeln in
+    // DOM-Reihenfolge, also muss dieses Feld solange ueber seinen Nachbarn liegen.
     this.toggleAttribute('data-ff-liste', this.vorschlaege.length > 0)
   }
 
-  // Die Vorschlaege kommen aus DERSELBEN Quelle wie das grosse Fenster
-  // (holeEintraege: Quelle, Spalten, Folge-Auswahl) — nur gefiltert und auf
-  // acht gekuerzt. Fehlt die Quelle oder „Gespeichert wird", bleibt die Liste
-  // still leer: eine Meldung bei jedem Tastendruck waere unbrauchbar.
+  // Die Vorschlaege kommen aus DERSELBEN Quelle wie das grosse Fenster, nur
+  // gefiltert und gekuerzt. Ohne Quelle bleibt die Liste still leer: eine Meldung
+  // bei jedem Tastendruck waere unbrauchbar.
   private berechneVorschlaege(): Eintrag[] {
     if (this.getippt === null || this.listeZu) return []
     if (coerceFeldTyp(this.fieldType) !== 'nachschlagen') return []
-    // Im Editor gibt es keine Daten und keine Liste.
     if (this.imEditor) return []
     const ergebnis = holeEintraege({
       el: this,
@@ -368,9 +355,8 @@ export class FormFeldBlock extends BasicBlock {
     return ergebnis.ok ? passendeVorschlaege(ergebnis.eintraege, this.getippt) : []
   }
 
-  // Escape kommt hier NICHT an, wenn ein Dialograhmen mit escape-schliesst
-  // offen ist — der hoert am document in der Abfang-Phase; ein
-  // stopPropagation hier waere zu spaet und wuerde Sicherheit vortaeuschen.
+  // Escape kommt hier NICHT an, wenn ein Dialograhmen mit escape-schliesst offen
+  // ist: der hoert am document in der Abfang-Phase.
   private onNachschlagTaste(e: KeyboardEvent): void {
     if (this.imEditor) return
     const anzahl = this.vorschlaege.length
@@ -381,7 +367,6 @@ export class FormFeldBlock extends BasicBlock {
       markeVonHand: this.markeVonHand,
     })
     if (folge === 'nichts') {
-      // Enter darf trotzdem kein Formular abschicken.
       if (e.key === 'Enter') e.preventDefault()
       return
     }
@@ -407,9 +392,8 @@ export class FormFeldBlock extends BasicBlock {
     klareAuswahl(geberIdVon(this))
   }
 
-  // Der EINE Uebernahme-Weg fuer den Bediener: Zeilenklick im grossen
-  // Fenster und Wahl in der Vorschlagsliste landen beide hier. Er raeumt
-  // das Getippte weg, damit im Feld der bestaetigte Text steht.
+  // Der eine Uebernahme-Weg fuer den Bediener: Zeilenklick im Fenster und Wahl in
+  // der Vorschlagsliste landen beide hier.
   private uebernimmUndMelde(anzeige: string, wert: string, satz: unknown): void {
     this.getippt = null
     this.listeZu = false
@@ -424,9 +408,8 @@ export class FormFeldBlock extends BasicBlock {
     this.value = wert
     this.satz = satz
 
-    // Hier hat ein MENSCH den Satz gewaehlt (Nachschlagen oder Vorschlag) —
-    // das zaehlt als Bedienung, sonst bremste die Kreis-Bremse der holenden
-    // Quellen die Rueckkehr zu einem schon einmal gewaehlten Beleg aus.
+    // Hier hat ein MENSCH den Satz gewaehlt; sonst bremste die Kreis-Bremse der
+    // holenden Quellen die Rueckkehr zu einem schon gewaehlten Beleg aus.
     setzeAuswahl(geberIdVon(this), satz, true)
   }
 
@@ -445,7 +428,7 @@ export class FormFeldBlock extends BasicBlock {
   pruefeEigenenWert(): void {
     if (coerceFeldTyp(this.fieldType) !== 'nachschlagen') return
     // Trifft der Daten-Push erst nach dem ersten Tastendruck ein, muss die
-    // offene Liste nachziehen — sie entsteht in willUpdate.
+    // offene Liste nachziehen.
     if (this.getippt !== null) this.requestUpdate()
     if (this.satz !== undefined && !satzPasstZurAuswahl(this, this.satz)) {
       this.leereNachschlagen()

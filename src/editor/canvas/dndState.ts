@@ -1,3 +1,4 @@
+// Der Stand eines laufenden Zugs von der Palette auf die Leinwand.
 import { createContext, useContext, type DragEvent } from 'react'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import type { useEditor } from '../../state/useEditor'

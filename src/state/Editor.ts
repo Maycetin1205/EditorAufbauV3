@@ -1,3 +1,4 @@
+// Der Editor-Zustand: Baustein-Baum, Auswahl, Historie, Bibliotheken.
 import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
 import { createBlockSubtree } from '../core/blocks/blockFactory'
 import { canContain, getBlockDefinition } from '../core/blocks/blockRegistry'
@@ -56,8 +57,8 @@ export class Editor extends Subject<Editor> {
   )
   private _hydrated = false
 
-  // Waehrend Undo/Redo die Bibliotheken zuruecksetzt, darf deren Aenderung
-  // keinen neuen Historien-Eintrag erzeugen.
+  // Waehrend Undo/Redo darf die Aenderung der Bibliotheken keinen neuen
+  // Historien-Eintrag erzeugen.
   private _stelltWiederHer = false
 
   constructor() {
@@ -68,8 +69,8 @@ export class Editor extends Subject<Editor> {
     this._hydrated = true
     if (persisted?.resaveNeeded) this._planer.plane()
 
-    // Die Bibliotheken gehoeren zur Maske: jede Aenderung an Datenquellen oder
-    // Relationen wird hier festgehalten, damit Strg+Z sie zuruecknimmt.
+    // Die Bibliotheken gehoeren zur Maske: jede Aenderung daran wird hier
+    // festgehalten, damit Strg+Z sie zuruecknimmt.
     for (const store of [dataSourceStore, relationStore]) {
       store.beobachteVorAenderung(() => {
         if (!this._stelltWiederHer) this.pushHistory()
@@ -285,8 +286,8 @@ export class Editor extends Subject<Editor> {
     return istMusterGeschuetzt(this._tree, id)
   }
 
-  // Liefert false, wenn der Wert VERWORFEN wurde (z. B. ein leerer
-  // Seitenname) — der Baustein stellt dann seinen alten Text wieder her.
+  // Liefert false, wenn der Wert VERWORFEN wurde; der Baustein stellt dann seinen
+  // alten Text wieder her.
   updateProperty(id: string, attr: string, value: unknown): boolean {
     const node = this._tree[id]
     if (!node) return false
@@ -314,10 +315,8 @@ export class Editor extends Subject<Editor> {
 
     next[id] = startgroesseNachziehen(def, node.props, next[id])
 
-    // Verschwindet mit dieser Aenderung eine Kennung aus einer Liste (eine
-    // geloeschte Spalte), darf kein Ketten-Parameter mehr auf sie zeigen.
-    // Die Ketten koennen auf anderen Bausteinen liegen, darum wird gesagt,
-    // was abgeschaltet wurde.
+    // Verschwindet eine Kennung aus einer Liste, darf kein Ketten-Parameter mehr
+    // auf sie zeigen; die Ketten koennen auf anderen Bausteinen liegen.
     const geputzt = ohneSpaltenZeiger(
       next,
       id,
@@ -409,8 +408,8 @@ export class Editor extends Subject<Editor> {
     this.notify(this)
   }
 
-  // Eine geladene Maskendatei ersetzt Bausteine, Datenquellen und Relationen
-  // in EINEM Undo-Schritt: Strg+Z bringt die vorige Maske zurueck.
+  // Eine geladene Maskendatei ersetzt Bausteine, Quellen und Relationen in EINEM
+  // Undo-Schritt.
   ersetzeMaske(inhalt: MaskenInhalt): void {
     this.pushHistory()
     this.setzeBibliotheken(inhalt)

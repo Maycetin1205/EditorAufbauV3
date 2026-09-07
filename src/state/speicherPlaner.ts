@@ -1,3 +1,4 @@
+// Wann der Editor den Stand von selbst sichert.
 export class SpeicherPlaner {
   private readonly schreibe: () => void
   private readonly verzoegerungMs: number

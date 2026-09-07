@@ -1,3 +1,4 @@
+// Ein Kaestchen mit Beschriftung; der Klick auf die Beschriftung kreuzt an.
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -6,22 +7,14 @@ export interface AnkreuzProps {
   disabled?: boolean
   onChange: () => void
 
-  // Der Rahmen der Zeile, in der das Ankreuzfeld steht (Trennlinie,
-  // Innenabstand, Schwebefarbe) — den kennt die Liste, nicht das Bauteil.
+  // Der Rahmen der Zeile, in der das Ankreuzfeld steht; den kennt die Liste.
   className?: string
 
-  // Die Beschriftung. Meist ein Wort, hier auch mehr: Name, Kennung und eine
-  // zweite Zeile darunter.
   children: ReactNode
 }
 
-// Kaestchen mit Beschriftung. Das Ganze ist ein `<label>`, damit der Klick auf
-// die Beschriftung ankreuzt — bei einer zweizeiligen Beschriftung ist das der
-// Unterschied zwischen einem Ziel von zwoelf Pixeln und der ganzen Zeile.
-//
-// Das Kaestchen sitzt oben (`mt-0.5`, `items-start`) statt mittig: bei
-// mehrzeiliger Beschriftung wandert es sonst in die Mitte des Blocks und
-// verliert den Bezug zur ersten Zeile.
+// Das Kaestchen sitzt oben statt mittig: bei mehrzeiliger Beschriftung verliert
+// es sonst den Bezug zur ersten Zeile.
 export function Ankreuz({ checked, disabled = false, onChange, className, children }: AnkreuzProps) {
   return (
     <label

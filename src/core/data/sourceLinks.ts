@@ -1,3 +1,4 @@
+// Die weiteren Quellen eines Bausteins, wie sie im Baum stehen.
 import type { DataSource } from './dataSources'
 
 export interface SchluesselPaar {
@@ -14,9 +15,8 @@ export function vollstaendigePaare(traeger: { keyPairs: readonly SchluesselPaar[
 export interface BausteinQuelle {
   quelleId: string
 
-  // Die Quelle, mit der die Schlüsselpaare verbinden. Leer = die Hauptquelle
-  // des Bausteins. So müssen nicht alle Quellen sternförmig an der ersten
-  // hängen: Quelle 2 darf an Quelle 3 hängen, 3 an 4.
+  // Die Quelle, mit der die Schluesselpaare verbinden. Leer = die Hauptquelle;
+  // so muessen nicht alle Quellen sternfoermig an der ersten haengen.
   partnerId: string
 
   keyPairs: SchluesselPaar[]
@@ -28,12 +28,9 @@ export const QUELLEN_DEFAULTS: Record<string, BausteinQuelle[]> = {
   [WEITERE_QUELLEN_PROP]: [],
 }
 
-// Eine gewählte Quelle genügt. Das Schlüsselpaar ist AUSDRÜCKLICH freiwillig:
-// eine Quelle ohne Paar ist eine reine Nachschlagequelle — der Bediener sucht
-// den Satz von Hand aus, es gibt nichts zu verknüpfen. Verlangte diese Stelle
-// ein vollständiges Paar, fiele die Quelle auf einem leeren Beleg still aus
-// Feldwähler und Export: dort gibt es gar keine Zeile, an die man etwas
-// knüpfen könnte.
+// Das Schluesselpaar ist ausdruecklich freiwillig: eine Quelle ohne Paar ist eine
+// reine Nachschlagequelle. Verlangte diese Stelle ein Paar, fiele die Quelle auf
+// einem leeren Beleg still aus Feldwaehler und Export.
 export function quelleBrauchbar(q: BausteinQuelle): boolean {
   return q.quelleId !== ''
 }
@@ -54,8 +51,8 @@ export function weitereQuellenAus(roh: unknown): BausteinQuelle[] {
     }
     acc.push({
       quelleId: e.quelleId,
-      // Alte Masken kennen die Angabe nicht: leer heisst Hauptquelle, also
-      // das, was sie ohne die Angabe meinen. Deshalb braucht es keine Migration.
+    // Alte Masken kennen die Angabe nicht: leer heisst Hauptquelle, also das,
+    // was sie ohne sie meinen.
       partnerId: typeof e.partnerId === 'string' ? e.partnerId : '',
       keyPairs: keyPairs.slice(0, MAX_SCHLUESSELPAARE),
     })
@@ -88,8 +85,8 @@ export function quellenAufloesen(
     const source = bibliothek.find((s) => s.id === q.quelleId)
     if (!source) continue
     gesehen.add(source.id)
-    // Eine Quelle, die auf sich selbst zeigt, ist kein Partner — sie fiele
-    // sonst der Kettenauflösung zur Laufzeit als Kreis vor die Füsse.
+  // Eine Quelle, die auf sich selbst zeigt, ist kein Partner: sie fiele der
+  // Kettenaufloesung als Kreis vor die Fuesse.
     const partnerId = q.partnerId === source.id ? '' : q.partnerId
     acc.push({ source, paare: vollstaendigePaare(q), partnerId })
   }

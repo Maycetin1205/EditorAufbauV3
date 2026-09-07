@@ -1,3 +1,4 @@
+// Baustein Karte: ein Kaertchen mit Titel, Text, Reiter und Avatar.
 import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'

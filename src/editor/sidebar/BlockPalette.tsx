@@ -1,3 +1,4 @@
+// Die Palette: alle Bausteine, die man auf die Flaeche ziehen kann.
 import { Component, Plus, Search, type Zeichen } from '@/ui/zeichen'
 import { createElement, useState } from 'react'
 import { Feld } from '@/ui/werkbank/Feld'

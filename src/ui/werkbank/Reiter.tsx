@@ -1,8 +1,8 @@
+// Eine Registerzunge: flach, die aktive traegt die Akzentflaeche.
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 export interface ReiterProps {
-  // Die Zunge, auf der die Ansicht gerade steht.
   aktiv?: boolean
   title?: string
   onClick: () => void
@@ -11,17 +11,9 @@ export interface ReiterProps {
   children: ReactNode
 }
 
-// Eine Registerzunge: flach, ohne Rahmen, die aktive traegt die Akzentflaeche.
-//
-// Die aktive Zunge wird nicht nur farbig, sondern auch fett. Das ist Absicht:
-// Farbe allein unterscheidet fuer manche Augen zu wenig, und die Zunge ist die
-// Anzeige, WO man ist — sie muss ohne Vergleich mit den Nachbarn lesbar sein.
-// Weil fett breiter baut als mager, huepfte die Leiste beim Wechsel sonst um
-// ein paar Pixel; `whitespace-nowrap` und die feste Hoehe halten sie ruhig.
-//
-// Kein `aria-pressed`: dieselbe Zunge dient auch als Aktion („＋ Neue Seite"),
-// und einer Aktion einen Gedrueckt-Zustand anzudichten waere schlechter als
-// gar keiner. Wer den Zustand ansagen will, gibt ihn an der Aufrufstelle.
+// Die aktive Zunge ist farbig UND fett: Farbe allein unterscheidet fuer manche
+// Augen zu wenig. Feste Hoehe und nowrap halten die Leiste beim Wechsel ruhig.
+// Kein aria-pressed: dieselbe Zunge dient auch als Aktion.
 export function Reiter({
   aktiv = false,
   title,

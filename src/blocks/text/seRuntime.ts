@@ -1,3 +1,4 @@
+// Der Text am SoftEngine-Datenstrom: den gebundenen Wert einsetzen.
 import { bindingAttr } from '../../core/blocks/BlockDefinition'
 import { macheDatenAnschluss } from '../shared/datenAnschluss'
 import { leseGebundeneStelle } from '../shared/gebundeneStelle'

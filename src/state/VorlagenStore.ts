@@ -1,3 +1,4 @@
+// Die Bibliotheken der Maske (Datenquellen, Relationen) als gemeinsamer Speicher.
 import { type EintragProblem } from '../core/data/ladeProblem'
 import { deepClone } from '../lib/deepClone'
 import { meldungen } from './meldungen'
@@ -31,9 +32,8 @@ export interface VorlagenBauplan<T extends VorlagenEintrag> {
   startbestand?: readonly T[]
 }
 
-// Was `pruefe` aussortiert, ist beim naechsten Speichern endgueltig weg —
-// die gekuerzte Liste ueberschreibt den Rohstand. Darum VOR dem ersten
-// Rueckschreiben eine Kopie anlegen und sagen, was fehlt.
+// Was `pruefe` aussortiert, ist beim naechsten Speichern endgueltig weg. Darum
+// vor dem ersten Rueckschreiben eine Kopie anlegen und sagen, was fehlt.
 function meldeGekuerzten(
   schluessel: string,
   klarname: string,
@@ -108,8 +108,7 @@ export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenSt
     return this._eintraege.find((e) => e.id === id)
   }
 
-  // Wer Aenderungen zuruecknehmen will (die Historie des Editors), bekommt
-  // den Ruf VOR jeder Aenderung — frueh genug, um den alten Stand festzuhalten.
+  // Wer Aenderungen zuruecknehmen will, bekommt den Ruf VOR jeder Aenderung.
   private vorAenderung = new Set<() => void>()
 
   beobachteVorAenderung(fn: () => void): () => void {

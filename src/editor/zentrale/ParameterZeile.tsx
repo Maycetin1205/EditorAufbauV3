@@ -1,3 +1,4 @@
+// Eine Parameter-Zeile im Schritt-Formular: Herkunft und Wert.
 import { Link2, X } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Marke } from '@/ui/werkbank/Marke'
@@ -18,15 +19,12 @@ export function ParameterZeile({
   onChange,
   onAusloeser,
 }: {
-  // Der wievielte Parameter. Steht wie die Schrittnummer in der Kette links
-  // und grau — dieselbe Zaehlung, dieselbe Form.
+  // Der wievielte Parameter; steht wie die Schrittnummer links und grau.
   nummer: number
 
-  // Was die Relationsvorlage an dieser Stelle vorsieht ({PINDEX}, 253_30).
-  // Das ist eine KENNUNG und keine Beschriftung, darum steht es in derselben
-  // Marke wie jede andere Kennung im Editor.
-  // Zusatzparameter haben keine Vorlage; dort bleibt der Platz leer, damit
-  // die Bedienelemente beider Abschnitte an derselben Kante beginnen.
+  // Was die Relationsvorlage an dieser Stelle vorsieht. Das ist eine KENNUNG und
+  // keine Beschriftung. Zusatzparameter haben keine Vorlage; dort bleibt der Platz
+  // leer, damit die Bedienelemente an derselben Kante beginnen.
   kennung?: string
   binding: ActionParamBinding
   wahlen: ParameterWahlen

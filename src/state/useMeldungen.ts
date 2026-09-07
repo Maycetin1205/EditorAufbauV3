@@ -1,3 +1,4 @@
+// Der Zugang der Oberflaeche zu den Meldungen.
 import { useSyncExternalStore } from 'react'
 import { meldungen } from './meldungen'
 

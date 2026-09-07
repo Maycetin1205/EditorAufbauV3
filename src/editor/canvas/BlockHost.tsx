@@ -1,3 +1,4 @@
+// Der Wirt eines Bausteins auf der Leinwand: Auswahl, Anfasser, Editor-Hilfen.
 import { useLayoutEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
@@ -93,7 +94,6 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
 
   const eltern = block.parentId ? editor.getNode(block.parentId) : undefined
   const amRand = rand || (eltern ? istRandBaustein(eltern) : false)
-
 
   const templateMark = editor.templateMarkFor(block.id)
 
@@ -211,8 +211,7 @@ interface AnfasserProps {
   onReset: () => void
 }
 
-// Der eine Anfasser fuer Breite und Hoehe: ein Pillenstrich in der
-// Auswahlfarbe, mittig auf der Kante.
+// Der eine Anfasser fuer Breite und Hoehe: ein Pillenstrich in der Auswahlfarbe.
 function Anfasser({ achse, title, onStart, onReset }: AnfasserProps) {
   return (
     <div

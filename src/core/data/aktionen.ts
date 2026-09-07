@@ -1,3 +1,4 @@
+// Die Aktionskette eines Bausteins: Schritte, Parameter und wie sie gelesen werden.
 import type { RelationTemplate } from './relations'
 
 export type StepTypeKey =
@@ -35,23 +36,17 @@ export const ACTION_PARAM_SOURCES = [
   'block_value',
   'gewaehlte_zeile',
 
-  // „Wert aus Erfassungszelle <Spalte>": liefert je Ketten-Lauf den
-  // sichtbaren Zellwert der jeweiligen erfassten Zeile — Herkunft egal,
-  // gewaehlt oder frei getippt (Formularfeld-Prinzip). blockId = die
-  // Tabelle. value = im BAUM die dauerhafte Spalten-KENNUNG (Spalte.kennung,
-  // verrutscht nicht beim Verschieben/Loeschen), im EXPORT der Spalten-Index
-  // (withoutEditorId uebersetzt — dasselbe Muster wie popupId -> Name und
-  // step_result -> Position). Die Kette laeuft einmal je Zeile.
+  // Der sichtbare Zellwert der jeweiligen erfassten Zeile, Herkunft egal. value
+  // ist im BAUM die dauerhafte Spalten-Kennung, im EXPORT der Spalten-Index; die
+  // Kette laeuft einmal je Zeile.
   'erfassungszelle',
 
-  // "Wert aus geaenderter Zelle <Spalte>": wie oben, nur fuer die vorgemerkten
-  // Aenderungen an GEBUCHTEN Zeilen. Die Kette laeuft einmal je geaenderter
-  // Zeile; {PINDEX} traegt dabei die Satznummer genau dieser Zeile.
+  // Wie oben, nur fuer die Aenderungen an GEBUCHTEN Zeilen; {PINDEX} traegt die
+  // Satznummer genau dieser Zeile.
   'aenderungszelle',
 
-  // „Wert aus geloeschter Zeile <Spalte>": die Zeilen, die der Bediener zum
-  // Loeschen vorgemerkt hat. Die Kette laeuft einmal je Zeile; {PINDEX}
-  // traegt die Satznummer.
+  // Die Zeilen, die der Bediener zum Loeschen vorgemerkt hat; {PINDEX} traegt
+  // die Satznummer.
   'loeschzelle',
   'previous_result',
   'step_result',
@@ -60,8 +55,6 @@ export const ACTION_PARAM_SOURCES = [
 
 const GESPEICHERTE_PARAM_QUELLEN = [...ACTION_PARAM_SOURCES, 'aus'] as const
 
-// Die drei Quellen, deren value eine Spalte einer Liste adressiert — im Baum
-// als Kennung, im Export als Index (s. Kommentar an 'erfassungszelle').
 export const ZELLEN_PARAM_QUELLEN = ['erfassungszelle', 'aenderungszelle', 'loeschzelle'] as const
 
 export type ActionParamSource = (typeof GESPEICHERTE_PARAM_QUELLEN)[number]
@@ -125,9 +118,8 @@ export interface StartToolStep extends ActionStepBase {
   toolParams: string[]
 }
 
-// Ein freier BüroWARE-Befehl. START_TOOL hat eine eigene Art, weil sein Link
-// fest aufgebaut ist ('0,START_TOOL,<nr>'); hier gibt der Bediener die ganze
-// Zeile vor, weil die Befehle je Installation andere sind.
+// Ein freier BueroWARE-Befehl. START_TOOL hat eine eigene Art, weil sein Link
+// fest aufgebaut ist; hier gibt der Bediener die ganze Zeile vor.
 export interface BwLinkStep extends ActionStepBase {
   type: 'BW_LINK'
 
@@ -246,9 +238,7 @@ function stepFields(raw: unknown): RuntimeStep | null {
   if (raw.type === 'RELATION') {
     if (typeof raw.relationId !== 'string') return null
     if (!Array.isArray(raw.extraParams)) return null
-    // Ein Schritt ohne params-Liste ist ungueltig und faellt beim Laden auf.
-    // Liesse man ihn mit LEEREN params durch, ginge die Relation mit lauter
-    // leeren Parametern ins ERP.
+  // Mit LEEREN params ginge die Relation mit lauter leeren Parametern ins ERP.
     if (!Array.isArray(raw.params)) return null
     const params: ActionParamBinding[] = []
     for (const value of raw.params) {
@@ -313,8 +303,8 @@ function withoutEditorId(
 ): RuntimeStep {
   const binding = (b: ActionParamBinding): ActionParamBinding => {
     if (b.source === 'step_result') return { ...b, value: stepPosition(b.value) }
-    // Spalten-Kennung -> Platz: die Laufzeit greift die Zeilenwerte ueber
-    // werte[index] (seAktionen), sie kennt keine Kennungen.
+    // Spalten-Kennung -> Platz: die Laufzeit greift die Zeilenwerte ueber den
+    // Index, sie kennt keine Kennungen.
     if ((ZELLEN_PARAM_QUELLEN as readonly string[]).includes(b.source)) {
       return { ...b, value: spaltenIndex(b.blockId ?? '', b.value) }
     }
@@ -353,8 +343,7 @@ export function serializeBlockEvents(
 
   popupName: (id: string) => string = () => '',
 
-  // Ohne Aufloeser bleibt die Kennung stehen — nur fuer Aufrufer ohne Baum
-  // (Tests); der Export reicht immer seinen echten durch.
+  // Ohne Aufloeser bleibt die Kennung stehen; der Export reicht immer seinen echten durch.
   spaltenIndex: (blockId: string, kennung: string) => string = (_, kennung) => kennung,
 ): string | null {
   if (!events) return null

@@ -1,3 +1,4 @@
+// Die linke Leiste des Editors.
 import { ChevronDown } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { BlockPalette } from './BlockPalette'

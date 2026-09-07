@@ -1,25 +1,21 @@
+// Der eine Parser fuer die Eigenschaften, die Id plus Schluesselpaare tragen.
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 
-// Zwei Bausteine-Eigenschaften tragen dieselbe Form: eine Liste von
-// Eintraegen, jeder mit EINER Id und einer Liste Schluesselpaare.
-// „Folgt der Auswahl von …" nennt die Id `geberId`, „weitere Quellen"
-// nennt sie `quelleId` — sonst ist nichts verschieden. Deshalb liest EIN
-// Parser beide; der Aufrufer sagt nur, wie sein Id-Feld heisst.
+// „Folgt der Auswahl von …" nennt die Id `geberId`, „weitere Quellen" nennt sie
+// `quelleId` — sonst ist nichts verschieden.
 export interface PaarEintrag {
   id: string
 
-  // Nur „weitere Quellen" fuellt das: die Quelle, mit der die Paare
-  // verbinden. Leer = die Hauptquelle des Bausteins.
+  // Nur „weitere Quellen" fuellt das. Leer = die Hauptquelle des Bausteins.
   partnerId: string
 
   keyPairs: SchluesselPaar[]
 }
 
 export interface PaarListeWahl {
-  // Eintraege ohne vollstaendiges Paar behalten. Fuer „weitere Quellen":
-  // dort ist das Paar freiwillig — eine Quelle ohne Paar ist eine reine
-  // Nachschlagequelle. Fuer „Folgt der Auswahl von …" bleibt es aus: eine
-  // Auswahl-Folge ohne Paar wuesste nicht, wonach sie filtern soll.
+  // Bei „weitere Quellen" ist das Paar freiwillig: eine Quelle ohne Paar ist eine
+  // reine Nachschlagequelle. Eine Auswahl-Folge ohne Paar wuesste nicht, wonach
+  // sie filtern soll.
   ohnePaareBehalten?: boolean
 }
 
