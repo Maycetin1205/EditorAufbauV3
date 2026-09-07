@@ -2,6 +2,7 @@
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { vorschlagListeTpl, type Vorschlag } from '../shared/vorschlagListe'
+import { fensterSpaltenOder } from './nachschlagen'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
 import type { Rechnung } from '../../core/data/rechnung'
@@ -166,13 +167,17 @@ export function anzeigeSpalteIn(
 }
 
 export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalte[] {
+  return fensterSpaltenOder(
+    umfeld.spalten[index]?.fensterSpalten,
+    () => automatikSpaltenIn(umfeld, index),
+  )
+}
+
+// Die Automatik der Tabellenspalte: alle Spalten, die auf dieselbe Hilfsquelle
+// zeigen, jedes Feld einmal.
+function automatikSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalte[] {
   const ziel = zielIn(umfeld, index)
   if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []
-
-  // Vom Bauer gestellt schlaegt Automatik.
-  const eigene = umfeld.spalten[index]?.fensterSpalten
-  if (eigene !== undefined && eigene.length > 0) return eigene.map((s) => ({ ...s }))
-
   const raus: Spalte[] = []
   for (const spalte of umfeld.spalten) {
     const anderes = zellenzielVon(spalte, umfeld.quelleId)

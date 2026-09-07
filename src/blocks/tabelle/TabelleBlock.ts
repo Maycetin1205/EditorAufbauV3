@@ -319,12 +319,6 @@ export class TabelleBlock extends BasicBlock {
 
   @property({ attribute: false }) fensterDialogIndex = -1
 
-  private fensterSpaltenEffektiv(index: number): Spalte[] {
-    const eigene = this.spaltenListe()[index]?.fensterSpalten
-    if (eigene !== undefined && eigene.length > 0) return eigene.map((s) => ({ ...s }))
-    return fensterSpaltenIn(this.erfassungsUmfeld(), index)
-  }
-
   // Ueber `aendere`, damit die Rechnung mitzieht und ein Undo-Schritt entsteht.
   private aendereSpalte(index: number, teil: Partial<Spalte>): void {
     const alt = this.spaltenListe()
@@ -334,7 +328,7 @@ export class TabelleBlock extends BasicBlock {
 
   private fensterDialogTpl(index: number): TemplateResult {
     const spalte = this.spaltenListe()[index]
-    const spalten = this.fensterSpaltenEffektiv(index)
+    const spalten = fensterSpaltenIn(this.erfassungsUmfeld(), index)
     return spaltenStellenTpl({
       titel: spalte?.titel ?? '',
       spalten,

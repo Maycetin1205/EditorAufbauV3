@@ -77,6 +77,14 @@ export function coerceNachschlagSpalten(v: unknown): Spalte[] {
   return Array.isArray(v) && v.length > 0 ? coerceSpalten(v) : []
 }
 
+// Die eine Regel des Suchfensters: vom Bauer gestellte Spalten schlagen die
+// Automatik, eine leere Liste ist keine Stellung. Formularfeld und
+// Tabellenspalte fragen hier, jeder mit seiner eigenen Automatik.
+export function fensterSpaltenOder(gestellt: unknown, automatik: () => Spalte[]): Spalte[] {
+  const eigene = coerceNachschlagSpalten(gestellt)
+  return eigene.length > 0 ? eigene : automatik()
+}
+
 export interface NachschlagenArgs {
   el: HTMLElement
   quelleId: string
@@ -301,7 +309,7 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
     spaltenwahl="ja"
     style="--se-r-lg:0px"
     .besitz=${'provided'}
-    .spalten=${eigene.length > 0 ? eigene : automatikSpalten(args)}
+    .spalten=${fensterSpaltenOder(eigene, () => automatikSpalten(args))}
     .leerText=${'Diese Quelle hat keine Sätze.'}
     .bereitgestellteZeilen=${eintraege.map((e) => ({
       rohzeile: e.satz,

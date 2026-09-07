@@ -39,6 +39,7 @@ import {
   type Eintrag,
   FENSTER_BREITE,
   FENSTER_HOEHE,
+  fensterSpaltenOder,
   folgeBeimVerlassen,
   holeEintraege,
   NACHSCHLAG_SPALTEN_BINDUNG,
@@ -267,12 +268,10 @@ export class FormFeldBlock extends BasicBlock {
   // Der Startpunkt im Einstell-Fenster: die gespeicherten Spalten, sonst der
   // heutige Automatik-Stand als konkrete Zeilen.
   private spaltenEffektiv(): Spalte[] {
-    const eigene = coerceNachschlagSpalten(this.nachschlagSpalten)
-    if (eigene.length > 0) return eigene
-    return automatikSpalten({
+    return fensterSpaltenOder(this.nachschlagSpalten, () => automatikSpalten({
       speicherFeld: this.speicherFeld,
       speicherTitel: this.speicherTitel,
-    })
+    }))
   }
 
   // Der eine Weg, mit dem dieser Baustein eine Eigenschaft an den Editor meldet.
