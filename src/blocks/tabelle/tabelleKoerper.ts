@@ -343,14 +343,6 @@ export interface FussHandeln {
   buche: () => void
 }
 
-const TASTEN = [
-  ['Enter', 'weiter'],
-  ['Tab', 'Zelle'],
-  ['F4', 'Suchen'],
-  ['Einfg', 'neue Zeile'],
-  ['Esc', 'leeren'],
-] as const
-
 export function tabelleFuss(
   lage: FussLage,
   tun: FussHandeln,
@@ -376,9 +368,6 @@ export function tabelleFuss(
         <span class="summe-titel">${s.titel}</span>
         <b>${s.text}</b>
       </span>`)}
-    </div>`}
-    ${!lage.erfassungAn ? nothing : html`<div class="tasten" aria-label="Tasten der Erfassung">
-      ${TASTEN.map(([taste, wirkung]) => html`<span><kbd>${taste}</kbd> ${wirkung}</span>`)}
     </div>`}
     <div class="fuss-rechts">
       ${!lage.blaettert ? nothing : html`<div class="seiten-nav">

@@ -168,11 +168,10 @@ export const tabelleStil = css`
       }
       .kopf > div.z { justify-content: flex-end; text-align: right; }
 
-      /* Platz vor der ersten Zelle fuer Statuspunkt und Plus der Erfassungszeile. */
+      /* Platz vor der ersten Zelle fuer den Statuspunkt. */
       .kopf > div:first-of-type,
       .zeile > div:first-of-type { padding-left: calc(var(--se-zell-x) + 14px); }
-      .zeile[data-status]::before,
-      .zeile.erfassung::before {
+      .zeile[data-status]::before {
         position: absolute;
         left: 8px;
         top: 50%;
@@ -183,16 +182,6 @@ export const tabelleStil = css`
         border-radius: 50%;
         background: var(--se-faint);
         pointer-events: none;
-      }
-      .zeile.erfassung::before {
-        content: '+';
-        width: auto;
-        height: auto;
-        border-radius: 0;
-        background: none;
-        color: var(--se-accent);
-        font-weight: 700;
-        line-height: 1;
       }
       .fehltext {
         margin-left: 8px;
@@ -335,32 +324,6 @@ export const tabelleStil = css`
         display: flex;
         align-items: center;
         gap: 6px;
-      }
-
-      /* Fehlt Platz, fallen ganze Hinweise weg, statt halb abgeschnitten
-         stehen zu bleiben. */
-      .tasten {
-        flex: 1 1 auto;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 4px 10px;
-        min-width: 0;
-        max-height: 20px;
-        margin: 0 auto;
-        overflow: hidden;
-      }
-      .tasten span { flex: none; display: inline-flex; align-items: center; gap: 4px; }
-      .tasten kbd {
-        padding: 1px 5px;
-        font-family: var(--se-mono);
-        font-size: var(--se-fs-xs);
-        line-height: 1.3;
-        color: var(--se-ink);
-        background: var(--se-panel);
-        border: var(--se-border) solid var(--se-line);
-        border-bottom-width: 2px;
-        border-radius: var(--se-r-sm);
       }
 
       .buchen {
