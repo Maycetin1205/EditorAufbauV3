@@ -355,8 +355,8 @@ export class FormFeldBlock extends BasicBlock {
     return ergebnis.ok ? passendeVorschlaege(ergebnis.eintraege, this.getippt) : []
   }
 
-  // Escape kommt hier NICHT an, wenn ein Dialograhmen mit escape-schliesst offen
-  // ist: der hoert am document in der Abfang-Phase.
+  // Escape kommt hier NICHT an, wenn ein Fenster offen ist: dessen Rahmen hoert
+  // am window in der Abfang-Phase und schliesst sich selbst.
   private onNachschlagTaste(e: KeyboardEvent): void {
     if (this.imEditor) return
     const anzahl = this.vorschlaege.length

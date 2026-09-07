@@ -29,6 +29,28 @@ function pixel(wert: unknown, ersatz: number): number {
   return Number.isFinite(zahl) && zahl > 0 ? zahl : ersatz
 }
 
+// Escape gehoert dem obersten offenen Fenster: SoftEngines SEEvent.js hoert am
+// document mit und schliesst damit sonst die ganze Maske.
+const fangendeFenster: DialogRahmen[] = []
+
+function aufEscape(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return
+  const oberstes = fangendeFenster.filter((f) => f.isConnected).pop()
+  if (!oberstes) return
+  event.stopPropagation()
+  oberstes.schliesse()
+}
+
+function faengtEscape(fenster: DialogRahmen, faengt: boolean): void {
+  const platz = fangendeFenster.indexOf(fenster)
+  if (faengt && platz < 0) fangendeFenster.push(fenster)
+  if (!faengt && platz >= 0) fangendeFenster.splice(platz, 1)
+
+  // Am window in der Abfang-Phase, damit die Taste SoftEngine nie erreicht.
+  if (fangendeFenster.length === 1) window.addEventListener('keydown', aufEscape, true)
+  if (fangendeFenster.length === 0) window.removeEventListener('keydown', aufEscape, true)
+}
+
 export class DialogRahmen extends LitElement {
   static override styles = css`
     :host {
@@ -155,18 +177,11 @@ export class DialogRahmen extends LitElement {
 
   private escapeRegistriert = false
 
-  private readonly aufTaste = (event: KeyboardEvent): void => {
-    if (event.key !== 'Escape') return
-    event.stopPropagation()
-    this.schliesse()
-  }
-
   private aktualisiereEscape(): void {
     const sollRegistriert = this.isConnected && this.escapeSchliesst
     if (sollRegistriert === this.escapeRegistriert) return
-    if (sollRegistriert) document.addEventListener('keydown', this.aufTaste, true)
-    else document.removeEventListener('keydown', this.aufTaste, true)
     this.escapeRegistriert = sollRegistriert
+    faengtEscape(this, sollRegistriert)
   }
 
   private ziehe(event: PointerEvent, achse: 'breite' | 'hoehe'): void {
@@ -226,7 +241,7 @@ export class DialogRahmen extends LitElement {
     }))
   }
 
-  private schliesse(): void {
+  schliesse(): void {
     this.dispatchEvent(new CustomEvent(DIALOG_SCHLIESSEN_EVENT, {
       bubbles: true,
       composed: true,
@@ -244,8 +259,8 @@ export class DialogRahmen extends LitElement {
 
   override disconnectedCallback(): void {
     if (this.escapeRegistriert) {
-      document.removeEventListener('keydown', this.aufTaste, true)
       this.escapeRegistriert = false
+      faengtEscape(this, false)
     }
     super.disconnectedCallback()
   }

@@ -103,6 +103,7 @@ export class PopupBlock extends BasicBlock {
         .hoehe=${this.hoehe}
         ohne-modal
         inhalt-fest
+        ?escape-schliesst=${this.offen && !this.imEditor}
         @ff-dialog-schliessen=${this.onClose}
       >
         <span

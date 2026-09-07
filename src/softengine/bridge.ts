@@ -223,6 +223,11 @@ export function bootSe(): void {
   booted = true
   tryInitSe()
   const g = seGlobal()
+
+  // SoftEngines eigene Suche (Strg+F) durchsucht keine Schatten-Wurzeln und
+  // meldet an jeder Maske "0 / 0".
+  g.enableCustomFind = false
+
   g.Erstellen = () => { refreshDataBasis(); klingeln(datenSindNeu()) }
   g.initData = g.Erstellen
   g.ReloadData = () => { klingeln(datenSindNeu()) }
