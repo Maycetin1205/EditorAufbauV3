@@ -1,4 +1,4 @@
-
+// Wie viele Zeilen auf eine Seite passen, gemessen am Rumpf der Tabelle.
 
 export const ZEILEN_HOEHE = 28
 
@@ -98,9 +98,8 @@ export interface Rumpfmessung {
 
   hoehe: number
 
-  // Der Kopf wird ZWEIZEILIG, sobald eine Spalte an eine Hilfsquelle gebunden ist;
-  // der ResizeObserver sieht das nicht, der Rumpf behaelt seine Hoehe. Ohne diesen
-  // Vergleich rechnet die Tabelle mit einer Zeile zu viel.
+  // Der Kopf wird zweizeilig, sobald eine Spalte an eine Hilfsquelle gebunden
+  // ist; der ResizeObserver sieht das nicht.
   kopf: number
 }
 

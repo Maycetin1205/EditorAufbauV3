@@ -1,3 +1,4 @@
+// Haelt Tipp-Lauf und erfasste Zeilen einer Tabelle zusammen.
 import type { Rechnung } from '../../core/data/rechnung'
 import { verknuepfungenVon } from '../shared/fremdeQuellen'
 import { ErfassungsLauf } from './erfassungsLauf'
@@ -13,8 +14,6 @@ export class ErfassungsAnschluss {
 
   private _zurueck: { kennung: string; platz: number } | null = null
 
-  // Die Korrektur bleibt AN ORT UND STELLE: nichts springt, nichts sortiert
-  // sich um.
   get korrekturPlatz(): number | null {
     return this._zurueck === null ? null : this._zurueck.platz
   }
@@ -27,9 +26,8 @@ export class ErfassungsAnschluss {
     return `e${this.naechsteKennung}`
   }
 
-  // Auch die unten getippte Zeile zaehlt hier mit: wer sie ausfuellt und
-  // bucht, ohne vorher Enter zu druecken, sieht sie vor sich und bekaeme sie
-  // sonst trotzdem nicht ins ERP.
+  // Auch die unten getippte Zeile zaehlt mit: wer sie ausfuellt und bucht, ohne
+  // vorher Enter zu druecken, bekaeme sie sonst nicht ins ERP.
   vormerkungen(umfeld: ErfassungsUmfeld): { kennung: string; werte: readonly string[] }[] {
     const alle = this._zeilen
       .filter((z) => z.geschrieben !== true)
@@ -119,8 +117,7 @@ export class ErfassungsAnschluss {
   }
 
   // Geschriebene Zeilen bleiben SICHTBAR: PUT ist Einweg und meldet keine
-  // Ablehnung — floegen sie hier aus der Liste und SoftEngine lieferte nichts
-  // nach, waere die Eingabe des Bedieners spurlos weg.
+  // Ablehnung.
   markiereGeschrieben(umfeld: ErfassungsUmfeld, kennungen: readonly string[]): boolean {
     if (kennungen.length === 0) return false
     let geaendert = false

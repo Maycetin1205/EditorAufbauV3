@@ -1,3 +1,4 @@
+// Die Zellen der Erfassungszeile: zeichnen, Tasten annehmen, Fenster oeffnen.
 import type { TemplateResult } from 'lit'
 import {
   fensterBreiteFuer,
@@ -47,8 +48,6 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
     speicherTitel: spalte.titel,
     spalten,
     titel: spalte.titel,
-    // Vom Bauer gestellt schlaegt gerechnet: hat er das Fenster einmal
-    // zurechtgezogen, bleibt es so.
     breite: spalte.fensterBreite ?? fensterBreiteFuer(spalten.length),
     hoehe: spalte.fensterHoehe ?? FENSTER_HOEHE,
     eintraege: wirt.lauf.eintraege(umfeld, index),
@@ -79,9 +78,8 @@ export function springe(wirt: ErfassungsWirt, index: number, taste: string): boo
 }
 
 function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
-  // Shift+Tab setzt den Fokus selbst eine Zelle zurück: der Browser-Weg durch
-  // die Schatten-Wurzeln ist nicht verlässlich, und die Tastatursteuerung soll
-  // in beide Richtungen vollständig sein.
+  // Shift+Tab setzt den Fokus selbst zurueck: der Browser-Weg durch die
+  // Schatten-Wurzeln ist nicht verlaesslich.
   if (e.key === 'Tab' && e.shiftKey) {
     const vorige = wirt.lauf.nachbarPlatz(wirt.umfeld(), index, -1)
     if (vorige === -1) return
@@ -113,8 +111,8 @@ export function erfassungsZeileFuer(
   cols: Readonly<Record<string, string>>,
   listeNachOben: boolean,
 
-  // Gezeichnet wird nur die gefilterte Sicht; die WERTE holt der Lauf weiter
-  // ueber den PLATZ in der vollen Spaltenliste.
+  // Gezeichnet wird die gefilterte Sicht, die Werte holt der Lauf ueber den
+  // vollen Platz.
   sicht: Spaltensicht,
 ): TemplateResult {
   const umfeld = wirt.umfeld()

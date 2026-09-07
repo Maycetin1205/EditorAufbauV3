@@ -1,3 +1,4 @@
+// Der Zug an der Spaltenkante: Griffe zeichnen und die gezogenen Breiten halten.
 import { html, type TemplateResult } from 'lit'
 import { SPALTEN_MIN_BREITE, type Spalte } from './spalten'
 
@@ -86,9 +87,8 @@ function starteZug(e: PointerEvent, index: number, wirt: BreitenWirt): void {
   window.addEventListener('blur', beiAbbruch)
 }
 
-// Greifstreifen mittig auf der Linie, als eigene Gitter-Kinder: `inset: 0` kennt
-// erst Chromium 87, SoftEngines eingebauter Browser ist aelter und gibt einer Lage
-// dort keine Groesse.
+// Einzelne Kanten statt inset: SoftEngines Browser ist aelter als Chromium 87
+// und gibt einer Lage mit inset keine Groesse.
 export function breitenGriffe(
   spaltenAnzahl: number,
   wirt: BreitenWirt,
@@ -104,24 +104,16 @@ export function breitenGriffe(
   ></span>`)
 }
 
-// Der Stand der von Hand gezogenen Breiten. Zwei Ablagen, EIN Zug: im Editor
-// schreibt das Loslassen in den Baum (ein Undo-Schritt), in der Maske bleibt
-// es beim fluechtigen Stand bis zum Neuladen.
-//
-// Als eigene Naht wie AnsichtsStand und SpaltenWahlStand, damit der Baustein
-// unter seinem Zeilen-Deckel bleibt.
+// Zwei Ablagen, ein Zug: im Editor schreibt das Loslassen in den Baum, in der
+// Maske bleibt es beim fluechtigen Stand bis zum Neuladen.
 export interface BreitenStandWirt {
-  // Im Editor gilt der Baum, in der Maske der fluechtige Stand.
   imEditor: () => boolean
 
-  // Die Griffe zaehlen die GEZEICHNETEN Spalten, gespeichert wird unter dem
-  // vollen Platz — ohne die Uebersetzung landete die gezogene Breite hinter
-  // einer ausgeblendeten Spalte auf der falschen.
+  // Die Griffe zaehlen die gezeichneten Spalten, gespeichert wird der volle Platz.
   vollerPlatz: (gezeichnet: number) => number
 
   spaltenListe: () => Spalte[]
 
-  // Nur im Editor gerufen: die neue Spaltenliste in den Baum melden.
   schreibeSpalten: (spalten: Spalte[]) => void
 
   melde: () => void
@@ -130,12 +122,10 @@ export interface BreitenStandWirt {
 export class BreitenStand {
   private readonly wirt: BreitenStandWirt
 
-  // Der fluechtige Stand: Platz in der VOLLEN Liste -> Breite.
   private readonly _breiten = new Map<number, number>()
 
-  // Wie die gerade gezogenen Spalten VOR dem Zug standen — damit Escape genau
-  // diese zuruecksetzt und nicht die Breiten, die der Bediener vorher
-  // eingestellt hat.
+  // Wie die gezogenen Spalten VOR dem Zug standen, damit Escape genau diese
+  // zuruecksetzt.
   private _vorZug: Map<number, number | undefined> | null = null
 
   constructor(wirt: BreitenStandWirt) {
@@ -146,8 +136,6 @@ export class BreitenStand {
     return this._breiten.get(index)
   }
 
-  // Nach einer Spaltenaenderung: die fluechtigen Breiten haengen am PLATZ der
-  // Spalte. Kommt eine dazu oder faellt eine weg, zeigen sie auf die falsche.
   vergessen(): void {
     this._breiten.clear()
   }
@@ -174,9 +162,8 @@ export class BreitenStand {
           this.wirt.melde()
           return
         }
-        // Im Editor gilt der Baum. Der fluechtige Stand muss WEG, sonst
-        // ueberdeckte er die gespeicherte Breite und ein spaeteres Undo
-        // aenderte sichtbar nichts.
+        // Der fluechtige Stand muss weg, sonst ueberdeckte er die gespeicherte
+        // Breite und ein spaeteres Undo aenderte sichtbar nichts.
         const liste = this.wirt.spaltenListe()
         for (const a of aenderung) {
           if (a.index >= liste.length) continue

@@ -1,3 +1,4 @@
+// Die Bediener-Spaltenwahl: das Fenster am Spaltenkopf und was weggenommen ist.
 import { html, nothing, type TemplateResult } from 'lit'
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import type { Spalte } from './spalten'
@@ -89,27 +90,18 @@ export function spaltenWahlTpl(
     </div>`
 }
 
-// Der Stand der Bediener-Spaltenwahl: WAS weggenommen ist und OB das Fenster
-// gerade offen steht (und wo). Nichts davon ist eine Einstellung des
-// Bausteins — es entsteht beim Bedienen der fertigen Maske.
-//
-// Als eigene Naht wie AnsichtsStand und ErfassungsAnschluss, damit der
-// Baustein unter seinem Zeilen-Deckel bleibt. Was die Wahl BEDEUTET und wie
-// sie gezeichnet wird, steht weiter in spaltenWahl.ts; hier liegt nur, in
-// welchem Zustand sie gerade ist.
+// Nichts davon ist eine Einstellung des Bausteins: es entsteht beim Bedienen
+// der fertigen Maske.
 
 const LEERE_WAHL: ReadonlySet<string> = new Set()
 
 export interface SpaltenWahlWirt {
   baustein: HTMLElement
 
-  // Nur in der fertigen Maske und nur mit Kopfzeile — ohne Ueberschrift gibt
-  // es keinen Platz fuer den Rechtsklick.
   an: () => boolean
 
-  // Neu zeichnen, und die fluechtigen Spaltenbreiten vergessen: die haengen
-  // am Platz der GEZEICHNETEN Spalten, mit einer mehr oder weniger stimmen
-  // sie nicht mehr.
+  // Neu zeichnen und die fluechtigen Breiten vergessen: die haengen am Platz
+  // der gezeichneten Spalten.
   melde: () => void
   breitenVergessen: () => void
 }
@@ -117,9 +109,8 @@ export interface SpaltenWahlWirt {
 export class SpaltenWahlStand {
   private readonly wirt: SpaltenWahlWirt
 
-  // Erst beim ersten Lesen aus dem Speicher geholt: `wahlSchluessel` braucht
-  // den Maskennamen und das fertige Dokument, beides steht im Konstruktor
-  // noch nicht.
+  // Erst beim ersten Lesen aus dem Speicher: der Schluessel braucht Maskenname
+  // und fertiges Dokument.
   private _weg: Set<string> | null = null
 
   private _offen: { links: number; oben: number } | null = null
@@ -143,8 +134,6 @@ export class SpaltenWahlStand {
     this.schliesse()
   }
 
-  // Das eigene Fenster statt des Browser-Menues — genau dafuer ist der
-  // Rechtsklick hier vergeben.
   oeffne(e: MouseEvent, rahmen: DOMRect): void {
     e.preventDefault()
     e.stopPropagation()
@@ -163,7 +152,6 @@ export class SpaltenWahlStand {
     this.wirt.melde()
   }
 
-  // Eine Spalte weg oder wieder her.
   schalte(kennung: string): void {
     const weg = new Set(this.weg())
     if (weg.has(kennung)) weg.delete(kennung)
@@ -182,9 +170,7 @@ export class SpaltenWahlStand {
     this.wirt.melde()
   }
 
-  // Beim Abhaengen des Bausteins: die Taste darf nicht am Fenster
-  // haengenbleiben (sonst horcht sie weiter, obwohl es die Tabelle nicht
-  // mehr gibt).
+  // Beim Abhaengen: die Taste darf nicht am Fenster haengenbleiben.
   loese(): void {
     window.removeEventListener('keydown', this.nimmTaste)
     this._offen = null

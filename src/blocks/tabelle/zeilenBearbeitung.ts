@@ -1,3 +1,4 @@
+// Vormerkungen an gebuchten Zeilen: Zellwerte aendern, Zeilen zum Loeschen merken.
 import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 import { zeilenIndexVon } from './seRuntime'
 import type { Spalte } from './spalten'
@@ -14,12 +15,8 @@ export interface ZeilenWirt {
 
   melde: () => void
 
-  // Was der Ketten-Lauf ueber die Zeilen gemeldet hat. Der Baustein haelt ihn,
-  // weil auch die erfassten Zeilen darin stehen.
   lauf: LaufStand
 
-  // Enter unter der letzten Zeile rueckt in die Erfassungszeile — die haelt
-  // der Baustein.
   erfassungAn: () => boolean
 
   fokussiereErfassungsZelle: (index: number) => void
@@ -28,33 +25,27 @@ export interface ZeilenWirt {
 export class ZeilenBearbeitung {
   private readonly wirt: ZeilenWirt
 
-  // Vorgemerkte Aenderungen an GEBUCHTEN Zeilen. Ueberleben jeden Push
-  // (sie haengen an der Satznummer, nicht am Platz in der Liste).
+  // Sie ueberleben jeden Push: sie haengen an der Satznummer, nicht am Platz.
   private readonly aenderungen = new AenderungsSpeicher()
 
-  // Satznummern der Zeilen, die weg sollen. Auch sie ueberleben einen Push.
   private readonly geloescht = new Set<string>()
 
   constructor(wirt: ZeilenWirt) {
     this.wirt = wirt
   }
 
-  // Der Vertrag der Faehigkeit aenderungsSchluessel (AenderungsTraegerElement
-  // in core/blocks/BlockDefinition.ts): je vorgemerkter Zeile ihre Satznummer
-  // und ALLE Spaltenwerte — die geaenderten inbegriffen. So kann die Kette
-  // auch unveraenderte Felder derselben Zeile mitschreiben.
+  // Der Vertrag der Faehigkeit aenderungsSchluessel: je Zeile ihre Satznummer
+  // und ALLE Spaltenwerte, damit die Kette auch unveraenderte Felder mitschreibt.
   get geaenderteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
-    // Nichts vorgemerkt: kein Nachschlagen. satzPlaetze liefe sonst bei JEDEM
-    // Rendern ueber alle Zeilen der Liste.
+    // satzPlaetze liefe sonst bei jedem Rendern ueber alle Zeilen der Liste.
     if (this.aenderungen.anzahl === 0) return []
     const spaltenAnzahl = this.wirt.spalten().length
     const plaetze = this.satzPlaetze()
     const raus: { satz: string; werte: readonly string[] }[] = []
     for (const { satz } of this.aenderungen.proSatz()) {
       const rohIndex = plaetze.get(satz)
-      // Die Zeile ist seit der Aenderung aus der Liste verschwunden (ein Push
-      // hat sie weggenommen). Sie wird NICHT geschrieben: mit leeren Werten
-      // zu schreiben hiesse, den Satz in der ERP leerzuraeumen.
+      // Die Zeile ist seit der Aenderung aus der Liste verschwunden; mit leeren
+      // Werten zu schreiben hiesse, den Satz im ERP leerzuraeumen.
       if (rohIndex === undefined) continue
       raus.push({
         satz,
@@ -64,9 +55,7 @@ export class ZeilenBearbeitung {
     return raus
   }
 
-  // Der Vertrag der Faehigkeit kannLoeschen (LoeschTraegerElement): je
-  // vorgemerkter Zeile ihre Satznummer und alle Spaltenwerte. Zeilen, die
-  // ein Push inzwischen weggenommen hat, fallen raus — sie sind schon weg.
+  // Der Vertrag der Faehigkeit kannLoeschen, gleiche Form wie geaenderteZeilen.
   get geloeschteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
     if (this.geloescht.size === 0) return []
     const spaltenAnzahl = this.wirt.spalten().length
@@ -83,8 +72,6 @@ export class ZeilenBearbeitung {
     return raus
   }
 
-  // Was der Ketten-Lauf geschrieben hat, ist keine Vormerkung mehr. Nur diese
-  // Zeilen — die haengengebliebenen und die dahinter bleiben stehen.
   austragen(art: VormerkArt, kennungen: readonly string[]): void {
     let weg = false
     for (const satz of kennungen) {
@@ -94,9 +81,6 @@ export class ZeilenBearbeitung {
     if (weg) this.wirt.melde()
   }
 
-  // Vorgemerkt heisst: noch schreibbar. Eine Zeile, die ein Push aus der
-  // Liste genommen hat, zaehlt nicht mehr mit — sonst stuende unter der
-  // Tabelle eine Zahl, die der Knopf nicht einloest.
   vorgemerkteAenderungen(): number {
     return this.geaenderteZeilen.length
   }
@@ -105,9 +89,8 @@ export class ZeilenBearbeitung {
     return this.geloeschteZeilen.length
   }
 
-  // Der Balken links an der Zeile. Was der Lauf meldet, schlaegt die
-  // Vormerkung; unter den Vormerkungen schlaegt die Loeschung die Aenderung,
-  // weil sie die Aenderung ohnehin mitnimmt (schalteLoeschung).
+  // Was der Lauf meldet, schlaegt die Vormerkung; unter den Vormerkungen
+  // schlaegt die Loeschung die Aenderung.
   statusVon(rohIndex: number): ZeilenZeichen {
     const satz = this.satzVon(rohIndex)
     if (satz === '') return { status: 'gebucht', titel: '' }
@@ -117,8 +100,7 @@ export class ZeilenBearbeitung {
     return this.wirt.lauf.zeigt('geaendert', satz, geaendert ? 'geaendert' : 'gebucht')
   }
 
-  // Satznummer -> Platz in der Liste. Einmal gebaut statt je Vormerkung
-  // gesucht: bei tausenden Zeilen waere das Suchen je Aenderung spuerbar.
+  // Einmal gebaut statt je Vormerkung gesucht: bei tausenden Zeilen spuerbar.
   private satzPlaetze(): Map<string, number> {
     const plaetze = new Map<string, number>()
     this.wirt.rohzeilen().forEach((zeile, index) => {
@@ -128,16 +110,13 @@ export class ZeilenBearbeitung {
     return plaetze
   }
 
-  // Der Schluessel einer Vormerkung ist die Satznummer der Zeile. Ohne sie
-  // wird gar nicht erst ein Eingabefeld gezeigt (aendernMoeglich).
   private satzVon(rohIndex: number): string {
     const rohzeile = this.wirt.rohzeilen()[rohIndex]
     return rohzeile === undefined ? '' : zeilenIndexVon(this.wirt.baustein, rohzeile)
   }
 
-  // Eine Zeile, die weg soll, braucht keine Zell-Aenderung mehr: was an ihr
-  // vorgemerkt war, faellt mit. Sonst schriebe derselbe Klick erst einen
-  // neuen Wert und loeschte die Zeile gleich danach.
+  // Eine Zeile, die weg soll, braucht keine Zell-Aenderung mehr: sonst schriebe
+  // derselbe Klick erst einen neuen Wert und loeschte die Zeile danach.
   schalteLoeschung(rohIndex: number): void {
     const satz = this.satzVon(rohIndex)
     if (satz === '') return
@@ -172,9 +151,8 @@ export class ZeilenBearbeitung {
     }
   }
 
-  // Steht beim Verlassen wieder der urspruengliche Wert da, ist es keine
-  // Aenderung mehr — die Vormerkung faellt weg, samt Marke. Verglichen wird
-  // roh gegen roh: die Zelle zeigt den ERP-Wert, wie er kommt.
+  // Steht wieder der urspruengliche Wert da, faellt die Vormerkung weg.
+  // Verglichen wird roh gegen roh, wie der ERP-Wert kommt.
   verlasseZelle(rohIndex: number, spaltenIndex: number, text: string): void {
     const satz = this.satzVon(rohIndex)
     const urspruenglich = this.wirt.datenzeilen()[rohIndex]?.[spaltenIndex] ?? ''
@@ -184,11 +162,8 @@ export class ZeilenBearbeitung {
     if (geaendert) this.wirt.melde()
   }
 
-  // Senkrecht durch DIESELBE Spalte, wie in der Handmaske (dort der „Anker"
-  // ueber die Mengen-Spalte). Der Fokuswechsel loest das Verlassen der alten
-  // Zelle aus — geformt und verglichen wird dort. Waagerecht bleibt Tab:
-  // eine Zeile kann mehrere aenderbare Spalten haben, und dann ist die
-  // Nachbarzelle rechts das Naheliegende.
+  // Senkrecht durch DIESELBE Spalte; der Fokuswechsel loest das Verlassen der
+  // alten Zelle aus. Waagerecht bleibt Tab.
   private zelleNachbar(
     spaltenIndex: number,
     von: HTMLInputElement,
@@ -202,8 +177,7 @@ export class ZeilenBearbeitung {
     if (jetzt < 0) return
     let ziel = jetzt + schritt
     if (ziel > felder.length - 1) {
-      // Enter unter der letzten Zeile: weiter in die Erfassungszeile — dort
-      // tippt der Bediener die naechste Position (Handmaske: enterModus).
+      // Enter unter der letzten Zeile: weiter in die Erfassungszeile.
       if (enterModus && this.wirt.erfassungAn()) {
         this.wirt.fokussiereErfassungsZelle(0)
         return
@@ -214,13 +188,10 @@ export class ZeilenBearbeitung {
     const feld = felder[ziel]
     if (!feld || feld === von) return
     feld.focus()
-    // Der Inhalt steht markiert da: wer weitertippt, ueberschreibt — genau
-    // der Editier-Start der Handmaske (dort selectNodeContents).
     feld.select()
     feld.scrollIntoView({ block: 'nearest' })
   }
 
-  // Escape nimmt die Vormerkung zurueck (der Wert der Zeile gilt wieder).
   // Keine dieser Tasten darf bis zur Zeile durchfallen: dort loeste Enter die
   // Kette „Zeile gewaehlt" aus, und Pfeile blaetterten den Rumpf.
   tasteZelle(rohIndex: number, spaltenIndex: number, e: KeyboardEvent): void {

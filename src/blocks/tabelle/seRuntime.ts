@@ -1,3 +1,4 @@
+// Die Tabelle am SoftEngine-Datenstrom: anmelden, Zeilen ableiten, Satznummer lesen.
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, satzIndexVon } from '../../softengine/data'
 import { auswahlWiederfinden, geberIdVon, zeilenNachAuswahl } from '../shared/auswahl'
@@ -36,8 +37,7 @@ export function hatSatzNummer(el: HTMLElement): boolean {
 }
 
 function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
-  // Erst die Lieferung von SoftEngine beweist den neuen Stand; nur dann
-  // duerfen die hinausgeschickten Erfassungszeilen weg (Status 'geschrieben').
+  // Erst die Lieferung von SoftEngine beweist den neuen Stand.
   if (lieferung) el.vergissGeschriebene()
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {

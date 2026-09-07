@@ -1,16 +1,13 @@
+// Das Aussehen der Tabelle und ihrer Erfassungszeile.
 import { css } from 'lit'
 
 export const tabelleStil = css`
       :host { min-width: 0; height: 100%; }
 
       .tabelle {
-        /* Die zwei Zahlen, aus denen sich jedes Zell-Polster ergibt. Nur
-           hier stehen sie. */
         --se-zell-x: 10px;
         --se-eingabe-x: 4px;
 
-        /* Der Kopf traegt zwei Zeilen Titel, damit „Behandlungsmenge" nicht
-           als „Behandl…" neben „Behandl…" steht. */
         --kopf-hoehe: 36px;
 
         position: relative;
@@ -79,10 +76,8 @@ export const tabelleStil = css`
         flex: 1 1 auto;
         overflow: auto;
 
-        /* Die Kopfzeile klebt IM Rumpf, teilt sich also jede Breite mit den
-           Zeilen: die Leiste kann keine Spalte gegen den Kopf verschieben.
-           Darum kein Gutter — reservierter Platz waere eine Luecke, die bei
-           kurzen Listen dauerhaft neben der letzten Spalte steht. */
+        /* Kein Gutter: reservierter Platz stuende bei kurzen Listen als Luecke
+           neben der letzten Spalte. */
         scrollbar-width: thin;
         display: flex;
         flex-direction: column;
@@ -90,11 +85,8 @@ export const tabelleStil = css`
 
       .koerper > .zeile { flex: none; }
 
-      /* Die Erfassungszeile klebt unten, IMMER. Hinge die Regel an einer
-         Klasse, die es nur bei „Blaettern = Nein" gibt, rollte die Zeile bei
-         der Voreinstellung weg, sobald mehr Zeilen da sind als in den Rumpf
-         passen, und der Bediener tippte ins Unsichtbare.
-         Die Kopfzeile klebt ohnehin schon bedingungslos (.kopf). */
+      /* Die Erfassungszeile klebt bedingungslos unten, nicht nur bei
+         „Blaettern = Nein": sonst tippte der Bediener ins Unsichtbare. */
       .koerper > .zeile.erfassung {
         position: sticky;
         bottom: 0;
@@ -128,23 +120,14 @@ export const tabelleStil = css`
         transition: background-color var(--se-move);
       }
 
-      /* Zebra: jede zweite Datenzeile leicht getoent. Die Zeile bringt die
-         Klasse mit, gezaehlt wird nach ihrer NUMMER in der Ansicht: nth-child
-         ueber alle Kinder des Rumpfes kippte die Toenung um eine Zeile, sobald
-         die Kopfzeile abgeschaltet ist oder die Erfassungszeile (ohne Quelle)
-         vorne steht.
-
-         Bewusst ohne den Rumpf-Vorsatz: so bleibt die Regel gleich stark wie
-         die Status-Farben weiter unten, und die stehen spaeter — eine
-         vorgemerkte Zeile behaelt damit ihre Kennfarbe. */
+      /* Getoent wird nach der Nummer in der Ansicht, nicht per nth-child: ohne
+         Kopfzeile oder mit vorangestellter Erfassungszeile kippte die Toenung. */
       .zeile.zebra {
         background: var(--se-zebra);
       }
 
-      /* Nur eine Zeile OHNE Status faerbt sich unter der Maus. Sonst wischte
-         der Hover die Kennfarbe genau in dem Moment weg, in dem der Bediener
-         mit dem Zeiger hinfaehrt, um sie anzusehen — die Farbe IST die
-         Auskunft. Dasselbe Muster wie bei .gewaehlt weiter unten. */
+      /* Nur eine Zeile OHNE Status faerbt sich unter der Maus: die Kennfarbe
+         IST die Auskunft. */
       .koerper > .zeile:not([data-status]):hover {
         background: var(--se-hover);
       }
@@ -167,11 +150,8 @@ export const tabelleStil = css`
       }
       .zeile.gewaehlt > div,
       .zeile:focus-visible > div { color: var(--se-ink); }
-      /* Die Textkante JEDER Zelle — eine Zahl, eine Stelle. Eine Zelle mit
-         Eingabefeld gibt ihr Polster an das Feld ab (siehe .tippbar weiter
-         unten); dessen eigenes Polster plus sein Rahmen ergeben wieder
-         dieselbe Kante. Sonst stuende der Text einer tippbaren Zelle weiter
-         vom Rand als der ihrer Nachbarin — in derselben Zeile. */
+      /* Die Textkante jeder Zelle; eine Zelle mit Eingabefeld gibt ihr Polster
+         an das Feld ab (.tippbar). */
       .kopf > div,
       .zeile > div {
         padding: 0 var(--se-zell-x);
@@ -182,15 +162,13 @@ export const tabelleStil = css`
         text-overflow: ellipsis;
       }
 
-      /* Zahlen stehen rechts auf einer Kante, Ziffern in fester Breite. */
       .zeile > div.zahl {
         text-align: right;
         font-variant-numeric: tabular-nums;
       }
       .kopf > div.z { justify-content: flex-end; text-align: right; }
 
-      /* Vor der ersten Zelle ist Platz fuer den Statuspunkt der Zeile und das
-         Plus der Erfassungszeile; alle Zeilen ruecken gleich ein. */
+      /* Platz vor der ersten Zelle fuer Statuspunkt und Plus der Erfassungszeile. */
       .kopf > div:first-of-type,
       .zeile > div:first-of-type { padding-left: calc(var(--se-zell-x) + 14px); }
       .zeile[data-status]::before,
@@ -222,7 +200,6 @@ export const tabelleStil = css`
         color: var(--se-red);
       }
 
-      /* Der Titel darf auf zwei Zeilen umbrechen; erst danach wird gekuerzt. */
       .kopf > div {
         display: flex;
         align-items: center;
@@ -231,7 +208,6 @@ export const tabelleStil = css`
         cursor: pointer;
         user-select: none;
 
-        /* Traeger des Greifstreifens (unten). */
         position: relative;
       }
       .kopf-text {
@@ -239,26 +215,14 @@ export const tabelleStil = css`
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
-        /* Ein Wort bricht nur, wenn es allein nicht in die Spalte passt; wo
-           der Browser deutsch trennen kann, trennt er mit Bindestrich. */
         overflow-wrap: break-word;
         -webkit-hyphens: auto;
         hyphens: auto;
       }
 
-      /* Der Greifstreifen ist ein eigenes Kind der Kopfzeile und sitzt in
-         derselben Gitter-Spur wie die Kopfzelle links von ihm (grid-column am
-         Element). justify-self haelt ihn an deren Ende, der negative Rand
-         schiebt ihn ueber die Linie: 11px breit, 6px links und 5px rechts.
-         Eine 1px-Linie trifft man mit der Maus nicht — und wer sie anvisiert,
-         zielt auf die Mitte, nicht 5px daneben.
-
-         Er liegt bewusst NICHT in der Kopfzelle (die schneidet ihren
-         Ueberhang ab, overflow: hidden — samt Trefferflaeche) und auch nicht
-         in einer eigenen Lage darueber: eine Lage braucht inset oder vier
-         Kanten und einen zweiten Satz Spalten-Spuren. So haengt er an genau
-         derselben Gitter-Rechnung wie der Kopf und braucht nichts, was die
-         Tabelle nicht ohnehin schon braucht. */
+      /* Der Greifstreifen ist ein eigenes Gitter-Kind in der Spur der Kopfzelle
+         und haengt ueber die Linie: eine 1px-Linie trifft die Maus nicht. In der
+         Kopfzelle schnitte deren overflow ihn ab. */
       .breite-griff {
         position: relative;
         z-index: 2;
@@ -282,14 +246,10 @@ export const tabelleStil = css`
 
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
-      /* Nur im Editor: diese Spalte zeichnet die Maske nicht. Gedaempft, aber
-         voll bedienbar — sie ist eine echte Spalte (Rechnung, Kette). */
+      /* Nur im Editor: gedaempft, aber voll bedienbar — es ist eine echte Spalte. */
       :host([data-ff-editor]) .versteckt { opacity: 0.45; }
 
-      /* Die Spaltenwahl des Bedieners (Rechtsklick am Kopf). Sie liegt IN der
-         Tabelle: die schneidet ihren Ueberhang ab (overflow: hidden), ein
-         Fenster ausserhalb waere also gar nicht zu sehen. Der Platz kommt
-         darum schon eingerechnet aus dem Baustein. */
+      /* Das Wahlfenster liegt IN der Tabelle: die schneidet ihren Ueberhang ab. */
       .sw-schirm {
         position: absolute;
         top: 0; right: 0; bottom: 0; left: 0;
@@ -377,9 +337,8 @@ export const tabelleStil = css`
         gap: 6px;
       }
 
-      /* Die Tasten der Erfassung, mittig im Fuss. Fehlt Platz, fallen ganze
-         Hinweise weg (sie brechen in eine verdeckte zweite Zeile um), statt
-         dass ein Hinweis halb abgeschnitten stehen bleibt. */
+      /* Fehlt Platz, fallen ganze Hinweise weg, statt halb abgeschnitten
+         stehen zu bleiben. */
       .tasten {
         flex: 1 1 auto;
         display: flex;
@@ -421,19 +380,10 @@ export const tabelleStil = css`
       .buchen:disabled { opacity: 0.5; cursor: default; }
       .buchen:disabled:hover { background: var(--se-accent); border-color: var(--se-accent); }
 
-      /* Die Summen stehen rechts neben der Zaehlzeile — Titel blass, Wert
-         kraeftig, Ziffern in fester Breite, damit die Kante steht. */
-      /* Aenderbare Zelle: ruhig, bis die Zeile darunter liegt — wie in der
-         Handmaske (dort .zi.still). Vorgemerkt = bernstein, damit man auf
-         einen Blick sieht, was noch nicht geschrieben ist. */
-      /* Zum Loeschen vorgemerkt: durchgestrichen und blass — die Zeile ist
-         noch da, aber sie geht. Zurueckgenommen wird sie am selben Kreuz. */
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
 
-      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle: petrol neu,
-         bernstein geaendert oder zum Loeschen vorgemerkt, rot haengengeblieben,
-         blass hinausgeschickt. Der Klartext haengt im title, der Fehler steht
-         zusaetzlich als Wort in der Zeile. */
+      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle; der Klartext
+         haengt im title. */
       .zeile[data-status="erfasst"] { background: var(--se-accent-soft); }
       .zeile[data-status="erfasst"]::before,
       .zeile[data-status="schreibt"]::before { background: var(--se-accent); }
@@ -441,7 +391,6 @@ export const tabelleStil = css`
       .zeile[data-status="loeschung"]::before { background: var(--se-amber); }
       .zeile[data-status="loeschung"] { background: var(--se-red-shell); }
       .zeile[data-status="schreibt"] { animation: se-schreibt 1.1s ease-in-out infinite; }
-      /* Hinausgeschickt: die Zeile ist erledigt, aber noch unbestaetigt. */
       .zeile[data-status="geschrieben"] { color: var(--se-muted); }
       .zeile[data-status="fehler"] { background: var(--se-red-shell); }
       .zeile[data-status="fehler"]::before { background: var(--se-red); }
@@ -450,7 +399,7 @@ export const tabelleStil = css`
         .zeile[data-status="schreibt"] { animation: none; }
       }
 
-      /* Das Kreuz sitzt am rechten Rand der Zeile, ueber dem letzten Feld. */
+      /* Traeger fuer das Kreuz am rechten Rand der Zeile. */
       .zeile { position: relative; }
       .zeile-weg {
         position: absolute;
@@ -473,11 +422,8 @@ export const tabelleStil = css`
       .zeile-weg:focus { opacity: 1; }
       .zeile-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
 
-      /* Im Editor steht das Kreuz still da: es zeigt, dass Loeschen an ist. */
       .zeile-weg.zeile-weg-anzeige { opacity: 1; cursor: default; }
 
-      /* Treffer der Suchzeile: gelb hinterlegt, Schriftfarbe bleibt — wie in
-         der Handmaske (dort <mark> mit #ffedb0). */
       mark {
         padding: 0 1px;
         color: inherit;
@@ -485,23 +431,11 @@ export const tabelleStil = css`
         border-radius: 2px;
       }
 
-      /* Eine tippbare Zelle ist eine ZELLE, kein Formularfeld — weder im
-         Ruhezustand noch unter der Maus noch mit der Schreibmarke darin.
-         Dass man "drin" ist, sagt allein die blinkende Marke, wie in einer
-         Tabellenkalkulation. Zoege Hover einen Rahmen und Fokus einen zweiten
-         in Akzentfarbe, flackerte in einer Zeile mit sechs tippbaren Spalten
-         beim Ueberfahren die halbe Zeile.
-
-         Der transparente Rahmen BLEIBT: er haelt die Hoehe. Ohne ihn springt
-         der Text um einen Pixel, sobald die Zelle den Zustand wechselt.
-
-         Gilt fuer die gebuchte Zeile (.zell-eingabe) und die Erfassungszeile
-         (.erf-eingabe) gemeinsam — es ist dieselbe Sache, und zwei Kopien
-         liefen beim ersten Aendern auseinander. */
-      /* Die Zelle, die ein Eingabefeld traegt, gibt ihr Polster an das Feld
-         ab — zusammen ergeben sie wieder --se-zell-x. Ohne diese Regel steht
-         der Text einer tippbaren Zelle um Feld-Polster plus Rahmen weiter
-         rechts als der ihrer Nachbarin. */
+      /* Eine tippbare Zelle bleibt eine ZELLE, kein Formularfeld: sechs davon in
+         einer Zeile flackerten sonst beim Ueberfahren. Der transparente Rahmen
+         bleibt, er haelt die Hoehe. */
+      /* Die Zelle gibt ihr Polster an das Feld ab, zusammen ergeben sie wieder
+         --se-zell-x. */
       .zeile > div.tippbar,
       .zeile.erfassung > div {
         padding: 0 calc(var(--se-zell-x) - var(--se-eingabe-x) - var(--se-border));
@@ -511,8 +445,6 @@ export const tabelleStil = css`
         padding-left: calc(var(--se-zell-x) + 14px - var(--se-eingabe-x) - var(--se-border));
       }
 
-      /* Automatisch gefuellt (aus dem gewaehlten Satz oder der Rechnung):
-         kursiv und petrol, damit man sieht, was die Maske beigesteuert hat. */
       .erf-eingabe.auto {
         color: var(--se-accent);
         font-style: italic;
@@ -535,13 +467,10 @@ export const tabelleStil = css`
       }
       .zell-eingabe:focus,
       .erf-eingabe:focus { outline: none; }
-      /* Die Platzhalter der Erfassungszeile erscheinen erst, wenn der Bediener
-         in ihr steht: ruhig, solange er liest; Orientierung, sobald er tippt. */
+      /* Die Platzhalter erscheinen erst, wenn der Bediener in der Zelle steht. */
       .erf-eingabe::placeholder { color: transparent; }
       .zeile.erfassung:focus-within .erf-eingabe::placeholder { color: var(--se-faint); }
 
-      /* Die Vormerkung ist etwas anderes als ein Eingabefeld: sie sagt, dass
-         hier etwas UNGESCHRIEBENES steht, und muss sichtbar bleiben. */
       .zell-eingabe.geaendert {
         background: var(--se-amber-shell);
         border-color: var(--se-amber-line);
@@ -590,12 +519,8 @@ export const erfassungStil = css`
         border-top: var(--se-border) solid var(--se-line);
       }
 
-      /* Die Liste haengt aus der Zelle heraus; ohne sichtbaren Ueberlauf
-         schnitte die Zelle sie ab. Gilt fuer jede Zelle, weil jede gebundene
-         Spalte eine Liste zeigen kann.
-
-         Das Polster steht in tabelleStil (.tippbar) — es ist dieselbe
-         Rechnung wie fuer jede andere Zelle mit Eingabefeld. */
+      /* Die Vorschlagsliste haengt aus der Zelle heraus, darum sichtbarer
+         Ueberlauf an jeder Zelle. */
       .zeile.erfassung > div {
         display: flex;
         align-items: center;
@@ -616,22 +541,10 @@ export const erfassungStil = css`
         margin: 0 0 2px;
       }
 
-      /* .erf-eingabe wird zusammen mit .zell-eingabe in tabelleStil gesetzt:
-         es ist dieselbe Sache — eine Zelle, in die getippt wird. */
-
-      /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }
 
-      /* Erfasste, noch nicht geschriebene Zeilen: wie Datenzeilen, nur
-         links markiert — erst der Knopf macht aus ihnen echte Positionen.
-         Die Markierung selbst macht der Statusbalken (tabelleStil).
-
-         Ein Klick macht sie AN ORT UND STELLE wieder zur Tipp-Zeile,
-         darum der Zeigefinger. Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie
-         an der gebuchten Zeile: absolut rechts, erst bei Hover. Saesse es
-         mitten in der ERSTEN Zelle, schoebe es deren Wert um rund 20px nach
-         rechts — die erfasste Zeile stuende sichtbar versetzt unter den
-         gebuchten. */
+      /* Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie an der gebuchten Zeile:
+         absolut rechts, sonst schoebe es den Wert der ersten Zelle beiseite. */
       .zeile.erfasst { flex: none; }
       :host(:not([data-ff-editor])) .zeile.erfasst { cursor: pointer; }
 `

@@ -1,3 +1,4 @@
+// Baustein Kanban-Zimmer: eine benannte Flaeche innerhalb einer Spalte.
 import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'

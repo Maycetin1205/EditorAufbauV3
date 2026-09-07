@@ -1,3 +1,4 @@
+// Zeichnet Kopf, Zeilen und Fuss der Tabelle; Stand und Bedienung kommen von aussen.
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { leerZustand } from '../shared/leerZustand'
@@ -18,7 +19,6 @@ export interface ZeilenStand {
 
   istGeloescht: (rohIndex: number) => boolean
 
-  // Der Balken links plus sein Klartext.
   statusVon: (rohIndex: number) => ZeilenZeichen
 
   tippeZelle: (rohIndex: number, spalte: number, text: string) => void
@@ -29,13 +29,10 @@ export interface ZeilenStand {
 }
 
 export interface KoerperLage {
-  // Die GEZEICHNETEN Spalten (in der Maske ohne die versteckten).
   spalten: readonly Spalte[]
 
-  // Wo die j-te gezeichnete Spalte in der VOLLEN Liste steht. Jeder WERT und
-  // jeder Zustand haengt am vollen Platz (datenzeilen, Aenderungen, Ketten);
-  // nur die Gitterspur haengt am gezeichneten. Wer das verwechselt, zeigt den
-  // Wert der einen Spalte unter dem Kopf der anderen — s. spalten.ts.
+  // plaetze[j] ist der Platz der j-ten gezeichneten Spalte in der vollen
+  // Liste; jeder Wert und jeder Zustand haengt am vollen Platz.
   plaetze: readonly number[]
 
   cols: Readonly<Record<string, string>>
@@ -44,15 +41,10 @@ export interface KoerperLage {
 
   imEditor: boolean
 
-  // Schalter „Kopfzeile": aus = keine Titelzeile (Editor UND Maske). Die
-  // Kopf-Griffe (Feld-Picker, Umbenennen) wandern im Editor auf die Zellen;
-  // Sortieren per Titelklick entfaellt an der Maske.
   zeigeKopf: boolean
 
-  // Der Bediener darf Spalten wegnehmen (Rechtsklick am Kopf). Nur Maske.
   spaltenwahlAn: boolean
 
-  // Das offene Spaltenwahl-Fenster, sonst null.
   spaltenwahl: SpaltenWahlLage | null
 
   auswahlSemantik: boolean
@@ -70,53 +62,37 @@ export interface KoerperLage {
   hatQuelle: boolean
   auswahlIndex: number
 
-  // Aendern in der Zeile ist moeglich: Laufzeit, echte Quelle, Satznummer da.
-  // Aus heisst: auch eine als aenderbar gestellte Spalte bleibt Text.
   aendernMoeglich: boolean
 
   zeilenStand: ZeilenStand
 
-  // Zeilen lassen sich zum Loeschen vormerken (Schalter am Baustein).
   loeschbar: boolean
 
   leer: boolean
   leerText: string
 
-  // Erfasste, noch nicht geschriebene Zeilen: sie stehen zwischen der
-  // letzten Datenzeile und der Erfassungszeile, links markiert — erst der
-  // Ketten-Lauf des Knopfs macht aus ihnen echte Positionen.
   erfasste: readonly (readonly string[])[]
 
   erfasstStand: (index: number) => ZeilenZeichen
 
-  // Die fertige Erfassungszeile. Der Rumpf kennt ihre Rollen nicht — er
-  // setzt sie nur an die richtige Stelle: sie ist die naechste FREIE Zeile,
-  // also direkt unter der letzten DATENzeile und vor allem, was nur fuellt.
-  // Ohne echte Daten (Editor, leere Quelle) ist das Zeile 1 ganz oben —
-  // nicht unten hinter den Platzhalter-Strichen.
+  // Sie gehoert an die naechste FREIE Zeile: direkt unter die letzte
+  // Datenzeile, vor alles, was nur fuellt.
   erfassung: TemplateResult | typeof nothing
 
-  // null: die Tipp-Zeile sitzt unten und legt NEUE Zeilen an. Sonst: der
-  // Platz unter den erfassten Zeilen, an dem sie gerade eine Zeile AN ORT
-  // UND STELLE korrigiert — dort zeichnet sie statt unten. Nichts springt.
+  // null: die Tipp-Zeile sitzt unten und legt neue Zeilen an; sonst der Platz,
+  // an dem sie eine erfasste Zeile an Ort und Stelle korrigiert.
   korrekturPlatz: number | null
 }
 
 export interface KoerperHandeln {
   setzeSuchtext: (text: string) => void
 
-  // Der Zug an der Spaltenkante. Er liegt hier und nicht am Kopf-Griff,
-  // weil er auch in der exportierten Maske gilt — dort gibt es weder
-  // Feld-Picker noch Umbenennen.
   breiten: BreitenWirt
 
-  // Kopf angeklickt: sortiert die Maske. Im Editor liegt die Bedienung der
-  // Spalten (Feld-Picker, Umordnen) als Schicht des Editors DARUEBER
-  // (editor/canvas/SpaltenBedienung); der Baustein markiert nur die Stellen
-  // (data-ff-eintrag) und zeichnet dafuer nichts.
+  // Im Editor liegt die Spalten-Bedienung als eigene Schicht darueber; hier
+  // wird nur sortiert.
   klickKopf: (index: number) => void
 
-  // Rechtsklick auf eine Spaltenueberschrift: das Spaltenwahl-Fenster.
   oeffneSpaltenwahl: (e: MouseEvent) => void
   spaltenwahl: SpaltenWahlHandeln
 
@@ -126,10 +102,6 @@ export interface KoerperHandeln {
 
   nimmErfassteZeile: (index: number) => void
 
-  // Eine erfasste Zeile ist noch nichts als eine Vormerkung: der Bediener
-  // muss den Vertipper geradeziehen koennen, ohne sie wegzuwerfen und neu zu
-  // tippen. Sie wird dafuer AN ORT UND STELLE wieder zur Tipp-Zeile — mit
-  // Vorschlagsliste, Fenster und Enter-Fluss (korrekturPlatz).
   holeErfassteZeile: (index: number) => void
 
   schalteLoeschung: (rohIndex: number) => void
@@ -167,10 +139,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
       <div class="koerper" role=${lage.leer ? nothing : 'table'} tabindex="-1">
       ${lage.zeigeKopf ? html`<div class="kopf" role="row" style=${styleMap(lage.cols)}>
         ${
-          // Kopfzelle und Greifstreifen nennen ihren Platz im Gitter BEIDE
-          // ausdruecklich (grid-row/grid-column). Sonst verteilt das Gitter die
-          // Zellen um die von den Streifen belegten Plaetze herum — in eine
-          // zweite Reihe.
+          // Kopfzelle und Greifstreifen nennen ihren Gitterplatz beide
+          // ausdruecklich, sonst rutschen die Zellen in eine zweite Reihe.
           lage.spalten.map(
           (s, i) => html`<div
             class=${[s.versteckt === true ? 'versteckt' : '', s.summe === true ? 'z' : '']
@@ -216,15 +186,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
               tun.aktiviereZeile(rohIndex, ansichtIndex)
             }}
             @dblclick=${(e: MouseEvent) => {
-              // In einer aenderbaren Zelle heisst Doppelklick „Wort markieren".
-              // Die Kette gehoert der ZEILE, nicht dem Eingabefeld.
+              // Der Doppelklick gehoert der Zeile, in einer Eingabezelle dem Text.
               if ((e.target as HTMLElement).closest('.zell-eingabe')) return
               tun.zeileDoppelt(rohIndex)
             }}
             @keydown=${(e: KeyboardEvent) => {
-              // In einer Eingabezelle gehoeren die Pfeile dem Text; auf dem
-              // Kreuz gehoert Enter dem Knopf — das preventDefault unten
-              // unterdrueckte sonst genau seinen Klick.
+              // In einer Eingabezelle gehoeren die Pfeile dem Text, auf dem
+              // Kreuz gehoert Enter dem Knopf.
               if ((e.target as HTMLElement).closest('.zell-eingabe, button')) return
               if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 const hoch = e.key === 'ArrowUp'
@@ -232,8 +200,6 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 if (bewegt || (hoch && fokussiereSuchzeile(e.target))) e.preventDefault()
                 return
               }
-              // Entf merkt die fokussierte Zeile zum Loeschen vor — und nimmt
-              // es am selben Weg zurueck.
               if (e.key === 'Delete' && lage.loeschbar && rohIndex !== null && !lage.imEditor) {
                 e.preventDefault()
                 tun.schalteLoeschung(rohIndex)
@@ -246,19 +212,13 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
           >
             ${ ''}
             ${lage.spalten.map((s, i) => {
-              // Der volle Platz DIESER Spalte: alles, was einen Wert oder
-              // einen Zustand adressiert, laeuft ueber ihn.
               const platz = lage.plaetze[i]
               const wert = rohIndex !== null
                 ? (lage.datenzeilen[rohIndex]?.[platz] ?? '')
                 : ZELLE_PLATZHALTER
-              // Ohne Kopfzeile uebernimmt die Zelle im Editor den Kopf-Griff:
-              // Klick oeffnet den Feld-Picker der Spalte. Umbenennen laeuft
-              // ueber das kurze Einschalten der Kopfzeile (Inspector).
+              // Ohne Kopfzeile uebernimmt die Zelle im Editor den Kopf-Griff.
               const kopfGriff = lage.imEditor && !lage.zeigeKopf && lage.editable
 
-              // Aenderbare Zelle einer gebuchten Zeile: ein Eingabefeld statt
-              // Text. Es traegt den vorgemerkten Wert, solange einer da ist.
               if (lage.aendernMoeglich && rohIndex !== null && spalteAenderbar(s)) {
                 const stand = lage.zeilenStand
                 return html`<div class="tippbar" role="cell">
@@ -276,13 +236,12 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
                 />
               </div>`
               }
-              // Was die Suche gefunden hat, soll man auch SEHEN.
               const klassen = [
                 s.versteckt === true ? 'versteckt' : '',
                 rohIndex !== null && alsZahl(wert) !== null ? 'zahl' : '',
               ].filter((k) => k !== '').join(' ')
-              // Ein Fehler des Ketten-Laufs steht als Wort in der ersten Zelle,
-              // nicht nur im Tooltip: die rote Zeile allein sagt nicht, warum.
+              // Der Fehler des Ketten-Laufs steht als Wort in der ersten Zelle,
+              // nicht nur im Tooltip.
               const fehltext = i === 0 && zeichen.status === 'fehler'
                 ? html`<span class="fehltext">${zeichen.titel}</span>`
                 : nothing
@@ -312,8 +271,7 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
         })}
         ${lage.erfasste.map((werte, zeilenIndex) => {
           const zeichen = lage.erfasstStand(zeilenIndex)
-          // Hinausgeschickt heisst: nicht mehr anfassen. Ein Zurueckholen
-          // wuerde eine Zeile zum Tippen anbieten, die im ERP schon steht.
+          // Hinausgeschickt heisst: nicht mehr anfassen, im ERP steht sie schon.
           const fest = zeichen.status === 'geschrieben'
           return html`${zeilenIndex === lage.korrekturPlatz ? lage.erfassung : nothing}<div
           class="zeile erfasst"
@@ -345,8 +303,8 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
         </div>`
         })}
         ${
-          // Korrigiert sie gerade die letzte (oder eine schon entfallene)
-          // Zeile, zeichnet die Tipp-Zeile HINTER allen erfassten.
+          // Korrektur an der letzten (oder entfallenen) Zeile: die Tipp-Zeile
+          // steht hinter allen erfassten.
           lage.korrekturPlatz !== null && lage.korrekturPlatz >= lage.erfasste.length
             ? lage.erfassung
             : nothing}
@@ -373,14 +331,10 @@ export interface FussLage {
 
   leer: boolean
 
-  // Mit Erfassungszeile stehen die Tasten im Fuss: der Bediener soll sie
-  // sehen, nicht erraten.
   erfassungAn: boolean
 
   imEditor: boolean
 
-  // Der Buchen-Knopf, wenn die Tabelle eine Buchen-Kette hat (Aktionen →
-  // Buchen). `offen` ist, was die Kette noch zu schreiben hat.
   buchen: { offen: number } | null
 }
 

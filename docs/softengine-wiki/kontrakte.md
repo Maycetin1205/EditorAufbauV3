@@ -294,6 +294,23 @@ steht hier nur als Wissen:
 - Maskenwurzel: `width:100%`, Spalten als `1fr`/flex — die Maske füllt das
   SoftEngine-Fenster wie die echten Chef-Masken.
 
+## 16. Bedienung der ausgelieferten Handmaske (Rahmen00001 V11)
+
+Am Quelltext der Maske abgelesen, nicht per Echttest. Unsere Tabelle haelt sich
+daran, damit die Bedienung beider Masken dieselbe ist.
+
+- Doppelklick auf eine Positionszeile: BW-Befehl `TABELLEPOS_DETAILS` mit der
+  Satznummer (auch in `docs/chef-maske/BeispielBeleg.html`).
+- `basisHTML_DoSetFocusToHTML` setzt den Fokus in die erste Erfassungszelle.
+- Enter unter der letzten Zeile fuehrt in die Erfassungszeile (`enterModus`).
+- Der Editier-Start markiert den Zellinhalt (`selectNodeContents`).
+- Die vorgemerkte Aenderung zaehlt in die Summe; gezaehlt wird ueber ALLE
+  Treffer, nicht ueber die sichtbare Seite.
+- Aenderbare Zelle im Ruhezustand ohne Rahmen (`.zi.still`), Suchtreffer als
+  `<mark>` mit `#ffedb0`.
+- Senkrecht bewegt sich der Cursor durch DIESELBE Spalte (dort der "Anker"
+  ueber der Mengen-Spalte).
+
 ---
 
 ## Was hier NICHT steht

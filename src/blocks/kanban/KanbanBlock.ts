@@ -1,3 +1,4 @@
+// Baustein Kanban: die Tafel, die ihre Spalten und deren Karten traegt.
 import { css, html, type TemplateResult } from 'lit'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'

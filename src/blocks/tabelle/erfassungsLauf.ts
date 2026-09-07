@@ -1,3 +1,4 @@
+// Der Tipp-Lauf einer Erfassungszeile: getippte Werte, gewaehlte Saetze, Vorschlaege, Tasten.
 import {
   nachschlagEintraege,
   quellenZeilen,
@@ -132,15 +133,13 @@ export class ErfassungsLauf {
     this._markeVonHand = false
   }
 
-  // Der Wert kommt aus dem gewaehlten Satz oder der Rechnung, nicht von Hand.
   istAutomatisch(umfeld: ErfassungsUmfeld, index: number): boolean {
     return !this.getippt.has(index) && this.wertVon(umfeld, index) !== ''
   }
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
     const listeOffen = this._tippSpalte === index && this._vorschlaege.length > 0
-    // Tab ist die Weiter-Taste — IMMER; das grosse Fenster oeffnen nur Enter
-    // und F4, nie Tab.
+    // Tab ist immer die Weiter-Taste; das grosse Fenster oeffnen nur Enter und F4.
     if (taste === 'Tab') {
       if (listeOffen && (this._markeVonHand || this._vorschlaege.length === 1)) taste = 'Enter'
       else return 'weiter'
@@ -244,20 +243,9 @@ export class ErfassungsLauf {
     }
   }
 
-  // Der Schlüsselwert der WERDENDEN Zeile: Gibt es den Satz der Tabellen-
-  // Quelle, trägt ER die Felder (so liest ihn auch die Datenzeile). Beim
-  // Erfassen einer NEUEN Zeile gibt es ihn nicht — dann liefern die von Hand
-  // gewählten verknüpften Sätze den Wert über ihre Paare: der gewählte
-  // Artikel liefert die Artikelnummer der Position, bevor es die Position
-  // gibt. Selbstgefülltes liefert nichts (s. vonHand), und `ausser` nimmt die
-  // fragende Quelle aus der Suche — ein Satz rechtfertigt sich nicht mit den
-  // eigenen Schlüsseln.
-  //
-  // `partnerId` sagt, WESSEN Feld gefragt ist. Leer (oder die Tabellen-Quelle)
-  // heisst Hauptquelle — das ist der Fall oben. Zeigt die Verknüpfung dagegen
-  // auf eine andere weitere Quelle (2 haengt an 3), zaehlt allein deren
-  // gewaehlter Satz: ist er noch nicht gewaehlt, ist der Schluessel UNBEKANNT,
-  // und unbekannt schraenkt nicht ein.
+  // Der Schluesselwert der werdenden Zeile: der eigene Satz traegt ihn, sonst
+  // die gewaehlten Partnersaetze ueber ihre Paare. Ein ungewaehlter Partner
+  // heisst UNBEKANNT und schraenkt nicht ein.
   private schluesselWert(
     umfeld: ErfassungsUmfeld,
     partnerId: string,
@@ -272,9 +260,7 @@ export class ErfassungsLauf {
     if (basis !== undefined) return getField(basis, feld)
     for (const quelleId of verknuepfteQuellenIn(umfeld)) {
       if (quelleId === ausser || !this.vonHand.has(quelleId)) continue
-      // Nur Quellen, die AN DER HAUPTQUELLE haengen, koennen deren Felder
-      // vertreten. Eine, die an einer anderen weiteren Quelle haengt, sagt
-      // ueber die Hauptquelle nichts aus.
+      // Nur was an der Hauptquelle haengt, kann deren Felder vertreten.
       const partner = umfeld.partnerVon(quelleId)
       if (partner !== '' && partner !== umfeld.quelleId) continue
       const satz = this.gewaehlt.get(quelleId)
@@ -288,8 +274,6 @@ export class ErfassungsLauf {
     return undefined
   }
 
-  // Die möglichen Sätze einer verknüpften Quelle, eingeschränkt über die
-  // bekannten Schlüsselwerte der werdenden Zeile.
   private moegliche(umfeld: ErfassungsUmfeld, quelleId: string, rows: readonly unknown[]): unknown[] {
     const partnerId = umfeld.partnerVon(quelleId)
     return passendeSaetze(
@@ -299,20 +283,15 @@ export class ErfassungsLauf {
     )
   }
 
-  // Nach jeder Übernahme gleicht sich die Zeile ab, bis Ruhe ist: Gewähltes,
-  // dessen Schlüssel nicht mehr passen, fällt (ein neuer Artikel löst die
-  // alte Gabe) — und wo die bekannten Schlüssel genau EINEN Satz übrig
-  // lassen, wählt er sich selbst (Ein-Treffer-Automatik). Die Automatik
-  // greift nur, wenn mindestens ein Schlüsselwert bekannt ist: sonst wählte
-  // sich in einem Ein-Satz-Stamm der Satz ungefragt von selbst.
+  // Bis Ruhe ist: Gewaehltes, dessen Schluessel nicht mehr passen, faellt; wo
+  // genau EIN Satz uebrig bleibt, waehlt er sich selbst. Ohne einen bekannten
+  // Schluessel greift die Automatik nicht.
   private gleicheAb(umfeld: ErfassungsUmfeld): void {
     const quellen = verknuepfteQuellenIn(umfeld)
     for (let runde = 0; runde <= quellen.length; runde++) {
       let bewegt = false
       for (const quelleId of quellen) {
         const paare = umfeld.paareZu(quelleId)
-        // Ohne Paar gibt es nichts abzugleichen: eine reine Nachschlagequelle
-        // bleibt stehen, wie der Bediener sie gewaehlt hat.
         if (paare.length === 0) continue
         const partnerId = umfeld.partnerVon(quelleId)
         const satz = this.gewaehlt.get(quelleId)
@@ -341,12 +320,8 @@ export class ErfassungsLauf {
     }
   }
 
-  // Eine schon erfasste Zeile zur Korrektur zurueck in die Erfassungszeile
-  // holen: ihre Werte gelten als GETIPPT. Die gewaehlten Saetze kommen NICHT
-  // mit — sie leben nur waehrend des Erfassens, und aus einer Zeichenkette
-  // laesst sich der Satz nicht eindeutig zurueckfinden (zwei Artikel duerfen
-  // gleich heissen). Der Bediener sucht die Zelle, die er korrigieren will,
-  // ohnehin neu aus; genau dafuer steht die Zeile wieder oben.
+  // Die Werte einer erfassten Zeile gelten als GETIPPT; die gewaehlten Saetze
+  // kommen nicht mit, aus einer Zeichenkette ist der Satz nicht wiederzufinden.
   uebernimmWerte(umfeld: ErfassungsUmfeld, werte: readonly string[]): void {
     this.zuruecksetzen()
     werte.forEach((wert, index) => {
@@ -356,16 +331,9 @@ export class ErfassungsLauf {
     this.rechne(umfeld)
   }
 
-  // In der abgelegten Zeile stehen ALLE Zellen gefuellt — auch der Platz, den
-  // die Rechnung selbst ausgerechnet hat. Als getippt uebernommen waere er ab
-  // jetzt ein GEGEBENER Wert: die Rechnung haette keine Luecke mehr und
-  // schwiege. Der Bediener aendert die Tiere von 10 auf 20, und die alte
-  // Abgabemenge ginge ins ERP.
-  //
-  // Erkannt wird der Platz daran, dass sein Wert exakt dem entspricht, was
-  // sich ohne ihn aus den uebrigen rechnet. Geprueft wird in PLATZ_KEYS-
-  // Reihenfolge, also die Abgabemenge zuerst: bei durchweg stimmigen Werten
-  // passen mehrere Plaetze, und sie ist die linke Seite der Gleichung.
+  // Der von der Rechnung gefuellte Platz darf nicht als gegebener Wert
+  // zurueckkommen, sonst schweigt die Rechnung. Erkannt wird er daran, dass sein
+  // Wert genau dem entspricht, was sich ohne ihn aus den uebrigen rechnet.
   private gibDemGerechnetenPlatzSeineLuecke(umfeld: ErfassungsUmfeld): void {
     const r = umfeld.rechnung
     if (!r) return
@@ -394,8 +362,7 @@ export class ErfassungsLauf {
     this._vorschlaege = []
   }
 
-  // Einmal je Darstellung berechnet: Tastatur und Anzeige müssen DENSELBEN
-  // Stand sehen, zwei Berechnungen liefen auseinander.
+  // Einmal je Darstellung: Tastatur und Anzeige muessen denselben Stand sehen.
   aktualisiereVorschlaege(umfeld: ErfassungsUmfeld): void {
     this.rechne(umfeld)
     this._vorschlaege = this.berechne(umfeld)
@@ -407,25 +374,16 @@ export class ErfassungsLauf {
     if (this._listeZu || zielIn(umfeld, index).art === 'frei') return []
     const getippt = this.getippt.get(index) ?? ''
     if (getippt === '') {
-      // Aufgemacht heisst: alles zeigen. Sonst bleibt die Liste dem Getippten
-      // vorbehalten, und ohne Zeichen gibt es nichts zu sehen.
+      // Aufgemacht heisst alles zeigen, sonst bleibt die Liste dem Getippten vorbehalten.
       if (this._listeAuf !== index) return []
       return this.eintraege(umfeld, index).slice(0, VORSCHLAEGE_MAX)
     }
     return passendeVorschlaege(this.eintraege(umfeld, index), getippt)
   }
 
-  // Dieselben Einträge für die Liste UND das große Fenster: eine zweite
-  // Quelle wäre eine zweite Wahrheit. Sie bekommt nur die Sätze, deren
-  // Schlüssel zu den bekannten Werten der werdenden Zeile passen.
-  //
-  // Nachgeschlagen wird NUR in einer verknüpften Zelle — dort wählt der
-  // Bediener aus einem Stamm. Eine Zelle der EIGENEN Quelle böte die Zeilen
-  // an, die die Tabelle gerade selbst zeigt, und eine davon zu wählen war
-  // zerstörerisch: uebernimm setzt den Satz für die ganze Quelle, füllte
-  // die werdende Zeile also mit einer alten Position (Klon) und warf dabei
-  // jede andere schon getroffene Wahl weg. In die eigene Quelle wird
-  // getippt, nicht ausgesucht.
+  // Dieselben Eintraege fuer Liste und Fenster. Nachgeschlagen wird nur in einer
+  // verknuepften Zelle: die eigene Quelle boete ihre eigenen Zeilen an, und eine
+  // davon zu waehlen klonte eine alte Position.
   eintraege(umfeld: ErfassungsUmfeld, index: number): Eintrag[] {
     const ziel = zielIn(umfeld, index)
     if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []

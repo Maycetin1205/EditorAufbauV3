@@ -1,10 +1,10 @@
+// Die Spaltenliste einer Tabelle: Form, Kennungen, Reihenfolge, Sicht beim Zeichnen.
 import { kennungenVergeben } from '../../core/blocks/listenBindung'
 import { ohneSpalten, rechnungAlsAttribut, rechnungVonAttribut } from '../../core/data/rechnung'
 
 export interface Spalte {
-  // Ketten-Parameter und Rechnung zeigen auf die Kennung, nie auf Platz oder
-  // Belegfeld: ein Belegfeld kann doppelt vergeben sein (zweimal 930_3), und
-  // die Rechnung erwischte dann stumm die falsche Spalte.
+  // Ketten und Rechnung zeigen auf die Kennung, nie auf Platz oder Feld: ein
+  // Belegfeld kann doppelt vergeben sein.
   kennung: string
   titel: string
   feld: string
@@ -17,26 +17,15 @@ export interface Spalte {
 
   fuellFeld?: string
 
-  // Das Suchfenster dieser Zelle (F4 beim Erfassen) — genau wie beim
-  // Formularfeld „nachschlagen" einstellbar.
-  //
-  // LEER heisst Automatik: das Fenster nimmt die Spalten der Tabelle, die auf
-  // dieselbe Hilfsquelle zeigen (fensterSpaltenIn). Das ist der Normalfall und
-  // bleibt es. Erst wer etwas ANDERES sehen will — ein Feld, das die Tabelle
-  // gar nicht fuehrt, andere Titel, andere Reihenfolge — stellt hier ein.
-  //
-  // Die Eintraege sind fluechtige Anzeige: nichts adressiert sie, darum tragen
-  // sie keine Kennung.
+  // Das Suchfenster dieser Zelle (F4). LEER heisst Automatik: das Fenster nimmt
+  // die Spalten der Tabelle, die auf dieselbe Hilfsquelle zeigen.
   fensterSpalten?: Spalte[]
 
-  // Groesse des Suchfensters. Ohne Wert rechnet sie sich aus der Spaltenzahl
-  // (fensterBreiteFuer).
   fensterBreite?: number
   fensterHoehe?: number
 
-  // Jeder Zustand und jeder ERP-Kontrakt haengt am PLATZ der Spalte in dieser
-  // vollen Liste: wer versteckte Spalten herauswirft, verschiebt alle Plaetze
-  // dahinter und schreibt stumm falsche Werte ins ERP. Filtern nur beim Zeichnen.
+  // Jeder Zustand und jeder ERP-Kontrakt haengt am PLATZ in der vollen Liste;
+  // versteckte Spalten fallen erst beim Zeichnen weg.
   versteckt?: boolean
 }
 
@@ -94,7 +83,6 @@ export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): n
   return spalten.findIndex((s) => s.kennung === t)
 }
 
-// Eine neue Tabelle startet mit EINER leeren Spalte.
 export function standardSpalten(): Spalte[] {
   return mitKennungen([neueSpalte(0)])
 }
@@ -106,10 +94,7 @@ function alsBreite(v: unknown): number | undefined {
   return gerundet < SPALTEN_MIN_BREITE ? SPALTEN_MIN_BREITE : gerundet
 }
 
-// Fenstermasse kommen aus dem Baum und aus dem Attribut der exportierten
-// Maske. Unter 120 px ist kein Fenster mehr, ueber 2000 passt es auf keinen
-// Bildschirm — beides waere ein Fenster, das der Bediener nicht mehr
-// zurechtruecken kann.
+// Unter 120 px ist kein Fenster mehr, ueber 2000 passt es auf keinen Bildschirm.
 const FENSTER_MIN = 120
 const FENSTER_MAX = 2000
 
@@ -141,10 +126,7 @@ function alsSpalte(x: unknown, index: number): Spalte {
         ? { fuellFeld: o.fuellFeld.trim() }
         : {}),
 
-      // Eine leere Liste ist dasselbe wie keine: Automatik. So faellt eine
-      // Spalte, deren Fenster-Spalten der Bauer alle wieder geloescht hat,
-      // von selbst auf die Automatik zurueck, statt ein leeres Fenster zu
-      // zeigen.
+      // Eine leere Liste ist dasselbe wie keine: zurueck zur Automatik.
       ...(Array.isArray(o.fensterSpalten) && o.fensterSpalten.length > 0
         ? { fensterSpalten: o.fensterSpalten.map((s, i) => alsSpalte(s, i)) }
         : {}),
@@ -171,10 +153,8 @@ export function coerceSpalten(v: unknown): Spalte[] {
   } else {
     arr = standardSpalten()
   }
-  // Nie kuerzen: die Obergrenze gilt fuer das Anlegen neuer Spalten
-  // (spaltenBindung). Eine gespeicherte Liste mit mehr Spalten bleibt ganz,
-  // sonst verschoeben sich die Plaetze dahinter und Ketten schrieben stumm
-  // falsche Werte ins ERP.
+  // Nie kuerzen: die Obergrenze gilt nur fuer neue Spalten, sonst verschoeben
+  // sich die Plaetze einer gespeicherten Liste.
   if (arr.length < SPALTEN_MIN) arr = [neueSpalte(0)]
   return mitKennungen(arr)
 }
@@ -187,9 +167,8 @@ export function tryCoerceSpalten(v: string): Spalte[] {
   }
 }
 
-// Die gezogene Zahl gilt als ANTEIL (`fr`), nicht als festes Pixelmass: feste
-// Pixel liessen rechts eine leere Flaeche stehen, sobald ihre Summe die
-// Tabellenbreite verfehlte.
+// Die gezogene Zahl gilt als Anteil (fr): feste Pixel liessen rechts eine leere
+// Flaeche stehen.
 export function spaltenRaster(
   spalten: readonly Spalte[],
   breiten: (index: number) => number | undefined = () => undefined,
@@ -202,20 +181,15 @@ export function spaltenRaster(
   return eigene.map((w) => `minmax(0, ${w ?? mittel}fr)`).join(' ')
 }
 
-// Eine Spalte hinten anfuegen. Hier wird NICHT gerechnet: die Breiten sind
-// Anteile (spalten.ts: spaltenRaster), die neue Spalte bekommt den mittleren
-// Anteil, und das Raster fuellt die Tabelle von allein wieder aus. Feste
-// Pixel umzuverteilen behandelte nur das Symptom.
+// Die neue Spalte bekommt den mittleren Anteil, das Raster fuellt die Tabelle
+// von allein wieder aus.
 export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
   return mitKennungen([...spalten, neueSpalte(spalten.length)])
 }
 
-// Die Rechnung zeigt ueber die dauerhafte Kennung auf ihre Spalten. Wird eine
-// gestrichen, wird der Platz leer (= unbenutzt) — sonst rechnete die Maske mit
-// einer Spalte, die es nicht mehr gibt, und die naechste neue Spalte kann
-// dieselbe Kennung wieder bekommen. Rueckgabe: das neue Attribut, oder null,
-// wenn nichts abzuraeumen ist. Gegenstueck fuer die Ketten-Parameter im ganzen
-// Baum: state/spaltenAufraeumen.ts.
+// Eine gestrichene Spalte darf keinen Zeiger der Rechnung hinterlassen: ihre
+// Kennung kann eine neue Spalte wieder bekommen. Rueckgabe null heisst, es war
+// nichts abzuraeumen.
 export function rechnungNachSpalten(
   roh: unknown,
   alt: readonly Spalte[],
@@ -229,10 +203,8 @@ export function rechnungNachSpalten(
   return geputzt === rechnung ? null : rechnungAlsAttribut(geputzt)
 }
 
-// Eine Spalte streichen — von ueberall her, nicht nur hinten. EINE Stelle
-// fuer beide Wege: das Kreuz am Spaltenkopf nennt seinen Platz, der
-// Minus-Knopf meint immer den letzten. Die letzte verbliebene Spalte bleibt
-// stehen: eine Tabelle ohne Spalte waere ein leerer Kasten ohne Weg zurueck.
+// Eine Stelle fuer beide Wege: das Kreuz am Spaltenkopf nennt seinen Platz, der
+// Minus-Knopf meint den letzten. Die letzte Spalte bleibt stehen.
 export function entferneSpalte(
   index: number,
   liste: () => Spalte[],
@@ -243,19 +215,14 @@ export function entferneSpalte(
   if (neu !== l) aendere([...neu])
 }
 
-// Streicht GENAU diese Spalte — rein: dieselbe Liste zurueck heisst „nicht
-// erlaubt" (letzte Spalte, Platz ausserhalb). Die verbliebenen Anteile
-// fuellen die Tabelle wieder aus (spaltenRaster), der Platz der gestrichenen
-// bleibt nicht als leere Flaeche stehen.
+// Dieselbe Liste zurueck heisst „nicht erlaubt" (letzte Spalte, Platz ausserhalb).
 export function ohneSpalte(spalten: readonly Spalte[], index: number): readonly Spalte[] {
   if (spalten.length <= SPALTEN_MIN || index < 0 || index >= spalten.length) return spalten
   return spalten.filter((_, i) => i !== index)
 }
 
-// Eine Spalte an einen anderen Platz setzen — rein: dieselbe Liste zurueck
-// heisst „nichts zu tun". Alles Ihre reist im Eintrag mit (Kennung, Titel,
-// Belegfeld, Fuellfeld, Breite); Ketten und Rechnung zeigen auf die KENNUNG
-// und brauchen kein Nachziehen — genau dafuer gibt es sie (spalten.ts).
+// Dieselbe Liste zurueck heisst „nichts zu tun". Ketten und Rechnung zeigen auf
+// die Kennung und brauchen kein Nachziehen.
 export function mitVerschobenerSpalte(
   spalten: readonly Spalte[],
   von: number,

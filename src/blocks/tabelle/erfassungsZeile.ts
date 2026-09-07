@@ -1,3 +1,4 @@
+// Das Umfeld einer Erfassungszeile: Zellenziele, Hilfsquellen, Fensterspalten.
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import { vorschlagListeTpl, type Vorschlag } from '../shared/vorschlagListe'
@@ -19,8 +20,6 @@ export interface ErfassungsLage {
 
   wert: (index: number) => string
 
-  // Steht in der Zelle etwas, das nicht der Bediener getippt hat (gewaehlter
-  // Satz, Rechnung)? Dann zeigt sie es kursiv.
   automatisch: (index: number) => boolean
 
   tippSpalte: number
@@ -57,9 +56,8 @@ function eingabe(
   />`
 }
 
-// Keine Lupe in der Erfassungszelle: das große Fenster öffnet F4 oder
-// Alt+Pfeil-runter, Enter springt im leeren Feld weiter. Die Lupe am
-// Formularfeld bleibt.
+// Keine Lupe in der Erfassungszelle: das grosse Fenster oeffnet F4 oder
+// Alt+Pfeil-runter.
 function laufzeitZelle(
   lage: ErfassungsLage,
   tun: ErfassungsHandeln,
@@ -171,9 +169,7 @@ export function fensterSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalt
   const ziel = zielIn(umfeld, index)
   if (ziel.art !== 'verknuepft' || ziel.quelleId === '' || ziel.code === '') return []
 
-  // Hat der Bauer das Fenster selbst gestellt, gilt SEINE Liste — sonst die
-  // Automatik darunter. Genau wie beim Formularfeld: eingestellt schlaegt
-  // ausgedacht.
+  // Vom Bauer gestellt schlaegt Automatik.
   const eigene = umfeld.spalten[index]?.fensterSpalten
   if (eigene !== undefined && eigene.length > 0) return eigene.map((s) => ({ ...s }))
 

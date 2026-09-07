@@ -1,8 +1,6 @@
+// Woran eine Zeile gerade ist: ein Balken am linken Rand plus Klartext im title.
 import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 
-// Woran eine Zeile gerade ist. Gezeigt wird das ausschliesslich als schmaler
-// Balken am linken Zeilenrand plus Klartext im title — nie als Wort in der
-// Zeile (keine Text-Marken wie „NEU").
 export type ZeilenStatus =
   | 'gebucht'
   | 'erfasst'
@@ -10,17 +8,14 @@ export type ZeilenStatus =
   | 'loeschung'
   | 'schreibt'
 
-  // Die Kette hat sie hinausgeschickt. Stehen bleibt sie trotzdem, bis
-  // SoftEngine wirklich neue Daten liefert: ein PUT ist ein Einweg-Ruf, seine
-  // Annahme sieht die Maske nicht. Wer die Zeile vorher wegnimmt, nimmt sie
-  // auch dann weg, wenn die ERP sie abgelehnt hat.
+  // Stehen bleibt sie, bis SoftEngine neue Daten liefert: ein PUT ist ein
+  // Einweg-Ruf, seine Annahme sieht die Maske nicht.
   | 'geschrieben'
   | 'fehler'
 
 export interface ZeilenZeichen {
   status: ZeilenStatus
 
-  // Leer bei 'gebucht': eine Zeile ohne Vormerkung braucht keinen Hinweis.
   titel: string
 }
 
@@ -34,10 +29,8 @@ const TITEL: Record<ZeilenStatus, string> = {
   fehler: 'Nicht geschrieben',
 }
 
-// Was der Ketten-Lauf ueber einzelne Zeilen gemeldet hat. Getrennt von den
-// Vormerkungen selbst, weil es etwas anderes ist: eine Vormerkung macht der
-// Bediener, diese Marken macht der Lauf — und die Fehlermarke muss den
-// Daten-Push ueberleben, den derselbe Lauf ausloest.
+// Getrennt von den Vormerkungen: die macht der Bediener, diese Marken der Lauf,
+// und die Fehlermarke muss den Daten-Push ueberleben, den derselbe Lauf ausloest.
 export class LaufStand {
   private readonly melde: () => void
 
@@ -49,8 +42,7 @@ export class LaufStand {
     this.melde = melde
   }
 
-  // Diese Zeile ist dran. Ein frueherer Fehlversuch derselben Zeile faellt
-  // damit weg — der zweite Anlauf faengt sauber an.
+  // Ein frueherer Fehlversuch derselben Zeile faellt damit weg.
   schreibt(art: VormerkArt, kennung: string): void {
     this.fehler.get(art)?.delete(kennung)
     const liste = this.schreibend.get(art) ?? new Set<string>()
@@ -67,9 +59,7 @@ export class LaufStand {
     this.melde()
   }
 
-  // Der Lauf ist durch. Jede „schreibt"-Marke dieser Liste faellt weg; die
-  // Fehlermarke der haengengebliebenen Zeile bleibt stehen — sie ist das
-  // Einzige, was von dem Lauf noch zu sehen sein soll.
+  // Die Fehlermarke der haengengebliebenen Zeile bleibt stehen.
   fertig(art: VormerkArt, geschrieben: readonly string[]): void {
     this.schreibend.get(art)?.clear()
     const offene = this.fehler.get(art)
@@ -79,8 +69,7 @@ export class LaufStand {
     this.melde()
   }
 
-  // Der Lauf schlaegt jede Vormerkung: was gerade geschrieben wird oder
-  // haengengeblieben ist, ist die dringendere Auskunft.
+  // Der Lauf schlaegt jede Vormerkung.
   zeigt(art: VormerkArt, kennung: string, grund: ZeilenStatus): ZeilenZeichen {
     const meldung = this.fehler.get(art)?.get(kennung)
     if (meldung !== undefined) return { status: 'fehler', titel: TITEL.fehler + ': ' + meldung }

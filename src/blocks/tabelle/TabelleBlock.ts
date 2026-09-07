@@ -1,3 +1,4 @@
+// Baustein Tabelle: haelt Spalten, Ansicht, Erfassung und Vormerkungen zusammen.
 import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
@@ -69,18 +70,12 @@ export class TabelleBlock extends BasicBlock {
   static readonly satzWahl: SatzWahl = {}
   static readonly kannAuswahlFolgen = true
 
-  // Erfassungszeile an -> die Kette eines Knopfs darf „Wert aus
-  // Erfassungszelle" lesen; der Export schreibt dafuer data-ff-block-id.
   static readonly kannErfassen: ErfassungsFaehigkeit = {
     wenn: { attributeName: 'erfassung', equals: 'ja' },
   }
 
-  // Der Eintrags-Schalter, mit dem eine Spalte aenderbar wird — dieselbe
-  // Vokabel, die der Inspector zeigt (spaltenBindung.eintragsSchalter).
   static readonly aenderungsSchluessel = 'aenderbar'
 
-  // Zeilen zum Loeschen vormerken — wie kannErfassen an einem Schalter des
-  // Bausteins, damit die Kommandozentrale weiss, wen sie anbieten darf.
   static readonly kannLoeschen: ErfassungsFaehigkeit = {
     wenn: { attributeName: 'loeschbar', equals: 'ja' },
   }
@@ -88,14 +83,10 @@ export class TabelleBlock extends BasicBlock {
   static readonly blockEvents = [
     { key: 'onRowClick', name: 'Zeile gewählt' },
 
-    // Der zweite Klick auf dieselbe Zeile — in ERP-Masken der Weg „zeig mir
-    // die Einzelheiten dazu" (Handmaske Rahmen00001 V11: BW-Befehl
-    // TABELLEPOS_DETAILS mit der Satznummer).
     { key: 'onRowDblClick', name: 'Zeile doppelt geklickt' },
 
-    // Die Kette, die die erfassten Zeilen ins ERP schreibt. Sie haengt an der
-    // Tabelle und laeuft ueber den Buchen-Knopf im Fuss (und F5), nicht ueber
-    // einen fremden Knopf, den der Bauer erst hinstellen muss.
+    // Diese Kette laeuft ueber den Buchen-Knopf im Fuss und F5, nicht ueber
+    // einen fremden Knopf.
     { key: 'onBuchen', name: 'Buchen' },
   ]
 
@@ -124,8 +115,6 @@ export class TabelleBlock extends BasicBlock {
   }
   static override readonly customProperties = TABELLE_EIGENSCHAFTEN
 
-  // Eine neue Tabelle nimmt die ganze Breite und zeigt gleich ein Dutzend
-  // Zeilen — so, wie sie in einer Maske am Ende fast immer steht.
   static readonly raster = { startW: 24, startH: 14, minW: 6, minH: 4 }
 
   @property({
@@ -167,12 +156,8 @@ export class TabelleBlock extends BasicBlock {
 
   private _besitz: Datenbesitz = 'softengine'
 
-  // Die von Hand am Spaltenkopf gezogenen Breiten; der Zug an der Kante
-  // liegt in spaltenBreite, der Baustein delegiert nur.
   private readonly _breiten = new BreitenStand({
     imEditor: () => this.imEditor,
-    // Dieselbe Sicht wie beim Zeichnen: auch die Spalten, die der Bediener in
-    // der Maske weggenommen hat, fehlen im gezeichneten Raster.
     vollerPlatz: (gezeichnet) =>
       spaltenSicht(this.spaltenListe(), this.imEditor, this._wahl.weg())
         .plaetze[gezeichnet] ?? gezeichnet,
@@ -181,8 +166,6 @@ export class TabelleBlock extends BasicBlock {
     melde: () => this.requestUpdate(),
   })
 
-  // Suchtext, Sortierung, Seite, Messung, Zeilenfokus — der Stand, in dem die
-  // Tabelle dasteht. Er liegt in ansichtsStand, der Baustein delegiert nur.
   private readonly _ansicht = new AnsichtsStand({
     baustein: this,
     editable: () => this.editable,
@@ -192,16 +175,10 @@ export class TabelleBlock extends BasicBlock {
     merktSortierung: () => !this.imEditor,
   })
 
-  // Tipp-Zustand + erfasste Zeilen; sie ueberleben jeden Daten-Push und
-  // fallen nur mit dem Zweckwechsel oder dem Ketten-Lauf des Knopfs.
   private _erfassung = new ErfassungsAnschluss()
 
-  // Was der Ketten-Lauf ueber einzelne Zeilen gemeldet hat (schreibt, haengen
-  // geblieben). Der Baustein haelt ihn, weil er beide Sorten Zeilen zeigt.
   private readonly _lauf = new LaufStand(() => this.requestUpdate())
 
-  // Was der BEDIENER sich weggenommen hat, und ob sein Wahlfenster offen
-  // steht. Nur in der fertigen Maske; liegt in spaltenWahlStand.
   private readonly _wahl = new SpaltenWahlStand({
     baustein: this,
     an: () => this.spaltenwahlAn,
@@ -209,8 +186,6 @@ export class TabelleBlock extends BasicBlock {
     breitenVergessen: () => this._breiten.vergessen(),
   })
 
-  // Vormerkungen und Zellbedienung der GEBUCHTEN Zeilen — Stand und
-  // Bedienung liegen in zeilenBearbeitung, der Baustein delegiert nur.
   private readonly _zeilen = new ZeilenBearbeitung({
     baustein: this,
     spalten: () => this.spaltenListe(),
@@ -258,13 +233,8 @@ export class TabelleBlock extends BasicBlock {
     this._erfassung.zuruecksetzen()
   }
 
-  // Die Laufzeit-Vertraege ErfassungsTraegerElement, AenderungsTraegerElement,
-  // LoeschTraegerElement und LaufBerichtElement (core/blocks/BlockDefinition.ts):
-  // die Kette am Knopf liest sie ueber die Element-Referenz (data-ff-block-id)
-  // — darum stehen sie am Baustein und delegieren nur.
-  // Die Kette sieht auch die Zeile, die gerade zur Korrektur oben steht —
-  // sonst schriebe der Knopf ausgerechnet die Zeile nicht, die der Bediener
-  // vor Augen hat.
+  // Diese vier Getter sind der Laufzeit-Vertrag der Kette am Knopf: sie liest
+  // sie ueber die Element-Referenz.
   get erfassteZeilen(): readonly (readonly string[])[] {
     return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map((v) => v.werte)
   }
@@ -299,8 +269,6 @@ export class TabelleBlock extends BasicBlock {
     this._zeilen.austragen(art, geschrieben)
   }
 
-  // Erst eine echte Lieferung aus SoftEngine raeumt die hinausgeschickten
-  // Zeilen weg — der Laufzeit-Anschluss reicht durch, ob es eine war.
   vergissGeschriebene(): void {
     if (this._erfassung.vergissGeschriebene()) this.requestUpdate()
   }
@@ -313,8 +281,6 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
-  // Enter am Zeilenende: die Zeile bleibt stehen, die Erfassung rueckt
-  // tiefer, der Cursor auf die erste Zelle. Geschrieben wird hier NICHTS.
   private erfasseZeile(): boolean {
     if (!this._erfassung.erfasse(this.erfassungsUmfeld())) return false
     this.requestUpdate()
@@ -323,11 +289,8 @@ export class TabelleBlock extends BasicBlock {
     return true
   }
 
-  // Nach dem Abschliessen muss die gerade erfasste Zeile zu sehen sein. Der
-  // Fokus allein holt sie nicht her: die Erfassungszeile KLEBT unten, der
-  // Browser haelt sie fuer sichtbar und rollt darum gar nicht — die neue Zeile
-  // kann oben aus dem Bild sein oder hinter der klebenden Zeile liegen. Ans
-  // Ende zu rollen setzt sie genau ueber die Erfassungszeile.
+  // Ans Ende rollen statt zur Zeile: die klebende Erfassungszeile gilt dem
+  // Browser als sichtbar, er rollt darum von selbst nicht.
   private zeigeLetzteErfasste(): void {
     void this.updateComplete.then(() => {
       const koerper = this.shadowRoot?.querySelector<HTMLElement>('.koerper')
@@ -335,14 +298,10 @@ export class TabelleBlock extends BasicBlock {
     })
   }
 
-  // Das Nachschlage-Fenster setzt den Fokus in die Suchzeile der Tabelle,
-  // die es zeigt (nachschlagen.ts) — darum bleibt der Weg am Baustein.
   fokussiereSuche(): boolean {
     return this._ansicht.fokussiereSuche()
   }
 
-  // Das Nachschlage-Fenster bringt das mit, was der Bediener schon getippt
-  // hat (nachschlagen.ts) — die Tabelle IM Fenster sucht damit sofort.
   setzeSuchtext(text: string): void {
     this._ansicht.setzeSuchtext(text)
     this.requestUpdate()
@@ -358,22 +317,15 @@ export class TabelleBlock extends BasicBlock {
     return coerceSpalten(this.spalten)
   }
 
-  // Welche Spalte gerade ihr Suchfenster einstellt (-1: keine). Der Editor
-  // setzt sie, wenn im Spaltenkopf-Fenster „Suchfenster…" gedrueckt wird
-  // (SPALTEN_BINDUNG.eintragsUnterFenster).
   @property({ attribute: false }) fensterDialogIndex = -1
 
-  // Der Startpunkt im Einstell-Fenster: die gespeicherte Liste, sonst der
-  // heutige Automatik-Stand als konkrete Zeilen — genauso wie beim
-  // Formularfeld (spaltenEffektiv in FormFeldBlock).
   private fensterSpaltenEffektiv(index: number): Spalte[] {
     const eigene = this.spaltenListe()[index]?.fensterSpalten
     if (eigene !== undefined && eigene.length > 0) return eigene.map((s) => ({ ...s }))
     return fensterSpaltenIn(this.erfassungsUmfeld(), index)
   }
 
-  // Schreibt einen Teil in GENAU EINE Spalte zurueck. Ueber `aendere`, damit
-  // die Rechnung mitgeführt wird und ein Undo-Schritt entsteht.
+  // Ueber `aendere`, damit die Rechnung mitzieht und ein Undo-Schritt entsteht.
   private aendereSpalte(index: number, teil: Partial<Spalte>): void {
     const alt = this.spaltenListe()
     if (alt[index] === undefined) return
@@ -390,23 +342,15 @@ export class TabelleBlock extends BasicBlock {
       hoehe: spalte?.fensterHoehe ?? FENSTER_HOEHE,
       onGroesse: (detail) => {
         const schluessel = detail.achse === 'breite' ? 'fensterBreite' : 'fensterHoehe'
-        // „standard" heisst: zurueck zur Automatik. Der Wert wird geloescht,
-        // nicht auf eine Zahl gesetzt — sonst faende die Spalte nie wieder
-        // zur gerechneten Groesse zurueck.
+        // „standard" heisst zurueck zur Automatik: der Wert wird geloescht,
+        // nicht auf eine Zahl gesetzt.
         this.aendereSpalte(index, {
           [schluessel]: detail.geste === 'standard' ? undefined : detail.wert,
         })
       },
       onAendern: (neu) => this.aendereSpalte(index, { fensterSpalten: neu as Spalte[] }),
-      // Die Feldwahl im Fenster geht NICHT nach oben. Beim Formularfeld darf
-      // sie das: dort heisst die Liste `nachschlagSpalten` und die des
-      // Bausteins anders. Hier hiessen beide `spalten` — der Editor haette den
-      // Klick auf die Spalte 2 IM FENSTER als Klick auf die Spalte 2 DER
-      // TABELLE verstanden und das falsche Feld gebunden.
-      //
-      // Solange das nicht getrennt ist, wird im Fenster nur benannt und
-      // geordnet (Doppelklick, +/-). Das Feld dahinter kommt aus der
-      // Tabellenspalte, auf die sich der Eintrag bezieht.
+      // Die Feldwahl bleibt stumm: Fenster- und Tabellenspalten heissen beide
+      // `spalten`, ein Klick traefe die Spalte der Tabelle.
       onFeldWahl: () => {},
       onSchliessen: () => { this.fensterDialogIndex = -1 },
     })
@@ -420,8 +364,6 @@ export class TabelleBlock extends BasicBlock {
     return this.erfassung === 'ja'
   }
 
-  // Der Baustein haelt nur den Stand; was die Zellen tun, steht in
-  // erfassungsBedienung — sonst laeuft diese Datei ueber ihren Deckel.
   private erfassungsWirt(): ErfassungsWirt {
     return {
       baustein: this,
@@ -433,20 +375,15 @@ export class TabelleBlock extends BasicBlock {
     }
   }
 
-  // Erst NACH dem Rendern fokussieren: die Zellen zeigen dann den neuen
-  // Stand, und das Ziel existiert sicher.
   private fokussiereErfassungsZelle(index: number): void {
     void this.updateComplete.then(() => {
-      // Ueber den VOLLEN Platz (data-spalte), nicht ueber die Zaehlung der
-      // gezeichneten Felder: mit einer ausgeblendeten Spalte davor traefe die
-      // Zaehlung die falsche Zelle.
+      // Ueber den vollen Platz (data-spalte): die Zaehlung der gezeichneten
+      // Felder traefe mit einer versteckten Spalte davor die falsche Zelle.
       const feld = this.shadowRoot?.querySelector<HTMLInputElement>(
         `.zeile.erfassung .erf-eingabe[data-spalte="${index}"]`,
       )
       if (!feld) return
       feld.focus()
-      // Dasselbe wie in der gebuchten Zeile (zeilenBearbeitung): der Cursor
-      // nuetzt nichts, wenn die Zelle ausserhalb des Blicks steht.
       feld.scrollIntoView({ block: 'nearest' })
     })
   }
@@ -460,11 +397,8 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
-  // Eine gestrichene Spalte darf keinen Zeiger hinterlassen. Die Rechnung
-  // sitzt an DIESER Tabelle und wird hier abgeraeumt; die Ketten-Parameter
-  // stehen im ganzen Baum — die raeumt der Store ab
-  // (state/spaltenAufraeumen.ts). Beide Meldungen bilden EINE Geste, sonst
-  // braeuchte ein Loeschen zwei Mal Strg+Z.
+  // Rechnung und Spalten in EINER Geste melden, sonst braucht ein Loeschen
+  // zwei Mal Strg+Z.
   private aendere(spalten: Spalte[]): void {
     const rechnung = rechnungNachSpalten(this.rechnung, this.spaltenListe(), spalten)
     if (rechnung === null) {
@@ -485,11 +419,8 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
-  // Gibt die ERP der Maske den Fokus, springt er in die Erfassungszeile —
-  // dort tippt der Bediener weiter (Handmaske Rahmen00001 V11:
-  // basisHTML_DoSetFocusToHTML setzt den Fokus in die erste Erfassungszelle).
-  // Ohne Erfassungszeile meldet sich die Tabelle nicht; dann sucht die
-  // Bruecke weiter.
+  // Fokus aus dem ERP geht in die Erfassungszeile; ohne sie meldet sich die
+  // Tabelle nicht und die Bruecke sucht weiter.
   private readonly nimmSeFokus = (ereignis: Event): void => {
     if (ereignis.defaultPrevented || !this.erfassungAn) return
     if (this.imEditor) return
@@ -497,9 +428,6 @@ export class TabelleBlock extends BasicBlock {
     this.fokussiereErfassungsZelle(0)
   }
 
-  // Der Buchen-Knopf im Fuss zaehlt wie ein Schreiben-Knopf: was seine Kette
-  // (Aktionen → Buchen) noch zu schreiben hat. Ohne Kette gibt es keinen
-  // Knopf; im Editor steht er als Vorschau da, sobald die Erfassung an ist.
   private buchenStand(): { offen: number } | null {
     if (this.imEditor) return this.erfassungAn ? { offen: 0 } : null
     const zahlen = vormerkStandVon(this, 'onBuchen')
@@ -511,9 +439,6 @@ export class TabelleBlock extends BasicBlock {
     runEvent(this, 'onBuchen', {}).catch(meldeKettenFehler)
   }
 
-  // Einfg fuehrt in die Erfassungszeile, F5 bucht: Tasten der Maske, nicht
-  // einer Zelle. Bei mehreren Tabellen gilt die, in der die Taste gedrueckt
-  // wurde, sonst die erste mit Erfassungszeile.
   private readonly maskenTaste = (e: KeyboardEvent): void => {
     if (this.imEditor || (e.key !== 'Insert' && e.key !== 'F5')) return
     const tabellen = Array.from(this.ownerDocument.querySelectorAll<TabelleBlock>('ff-tabelle'))
@@ -542,24 +467,15 @@ export class TabelleBlock extends BasicBlock {
     this._ansicht.beobachte()
   }
 
-  // Wie beim Nachschlage-Feld: einmal je Darstellung berechnet, damit
-  // Tastatur und Anzeige DENSELBEN Stand sehen. Im Editor gibt es keine Daten
-  // und keine Liste.
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed)
-    // Die fluechtigen Breiten haengen am PLATZ der Spalte. Kommt eine Spalte
-    // dazu oder faellt eine weg, zeigen sie auf die falsche — dann lieber
-    // zurueck auf die gleichmaessige Aufteilung als auf ein verschobenes
-    // Raster. Waehrend eines Zugs passiert das nicht: dort aendert sich
-    // `spalten` erst beim Loslassen, und da sind die Eintraege schon weg.
+    // Die fluechtigen Breiten haengen am Platz der Spalte; aendert sich die
+    // Liste, gilt wieder die gleichmaessige Aufteilung.
     if (changed.has('spalten')) this._breiten.vergessen()
     if (!this.erfassungAn || this.imEditor) return
     this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())
   }
 
-  // Der Schreiben-Knopf haengt nicht an diesem Baustein, sondern an seiner
-  // eigenen Kette. Er erfaehrt hier, dass sich die Zahl geaendert hat — an
-  // EINER Stelle, damit kein Weg (Tippen, Loeschkreuz, Push) sie vergisst.
   protected override updated(): void {
     this._ansicht.nachRendern()
     meldeVormerkungen(this)
@@ -598,8 +514,6 @@ export class TabelleBlock extends BasicBlock {
   override render(): TemplateResult {
     const spalten = this.spaltenListe()
 
-    // Gezeichnet wird in der Maske ohne die ausgeblendeten Spalten; Werte,
-    // Ketten und Rechnung laufen weiter ueber den vollen Platz (spalten.ts).
     const sicht = spaltenSicht(spalten, this.imEditor, this._wahl.weg())
 
     const ansicht = tabelleAnsicht({
@@ -633,7 +547,6 @@ export class TabelleBlock extends BasicBlock {
         zeigeKopf: this.kopfzeile === 'ja',
         spaltenwahlAn: this.spaltenwahlAn,
         spaltenwahl: this._wahl.offen === null ? null : {
-          // Zur Wahl steht nur, was der BAUER zeigt.
           waehlbar: spalten.filter((sp) => sp.versteckt !== true),
           weg: this._wahl.weg(),
           links: this._wahl.offen.links,
@@ -664,9 +577,8 @@ export class TabelleBlock extends BasicBlock {
           ? erfassungsZeileFuer(
               this.erfassungsWirt(),
               ansicht.cols,
-              // Kein Lineal mehr uebrig heisst: die Zeile sitzt ganz unten im
-              // Rumpf, unter ihr ist kein Platz fuer die Liste. Eine Korrektur
-              // mitten in der Liste hat dagegen Platz unter sich.
+              // Kein Lineal mehr uebrig: die Zeile sitzt ganz unten, unter
+              // ihr ist kein Platz fuer die Vorschlagsliste.
               this._erfassung.korrekturPlatz === null && (ansicht.linealTakte ?? 1) <= 0,
               sicht,
             )
@@ -680,8 +592,6 @@ export class TabelleBlock extends BasicBlock {
           schliesse: () => this._wahl.schliesse(),
         },
         breiten: this._breiten.wirtFuerZug(),
-        // Sortieren gehoert der Maske; im Editor liegt die Spalten-Bedienung
-        // des Editors ueber dem Kopf.
         klickKopf: (i) => {
           if (!this.editable) this._ansicht.klickSortiere(i)
         },

@@ -1,3 +1,4 @@
+// Baustein Kanban-Spalte: eine Bahn der Tafel, Ziel eines gezogenen Kaertchens.
 import { css, html, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'

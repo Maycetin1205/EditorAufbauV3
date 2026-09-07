@@ -1351,13 +1351,9 @@
       :host { min-width: 0; height: 100%; }
 
       .tabelle {
-        /* Die zwei Zahlen, aus denen sich jedes Zell-Polster ergibt. Nur
-           hier stehen sie. */
         --se-zell-x: 10px;
         --se-eingabe-x: 4px;
 
-        /* Der Kopf traegt zwei Zeilen Titel, damit „Behandlungsmenge" nicht
-           als „Behandl…" neben „Behandl…" steht. */
         --kopf-hoehe: 36px;
 
         position: relative;
@@ -1426,10 +1422,8 @@
         flex: 1 1 auto;
         overflow: auto;
 
-        /* Die Kopfzeile klebt IM Rumpf, teilt sich also jede Breite mit den
-           Zeilen: die Leiste kann keine Spalte gegen den Kopf verschieben.
-           Darum kein Gutter — reservierter Platz waere eine Luecke, die bei
-           kurzen Listen dauerhaft neben der letzten Spalte steht. */
+        /* Kein Gutter: reservierter Platz stuende bei kurzen Listen als Luecke
+           neben der letzten Spalte. */
         scrollbar-width: thin;
         display: flex;
         flex-direction: column;
@@ -1437,11 +1431,8 @@
 
       .koerper > .zeile { flex: none; }
 
-      /* Die Erfassungszeile klebt unten, IMMER. Hinge die Regel an einer
-         Klasse, die es nur bei „Blaettern = Nein" gibt, rollte die Zeile bei
-         der Voreinstellung weg, sobald mehr Zeilen da sind als in den Rumpf
-         passen, und der Bediener tippte ins Unsichtbare.
-         Die Kopfzeile klebt ohnehin schon bedingungslos (.kopf). */
+      /* Die Erfassungszeile klebt bedingungslos unten, nicht nur bei
+         „Blaettern = Nein": sonst tippte der Bediener ins Unsichtbare. */
       .koerper > .zeile.erfassung {
         position: sticky;
         bottom: 0;
@@ -1475,23 +1466,14 @@
         transition: background-color var(--se-move);
       }
 
-      /* Zebra: jede zweite Datenzeile leicht getoent. Die Zeile bringt die
-         Klasse mit, gezaehlt wird nach ihrer NUMMER in der Ansicht: nth-child
-         ueber alle Kinder des Rumpfes kippte die Toenung um eine Zeile, sobald
-         die Kopfzeile abgeschaltet ist oder die Erfassungszeile (ohne Quelle)
-         vorne steht.
-
-         Bewusst ohne den Rumpf-Vorsatz: so bleibt die Regel gleich stark wie
-         die Status-Farben weiter unten, und die stehen spaeter — eine
-         vorgemerkte Zeile behaelt damit ihre Kennfarbe. */
+      /* Getoent wird nach der Nummer in der Ansicht, nicht per nth-child: ohne
+         Kopfzeile oder mit vorangestellter Erfassungszeile kippte die Toenung. */
       .zeile.zebra {
         background: var(--se-zebra);
       }
 
-      /* Nur eine Zeile OHNE Status faerbt sich unter der Maus. Sonst wischte
-         der Hover die Kennfarbe genau in dem Moment weg, in dem der Bediener
-         mit dem Zeiger hinfaehrt, um sie anzusehen — die Farbe IST die
-         Auskunft. Dasselbe Muster wie bei .gewaehlt weiter unten. */
+      /* Nur eine Zeile OHNE Status faerbt sich unter der Maus: die Kennfarbe
+         IST die Auskunft. */
       .koerper > .zeile:not([data-status]):hover {
         background: var(--se-hover);
       }
@@ -1514,11 +1496,8 @@
       }
       .zeile.gewaehlt > div,
       .zeile:focus-visible > div { color: var(--se-ink); }
-      /* Die Textkante JEDER Zelle — eine Zahl, eine Stelle. Eine Zelle mit
-         Eingabefeld gibt ihr Polster an das Feld ab (siehe .tippbar weiter
-         unten); dessen eigenes Polster plus sein Rahmen ergeben wieder
-         dieselbe Kante. Sonst stuende der Text einer tippbaren Zelle weiter
-         vom Rand als der ihrer Nachbarin — in derselben Zeile. */
+      /* Die Textkante jeder Zelle; eine Zelle mit Eingabefeld gibt ihr Polster
+         an das Feld ab (.tippbar). */
       .kopf > div,
       .zeile > div {
         padding: 0 var(--se-zell-x);
@@ -1529,15 +1508,13 @@
         text-overflow: ellipsis;
       }
 
-      /* Zahlen stehen rechts auf einer Kante, Ziffern in fester Breite. */
       .zeile > div.zahl {
         text-align: right;
         font-variant-numeric: tabular-nums;
       }
       .kopf > div.z { justify-content: flex-end; text-align: right; }
 
-      /* Vor der ersten Zelle ist Platz fuer den Statuspunkt der Zeile und das
-         Plus der Erfassungszeile; alle Zeilen ruecken gleich ein. */
+      /* Platz vor der ersten Zelle fuer Statuspunkt und Plus der Erfassungszeile. */
       .kopf > div:first-of-type,
       .zeile > div:first-of-type { padding-left: calc(var(--se-zell-x) + 14px); }
       .zeile[data-status]::before,
@@ -1569,7 +1546,6 @@
         color: var(--se-red);
       }
 
-      /* Der Titel darf auf zwei Zeilen umbrechen; erst danach wird gekuerzt. */
       .kopf > div {
         display: flex;
         align-items: center;
@@ -1578,7 +1554,6 @@
         cursor: pointer;
         user-select: none;
 
-        /* Traeger des Greifstreifens (unten). */
         position: relative;
       }
       .kopf-text {
@@ -1586,26 +1561,14 @@
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
-        /* Ein Wort bricht nur, wenn es allein nicht in die Spalte passt; wo
-           der Browser deutsch trennen kann, trennt er mit Bindestrich. */
         overflow-wrap: break-word;
         -webkit-hyphens: auto;
         hyphens: auto;
       }
 
-      /* Der Greifstreifen ist ein eigenes Kind der Kopfzeile und sitzt in
-         derselben Gitter-Spur wie die Kopfzelle links von ihm (grid-column am
-         Element). justify-self haelt ihn an deren Ende, der negative Rand
-         schiebt ihn ueber die Linie: 11px breit, 6px links und 5px rechts.
-         Eine 1px-Linie trifft man mit der Maus nicht — und wer sie anvisiert,
-         zielt auf die Mitte, nicht 5px daneben.
-
-         Er liegt bewusst NICHT in der Kopfzelle (die schneidet ihren
-         Ueberhang ab, overflow: hidden — samt Trefferflaeche) und auch nicht
-         in einer eigenen Lage darueber: eine Lage braucht inset oder vier
-         Kanten und einen zweiten Satz Spalten-Spuren. So haengt er an genau
-         derselben Gitter-Rechnung wie der Kopf und braucht nichts, was die
-         Tabelle nicht ohnehin schon braucht. */
+      /* Der Greifstreifen ist ein eigenes Gitter-Kind in der Spur der Kopfzelle
+         und haengt ueber die Linie: eine 1px-Linie trifft die Maus nicht. In der
+         Kopfzelle schnitte deren overflow ihn ab. */
       .breite-griff {
         position: relative;
         z-index: 2;
@@ -1629,14 +1592,10 @@
 
       .sort-pfeil { font-size: 9px; color: var(--se-muted); }
 
-      /* Nur im Editor: diese Spalte zeichnet die Maske nicht. Gedaempft, aber
-         voll bedienbar — sie ist eine echte Spalte (Rechnung, Kette). */
+      /* Nur im Editor: gedaempft, aber voll bedienbar — es ist eine echte Spalte. */
       :host([data-ff-editor]) .versteckt { opacity: 0.45; }
 
-      /* Die Spaltenwahl des Bedieners (Rechtsklick am Kopf). Sie liegt IN der
-         Tabelle: die schneidet ihren Ueberhang ab (overflow: hidden), ein
-         Fenster ausserhalb waere also gar nicht zu sehen. Der Platz kommt
-         darum schon eingerechnet aus dem Baustein. */
+      /* Das Wahlfenster liegt IN der Tabelle: die schneidet ihren Ueberhang ab. */
       .sw-schirm {
         position: absolute;
         top: 0; right: 0; bottom: 0; left: 0;
@@ -1724,9 +1683,8 @@
         gap: 6px;
       }
 
-      /* Die Tasten der Erfassung, mittig im Fuss. Fehlt Platz, fallen ganze
-         Hinweise weg (sie brechen in eine verdeckte zweite Zeile um), statt
-         dass ein Hinweis halb abgeschnitten stehen bleibt. */
+      /* Fehlt Platz, fallen ganze Hinweise weg, statt halb abgeschnitten
+         stehen zu bleiben. */
       .tasten {
         flex: 1 1 auto;
         display: flex;
@@ -1768,19 +1726,10 @@
       .buchen:disabled { opacity: 0.5; cursor: default; }
       .buchen:disabled:hover { background: var(--se-accent); border-color: var(--se-accent); }
 
-      /* Die Summen stehen rechts neben der Zaehlzeile — Titel blass, Wert
-         kraeftig, Ziffern in fester Breite, damit die Kante steht. */
-      /* Aenderbare Zelle: ruhig, bis die Zeile darunter liegt — wie in der
-         Handmaske (dort .zi.still). Vorgemerkt = bernstein, damit man auf
-         einen Blick sieht, was noch nicht geschrieben ist. */
-      /* Zum Loeschen vorgemerkt: durchgestrichen und blass — die Zeile ist
-         noch da, aber sie geht. Zurueckgenommen wird sie am selben Kreuz. */
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
 
-      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle: petrol neu,
-         bernstein geaendert oder zum Loeschen vorgemerkt, rot haengengeblieben,
-         blass hinausgeschickt. Der Klartext haengt im title, der Fehler steht
-         zusaetzlich als Wort in der Zeile. */
+      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle; der Klartext
+         haengt im title. */
       .zeile[data-status="erfasst"] { background: var(--se-accent-soft); }
       .zeile[data-status="erfasst"]::before,
       .zeile[data-status="schreibt"]::before { background: var(--se-accent); }
@@ -1788,7 +1737,6 @@
       .zeile[data-status="loeschung"]::before { background: var(--se-amber); }
       .zeile[data-status="loeschung"] { background: var(--se-red-shell); }
       .zeile[data-status="schreibt"] { animation: se-schreibt 1.1s ease-in-out infinite; }
-      /* Hinausgeschickt: die Zeile ist erledigt, aber noch unbestaetigt. */
       .zeile[data-status="geschrieben"] { color: var(--se-muted); }
       .zeile[data-status="fehler"] { background: var(--se-red-shell); }
       .zeile[data-status="fehler"]::before { background: var(--se-red); }
@@ -1797,7 +1745,7 @@
         .zeile[data-status="schreibt"] { animation: none; }
       }
 
-      /* Das Kreuz sitzt am rechten Rand der Zeile, ueber dem letzten Feld. */
+      /* Traeger fuer das Kreuz am rechten Rand der Zeile. */
       .zeile { position: relative; }
       .zeile-weg {
         position: absolute;
@@ -1820,11 +1768,8 @@
       .zeile-weg:focus { opacity: 1; }
       .zeile-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
 
-      /* Im Editor steht das Kreuz still da: es zeigt, dass Loeschen an ist. */
       .zeile-weg.zeile-weg-anzeige { opacity: 1; cursor: default; }
 
-      /* Treffer der Suchzeile: gelb hinterlegt, Schriftfarbe bleibt — wie in
-         der Handmaske (dort <mark> mit #ffedb0). */
       mark {
         padding: 0 1px;
         color: inherit;
@@ -1832,23 +1777,11 @@
         border-radius: 2px;
       }
 
-      /* Eine tippbare Zelle ist eine ZELLE, kein Formularfeld — weder im
-         Ruhezustand noch unter der Maus noch mit der Schreibmarke darin.
-         Dass man "drin" ist, sagt allein die blinkende Marke, wie in einer
-         Tabellenkalkulation. Zoege Hover einen Rahmen und Fokus einen zweiten
-         in Akzentfarbe, flackerte in einer Zeile mit sechs tippbaren Spalten
-         beim Ueberfahren die halbe Zeile.
-
-         Der transparente Rahmen BLEIBT: er haelt die Hoehe. Ohne ihn springt
-         der Text um einen Pixel, sobald die Zelle den Zustand wechselt.
-
-         Gilt fuer die gebuchte Zeile (.zell-eingabe) und die Erfassungszeile
-         (.erf-eingabe) gemeinsam — es ist dieselbe Sache, und zwei Kopien
-         liefen beim ersten Aendern auseinander. */
-      /* Die Zelle, die ein Eingabefeld traegt, gibt ihr Polster an das Feld
-         ab — zusammen ergeben sie wieder --se-zell-x. Ohne diese Regel steht
-         der Text einer tippbaren Zelle um Feld-Polster plus Rahmen weiter
-         rechts als der ihrer Nachbarin. */
+      /* Eine tippbare Zelle bleibt eine ZELLE, kein Formularfeld: sechs davon in
+         einer Zeile flackerten sonst beim Ueberfahren. Der transparente Rahmen
+         bleibt, er haelt die Hoehe. */
+      /* Die Zelle gibt ihr Polster an das Feld ab, zusammen ergeben sie wieder
+         --se-zell-x. */
       .zeile > div.tippbar,
       .zeile.erfassung > div {
         padding: 0 calc(var(--se-zell-x) - var(--se-eingabe-x) - var(--se-border));
@@ -1858,8 +1791,6 @@
         padding-left: calc(var(--se-zell-x) + 14px - var(--se-eingabe-x) - var(--se-border));
       }
 
-      /* Automatisch gefuellt (aus dem gewaehlten Satz oder der Rechnung):
-         kursiv und petrol, damit man sieht, was die Maske beigesteuert hat. */
       .erf-eingabe.auto {
         color: var(--se-accent);
         font-style: italic;
@@ -1882,13 +1813,10 @@
       }
       .zell-eingabe:focus,
       .erf-eingabe:focus { outline: none; }
-      /* Die Platzhalter der Erfassungszeile erscheinen erst, wenn der Bediener
-         in ihr steht: ruhig, solange er liest; Orientierung, sobald er tippt. */
+      /* Die Platzhalter erscheinen erst, wenn der Bediener in der Zelle steht. */
       .erf-eingabe::placeholder { color: transparent; }
       .zeile.erfassung:focus-within .erf-eingabe::placeholder { color: var(--se-faint); }
 
-      /* Die Vormerkung ist etwas anderes als ein Eingabefeld: sie sagt, dass
-         hier etwas UNGESCHRIEBENES steht, und muss sichtbar bleiben. */
       .zell-eingabe.geaendert {
         background: var(--se-amber-shell);
         border-color: var(--se-amber-line);
@@ -1935,12 +1863,8 @@
         border-top: var(--se-border) solid var(--se-line);
       }
 
-      /* Die Liste haengt aus der Zelle heraus; ohne sichtbaren Ueberlauf
-         schnitte die Zelle sie ab. Gilt fuer jede Zelle, weil jede gebundene
-         Spalte eine Liste zeigen kann.
-
-         Das Polster steht in tabelleStil (.tippbar) — es ist dieselbe
-         Rechnung wie fuer jede andere Zelle mit Eingabefeld. */
+      /* Die Vorschlagsliste haengt aus der Zelle heraus, darum sichtbarer
+         Ueberlauf an jeder Zelle. */
       .zeile.erfassung > div {
         display: flex;
         align-items: center;
@@ -1961,22 +1885,10 @@
         margin: 0 0 2px;
       }
 
-      /* .erf-eingabe wird zusammen mit .zell-eingabe in tabelleStil gesetzt:
-         es ist dieselbe Sache — eine Zelle, in die getippt wird. */
-
-      /* Im Editor zeigt die Zelle keine Eingabe, sondern Striche. */
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }
 
-      /* Erfasste, noch nicht geschriebene Zeilen: wie Datenzeilen, nur
-         links markiert — erst der Knopf macht aus ihnen echte Positionen.
-         Die Markierung selbst macht der Statusbalken (tabelleStil).
-
-         Ein Klick macht sie AN ORT UND STELLE wieder zur Tipp-Zeile,
-         darum der Zeigefinger. Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie
-         an der gebuchten Zeile: absolut rechts, erst bei Hover. Saesse es
-         mitten in der ERSTEN Zelle, schoebe es deren Wert um rund 20px nach
-         rechts — die erfasste Zeile stuende sichtbar versetzt unter den
-         gebuchten. */
+      /* Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie an der gebuchten Zeile:
+         absolut rechts, sonst schoebe es den Wert der ersten Zelle beiseite. */
       .zeile.erfasst { flex: none; }
       :host(:not([data-ff-editor])) .zeile.erfasst { cursor: pointer; }
 `,Q=class extends E{constructor(...e){super(...e),this.spalten=oo(),this.source=``,this.suche=`ja`,this.erfassung=`nein`,this.blaettern=`ja`,this.loeschbar=`nein`,this.kopfzeile=`ja`,this.spaltenwahl=`nein`,this.leerText=ls,this.rechnung=``,this.datenzeilen=[],this.rohzeilen=[],this.auswahlIndex=-1,this.durchAuswahlGefiltert=!1,this.datenGeliefert=!1,this._besitz=`softengine`,this._breiten=new dl({imEditor:()=>this.imEditor,vollerPlatz:e=>eo(this.spaltenListe(),this.imEditor,this._wahl.weg()).plaetze[e]??e,spaltenListe:()=>this.spaltenListe(),schreibeSpalten:e=>this.aendere(e),melde:()=>this.requestUpdate()}),this._ansicht=new sl({baustein:this,editable:()=>this.editable,zeilenHoehe:()=>this.zeilenHoehe,melde:()=>this.requestUpdate(),spalten:()=>this.spaltenListe(),merktSortierung:()=>!this.imEditor}),this._erfassung=new Uc,this._lauf=new Yc(()=>this.requestUpdate()),this._wahl=new yl({baustein:this,an:()=>this.spaltenwahlAn,melde:()=>this.requestUpdate(),breitenVergessen:()=>this._breiten.vergessen()}),this._zeilen=new Wc({baustein:this,spalten:()=>this.spaltenListe(),rohzeilen:()=>this.rohzeilen,datenzeilen:()=>this.datenzeilen,melde:()=>this.requestUpdate(),lauf:this._lauf,erfassungAn:()=>this.erfassungAn,fokussiereErfassungsZelle:e=>this.fokussiereErfassungsZelle(e)}),this.fensterDialogIndex=-1,this.nimmSeFokus=e=>{!e.defaultPrevented&&this.erfassungAn&&(this.imEditor||(e.preventDefault(),this.fokussiereErfassungsZelle(0)))},this.maskenTaste=e=>{if(this.imEditor||e.key!==`Insert`&&e.key!==`F5`)return;let t=Array.from(this.ownerDocument.querySelectorAll(`ff-tabelle`)),n=e.composedPath();(t.find(e=>n.includes(e))??t.find(e=>e.erfassungAn))===this&&(e.key===`Insert`&&this.erfassungAn?(e.preventDefault(),this.fokussiereErfassungsZelle(0)):e.key===`F5`&&this.buchenStand()!==null&&(e.preventDefault(),this.buche()))}}static{this.blockType=`tabelle`}static{this.tagName=`ff-tabelle`}static{this.displayName=`Tabelle`}static{this.category=`anzeige`}static{this.acceptsDataSource=!0}static{this.satzWahl={}}static{this.kannAuswahlFolgen=!0}static{this.kannErfassen={wenn:{attributeName:`erfassung`,equals:`ja`}}}static{this.aenderungsSchluessel=`aenderbar`}static{this.kannLoeschen={wenn:{attributeName:`loeschbar`,equals:`ja`}}}static{this.blockEvents=[{key:`onRowClick`,name:`Zeile gewählt`},{key:`onRowDblClick`,name:`Zeile doppelt geklickt`},{key:`onBuchen`,name:`Buchen`}]}static{this.listenBindung=kl}static{this.defaultProps={width:`fill`,source:``,spalten:oo(),suche:`ja`,erfassung:`nein`,blaettern:`ja`,loeschbar:`nein`,kopfzeile:`ja`,spaltenwahl:`nein`,tagField:``,rechnung:``,leerText:ls}}static{this.customProperties=Ol}static{this.raster={startW:24,startH:14,minW:6,minH:4}}get besitz(){return this._besitz}set besitz(e){e!==this._besitz&&(this._besitz=e,this.setzeAbgeleitetesZurueck(),this.isConnected&&(e===`provided`?Do(this):Eo(this)),this.requestUpdate())}set bereitgestellteZeilen(e){let t=Oo(e);this.rohzeilen=t.rohzeilen,this.datenzeilen=t.datenzeilen,this.datenGeliefert=!0,this.auswahlIndex=-1,this.durchAuswahlGefiltert=!1,this._ansicht.nachPush(),this.requestUpdate()}setzeAbgeleitetesZurueck(){this.rohzeilen=[],this.datenzeilen=[],this.datenGeliefert=!1,this.auswahlIndex=-1,this.durchAuswahlGefiltert=!1,this._ansicht.zuruecksetzen(),this._erfassung.zuruecksetzen()}get erfassteZeilen(){return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map(e=>e.werte)}get erfassteSchluessel(){return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map(e=>e.kennung)}get geaenderteZeilen(){return this._zeilen.geaenderteZeilen}get geloeschteZeilen(){return this._zeilen.geloeschteZeilen}zeileSchreibt(e,t){this._lauf.schreibt(e,t)}zeileGescheitert(e,t,n){this._lauf.gescheitert(e,t,n)}laufFertig(e,t){if(this._lauf.fertig(e,t),e===`erfasst`){this._erfassung.markiereGeschrieben(this.erfassungsUmfeld(),t)&&this.requestUpdate();return}this._zeilen.austragen(e,t)}vergissGeschriebene(){this._erfassung.vergissGeschriebene()&&this.requestUpdate()}erfasstStand(e){return this._lauf.zeigt(`erfasst`,this._erfassung.schluessel[e]??``,this._erfassung.istGeschrieben(e)?`geschrieben`:`erfasst`)}erfasseZeile(){return this._erfassung.erfasse(this.erfassungsUmfeld())?(this.requestUpdate(),this.fokussiereErfassungsZelle(0),this.zeigeLetzteErfasste(),!0):!1}zeigeLetzteErfasste(){this.updateComplete.then(()=>{let e=this.shadowRoot?.querySelector(`.koerper`);e&&(e.scrollTop=e.scrollHeight)})}fokussiereSuche(){return this._ansicht.fokussiereSuche()}setzeSuchtext(e){this._ansicht.setzeSuchtext(e),this.requestUpdate()}get hatQuelle(){return this._besitz===`provided`||Tl(this.imEditor,this.source)}spaltenListe(){return H(this.spalten)}fensterSpaltenEffektiv(e){let t=this.spaltenListe()[e]?.fensterSpalten;return t!==void 0&&t.length>0?t.map(e=>({...e})):vc(this.erfassungsUmfeld(),e)}aendereSpalte(e,t){let n=this.spaltenListe();n[e]!==void 0&&this.aendere(n.map((n,r)=>r===e?{...n,...t}:n))}fensterDialogTpl(e){let t=this.spaltenListe()[e],n=this.fensterSpaltenEffektiv(e);return cs({titel:t?.titel??``,spalten:n,breite:t?.fensterBreite??zo(n.length),hoehe:t?.fensterHoehe??380,onGroesse:t=>{let n=t.achse===`breite`?`fensterBreite`:`fensterHoehe`;this.aendereSpalte(e,{[n]:t.geste===`standard`?void 0:t.wert})},onAendern:t=>this.aendereSpalte(e,{fensterSpalten:t}),onFeldWahl:()=>{},onSchliessen:()=>{this.fensterDialogIndex=-1}})}get zeilenHoehe(){return 28}get erfassungAn(){return this.erfassung===`ja`}erfassungsWirt(){return{baustein:this,lauf:this._erfassung.lauf,umfeld:()=>this.erfassungsUmfeld(),melde:()=>this.requestUpdate(),fokussiere:e=>this.fokussiereErfassungsZelle(e),erfasseZeile:()=>this.erfasseZeile()}}fokussiereErfassungsZelle(e){this.updateComplete.then(()=>{let t=this.shadowRoot?.querySelector(`.zeile.erfassung .erf-eingabe[data-spalte="${e}"]`);t&&(t.focus(),t.scrollIntoView({block:`nearest`}))})}erfassungsUmfeld(){return this._erfassung.umfeld(this,this.spaltenListe(),this.source,Za(this.rechnung))}aendere(e){let t=go(this.rechnung,this.spaltenListe(),e);if(t===null){this.meldeProp(`spalten`,e);return}this.meldeProp(`rechnung`,t,`beginn`),this.meldeProp(`spalten`,e,`ende`)}meldeProp(e,t,n){this.dispatchEvent(new CustomEvent(`ff-prop-change`,{detail:{attr:e,value:t,...n===void 0?{}:{geste:n}},bubbles:!0,composed:!0}))}buchenStand(){if(this.imEditor)return this.erfassungAn?{offen:0}:null;let e=Vr(this,`onBuchen`);return e===void 0?null:{offen:zr(e)}}buche(){this.imEditor||z(this,`onBuchen`,{}).catch(R)}connectedCallback(){super.connectedCallback(),this._besitz===`softengine`&&Eo(this),document.addEventListener(Yn,this.nimmSeFokus),document.addEventListener(`keydown`,this.maskenTaste),this._ansicht.beobachte()}firstUpdated(){this._ansicht.beobachte()}willUpdate(e){super.willUpdate(e),e.has(`spalten`)&&this._breiten.vergessen(),this.erfassungAn&&!this.imEditor&&this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())}updated(){this._ansicht.nachRendern(),Ur(this)}disconnectedCallback(){super.disconnectedCallback(),this._wahl.loese(),document.removeEventListener(Yn,this.nimmSeFokus),document.removeEventListener(`keydown`,this.maskenTaste),this._ansicht.loese(),rs(this),Do(this)}static{this.styles=[E.styles,fs,Ll,Bi,Rl]}get spaltenwahlAn(){return this.spaltenwahl===`ja`&&this.kopfzeile===`ja`&&!this.imEditor}oeffneSpaltenwahl(e){let t=this.shadowRoot?.querySelector(`.tabelle`)?.getBoundingClientRect();t&&this._wahl.oeffne(e,t)}render(){let e=this.spaltenListe(),t=eo(e,this.imEditor,this._wahl.weg()),n=Cl({spalten:e,gezeichnet:t.spalten,plaetze:t.plaetze,breiteVon:e=>this._breiten.breiteVon(e),hatQuelle:this.hatQuelle,datenGeliefert:this.datenGeliefert,datenzeilen:this.datenzeilen,suchtext:this._ansicht.suchtext,sortSpalte:this._ansicht.sortSpalte,sortAuf:this._ansicht.sortAuf,wunschSeite:this._ansicht.seite,gemessen:this._ansicht.mass,erfassungAn:this.erfassungAn,erfassteAnzahl:this._erfassung.zeilen.length,wertVon:(e,t)=>this._zeilen.zellWert(e,t),blaettert:this.blaettern===`ja`});return v`<div class="tabelle" style=${J({"--takt":`${n.takt}px`,"--zeilen-hoehe":`${n.zeilenHoehe}px`})}>

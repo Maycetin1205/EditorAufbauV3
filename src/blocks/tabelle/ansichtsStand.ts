@@ -1,3 +1,4 @@
+// Der Stand, in dem die Tabelle dasteht: Suchtext, Sortierung, Seite, Messung, Fokus.
 import {
   beobachteRumpf,
   gemessenesMass,
@@ -19,12 +20,10 @@ export interface AnsichtsWirt {
 
   melde: () => void
 
-  // Die Spalten in der VOLLEN Liste — die gemerkte Sortierung haengt an der
-  // Kennung, nicht am Platz, und muss beim Lesen zurueckuebersetzt werden.
+  // Die volle Liste: die gemerkte Sortierung haengt an der Kennung, nicht am
+  // Platz, und wird beim Lesen zurueckuebersetzt.
   spalten: () => readonly { kennung: string }[]
 
-  // Nur in der fertigen Maske merken. Im Editor waere es sinnlos (dort wird
-  // nicht sortiert) und stoerend (der Bauer sieht fremde Bediener-Staende).
   merktSortierung: () => boolean
 }
 
@@ -63,18 +62,16 @@ export class AnsichtsStand {
     return this._suchtext.trim() !== ''
   }
 
-  // Erst beim ersten Lesen aus dem Speicher geholt: der Schluessel braucht
-  // den Maskennamen und das fertige Dokument, beides steht im Konstruktor
-  // noch nicht. Danach gilt der Stand im Arbeitsspeicher.
+  // Erst beim ersten Lesen aus dem Speicher: der Schluessel braucht Maskenname
+  // und fertiges Dokument.
   private holeGemerkte(): void {
     if (this._gemerkteGelesen) return
     this._gemerkteGelesen = true
     if (!this.wirt.merktSortierung()) return
     const stand = leseSortierung(sortierSchluessel(this.wirt.baustein))
     if (stand === null) return
-    // Die gemerkte Spalte kann es nicht mehr geben (der Bauer hat sie
-    // geloescht). Dann bleibt die Tabelle unsortiert, statt auf gut Glueck
-    // eine andere zu nehmen.
+    // Die gemerkte Spalte kann es nicht mehr geben; dann bleibt die Tabelle
+    // unsortiert, statt auf gut Glueck eine andere zu nehmen.
     const platz = this.wirt.spalten().findIndex((s) => s.kennung === stand.kennung)
     if (platz < 0) return
     this._sortSpalte = platz
@@ -118,8 +115,8 @@ export class AnsichtsStand {
   klickSortiere(index: number): void {
     if (this.wirt.editable()) return
     this.merkeZeilenFokus()
-    // Erst den gemerkten Stand holen, sonst faenge der erste Klick nach dem
-    // Laden bei "unsortiert" an und drehte die Richtung nicht um.
+    // Erst den gemerkten Stand holen, sonst faenge der erste Klick bei
+    // „unsortiert“ an und drehte die Richtung nicht um.
     this.holeGemerkte()
     if (this._sortSpalte === index) {
       this._sortAuf = !this._sortAuf
@@ -170,9 +167,8 @@ export class AnsichtsStand {
   }
 
   nachRendern(): void {
-    // Den Kopf sieht der ResizeObserver nie (er haengt am Rumpf, der seine
-    // Hoehe behaelt) — ohne diesen Vergleich bleibt eine Zeile zu viel
-    // gerechnet.
+    // Den Kopf sieht der ResizeObserver nie; ohne den Vergleich bleibt eine
+    // Zeile zu viel gerechnet.
     if (this._taktGemessen !== this.wirt.zeilenHoehe()
       || this._rumpfGemessen !== rumpfHoehe(this.wirt.baustein)
       || this._kopfGemessen !== kopfHoehe(this.wirt.baustein)) {
@@ -196,8 +192,7 @@ export class AnsichtsStand {
     this._kopfGemessen = 0
   }
 
-  // Zweckwechsel: die Tabelle zeigt etwas ANDERES. Dann muss auch die
-  // gemerkte Sortierung fallen — sie zeigte auf Spalten der alten Quelle.
+  // Zweckwechsel: die gemerkte Sortierung zeigte auf Spalten der alten Quelle.
   zuruecksetzen(): void {
     this._suchtext = ''
     this._sortSpalte = -1

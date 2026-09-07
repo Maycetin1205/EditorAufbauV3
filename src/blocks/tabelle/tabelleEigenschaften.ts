@@ -1,3 +1,4 @@
+// Die Eigenschaften der Tabelle und ihrer Spalten, wie der Inspector sie zeigt.
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { jaNeinProperty } from '../shared/jaNeinProperty'
 import { leerTextProperty } from '../shared/leerZustand'
@@ -87,10 +88,8 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     return neu === alt ? {} : { spalten: [...neu] }
   },
 
-  // Das Suchfenster dieser Spalte (F4 in der Erfassungszeile). Ohne
-  // Einstellung rechnet es sich bei jedem Oeffnen aus den Tabellenspalten.
-  // Der Knopf oeffnet dieselbe Flaeche, die das Formularfeld ueber die Lupe
-  // zeigt.
+  // Ohne Einstellung rechnet sich das Fenster bei jedem Oeffnen aus den
+  // Tabellenspalten.
   eintragsUnterFenster: {
     label: 'Suchfenster…',
     hinweis: 'Ohne Einstellung nimmt es die Spalten derselben Hilfsquelle.',
@@ -125,8 +124,7 @@ export const SPALTEN_BINDUNG: ListenBindung = {
     {
       key: 'fuellFeld',
 
-      // Nicht „Füllfeld"/„Spaltenfeld" nennen: die Beschriftung muss sagen,
-      // WANN das Feld gilt.
+      // Die Beschriftung muss sagen, WANN das Feld gilt.
       label: 'Nachschlagen',
       hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.',
       nurFremdeQuellen: true,

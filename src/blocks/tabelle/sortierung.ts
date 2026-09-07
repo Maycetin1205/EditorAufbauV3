@@ -1,3 +1,4 @@
+// Sortieren einer Tabellenspalte und der gemerkte Bediener-Stand dazu.
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 
 const LEER_ZULETZT = 1
@@ -97,15 +98,8 @@ export function sortiereIndizes(
     })
 }
 
-// Was der BEDIENER sich in der fertigen Maske sortiert hat, ueberlebt das
-// Schliessen und Neuladen der Maske.
-//
-// Gemerkt wird die KENNUNG der Spalte, nicht ihr Platz: verschiebt der Bauer
-// spaeter eine Spalte, zeigte die Platznummer auf die falsche (derselbe
-// Grund, aus dem Ketten und Rechnung an der Kennung haengen, s. spalten.ts).
-//
-// Dasselbe Verfahren wie die Spaltenwahl (spaltenWahl.ts) — inklusive
-// Rueckfall auf das Gedaechtnis, wenn der Browser-Speicher ausfaellt.
+// Gemerkt wird die KENNUNG der Spalte, nicht ihr Platz: eine spaeter verschobene
+// Spalte zeigte sonst auf die falsche.
 
 const VORSATZ = 'ff_sortierung_'
 
@@ -114,14 +108,11 @@ export interface GemerkteSortierung {
   auf: boolean
 }
 
-// Faellt der Browser-Speicher aus (SoftEngines eingebauter Browser ist alt,
-// und ob er ihn hergibt, ist unbelegt), haelt die Sortierung wenigstens die
-// Sitzung. Eine Sortierung ist keine Meldung wert.
+// Faellt der Browser-Speicher aus, haelt die Sortierung wenigstens die Sitzung.
 const imGedaechtnis = new Map<string, GemerkteSortierung | null>()
 
-// Je Maske und Tabelle eine eigene Sortierung. Die Baustein-Kennung traegt
-// nicht jede Tabelle (nur die adressierbaren), darum der Platz im Dokument
-// als Rueckfall.
+// Je Maske und Tabelle eigen; nicht jede Tabelle traegt eine Baustein-Kennung,
+// darum der Platz im Dokument als Rueckfall.
 export function sortierSchluessel(el: HTMLElement): string {
   const titel = typeof document === 'undefined' ? '' : document.title
   const id = el.getAttribute(ACTION_VALUE_ID_ATTR)
@@ -141,8 +132,7 @@ export function leseSortierung(schluessel: string): GemerkteSortierung | null {
   }
 }
 
-// Getrennt und ausgestellt, damit der Test sie ohne Browser-Speicher pruefen
-// kann: Fremde oder alte Staende duerfen die Tabelle nicht umwerfen.
+// Fremde oder alte Staende duerfen die Tabelle nicht umwerfen.
 export function deuteSortierung(roh: unknown): GemerkteSortierung | null {
   if (typeof roh !== 'object' || roh === null) return null
   const o = roh as Record<string, unknown>
@@ -178,7 +168,5 @@ export function summeText(werte: readonly string[], min: number, max: number): s
   })
 }
 
-// Keine erzwungene Nachkommastelle, aber bis zu drei, wo der ERP sie liefert
-// (0,25 Stunden). Eine Zahl fuer alle Summen — die Spalte sagt nicht mehr, ob
-// sie Menge oder Betrag ist.
+// Bis zu drei Nachkommastellen, wo der ERP sie liefert, keine erzwungene.
 export const SUMME_NACHKOMMA = { min: 0, max: 3 } as const

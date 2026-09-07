@@ -1,3 +1,4 @@
+// Rechnet aus Daten und Stand die Zeilen, Seiten, Summen und Masse einer Ansicht.
 import {
   linealTakte,
   OHNE_MESSUNG,
@@ -35,8 +36,6 @@ export interface AnsichtFrage {
 
   erfassteAnzahl: number
 
-  // Zellwert samt vorgemerkter Aenderung: die Handmaske Rahmen00001 V11 nimmt
-  // die geaenderte Menge in die Summe.
   wertVon: (rohIndex: number, spalte: number) => string
 
   blaettert: boolean
@@ -59,8 +58,7 @@ export interface TabelleAnsicht {
 
   linealTakte: number | null
 
-  // Ueber ALLE Treffer gezaehlt, nicht nur ueber die sichtbare Seite (so
-  // rechnet die Handmaske Rahmen00001 V11).
+  // Ueber alle Treffer gezaehlt, nicht nur ueber die sichtbare Seite.
   summen: readonly { titel: string; text: string }[]
 }
 
@@ -81,14 +79,11 @@ function summenVon(
   return raus
 }
 
-// Gesucht und sortiert wird ueber DENSELBEN Zellwert, den die Summe nimmt —
-// vorgemerkte Aenderung eingerechnet. Sonst sucht der Bediener nach dem, was
-// er gerade in die Zelle getippt hat, und seine eigene Zeile faellt aus der
-// Liste; sortiert stuende sie nach dem alten Wert an alter Stelle.
+// Gesucht und sortiert wird ueber DENSELBEN Zellwert, den die Summe nimmt:
+// sonst faellt die gerade getippte Zeile aus der Liste.
 function ansichtsZeilen(frage: AnsichtFrage): string[][] {
-  // Ueber die SPALTEN, nicht ueber die Laenge der Datenzeile: eine frisch
-  // angelegte Spalte hat in den gelieferten Daten noch keinen Eintrag und
-  // fiele sonst aus Suche und Sortierung heraus.
+  // Ueber die Spalten, nicht ueber die Laenge der Datenzeile: eine frisch
+  // angelegte Spalte hat in den Daten noch keinen Eintrag.
   return frage.datenzeilen.map((_, zeile) => frage.spalten.map((__, s) => frage.wertVon(zeile, s)))
 }
 
@@ -101,8 +96,8 @@ function sichtbareIndizes(frage: AnsichtFrage): number[] {
 }
 
 export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
-  // Die Spuren zaehlen die GEZEICHNETEN Spalten; die gezogene Breite steht
-  // aber unter dem vollen Platz.
+  // Die Spuren zaehlen die gezeichneten Spalten, die gezogene Breite steht
+  // unter dem vollen Platz.
   const gezeichnet = frage.gezeichnet ?? frage.spalten
   const plaetze = frage.plaetze ?? gezeichnet.map((_, i) => i)
   const cols = {
@@ -114,8 +109,7 @@ export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
 
   const hatQuelle = frage.hatQuelle
 
-  // Mit Erfassungszeile gibt es keinen Leerzustand: die Zeile IST der Inhalt,
-  // und die zentrierte Tafel schoebe sie an den Rumpf-Rand.
+  // Mit Erfassungszeile gibt es keinen Leerzustand: die Zeile IST der Inhalt.
   const leer = frage.erfassungAn
     ? false
     : zeigtLeerzustand(hatQuelle, frage.datenGeliefert, frage.datenzeilen.length)

@@ -1,3 +1,4 @@
+// Zeilen anfassen: Fokus mit den Pfeiltasten bewegen, eine Zeile aktivieren.
 import { geberIdVon, klareAuswahl, setzeAuswahl as globalSetzeAuswahl } from '../shared/auswahl'
 import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
 import { zeilenIndexVon, type RuntimeTableElement } from './seRuntime'
@@ -45,9 +46,6 @@ export function bewegeZeilenFokus(von: EventTarget | null, richtung: number): bo
   return true
 }
 
-// Pfeil-runter aus der Suchzeile springt in die Liste, Pfeil-hoch aus der
-// ersten Zeile wieder zurueck: tippen und auswaehlen ohne die Hand von den
-// Pfeilen zu nehmen.
 export function fokussiereErsteZeile(von: EventTarget | null): boolean {
   if (!(von instanceof HTMLElement)) return false
   const erste = von.closest<HTMLElement>('.tabelle')
@@ -77,10 +75,7 @@ export function stelleZeilenFokusHer(wurzel: ShadowRoot | null, rohIndex: number
   ziel?.focus()
 }
 
-// Was ein Klick auf eine Datenzeile ausloest: die Zeile weitergeben (Auswahl
-// folgen), sie als Auswahl setzen und die Kette am Baustein starten. Im
-// Editor passiert nichts davon — dort ist der Klick Bedienung des Editors.
-// Getrennt vom Baustein, damit der unter seinem Zeilen-Deckel bleibt.
+// Im Editor loest der Klick nichts davon aus: dort ist er Bedienung des Editors.
 export function aktiviereZeile(
   el: HTMLElement,
   rohzeilen: readonly unknown[],

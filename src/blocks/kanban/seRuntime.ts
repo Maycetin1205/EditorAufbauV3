@@ -1,3 +1,4 @@
+// Die Tafel am SoftEngine-Datenstrom: Karten einsortieren und das Ziehen verdrahten.
 import { bindingAttr } from '../../core/blocks/BlockDefinition'
 import { getAllBlockDefinitions } from '../../core/blocks/blockRegistry'
 import { getField, satzIndexVon } from '../../softengine/data'
