@@ -9,7 +9,7 @@ import {
   type Zeilenmass,
 } from './seitengroesse'
 import { fokussierterRohIndex, stelleZeilenFokusHer } from './zeilenAktivierung'
-import { leseSortierung, sichereSortierung, sortierSchluessel } from './sortierung'
+import { gemerkteSortierung } from './sortierung'
 
 export interface AnsichtsWirt {
   baustein: HTMLElement & MessZiel
@@ -68,7 +68,7 @@ export class AnsichtsStand {
     if (this._gemerkteGelesen) return
     this._gemerkteGelesen = true
     if (!this.wirt.merktSortierung()) return
-    const stand = leseSortierung(sortierSchluessel(this.wirt.baustein))
+    const stand = gemerkteSortierung.lies(this.wirt.baustein)
     if (stand === null) return
     // Die gemerkte Spalte kann es nicht mehr geben; dann bleibt die Tabelle
     // unsortiert, statt auf gut Glueck eine andere zu nehmen.
@@ -81,8 +81,8 @@ export class AnsichtsStand {
   private merkeSortierung(): void {
     if (!this.wirt.merktSortierung()) return
     const kennung = this.wirt.spalten()[this._sortSpalte]?.kennung ?? ''
-    sichereSortierung(
-      sortierSchluessel(this.wirt.baustein),
+    gemerkteSortierung.merke(
+      this.wirt.baustein,
       this._sortSpalte < 0 || kennung === '' ? null : { kennung, auf: this._sortAuf },
     )
   }

@@ -1,42 +1,16 @@
 // Die Bediener-Spaltenwahl: das Fenster am Spaltenkopf und was weggenommen ist.
 import { html, nothing, type TemplateResult } from 'lit'
-import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
+import { macheBedienerStand } from './bedienerStand'
 import type { Spalte } from './spalten'
 
-const VORSATZ = 'ff_spaltenwahl_'
-
-const imGedaechtnis = new Map<string, string[]>()
-
-function wahlSchluessel(el: HTMLElement): string {
-  const titel = typeof document === 'undefined' ? '' : document.title
-  const id = el.getAttribute(ACTION_VALUE_ID_ATTR)
-  if (id !== null && id !== '') return `${VORSATZ}${titel}|${id}`
-  const gleiche = Array.from(el.ownerDocument?.querySelectorAll(el.tagName) ?? [])
-  return `${VORSATZ}${titel}|#${Math.max(0, gleiche.indexOf(el))}`
+// Gemerkt werden die weggenommenen Spalten an ihrer Kennung.
+function deuteWeggenommene(roh: unknown): string[] | null {
+  if (!Array.isArray(roh)) return null
+  const liste = roh.filter((k): k is string => typeof k === 'string')
+  return liste.length === 0 ? null : liste
 }
 
-function ladeWahl(schluessel: string): Set<string> {
-  const ausGedaechtnis = imGedaechtnis.get(schluessel)
-  if (ausGedaechtnis) return new Set(ausGedaechtnis)
-  try {
-    const roh = localStorage.getItem(schluessel)
-    if (roh === null) return new Set()
-    const liste: unknown = JSON.parse(roh)
-    if (!Array.isArray(liste)) return new Set()
-    return new Set(liste.filter((k): k is string => typeof k === 'string'))
-  } catch {
-    return new Set()
-  }
-}
-
-function sichereWahl(schluessel: string, weg: ReadonlySet<string>): void {
-  const liste = [...weg]
-  imGedaechtnis.set(schluessel, liste)
-  try {
-    if (liste.length === 0) localStorage.removeItem(schluessel)
-    else localStorage.setItem(schluessel, JSON.stringify(liste))
-  } catch { /* dann gilt sie fuer die Sitzung */ }
-}
+const gemerkteSpaltenWahl = macheBedienerStand('ff_spaltenwahl_', deuteWeggenommene)
 
 export interface SpaltenWahlLage {
   waehlbar: readonly Spalte[]
@@ -125,7 +99,9 @@ export class SpaltenWahlStand {
 
   weg(): ReadonlySet<string> {
     if (!this.wirt.an()) return LEERE_WAHL
-    if (this._weg === null) this._weg = ladeWahl(wahlSchluessel(this.wirt.baustein))
+    if (this._weg === null) {
+      this._weg = new Set(gemerkteSpaltenWahl.lies(this.wirt.baustein) ?? [])
+    }
     return this._weg
   }
 
@@ -165,7 +141,7 @@ export class SpaltenWahlStand {
 
   private merke(weg: Set<string>): void {
     this._weg = weg
-    sichereWahl(wahlSchluessel(this.wirt.baustein), weg)
+    gemerkteSpaltenWahl.merke(this.wirt.baustein, weg.size === 0 ? null : [...weg])
     this.wirt.breitenVergessen()
     this.wirt.melde()
   }
