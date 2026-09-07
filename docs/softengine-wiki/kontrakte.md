@@ -13,10 +13,10 @@ fehlt, wird nicht geraten, sondern getestet.
 - LF-only, reines ASCII. Escaping macht der Export maschinell
   (`export/serializer.ts`). Schlägt `validateMaskHtml` an, lädt SoftEngine die
   Datei gar nicht erst.
-- Eine Maske ist EINE Datei — Bilder und Schriften werden eingebettet, nie
-  nachgeladen.
+- Bilder und Schriften werden in die Maske eingebettet, nie nachgeladen. Ihre
+  Laufzeit liegt dagegen als eigene Dateien im Maskenordner (siehe 13).
 - Zwei SE-Marker traegt jede Maske: `JWHtmlStart` in Zeile 1 und `JWHtmlEnde` in
-  der letzten (`export/validator.ts`). Ein Skript traegt sie: ihre eigene Runtime.
+  der letzten (`export/validator.ts`).
 
 ## 2. Anmeldung und Datenempfang
 
@@ -296,7 +296,10 @@ steht hier nur als Wissen:
   gelesen, nicht per Echttest). Fehlt die Bruecke, meldet die Maske
   „SoftEngine-Anschluss nicht gefunden".
 - Ein Skript im Maskenordner (`<script src="fftest.js">`) wird ebenfalls
-  geladen (belegt 2026-08-28). Der Export nutzt das nicht.
+  geladen (belegt 2026-08-28). Darauf liegt die Laufzeit der Maske:
+  `ff-basis.js` und je benutztem Baustein eine Datei, klassische Skripte in
+  Ladereihenfolge. Ob der SoftEngine-Browser sie zwischenspeichert, ist NICHT
+  belegt — das entscheidet ein Echttest.
 - Nebenbeobachtung: `CONECT` wird ZWEIMAL gesendet, Empfang trotzdem nur
   1 Paket. Ungeklärt.
 

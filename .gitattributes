@@ -2,4 +2,4 @@
 # werden die Byte-Waechter auf einem frisch ausgecheckten Windows-Repo rot).
 src/export/referenz/referenz.html -text
 src/export/referenz/referenz.sevariablen.json -text
-src/export/generated/ff-runtime.js -text
+src/export/generated/* -text

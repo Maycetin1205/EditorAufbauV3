@@ -39,14 +39,19 @@ describe('kaputte Maske', () => {
     expect(beanstandet(html)).toContain('Start-Marker Zeile 1')
   })
 
-  test('zweiter Skript-Tag: die Maske traegt nur ihre eigene Runtime', () => {
+  test('fremdes Skript: die Maske laedt nur ihre eigene Laufzeit', () => {
     const html = echterExport().replace('<script>', '<script src="fremd.js"></script>\n<script>')
-    expect(beanstandet(html)).toContain('genau 1 <script>')
+    expect(beanstandet(html)).toContain('nur eigene Laufzeitdateien')
   })
 
-  test('Runtime-Buendel fehlt: die Maske waere stumm', () => {
-    const html = echterExport().replaceAll('customElements.define', 'nichtsDergleichen')
-    expect(beanstandet(html)).toContain('Runtime-Buendel eingebettet')
+  test('Basisdatei nicht eingebunden: die Maske waere stumm', () => {
+    const html = echterExport().replace('<script src="ff-basis.js"></script>', '')
+    expect(beanstandet(html)).toContain('Laufzeit-Basis eingebunden')
+  })
+
+  test('Baustein-Code in der Maske: der gehoert in die Dateien daneben', () => {
+    const html = echterExport().replace('</body>', '<script>customElements.define()</script>\n</body>')
+    expect(beanstandet(html)).toContain('kein Baustein-Code in der Datei')
   })
 
   // Jede Beanstandung muss dem Bediener sagen, WAS sie gefunden hat — die

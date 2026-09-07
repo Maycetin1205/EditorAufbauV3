@@ -32,17 +32,25 @@ export function validateMaskHtml(html: string): CheckResult[] {
   )
 
   const styles = (html.match(/<style[\s>]/g) ?? []).length
-  const scripts = (html.match(/<script[\s>]/g) ?? []).length
   check('genau 1 <style>', styles === 1, `gefunden: ${styles}`)
-  // Die Bruecke laedt JWHtmlStart: das eine Skript der Maske ist ihre Runtime.
-  check('genau 1 <script>', scripts === 1, `gefunden: ${scripts}`)
 
-  const inlineBody = /<script>\n([\s\S]*?)\n<\/script>/.exec(html)?.[1] ?? ''
   check(
-    'Runtime-Buendel eingebettet',
-    inlineBody.includes('customElements.define'),
-    'Web-Component-Registrierung fehlt',
+    'Laufzeit-Basis eingebunden',
+    html.includes('<script src="ff-basis.js"></script>'),
+    'ohne die Basisdatei bleibt jeder Baustein stumm',
   )
+  check(
+    'kein Baustein-Code in der Datei',
+    !html.includes('customElements.define'),
+    'die Laufzeit gehoert in die Dateien daneben',
+  )
+
+  // Geladen wird nur die eigene Laufzeit: die Bruecke bringt JWHtmlStart selbst
+  // mit, alles andere waere ein fremdes Skript in der Maske.
+  const fremde = [...html.matchAll(/<script[^>]*\ssrc="([^"]*)"/g)]
+    .map((treffer) => treffer[1])
+    .filter((src) => !/^ff-[a-z]+\.js$/.test(src))
+  check('nur eigene Laufzeitdateien', fremde.length === 0, fremde.join(', '))
 
   check('DOCTYPE vorhanden', html.includes('<!DOCTYPE html>'))
   check('Wurzel-Fluss vorhanden', html.includes('class="ff-root"'))

@@ -1,5 +1,4 @@
-// Der Einstieg des Runtime-Buendels: meldet alle Bausteine in der Maske an.
-import '../blocks/register'
+// Ein Fehler, den niemand aufgefangen hat, geht in den Meldungsbalken der Maske.
 import { meldeFehler } from '../softengine/meldung'
 
 if (typeof window !== 'undefined') {

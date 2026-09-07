@@ -1,0 +1,110 @@
+{
+  "basisDatei": "ff-basis.js",
+  "teile": [
+    {
+      "name": "ansicht",
+      "datei": "ff-ansicht.js",
+      "bausteine": [
+        "ansicht"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "bild",
+      "datei": "ff-bild.js",
+      "bausteine": [
+        "bild"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "button",
+      "datei": "ff-button.js",
+      "bausteine": [
+        "button"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "card",
+      "datei": "ff-card.js",
+      "bausteine": [
+        "card"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "datum",
+      "datei": "ff-datum.js",
+      "bausteine": [
+        "datum"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "kanban",
+      "datei": "ff-kanban.js",
+      "bausteine": [
+        "kanban",
+        "kanban-spalte",
+        "kanban-zimmer"
+      ],
+      "braucht": [
+        "card"
+      ]
+    },
+    {
+      "name": "navi",
+      "datei": "ff-navi.js",
+      "bausteine": [
+        "navi",
+        "navi-eintrag"
+      ],
+      "braucht": [
+        "ansicht"
+      ]
+    },
+    {
+      "name": "popup",
+      "datei": "ff-popup.js",
+      "bausteine": [
+        "popup"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "tabelle",
+      "datei": "ff-tabelle.js",
+      "bausteine": [
+        "tabelle"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "formfeld",
+      "datei": "ff-formfeld.js",
+      "bausteine": [
+        "formfeld"
+      ],
+      "braucht": [
+        "tabelle"
+      ]
+    },
+    {
+      "name": "text",
+      "datei": "ff-text.js",
+      "bausteine": [
+        "text"
+      ],
+      "braucht": []
+    },
+    {
+      "name": "trenner",
+      "datei": "ff-trenner.js",
+      "bausteine": [
+        "trenner"
+      ],
+      "braucht": []
+    }
+  ]
+}

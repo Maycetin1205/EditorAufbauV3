@@ -48,7 +48,7 @@ import { collectRelations } from './benutzteRelationen'
 import { baueSevariablen } from './sevariablen'
 import { vorschauRoh, vorschauStellenVon } from './bindungsVorschau'
 import { styleAttr } from './knotenStil'
-import runtimeJsRaw from './generated/ff-runtime.js?raw'
+import { dateiWacheSkript, laufzeitDateienFuer, type LaufzeitDatei } from './laufzeitTeile'
 import {
   escapeHtmlAttr,
   escapeHtmlText,
@@ -65,6 +65,9 @@ const EIGENE_QUELLE_PROPS = new Set([QUELLE_PROP, WEITERE_QUELLEN_PROP])
 export interface MaskExport {
   html: string
   sevariablen: string
+
+  // Die Laufzeitdateien, die neben die Maske gehoeren.
+  laufzeit: LaufzeitDatei[]
 }
 
 function attributWert(value: unknown): string {
@@ -230,7 +233,8 @@ export function exportMask(
   const usedRelations = collectRelations(tree, relations, used)
 
   const tokensCss = stripCssComments(tokensCssRaw)
-  const runtimeJs = guardScriptContent(escapeNonAsciiJs(runtimeJsRaw.trim()))
+  const laufzeit = laufzeitDateienFuer(benutzteTypen(tree))
+  const dateiWache = guardScriptContent(escapeNonAsciiJs(dateiWacheSkript(laufzeit)))
 
   const sourcesJs = guardJsonScript(escapeNonAsciiJs(
     'window.FF_DATA_SOURCES = ' + JSON.stringify(used.map((s) => {
@@ -294,7 +298,10 @@ export function exportMask(
     '<script>',
     sourcesJs,
     relationsJs,
-    runtimeJs,
+    '</script>',
+    ...laufzeit.map((datei) => `<script src="${datei.name}"></script>`),
+    '<script>',
+    dateiWache,
     '</script>',
     '</body>',
     '</html>',
@@ -303,5 +310,19 @@ export function exportMask(
 
   const sevariablen = baueSevariablen(used, benutzteFelder, holSchluessel)
 
-  return { html, sevariablen }
+  return { html, sevariablen, laufzeit }
+}
+
+// Welche Bausteintypen in der Maske stehen — danach richtet sich, welche
+// Laufzeitdateien sie braucht.
+function benutzteTypen(tree: BlockTree): Set<string> {
+  const typen = new Set<string>()
+  const gehe = (id: string): void => {
+    const node = tree[id]
+    if (!node) return
+    if (id !== ROOT_ID) typen.add(node.type)
+    for (const kindId of node.childIds) gehe(kindId)
+  }
+  gehe(ROOT_ID)
+  return typen
 }

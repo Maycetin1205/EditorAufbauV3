@@ -1,0 +1,4 @@
+(function(e,t,n){var r=Object.defineProperty,i=((e,t)=>{let n={};for(var i in e)r(n,i,{get:e[i],enumerable:!0});return t||r(n,Symbol.toStringTag,{value:`Module`}),n})({AnsichtBlock:()=>a}),a=class extends t.BasicBlock{static{this.blockType=`ansicht`}static{this.tagName=`ff-ansicht`}static{this.displayName=`Ansicht`}static{this.category=`layout`}static{this.acceptsChildren=!0}static{this.showInPalette=!1}static{this.allowedParentTypes=[n.ROOT_TYPE]}static{this.pageBlock=!0}static{this.flaechenSeite=!0}static{this.resizableWidth=!1}static{this.containerHint=!1}static{this.defaultProps={name:`Ansicht`}}static{this.styles=[t.BasicBlock.styles,e.css`
+
+      :host { display: contents; }
+    `]}render(){return e.html`<slot></slot>`}};t.BasicBlock.defineAndRegister(a),window.FF=window.FF||{},FF.blocks$ansicht$AnsichtBlock=i})(FF.lit,FF.blocks$base$BasicBlock,FF.core$blocks$BlockData);

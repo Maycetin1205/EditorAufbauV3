@@ -38,7 +38,9 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const handleExport = () => {
     const sources = dataSourceStore.list
     const relations = relationStore.list
-    const { html, sevariablen } = exportMask(ed.tree, maskenNameVon(ed.tree), sources, relations)
+    const { html, sevariablen, laufzeit } = exportMask(
+      ed.tree, maskenNameVon(ed.tree), sources, relations,
+    )
     const failed = failedChecks(validateMaskHtml(html))
     if (failed.length > 0) {
       meldungen.melde(
@@ -50,6 +52,7 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
 
     downloadFile('index.basis.source.html', html, 'text/html')
     downloadFile('index.basis.SEvariablen.json', sevariablen, 'application/json')
+    for (const datei of laufzeit) downloadFile(datei.name, datei.inhalt, 'text/javascript')
   }
 
   return (
@@ -86,7 +89,7 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
       <Knopf
         art="primaer"
         aria-label="Als SoftEngine-Maske exportieren"
-        title="Export (SoftEngine-Maske)"
+        title="Export — Maskendatei, SEvariablen und Laufzeitdateien; alle in denselben Ordner"
         onClick={handleExport}
         disabled={ed.blockCount === 0}
       >
