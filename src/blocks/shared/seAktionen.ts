@@ -8,7 +8,7 @@ import type {
   VormerkArt,
 } from '../../core/blocks/BlockDefinition'
 import { auswahlFuer } from './auswahl'
-import { PopupBlock } from '../popup/PopupBlock'
+import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import {
   formatNowDate,
   resolveParams,
@@ -75,10 +75,12 @@ function seStartTool(nr: string, params: readonly string[]): boolean {
 
 export function applyPopupStep(root: ParentNode, name: string, oeffnen: boolean): void {
   if (name.trim() === '') return
-  const alle = Array.from(root.querySelectorAll(PopupBlock.tagName))
-
+  // Nach dem Fenster-Baustein wird die Registry gefragt: eine Maske ohne
+  // Fenster laedt seinen Code gar nicht erst.
+  const fensterArt = getBlockDefinition('popup')
+  const alle = fensterArt === undefined ? [] : Array.from(root.querySelectorAll(fensterArt.tagName))
   const treffer = alle.filter(
-    (el) => (el.getAttribute('name') ?? PopupBlock.defaultProps.name) === name,
+    (el) => (el.getAttribute('name') ?? fensterArt?.defaultProps.name) === name,
   )
   if (treffer.length === 0) {
     meldeFehler('Fenster „' + name + '“ gibt es in dieser Maske nicht.')

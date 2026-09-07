@@ -3,7 +3,7 @@ import {
   nachschlagEintraege,
   quellenZeilen,
   type Eintrag,
-} from '../shared/nachschlagen'
+} from './nachschlagen'
 import { getField } from '../../softengine/data'
 import {
   bewegteMarke,

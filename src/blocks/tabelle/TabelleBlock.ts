@@ -20,7 +20,7 @@ import {
   fensterBreiteFuer,
   schliesseNachschlagenFuer,
   spaltenStellenTpl,
-} from '../shared/nachschlagen'
+} from './nachschlagen'
 import {
   erfassungsZeileFuer,
   type ErfassungsWirt,

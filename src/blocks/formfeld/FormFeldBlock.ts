@@ -47,7 +47,7 @@ import {
   satzPasstZurAuswahl,
   schliesseNachschlagenFuer,
   spaltenStellenTpl,
-} from '../shared/nachschlagen'
+} from '../tabelle/nachschlagen'
 import type { Spalte } from '../tabelle/spalten'
 
 export class FormFeldBlock extends BasicBlock {

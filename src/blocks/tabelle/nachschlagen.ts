@@ -4,19 +4,19 @@ import type { ListenBindung } from '../../core/blocks/listenBindung'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, getField, rowsFor } from '../../softengine/data'
 import { meldeFehler } from '../../softengine/meldung'
-import { zeilenNachAuswahl } from './auswahl'
-import { lupeZeichen } from './lupeZeichen'
+import { zeilenNachAuswahl } from '../shared/auswahl'
+import { lupeZeichen } from '../shared/lupeZeichen'
 import {
   DIALOG_RAHMEN_TAG,
   type DialogGroesseDetail,
   type DialogRahmen,
-} from './DialogRahmen'
-import { coerceSpalten, STANDARD_TITEL, type Spalte } from '../tabelle/spalten'
-import type { TabelleBlock } from '../tabelle/TabelleBlock'
+} from '../shared/DialogRahmen'
+import { coerceSpalten, STANDARD_TITEL, type Spalte } from './spalten'
+import type { TabelleBlock } from './TabelleBlock'
 import {
   ZEILE_AKTIVIERT_EVENT,
   type ZeileAktiviertDetail,
-} from '../tabelle/zeilenAktivierung'
+} from './zeilenAktivierung'
 
 export const FENSTER_BREITE = 520
 export const FENSTER_HOEHE = 380

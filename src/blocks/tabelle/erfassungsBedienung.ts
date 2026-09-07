@@ -4,7 +4,7 @@ import {
   fensterBreiteFuer,
   FENSTER_HOEHE,
   oeffneNachschlagen,
-} from '../shared/nachschlagen'
+} from './nachschlagen'
 import type { ErfassungsLauf } from './erfassungsLauf'
 import {
   erfassungsZeileTpl,
