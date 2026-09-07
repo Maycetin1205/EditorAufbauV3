@@ -12,7 +12,6 @@ import {
   statusVariantProperty,
   type StatusVariant,
 } from '../shared/statusVariant'
-import { tierIcon } from '../shared/tierIcon'
 import { kartenStil } from './kartenStil'
 
 type TextSpotProp = 'heading' | 'heading2' | 'time' | 'date' | 'meta' | 'text'
@@ -130,7 +129,14 @@ export class CardBlock extends BasicBlock {
                   class="avatar"
                   data-ff-spot="avatar"
                   ?data-ff-bound=${this.avatarField !== ''}
-                >${this.avatar.trim() === '' ? nothing : tierIcon(this.avatar)}</span>`
+                >${this.avatar.trim() === ''
+                  ? nothing
+                  : html`<img
+                      src=${this.avatar}
+                      alt=""
+                      aria-hidden="true"
+                      @error=${(e: Event) => { (e.target as HTMLElement).hidden = true }}
+                    />`}</span>`
               : nothing}
             <div class="namen">
               ${zeigt(this.heading) ? this.stelle('heading', 'name') : nothing}
