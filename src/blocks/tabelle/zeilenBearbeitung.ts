@@ -1,8 +1,13 @@
 // Vormerkungen an gebuchten Zeilen: Zellwerte aendern, Zeilen zum Loeschen merken.
 import type { VormerkArt } from '../../core/blocks/BlockDefinition'
+import { geheInZelle, zellenFelder } from '../shared/zellenEingabe'
 import { zeilenIndexVon } from './seRuntime'
 import type { Spalte } from './spalten'
 import type { LaufStand, ZeilenZeichen } from './zeilenStatus'
+
+// Die gebuchten Zeilen, ohne die Erfassungszeile: die haengt unten und waere
+// beim Wandern durch eine Spalte die falsche Nachbarin.
+const GEBUCHTE_ZEILEN = '.koerper > .zeile:not(.erfassung)'
 
 export interface ZeilenWirt {
   baustein: HTMLElement
@@ -170,9 +175,11 @@ export class ZeilenBearbeitung {
     schritt: number,
     enterModus: boolean,
   ): void {
-    const felder = Array.from(this.wirt.baustein.shadowRoot?.querySelectorAll<HTMLInputElement>(
-      `.koerper > .zeile:not(.erfassung) .zell-eingabe[data-spalte="${spaltenIndex}"]`,
-    ) ?? [])
+    const felder = zellenFelder(
+      this.wirt.baustein.shadowRoot,
+      GEBUCHTE_ZEILEN,
+      spaltenIndex,
+    )
     const jetzt = felder.indexOf(von)
     if (jetzt < 0) return
     let ziel = jetzt + schritt
@@ -186,10 +193,8 @@ export class ZeilenBearbeitung {
     }
     if (ziel < 0) ziel = 0
     const feld = felder[ziel]
-    if (!feld || feld === von) return
-    feld.focus()
-    feld.select()
-    feld.scrollIntoView({ block: 'nearest' })
+    if (feld === von) return
+    geheInZelle(feld)
   }
 
   // Keine dieser Tasten darf bis zur Zeile durchfallen: dort loeste Enter die

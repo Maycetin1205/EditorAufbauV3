@@ -399,46 +399,17 @@ export const tabelleStil = css`
          bleibt, er haelt die Hoehe. */
       /* Die Zelle gibt ihr Polster an das Feld ab, zusammen ergeben sie wieder
          --se-zell-x. */
+      /* Eine Zelle mit Eingabestelle laesst die Vorschlagsliste heraushaengen. */
       .zeile > div.tippbar,
       .zeile.erfassung > div {
+        display: flex;
+        align-items: center;
+        overflow: visible;
         padding: 0 calc(var(--se-zell-x) - var(--se-eingabe-x) - var(--se-border));
       }
       .zeile > div.tippbar:first-of-type,
       .zeile.erfassung > div:first-of-type {
         padding-left: calc(var(--se-zell-x) + 14px - var(--se-eingabe-x) - var(--se-border));
-      }
-
-      .erf-eingabe.auto {
-        color: var(--se-accent);
-        font-style: italic;
-        background: var(--se-accent-soft);
-      }
-
-      .zell-eingabe,
-      .erf-eingabe {
-        box-sizing: border-box;
-        width: 100%;
-        height: calc(var(--zeilen-hoehe) - 8px);
-        min-width: 0;
-        padding: 0 var(--se-eingabe-x);
-        font-family: var(--se-font);
-        font-size: var(--se-fs);
-        color: var(--se-ink);
-        background: transparent;
-        border: var(--se-border) solid transparent;
-        border-radius: var(--se-r-sm);
-      }
-      .zell-eingabe:focus,
-      .erf-eingabe:focus { outline: none; }
-      /* Die Platzhalter erscheinen erst, wenn der Bediener in der Zelle steht. */
-      .erf-eingabe::placeholder { color: transparent; }
-      .zeile.erfassung:focus-within .erf-eingabe::placeholder { color: var(--se-faint); }
-
-      .zell-eingabe.geaendert {
-        background: var(--se-amber-shell);
-        border-color: var(--se-amber-line);
-        color: var(--se-ink);
-        font-weight: 600;
       }
 
       .vorgemerkt {
@@ -480,28 +451,6 @@ export const erfassungStil = css`
         flex: none;
         background: var(--se-panel-2);
         border-top: var(--se-border) solid var(--se-line);
-      }
-
-      /* Die Vorschlagsliste haengt aus der Zelle heraus, darum sichtbarer
-         Ueberlauf an jeder Zelle. */
-      .zeile.erfassung > div {
-        display: flex;
-        align-items: center;
-        overflow: visible;
-      }
-
-      .erf-halter {
-        position: relative;
-        display: flex;
-        align-items: center;
-        width: 100%;
-        min-width: 0;
-      }
-
-      .erf-halter.nach-oben .vorschlaege {
-        top: auto;
-        bottom: 100%;
-        margin: 0 0 2px;
       }
 
       :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }

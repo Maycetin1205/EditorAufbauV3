@@ -8,6 +8,7 @@ import { alsZahl } from './sortierung'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { breitenGriffe, type BreitenWirt } from './spaltenBreite'
 import { spalteAenderbar } from './tabelleEigenschaften'
+import { zellenEingabeTpl } from '../shared/zellenEingabe'
 import { bewegeZeilenFokus, fokussiereErsteZeile, fokussiereSuchzeile } from './zeilenAktivierung'
 import type { ZeilenZeichen } from './zeilenStatus'
 import { datensatzText } from './tabelleAnsicht'
@@ -221,20 +222,22 @@ export function tabelleKoerper(lage: KoerperLage, tun: KoerperHandeln): Template
 
               if (lage.aendernMoeglich && rohIndex !== null && spalteAenderbar(s)) {
                 const stand = lage.zeilenStand
-                return html`<div class="tippbar" role="cell">
-                <input
-                  class=${stand.istGeaendert(rohIndex, platz) ? 'zell-eingabe geaendert' : 'zell-eingabe'}
-                  type="text"
-                  data-spalte=${platz}
-                  aria-label=${s.titel}
-                  .value=${stand.zellWert(rohIndex, platz)}
-                  @input=${(e: Event) =>
-                    stand.tippeZelle(rohIndex, platz, (e.target as HTMLInputElement).value)}
-                  @blur=${(e: Event) =>
-                    stand.verlasseZelle(rohIndex, platz, (e.target as HTMLInputElement).value)}
-                  @keydown=${(e: KeyboardEvent) => stand.tasteZelle(rohIndex, platz, e)}
-                />
-              </div>`
+                return html`<div class="tippbar" role="cell">${zellenEingabeTpl({
+                  wert: stand.zellWert(rohIndex, platz),
+                  titel: s.titel,
+                  platzhalter: '',
+                  platz,
+                  zustand: stand.istGeaendert(rohIndex, platz) ? 'geaendert' : 'ruhig',
+                  vorschlaege: [],
+                  marke: 0,
+                  listeNachOben: false,
+                }, {
+                  tippen: (text) => stand.tippeZelle(rohIndex, platz, text),
+                  taste: (e) => stand.tasteZelle(rohIndex, platz, e),
+                  verlassen: (text) => stand.verlasseZelle(rohIndex, platz, text),
+                  waehleVorschlag: () => {},
+                  setzeMarke: () => {},
+                })}</div>`
               }
               const klassen = [
                 s.versteckt === true ? 'versteckt' : '',

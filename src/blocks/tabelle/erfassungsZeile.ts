@@ -1,7 +1,8 @@
 // Das Umfeld einer Erfassungszeile: Zellenziele, Hilfsquellen, Fensterspalten.
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
-import { vorschlagListeTpl, type Vorschlag } from '../shared/vorschlagListe'
+import type { Vorschlag } from '../shared/vorschlagListe'
+import { zellenEingabeTpl } from '../shared/zellenEingabe'
 import { fensterSpaltenOder } from './nachschlagen'
 import { ZELLE_PLATZHALTER, type Spalte } from './spalten'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
@@ -39,50 +40,6 @@ export interface ErfassungsHandeln {
   setzeMarke: (listenIndex: number) => void
 }
 
-function eingabe(
-  lage: ErfassungsLage,
-  tun: ErfassungsHandeln,
-  index: number,
-  platz: number,
-): TemplateResult {
-  return html`<input
-    class=${lage.automatisch(platz) ? 'erf-eingabe auto' : 'erf-eingabe'}
-    type="text"
-    data-spalte=${platz}
-    placeholder=${lage.spalten[index]?.titel ?? ''}
-    .value=${lage.wert(platz)}
-    @input=${(e: Event) => tun.tippen(platz, (e.target as HTMLInputElement).value)}
-    @keydown=${(e: KeyboardEvent) => tun.taste(platz, e)}
-    @blur=${() => tun.verlassen(platz)}
-  />`
-}
-
-// Keine Lupe in der Erfassungszelle: das grosse Fenster oeffnet F4 oder
-// Alt+Pfeil-runter.
-function laufzeitZelle(
-  lage: ErfassungsLage,
-  tun: ErfassungsHandeln,
-  index: number,
-  platz: number,
-  frei: boolean,
-): TemplateResult {
-  if (frei) {
-    return html`<div class="erf-halter">
-      ${eingabe(lage, tun, index, platz)}
-    </div>`
-  }
-  const liste = lage.tippSpalte === platz && lage.vorschlaege.length > 0
-  return html`<div class=${lage.listeNachOben ? 'erf-halter nach-oben' : 'erf-halter'}>
-    ${eingabe(lage, tun, index, platz)}
-    ${liste ? vorschlagListeTpl({
-      eintraege: lage.vorschlaege,
-      marke: lage.marke,
-      onWaehlen: (i) => tun.waehleVorschlag(i),
-      onMarke: (i) => tun.setzeMarke(i),
-    }) : nothing}
-  </div>`
-}
-
 export function erfassungsZeileTpl(
   lage: ErfassungsLage,
   tun: ErfassungsHandeln,
@@ -95,8 +52,26 @@ export function erfassungsZeileTpl(
           role="cell"
         >${ZELLE_PLATZHALTER}</div>`
       }
+      const platz = lage.plaetze[i]
+      // Eine freie Zelle hat nichts nachzuschlagen; ihre Liste bliebe leer.
       const frei = zellenzielVon(spalte, lage.quelleId).art === 'frei'
-      return html`<div role="cell">${laufzeitZelle(lage, tun, i, lage.plaetze[i], frei)}</div>`
+      const liste = !frei && lage.tippSpalte === platz
+      return html`<div role="cell">${zellenEingabeTpl({
+        wert: lage.wert(platz),
+        titel: spalte.titel,
+        platzhalter: spalte.titel,
+        platz,
+        zustand: lage.automatisch(platz) ? 'automatisch' : 'ruhig',
+        vorschlaege: liste ? lage.vorschlaege : [],
+        marke: lage.marke,
+        listeNachOben: lage.listeNachOben,
+      }, {
+        tippen: (text) => tun.tippen(platz, text),
+        taste: (e) => tun.taste(platz, e),
+        verlassen: () => tun.verlassen(platz),
+        waehleVorschlag: (i2) => tun.waehleVorschlag(i2),
+        setzeMarke: (i2) => tun.setzeMarke(i2),
+      })}</div>`
     })}
   </div>`
 }

@@ -15,6 +15,7 @@ import type {
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
 import { vorschlagStil } from '../shared/vorschlagListe'
+import { geheInZelle, zellenEingabeStil, zellenFelder } from '../shared/zellenEingabe'
 import {
   FENSTER_HOEHE,
   fensterBreiteFuer,
@@ -371,14 +372,7 @@ export class TabelleBlock extends BasicBlock {
 
   private fokussiereErfassungsZelle(index: number): void {
     void this.updateComplete.then(() => {
-      // Ueber den vollen Platz (data-spalte): die Zaehlung der gezeichneten
-      // Felder traefe mit einer versteckten Spalte davor die falsche Zelle.
-      const feld = this.shadowRoot?.querySelector<HTMLInputElement>(
-        `.zeile.erfassung .erf-eingabe[data-spalte="${index}"]`,
-      )
-      if (!feld) return
-      feld.focus()
-      feld.scrollIntoView({ block: 'nearest' })
+      geheInZelle(zellenFelder(this.shadowRoot, '.zeile.erfassung', index)[0])
     })
   }
 
@@ -490,6 +484,7 @@ export class TabelleBlock extends BasicBlock {
     leerStil,
     tabelleStil,
     vorschlagStil,
+    zellenEingabeStil,
     erfassungStil,
   ]
 
