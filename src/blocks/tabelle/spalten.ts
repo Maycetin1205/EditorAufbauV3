@@ -1,9 +1,9 @@
 // Die Spaltenliste einer Tabelle: Form, Kennungen, Reihenfolge, Sicht beim Zeichnen.
 import { kennungenVergeben } from '../../core/blocks/listenBindung'
-import { ohneSpalten, rechnungAlsAttribut, rechnungVonAttribut } from '../../core/data/rechnung'
+import { formelVonRoh, ohneGliederAuf, type Formel } from '../../core/data/rechnung'
 
 export interface Spalte {
-  // Ketten und Rechnung zeigen auf die Kennung, nie auf Platz oder Feld: ein
+  // Ketten und Formeln zeigen auf die Kennung, nie auf Platz oder Feld: ein
   // Belegfeld kann doppelt vergeben sein.
   kennung: string
   titel: string
@@ -16,6 +16,9 @@ export interface Spalte {
   aenderbar?: boolean
 
   fuellFeld?: string
+
+  // Rechnet die Zelle der Erfassungszeile aus anderen Spalten; Getipptes geht vor.
+  formel?: Formel
 
   // Das Suchfenster dieser Zelle (F4). LEER heisst Automatik: das Fenster nimmt
   // die Spalten der Tabelle, die auf dieselbe Hilfsquelle zeigen.
@@ -109,6 +112,7 @@ function alsSpalte(x: unknown, index: number): Spalte {
   if (x && typeof x === 'object') {
     const o = x as Record<string, unknown>
     const breite = o.breite === undefined ? undefined : alsBreite(o.breite)
+    const formel = formelVonRoh(o.formel)
     return {
       kennung: typeof o.kennung === 'string' ? o.kennung.trim() : '',
       titel: typeof o.titel === 'string' ? o.titel : standardTitelFuer(index),
@@ -125,6 +129,8 @@ function alsSpalte(x: unknown, index: number): Spalte {
       ...(typeof o.fuellFeld === 'string' && o.fuellFeld.trim() !== ''
         ? { fuellFeld: o.fuellFeld.trim() }
         : {}),
+
+      ...(formel === undefined ? {} : { formel }),
 
       // Eine leere Liste ist dasselbe wie keine: zurueck zur Automatik.
       ...(Array.isArray(o.fensterSpalten) && o.fensterSpalten.length > 0
@@ -187,22 +193,6 @@ export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
   return mitKennungen([...spalten, neueSpalte(spalten.length)])
 }
 
-// Eine gestrichene Spalte darf keinen Zeiger der Rechnung hinterlassen: ihre
-// Kennung kann eine neue Spalte wieder bekommen. Rueckgabe null heisst, es war
-// nichts abzuraeumen.
-export function rechnungNachSpalten(
-  roh: unknown,
-  alt: readonly Spalte[],
-  neu: readonly Spalte[],
-): string | null {
-  const rechnung = rechnungVonAttribut(roh)
-  if (!rechnung) return null
-  const bleibt = new Set(neu.map((s) => s.kennung))
-  const gestrichen = alt.map((s) => s.kennung).filter((k) => k !== '' && !bleibt.has(k))
-  const geputzt = ohneSpalten(rechnung, gestrichen)
-  return geputzt === rechnung ? null : rechnungAlsAttribut(geputzt)
-}
-
 // Eine Stelle fuer beide Wege: das Kreuz am Spaltenkopf nennt seinen Platz, der
 // Minus-Knopf meint den letzten. Die letzte Spalte bleibt stehen.
 export function entferneSpalte(
@@ -216,9 +206,18 @@ export function entferneSpalte(
 }
 
 // Dieselbe Liste zurueck heisst „nicht erlaubt" (letzte Spalte, Platz ausserhalb).
+// Die Formeln der anderen verlieren ihre Glieder auf die gestrichene Spalte.
 export function ohneSpalte(spalten: readonly Spalte[], index: number): readonly Spalte[] {
   if (spalten.length <= SPALTEN_MIN || index < 0 || index >= spalten.length) return spalten
-  return spalten.filter((_, i) => i !== index)
+  const gestrichen = new Set([spalten[index].kennung])
+  return spalten.filter((_, i) => i !== index).map((s) => {
+    if (s.formel === undefined) return s
+    const formel = ohneGliederAuf(s.formel, gestrichen)
+    if (formel === s.formel) return s
+    const ohne: Spalte = { ...s }
+    delete ohne.formel
+    return formel === undefined ? ohne : { ...ohne, formel }
+  })
 }
 
 // Dieselbe Liste zurueck heisst „nichts zu tun". Ketten und Rechnung zeigen auf

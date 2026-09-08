@@ -7,7 +7,6 @@ import type {
   ListenBindung,
   VormerkArt,
 } from '../../core/blocks/BlockDefinition'
-import { rechnungVonAttribut } from '../../core/data/rechnung'
 import { SE_FOKUS_EVENT } from '../../softengine/bridge'
 import { BasicBlock } from '../base/BasicBlock'
 import { vorschlagStil } from '../shared/vorschlagListe'
@@ -20,7 +19,7 @@ import {
   spaltenStellenTpl,
 } from '../tabelle/nachschlagen'
 import { hatSatzNummer } from '../tabelle/seRuntime'
-import { rechnungNachSpalten, standardSpalten, type Spalte } from '../tabelle/spalten'
+import { standardSpalten, type Spalte } from '../tabelle/spalten'
 import { TabelleBlock } from '../tabelle/TabelleBlock'
 import { OHNE_SCHMUCK, type Unterzeilen, type Zeilenschmuck } from '../tabelle/tabelleKoerper'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
@@ -61,7 +60,6 @@ export class ErfassungBlock extends TabelleBlock {
     ...TabelleBlock.defaultProps,
     spalten: standardSpalten(),
     loeschbar: 'nein',
-    rechnung: '',
   }
 
   static override readonly customProperties = ERFASSUNG_EIGENSCHAFTEN
@@ -74,8 +72,6 @@ export class ErfassungBlock extends TabelleBlock {
   ]
 
   @property() loeschbar = 'nein'
-
-  @property() rechnung = ''
 
   @property({ attribute: false }) fensterDialogIndex = -1
 
@@ -143,25 +139,8 @@ export class ErfassungBlock extends TabelleBlock {
     return this._zeilen.zellWert(rohIndex, platz)
   }
 
-  // Rechnung und Spalten in EINER Geste melden, sonst braucht ein Loeschen
-  // zwei Mal Strg+Z.
-  protected override aendere(spalten: Spalte[]): void {
-    const rechnung = rechnungNachSpalten(this.rechnung, this.spaltenListe(), spalten)
-    if (rechnung === null) {
-      super.aendere(spalten)
-      return
-    }
-    this.meldeProp('rechnung', rechnung, 'beginn')
-    this.meldeProp('spalten', spalten, 'ende')
-  }
-
   private erfassungsUmfeld(): ErfassungsUmfeld {
-    return this._erfassung.umfeld(
-      this,
-      this.spaltenListe(),
-      this.source,
-      rechnungVonAttribut(this.rechnung),
-    )
+    return this._erfassung.umfeld(this, this.spaltenListe(), this.source)
   }
 
   private erfassungsWirt(): ErfassungsWirt {
@@ -281,7 +260,6 @@ export class ErfassungBlock extends TabelleBlock {
     }
   }
 
-  // Ueber `aendere`, damit die Rechnung mitzieht und ein Undo-Schritt entsteht.
   private aendereSpalte(index: number, teil: Partial<Spalte>): void {
     const alt = this.spaltenListe()
     if (alt[index] === undefined) return

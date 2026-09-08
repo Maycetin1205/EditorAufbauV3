@@ -300,3 +300,43 @@ export function migrateErfassungAlsBaustein(src: Record<string, RohKnoten>): voi
     }
   }
 }
+
+// Die Rechnung mit vier festen Plaetzen ist zur Formel je Spalte geworden: die
+// Mengenspalte rechnet sich als Produkt der belegten Faktoren. Die Umkehrung
+// (Dosis aus der Menge) gibt es nicht mehr.
+export function migrateRechnungAlsFormel(src: Record<string, RohKnoten>): void {
+  for (const node of Object.values(src)) {
+    if (!node || typeof node !== 'object') continue
+    const props = rohProps(node)
+    if (!('rechnung' in props)) continue
+    const roh = typeof props.rechnung === 'string' ? props.rechnung.trim() : ''
+    delete props.rechnung
+    if (roh === '') continue
+    let geparst: unknown
+    try {
+      geparst = JSON.parse(roh)
+    } catch {
+      continue
+    }
+    if (!geparst || typeof geparst !== 'object' || Array.isArray(geparst)) continue
+    const plaetze = geparst as Record<string, unknown>
+    const platz = (key: string): Record<string, unknown> | undefined => {
+      const p = plaetze[key]
+      return p && typeof p === 'object' ? p as Record<string, unknown> : undefined
+    }
+    const kennungVon = (key: string): string => {
+      const spalte = platz(key)?.spalte
+      return typeof spalte === 'string' ? spalte.trim() : ''
+    }
+    const ziel = kennungVon('menge')
+    const faktoren = RECHNUNG_PLAETZE_ROH.slice(1).map(kennungVon).filter((k) => k !== '')
+    if (ziel === '' || faktoren.length === 0) continue
+    const spalte = rohSpalten(node).find((s) => s.kennung === ziel)
+    if (!spalte) continue
+    spalte.formel = {
+      glieder: faktoren.map((kennung) => ({ spalte: kennung })),
+      zeichen: faktoren.slice(1).map(() => '*'),
+      runden: platz('menge')?.runden ?? { stellen: 3, richtung: 'kfm' },
+    }
+  }
+}

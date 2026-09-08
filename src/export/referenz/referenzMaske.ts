@@ -103,6 +103,16 @@ export function referenzBaum(): BlockTree {
         { kennung: 'sp-art', titel: 'ArtNr', feld: '18_25', art: 'text' },
         { kennung: 'sp-bez', titel: 'Bezeichnung', feld: '45_60', art: 'text', fuellFeld: 'q-art::bez' },
         { kennung: 'sp-menge', titel: 'Menge', feld: '164_8', art: 'text', aenderbar: true },
+        {
+          kennung: 'sp-doppelt',
+          titel: 'Doppelt',
+          feld: '',
+          formel: {
+            glieder: [{ spalte: 'sp-menge' }, { zahl: 2 }],
+            zeichen: ['*'],
+            runden: { stellen: 2, richtung: 'kfm' },
+          },
+        },
       ],
       loeschbar: 'ja',
     }),

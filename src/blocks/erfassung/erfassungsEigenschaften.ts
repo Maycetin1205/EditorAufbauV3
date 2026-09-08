@@ -3,7 +3,7 @@ import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import type { EintragsSchalter, ListenBindung } from '../../core/blocks/BlockDefinition'
 import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
 import { jaNeinProperty } from '../shared/jaNeinProperty'
-import { coerceSpalten, ohneSpalte, rechnungNachSpalten, type Spalte } from '../tabelle/spalten'
+import type { Spalte } from '../tabelle/spalten'
 import { SPALTEN_BINDUNG, TABELLE_EIGENSCHAFTEN } from '../tabelle/tabelleEigenschaften'
 
 const LOESCHBAR = jaNeinProperty(
@@ -27,16 +27,6 @@ const AENDERBAR: EintragsSchalter = {
 
 export const ERFASSUNG_SPALTEN_BINDUNG: ListenBindung = {
   ...SPALTEN_BINDUNG,
-
-  // Rechnung und Spalten in EINER Geste, sonst braucht ein Loeschen zwei Mal
-  // Strg+Z.
-  eintragWeg: (props, index) => {
-    const alt = coerceSpalten(props.spalten)
-    const neu = ohneSpalte(alt, index)
-    if (neu === alt) return {}
-    const rechnung = rechnungNachSpalten(props.rechnung, alt, neu)
-    return { spalten: [...neu], ...(rechnung === null ? {} : { rechnung }) }
-  },
 
   // Ohne Einstellung rechnet sich das Fenster bei jedem Oeffnen aus den
   // Spalten derselben Hilfsquelle.

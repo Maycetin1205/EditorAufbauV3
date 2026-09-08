@@ -1,5 +1,9 @@
 import { expect, test } from 'vitest'
-import { migrateErfassungAlsBaustein, migrateSpaltenKennungen } from './migrationenRoh'
+import {
+  migrateErfassungAlsBaustein,
+  migrateRechnungAlsFormel,
+  migrateSpaltenKennungen,
+} from './migrationenRoh'
 
 // Die Lade-Migration zur Spalten-Kennung: alte Masken sprachen
 // Spalten ueber Platznummer (Ketten) bzw. Belegfeld (Rechnung) an — beides
@@ -133,4 +137,40 @@ test('eine Tabelle, die schreibt, wird zur Erfassung; die Liste verliert die Sch
   expect(src.l.type).toBe('erfassung')
   expect(src.t.type).toBe('tabelle')
   expect(src.t.props).toEqual({ spalten: [{ kennung: 's1', titel: 'A', feld: '1_1' }] })
+})
+
+test('die Rechnung mit festen Plaetzen wird zur Formel an der Mengenspalte', () => {
+  const src = {
+    e: {
+      type: 'erfassung',
+      props: {
+        spalten: [
+          { kennung: 's1', titel: 'Menge', feld: '164_8' },
+          { kennung: 's2', titel: 'Tiere', feld: '1_1' },
+          { kennung: 's3', titel: 'Dosis', feld: '930_3' },
+        ],
+        rechnung: JSON.stringify({
+          menge: { spalte: 's1', runden: { stellen: 2, richtung: 'auf' } },
+          anzahl: { spalte: 's2', runden: { stellen: 0, richtung: 'auf' } },
+          dosis: { spalte: 's3', runden: { stellen: 3, richtung: 'kfm' } },
+          tage: { spalte: '', runden: { stellen: 3, richtung: 'kfm' } },
+        }),
+      },
+    },
+    leer: { type: 'erfassung', props: { spalten: [{ kennung: 's1', titel: 'A', feld: '1_1' }], rechnung: '' } },
+  }
+  migrateRechnungAlsFormel(src)
+  expect('rechnung' in src.e.props).toBe(false)
+  expect(src.e.props.spalten[0]).toEqual({
+    kennung: 's1',
+    titel: 'Menge',
+    feld: '164_8',
+    formel: {
+      glieder: [{ spalte: 's2' }, { spalte: 's3' }],
+      zeichen: ['*'],
+      runden: { stellen: 2, richtung: 'auf' },
+    },
+  })
+  expect(src.e.props.spalten[1]).not.toHaveProperty('formel')
+  expect(src.leer.props).toEqual({ spalten: [{ kennung: 's1', titel: 'A', feld: '1_1' }] })
 })

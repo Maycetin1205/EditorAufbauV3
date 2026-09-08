@@ -7,14 +7,7 @@ import {
 import { getField } from '../../softengine/data'
 import { passendeVorschlaege, VORSCHLAEGE_MAX } from '../shared/vorschlagListe'
 import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
-import {
-  loeseRechnung,
-  platzText,
-  zahlStreng,
-  PLATZ_KEYS,
-  type PlatzKey,
-  type PlatzWert,
-} from '../../core/data/rechnung'
+import { rechneFormel, zahlStreng, zahlText } from '../../core/data/rechnung'
 import { alsZahl } from '../tabelle/sortierung'
 import { spalteMitKennung } from '../tabelle/spalten'
 import {
@@ -27,6 +20,9 @@ import {
 } from './erfassungsZeile'
 
 export type ErfassungsTaste = TastenFolge | 'weiter' | 'leeren' | 'liste-auf'
+
+// null = leer, 'fehler' = belegt, aber nicht als Zahl lesbar.
+type GegebeneZahl = number | null | 'fehler'
 
 export class ErfassungsLauf {
   private getippt = new Map<number, string>()
@@ -41,7 +37,8 @@ export class ErfassungsLauf {
 
   private readonly liste = new VorschlagStand<Eintrag>()
 
-  private _gerechnet: { index: number; wert: string } | null = null
+  // Je Formelspalte ihr gerechneter Text, solange nichts Getipptes davor steht.
+  private readonly _gerechnet = new Map<number, string>()
 
   get tippSpalte(): number {
     return this._tippSpalte
@@ -58,7 +55,8 @@ export class ErfassungsLauf {
   wertVon(umfeld: ErfassungsUmfeld, index: number): string {
     const getippt = this.getippt.get(index)
     if (getippt !== undefined && getippt !== '') return getippt
-    if (this._gerechnet?.index === index) return this._gerechnet.wert
+    const gerechnet = this._gerechnet.get(index)
+    if (gerechnet !== undefined) return gerechnet
     if (getippt !== undefined) return getippt
     const ziel = zielIn(umfeld, index)
     if (ziel.quelleId === '' || ziel.code === '') return ''
@@ -66,7 +64,7 @@ export class ErfassungsLauf {
     return satz === undefined ? '' : getField(satz, ziel.code)
   }
 
-  private gegebeneZahl(umfeld: ErfassungsUmfeld, index: number): PlatzWert {
+  private gegebeneZahl(umfeld: ErfassungsUmfeld, index: number): GegebeneZahl {
     const getippt = this.getippt.get(index)
     if (getippt !== undefined) {
       if (getippt.trim() === '') return null
@@ -83,25 +81,34 @@ export class ErfassungsLauf {
     return zahl === null ? 'fehler' : zahl
   }
 
+  // Jede Formelspalte rechnet aus Gegebenem und aus anderen Formelspalten; ein
+  // Kreis bleibt leer.
   rechne(umfeld: ErfassungsUmfeld): void {
-    this._gerechnet = null
-    const r = umfeld.rechnung
-    if (!r) return
-    const werte = {} as Record<PlatzKey, PlatzWert>
-    const indizes = {} as Record<PlatzKey, number>
-    const konfiguriert = new Set<PlatzKey>()
-    for (const key of PLATZ_KEYS) {
-      const index = spalteMitKennung(umfeld.spalten, r[key].spalte)
-      indizes[key] = index
-      werte[key] = index === -1 ? null : this.gegebeneZahl(umfeld, index)
-      if (index !== -1) konfiguriert.add(key)
+    this._gerechnet.clear()
+    const zahlen = new Map<number, number | null>()
+    const unterwegs = new Set<number>()
+    const zahlVon = (index: number): number | null => {
+      const bekannt = zahlen.get(index)
+      if (bekannt !== undefined) return bekannt
+      if (unterwegs.has(index)) return null
+      unterwegs.add(index)
+      const gegeben = this.gegebeneZahl(umfeld, index)
+      let zahl: number | null = gegeben === 'fehler' ? null : gegeben
+      const formel = umfeld.spalten[index]?.formel
+      if (gegeben === null && formel !== undefined) {
+        zahl = rechneFormel(formel, (kennung) => {
+          const i = spalteMitKennung(umfeld.spalten, kennung)
+          return i === -1 ? null : zahlVon(i)
+        })
+        if (zahl !== null) this._gerechnet.set(index, zahlText(zahl, formel.runden.stellen))
+      }
+      unterwegs.delete(index)
+      zahlen.set(index, zahl)
+      return zahl
     }
-    const geloest = loeseRechnung(r, werte, konfiguriert)
-    if (!geloest) return
-    this._gerechnet = {
-      index: indizes[geloest.platz],
-      wert: platzText(geloest.wert, r[geloest.platz].runden.stellen),
-    }
+    umfeld.spalten.forEach((spalte, index) => {
+      if (spalte.formel !== undefined) zahlVon(index)
+    })
   }
 
   tippe(index: number, text: string): void {
@@ -117,8 +124,11 @@ export class ErfassungsLauf {
     this.liste.ruhe()
   }
 
+  // Eine leergetippte Formelzelle zeigt wieder ihren gerechneten Wert.
   istAutomatisch(umfeld: ErfassungsUmfeld, index: number): boolean {
-    return !this.getippt.has(index) && this.wertVon(umfeld, index) !== ''
+    const getippt = this.getippt.get(index)
+    const gerechnet = getippt === '' && this._gerechnet.has(index)
+    return (getippt === undefined || gerechnet) && this.wertVon(umfeld, index) !== ''
   }
 
   entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
@@ -295,33 +305,29 @@ export class ErfassungsLauf {
     werte.forEach((wert, index) => {
       if (wert !== '') this.getippt.set(index, wert)
     })
-    this.gibDemGerechnetenPlatzSeineLuecke(umfeld)
+    this.gibDenGerechnetenIhreLuecke(umfeld)
     this.rechne(umfeld)
   }
 
-  // Der von der Rechnung gefuellte Platz darf nicht als gegebener Wert
-  // zurueckkommen, sonst schweigt die Rechnung. Erkannt wird er daran, dass sein
-  // Wert genau dem entspricht, was sich ohne ihn aus den uebrigen rechnet.
-  private gibDemGerechnetenPlatzSeineLuecke(umfeld: ErfassungsUmfeld): void {
-    const r = umfeld.rechnung
-    if (!r) return
-    for (const key of PLATZ_KEYS) {
-      const index = spalteMitKennung(umfeld.spalten, r[key].spalte)
-      if (index === -1) continue
+  // Ein von der Formel gefuellter Wert darf nicht als getippt zurueckkommen,
+  // sonst rechnet die Spalte nicht mehr. Erkannt wird er daran, dass er genau
+  // dem entspricht, was sich ohne ihn aus den uebrigen rechnet.
+  private gibDenGerechnetenIhreLuecke(umfeld: ErfassungsUmfeld): void {
+    umfeld.spalten.forEach((spalte, index) => {
+      if (spalte.formel === undefined) return
       const wert = this.getippt.get(index)
-      if (wert === undefined || wert === '') continue
+      if (wert === undefined || wert === '') return
       this.getippt.delete(index)
       this.rechne(umfeld)
-      if (this._gerechnet?.index === index && this._gerechnet.wert === wert) return
-      this.getippt.set(index, wert)
-    }
+      if (this._gerechnet.get(index) !== wert) this.getippt.set(index, wert)
+    })
   }
 
   zuruecksetzen(): void {
     this.getippt.clear()
     this.gewaehlt.clear()
     this.vonHand.clear()
-    this._gerechnet = null
+    this._gerechnet.clear()
     this._tippSpalte = -1
     this._listeAuf = -1
     this.liste.ruhe()

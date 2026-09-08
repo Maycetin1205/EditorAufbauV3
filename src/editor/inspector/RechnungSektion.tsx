@@ -1,17 +1,21 @@
-// Die Rechnung der Erfassungszeile einstellen: welche Spalte welchen Platz traegt.
+// Die Formeln der Erfassung einstellen: welche Spalte sich woraus rechnet.
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { Segment, type SegmentOption } from '@/ui/werkbank/Segment'
 import { Wahl, type WahlOption } from '@/ui/werkbank/Wahl'
 import { Zahl } from '@/ui/werkbank/Zahl'
+import { X } from '@/ui/zeichen'
+import { coerceSpalten, type Spalte } from '../../blocks/tabelle/spalten'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import {
-  leereRechnung,
-  rechnungAlsAttribut,
-  rechnungVonAttribut,
-  PLATZ_KEYS,
-  PLATZ_NAMEN,
-  type PlatzKey,
-  type Rechnung,
+  formelAlsText,
+  neueFormel,
+  zahlStreng,
+  zahlText,
+  STELLEN_MAX,
+  type Formel,
+  type Glied,
+  type Rechenzeichen,
   type RundungsRichtung,
 } from '../../core/data/rechnung'
 import { useEditor } from '../../state/useEditor'
@@ -26,112 +30,204 @@ const RICHTUNGEN: WahlOption[] = [
   { wert: 'kfm', name: 'kaufmännisch' },
 ]
 
-// Titel als Anzeige, die dauerhafte KENNUNG als Griff der Plaetze — nie das
-// Belegfeld, das kann doppelt vergeben sein.
-function spaltenVon(node: BlockNode): { titel: string; kennung: string; versteckt: boolean }[] {
-  const roh = node.props.spalten
-  if (!Array.isArray(roh)) return []
-  const raus: { titel: string; kennung: string; versteckt: boolean }[] = []
-  for (const eintrag of roh) {
-    if (!eintrag || typeof eintrag !== 'object') continue
-    const o = eintrag as Record<string, unknown>
-    const kennung = typeof o.kennung === 'string' ? o.kennung.trim() : ''
-    if (kennung === '') continue
-    raus.push({
-      titel: typeof o.titel === 'string' ? o.titel : '',
-      kennung,
-      versteckt: o.versteckt === true,
+const ZEICHEN: SegmentOption[] = [
+  { wert: '+', name: 'plus', zeichen: '+' },
+  { wert: '-', name: 'minus', zeichen: '−' },
+  { wert: '*', name: 'mal', zeichen: '×' },
+  { wert: '/', name: 'geteilt', zeichen: '÷' },
+]
+
+// Der Eintrag der Spaltenwahl, der eine feste Zahl statt einer Spalte meint.
+const FESTE_ZAHL = '#zahl'
+
+function spaltenName(spalte: Spalte): string {
+  return (spalte.titel === '' ? spalte.kennung : spalte.titel)
+    + (spalte.versteckt === true ? ' (ausgeblendet)' : '')
+}
+
+function mitFormel(spalte: Spalte, formel: Formel | undefined): Spalte {
+  const ohne: Spalte = { ...spalte }
+  delete ohne.formel
+  return formel === undefined ? ohne : { ...ohne, formel }
+}
+
+function FesteZahl({ wert, onWert }: { wert: number; onWert: (zahl: number) => void }) {
+  const text = zahlText(wert, STELLEN_MAX)
+  return (
+    <Zahl
+      key={text}
+      className="w-20"
+      title="Feste Zahl, deutsch geschrieben"
+      defaultValue={text}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+      onBlur={(e) => {
+        const zahl = zahlStreng(e.currentTarget.value)
+        if (zahl === null) e.currentTarget.value = text
+        else if (zahl !== wert) onWert(zahl)
+      }}
+    />
+  )
+}
+
+function FormelZeilen({ spalten, index, onFormel }: {
+  spalten: readonly Spalte[]
+  index: number
+  onFormel: (formel: Formel | undefined) => void
+}) {
+  const spalte = spalten[index]
+  const formel = spalte.formel
+  if (formel === undefined) return null
+  const andere: WahlOption[] = spalten
+    .filter((s, i) => i !== index && s.kennung !== '')
+    .map((s) => ({ wert: s.kennung, name: spaltenName(s) }))
+  const optionen: WahlOption[] = [...andere, { wert: FESTE_ZAHL, name: 'Zahl…' }]
+  const titelVon = (kennung: string): string => {
+    const s = spalten.find((sp) => sp.kennung === kennung)
+    return s === undefined ? '' : (s.titel === '' ? s.kennung : s.titel)
+  }
+
+  const setzeGlied = (i: number, glied: Glied): void => {
+    onFormel({ ...formel, glieder: formel.glieder.map((g, k) => (k === i ? glied : g)) })
+  }
+  const setzeZeichen = (i: number, zeichen: Rechenzeichen): void => {
+    onFormel({ ...formel, zeichen: formel.zeichen.map((z, k) => (k === i ? zeichen : z)) })
+  }
+  const gliedWeg = (i: number): void => {
+    if (formel.glieder.length <= 1) return
+    onFormel({
+      ...formel,
+      glieder: formel.glieder.filter((_, k) => k !== i),
+      zeichen: formel.zeichen.filter((_, k) => k !== Math.max(0, i - 1)),
     })
   }
-  return raus
+  const gliedDazu = (): void => {
+    onFormel({
+      ...formel,
+      glieder: [...formel.glieder, { spalte: '' }],
+      zeichen: [...formel.zeichen, '*'],
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded border border-linie p-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate text-ui" title={formelAlsText(formel, titelVon)}>
+          <span className="font-medium">{spaltenName(spalte)}</span>
+          {' = '}
+          {formelAlsText(formel, titelVon)}
+        </span>
+        <Knopf nurZeichen aria-label="Formel entfernen" onClick={() => onFormel(undefined)}>
+          <X className="size-3.5" />
+        </Knopf>
+      </div>
+
+      {formel.glieder.map((glied, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          {i === 0
+            ? <span className="w-steuer shrink-0 text-center text-ui text-matt">=</span>
+            : (
+              <Segment
+                bezeichnung="Rechenzeichen"
+                optionen={ZEICHEN}
+                wert={formel.zeichen[i - 1] ?? '*'}
+                onWaehle={(z) => setzeZeichen(i - 1, z as Rechenzeichen)}
+              />
+            )}
+          <Wahl
+            optionen={optionen}
+            wert={'zahl' in glied ? FESTE_ZAHL : glied.spalte}
+            leerText="Spalte wählen"
+            onWaehle={(wert) => setzeGlied(i, wert === FESTE_ZAHL ? { zahl: 1 } : { spalte: wert })}
+          />
+          {'zahl' in glied && (
+            <FesteZahl wert={glied.zahl} onWert={(zahl) => setzeGlied(i, { zahl })} />
+          )}
+          <Knopf
+            nurZeichen
+            aria-label="Glied entfernen"
+            disabled={formel.glieder.length <= 1}
+            onClick={() => gliedWeg(i)}
+          >
+            <X className="size-3.5" />
+          </Knopf>
+        </div>
+      ))}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Knopf onClick={gliedDazu}>+ Glied</Knopf>
+        <span className="ml-auto text-dicht text-matt">runden</span>
+        <Zahl
+          einheit="NK"
+          title="Nachkommastellen des gerechneten Werts"
+          className="w-16"
+          min={0}
+          max={STELLEN_MAX}
+          value={formel.runden.stellen}
+          onChange={(e) => {
+            const stellen = Number.parseInt(e.target.value, 10)
+            if (Number.isInteger(stellen) && stellen >= 0 && stellen <= STELLEN_MAX) {
+              onFormel({ ...formel, runden: { ...formel.runden, stellen } })
+            }
+          }}
+        />
+        <Wahl
+          className="w-auto"
+          optionen={RICHTUNGEN}
+          wert={formel.runden.richtung}
+          onWaehle={(richtung) => onFormel({
+            ...formel,
+            runden: { ...formel.runden, richtung: richtung as RundungsRichtung },
+          })}
+        />
+      </div>
+    </div>
+  )
 }
 
 export function RechnungSektion({ block }: { block: BlockNode }) {
   const [offen, schalte] = useAbschnitt('rechnung')
   const ed = useEditor()
-  const stand = rechnungVonAttribut(block.props.rechnung) ?? leereRechnung()
-  // Eine ausgeblendete Spalte steht dabei, aber gekennzeichnet: die Rechnung
-  // rechnet in sie hinein, tippen kann der Bediener sie nicht.
-  const spaltenOptionen: WahlOption[] = spaltenVon(block).map((s) => ({
-    wert: s.kennung,
-    name: (s.titel === '' ? s.kennung : s.titel) + (s.versteckt ? ' (ausgeblendet)' : ''),
-  }))
-  const gesetzt = typeof block.props.rechnung === 'string' && block.props.rechnung.trim() !== ''
+  const spalten = coerceSpalten(block.props.spalten)
 
-  // Eine ausgeblendete Spalte kann der Bediener nie tippen, sie kann also nur der
-  // GERECHNETE Platz sein. Sitzen zwei Plaetze auf ausgeblendeten Spalten, hat die
-  // Gleichung zwei Luecken und die Rechnung rechnet nie — das fiele sonst erst in
-  // SoftEngine auf, an einer Zelle, die leer bleibt.
-  const versteckteKennungen = new Set(
-    spaltenVon(block).filter((sp) => sp.versteckt).map((sp) => sp.kennung),
-  )
-  const blockiert = PLATZ_KEYS
-    .filter((key) => versteckteKennungen.has(stand[key].spalte))
-    .map((key) => PLATZ_NAMEN[key])
+  const setzeFormel = (index: number, formel: Formel | undefined): void => {
+    ed.updateProperty(
+      block.id,
+      'spalten',
+      spalten.map((s, i) => (i === index ? mitFormel(s, formel) : s)),
+    )
+  }
 
-  const speichere = (neu: Rechnung): void => {
-    ed.updateProperty(block.id, 'rechnung', rechnungAlsAttribut(neu))
-  }
-  const setzePlatz = (key: PlatzKey, teil: Partial<Rechnung[PlatzKey]>): void => {
-    speichere({ ...stand, [key]: { ...stand[key], ...teil } })
-  }
+  const mitFormeln = spalten.map((_, i) => i).filter((i) => spalten[i].formel !== undefined)
+  const ohneFormel: WahlOption[] = spalten
+    .map((s, i) => ({ spalte: s, index: i }))
+    .filter(({ spalte }) => spalte.formel === undefined && spalte.kennung !== '')
+    .map(({ spalte, index }) => ({ wert: String(index), name: spaltenName(spalte) }))
 
   return (
     <Gruppe titel="Rechnung" offen={offen} onSchalte={schalte}>
       <div className="flex flex-col gap-3">
         <p className="text-dicht text-matt">
-          Abgabemenge = Anzahl × Dosis × Tage. Gerechnet wird der eine leere
-          Platz der Erfassungszeile.
+          Eine Spalte mit Formel rechnet sich aus anderen Spalten, sobald alle
+          Glieder gefüllt sind. Mal und Geteilt gehen vor Plus und Minus.
+          Getipptes geht vor.
         </p>
 
-        {PLATZ_KEYS.map((key) => (
-          <div key={key} className="flex flex-col gap-1">
-            <span className="text-dicht text-matt">{PLATZ_NAMEN[key]}</span>
-            <Wahl
-              optionen={spaltenOptionen}
-              wert={stand[key].spalte}
-              leerText="Keine"
-              onWaehle={(spalte) => setzePlatz(key, { spalte })}
-            />
-            <div className="flex items-center gap-1.5">
-              <Zahl
-                einheit="NK"
-                title="Nachkommastellen des gerechneten Werts"
-                min={0}
-                max={6}
-                value={stand[key].runden.stellen}
-                onChange={(e) => {
-                  const stellen = Number.parseInt(e.target.value, 10)
-                  if (Number.isInteger(stellen) && stellen >= 0 && stellen <= 6) {
-                    setzePlatz(key, { runden: { ...stand[key].runden, stellen } })
-                  }
-                }}
-              />
-              <Wahl
-                optionen={RICHTUNGEN}
-                wert={stand[key].runden.richtung}
-                onWaehle={(richtung) => setzePlatz(key, {
-                  runden: { ...stand[key].runden, richtung: richtung as RundungsRichtung },
-                })}
-              />
-            </div>
-          </div>
+        {mitFormeln.map((index) => (
+          <FormelZeilen
+            key={spalten[index].kennung}
+            spalten={spalten}
+            index={index}
+            onFormel={(formel) => setzeFormel(index, formel)}
+          />
         ))}
 
-        {blockiert.length > 1 && (
-          <p className="text-dicht text-fehler">
-            {blockiert.join(' und ')} liegen beide auf ausgeblendeten Spalten.
-            In die kann niemand tippen, und gerechnet wird nur eine — die
-            Rechnung bleibt leer. Eine der beiden muss sichtbar sein.
-          </p>
-        )}
-
-        {gesetzt && (
-          <div className="flex justify-end border-t border-linie pt-2">
-            <Knopf onClick={() => ed.updateProperty(block.id, 'rechnung', '')}>
-              Rechnung entfernen
-            </Knopf>
-          </div>
+        {ohneFormel.length > 0 && (
+          <Wahl
+            optionen={ohneFormel}
+            wert=""
+            leerText="Formel für Spalte…"
+            onWaehle={(wert) => setzeFormel(Number(wert), neueFormel())}
+          />
         )}
       </div>
     </Gruppe>

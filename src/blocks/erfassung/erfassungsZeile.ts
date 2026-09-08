@@ -6,7 +6,6 @@ import { zellenEingabeTpl } from '../shared/zellenEingabe'
 import { fensterSpaltenOder } from '../tabelle/nachschlagen'
 import { ZELLE_PLATZHALTER, type Spalte } from '../tabelle/spalten'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
-import type { Rechnung } from '../../core/data/rechnung'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import { getField } from '../../softengine/data'
 
@@ -94,8 +93,6 @@ export interface ErfassungsUmfeld {
   paareZu: (quelleId: string) => readonly SchluesselPaar[]
 
   partnerVon: (quelleId: string) => string
-
-  rechnung?: Rechnung | null
 }
 
 export function zellenzielVon(

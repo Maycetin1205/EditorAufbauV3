@@ -22,6 +22,7 @@ import {
   migrateErfassungsRollenWeg,
   migrateKanbanVorlage,
   migrateKnopfAusTabelle,
+  migrateRechnungAlsFormel,
   migrateSpaltenKennungen,
   migrateZeileAufloesen,
   type EntfernGrund,
@@ -61,6 +62,7 @@ export function sanitizeTree(
     meldungen?.absichtlichEntfernt?.(id, grund)
   }
   migrateErfassungAlsBaustein(src)
+  migrateRechnungAlsFormel(src)
 
   const addChild = (parentId: string, childId: unknown): void => {
     if (typeof childId !== 'string' || tree[childId]) return

@@ -1,8 +1,4 @@
-// Die Rechnung der Belegerfassung: gerechnet wird der EINE leere Platz,
-// Getipptes und aus Quellen Gefuelltes gilt als gegeben.
-//
-// Tiergewicht und „je kg" sind bewusst KEINE Plaetze: die Dosis gilt pro Tier.
-// Mit ihnen waeren es zwei Luecken und die Rechnung schwiege.
+// Die Rechnung der Erfassungszeile: je Spalte eine Formel aus anderen Spalten und festen Zahlen.
 
 export type RundungsRichtung = 'auf' | 'ab' | 'kfm'
 
@@ -11,43 +7,27 @@ export interface Rundung {
   richtung: RundungsRichtung
 }
 
-export interface RechnungsPlatz {
-  // Ueber die dauerhafte KENNUNG der Spalte, nie ueber Platz oder Belegfeld.
-  // Leer = Platz unbenutzt (Faktor 1).
-  spalte: string
+export type Rechenzeichen = '+' | '-' | '*' | '/'
+
+export const RECHENZEICHEN: readonly Rechenzeichen[] = ['+', '-', '*', '/']
+
+// Ein Glied zeigt ueber die dauerhafte KENNUNG auf eine Spalte, nie ueber Platz
+// oder Belegfeld, oder es ist eine feste Zahl.
+export type Glied = { spalte: string } | { zahl: number }
+
+export interface Formel {
+  glieder: readonly Glied[]
+  // Zwischen je zwei Gliedern eines, also eins weniger als Glieder.
+  zeichen: readonly Rechenzeichen[]
   runden: Rundung
 }
 
-export type PlatzKey = 'menge' | 'anzahl' | 'dosis' | 'tage'
+export const RUNDEN_STANDARD: Rundung = { stellen: 3, richtung: 'kfm' }
 
-export const PLATZ_KEYS: readonly PlatzKey[] = ['menge', 'anzahl', 'dosis', 'tage']
+export const STELLEN_MAX = 6
 
-export const PLATZ_NAMEN: Record<PlatzKey, string> = {
-  menge: 'Abgabemenge',
-  anzahl: 'Anzahl Tiere',
-  dosis: 'Dosis',
-  tage: 'Behandlungstage',
-}
-
-// Einheiten traegt die Rechnung keine: die Einheit kommt aus den Daten der Zeile
-// und ist oft nicht umrechenbar.
-export interface Rechnung {
-  menge: RechnungsPlatz
-  anzahl: RechnungsPlatz
-  dosis: RechnungsPlatz
-  tage: RechnungsPlatz
-}
-
-const RUNDEN_STANDARD: Rundung = { stellen: 3, richtung: 'kfm' }
-
-export function leereRechnung(): Rechnung {
-  return {
-    menge: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-  // Tiere sind ganze Tiere; aufgerundet, damit keines leer ausgeht.
-    anzahl: { spalte: '', runden: { stellen: 0, richtung: 'auf' } },
-    dosis: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-    tage: { spalte: '', runden: { ...RUNDEN_STANDARD } },
-  }
+export function neueFormel(): Formel {
+  return { glieder: [{ spalte: '' }], zeichen: [], runden: { ...RUNDEN_STANDARD } }
 }
 
 // Getippte Zahl, deutsch und STRENG: '0.750' bleibt ungelesen, denn raten hiesse
@@ -73,7 +53,7 @@ export function rundeWert(wert: number, runden: Rundung): number {
 
 // Gerechnete Werte reisen ohne Tausender-Gruppierung, so liest jeder Parser sie
 // eindeutig zurueck.
-export function platzText(wert: number, stellen: number): string {
+export function zahlText(wert: number, stellen: number): string {
   return wert.toLocaleString('de-DE', {
     useGrouping: false,
     minimumFractionDigits: 0,
@@ -81,107 +61,109 @@ export function platzText(wert: number, stellen: number): string {
   })
 }
 
-// null = leer (Luecke), 'fehler' = belegt, aber nicht als Zahl lesbar.
-export type PlatzWert = number | null | 'fehler'
-
-export function loeseRechnung(
-  r: Rechnung,
-  werte: Readonly<Record<PlatzKey, PlatzWert>>,
-  konfiguriert: ReadonlySet<PlatzKey>,
-): { platz: PlatzKey; wert: number } | null {
-  if (!konfiguriert.has('menge')) return null
-
-  const noetig: PlatzKey[] = ['menge']
-  for (const k of ['anzahl', 'dosis', 'tage'] as const) {
-    if (konfiguriert.has(k)) noetig.push(k)
+// Mal und Geteilt vor Plus und Minus, wie auf dem Papier. Fehlt ein Glied oder
+// wird durch null geteilt, gibt es keinen Wert.
+export function rechneFormel(
+  formel: Formel,
+  zahlVon: (kennung: string) => number | null,
+): number | null {
+  if (formel.glieder.length === 0) return null
+  const werte: number[] = []
+  for (const glied of formel.glieder) {
+    const wert = 'zahl' in glied ? glied.zahl : zahlVon(glied.spalte)
+    if (wert === null || !Number.isFinite(wert)) return null
+    werte.push(wert)
   }
-
-  const luecken: PlatzKey[] = []
-  for (const k of noetig) {
-    const w = werte[k]
-    if (w === 'fehler') return null
-    if (w === null) luecken.push(k)
+  const summanden: number[] = []
+  const vorzeichen: ('+' | '-')[] = []
+  let produkt = werte[0]
+  for (let i = 0; i < formel.zeichen.length && i + 1 < werte.length; i++) {
+    const zeichen = formel.zeichen[i]
+    const wert = werte[i + 1]
+    if (zeichen === '*') produkt *= wert
+    else if (zeichen === '/') {
+      if (wert === 0) return null
+      produkt /= wert
+    } else {
+      summanden.push(produkt)
+      vorzeichen.push(zeichen)
+      produkt = wert
+    }
   }
-  if (luecken.length !== 1) return null
-  const luecke = luecken[0]
-
-  // Ein unbelegter oder leerer Platz zaehlt als Faktor 1: die Luecke steht so als
-  // 1 in der rechten Seite, und Teilen loest nach ihr auf.
-  const zahl = (k: PlatzKey): number => {
-    const w = werte[k]
-    return typeof w === 'number' ? w : 1
+  summanden.push(produkt)
+  let ergebnis = summanden[0]
+  for (let i = 0; i < vorzeichen.length; i++) {
+    ergebnis = vorzeichen[i] === '+' ? ergebnis + summanden[i + 1] : ergebnis - summanden[i + 1]
   }
-
-  const rechte = zahl('anzahl') * zahl('dosis') * zahl('tage')
-  let wert: number
-  if (luecke === 'menge') wert = rechte
-  else {
-    if (rechte === 0) return null
-    wert = zahl('menge') / rechte
-  }
-  if (!Number.isFinite(wert)) return null
-  return { platz: luecke, wert: rundeWert(wert, r[luecke].runden) }
+  if (!Number.isFinite(ergebnis)) return null
+  return rundeWert(ergebnis, formel.runden)
 }
 
-function alsRundung(roh: unknown, standard: Rundung): Rundung {
-  if (!roh || typeof roh !== 'object') return { ...standard }
+const ZEICHEN_TEXT: Record<Rechenzeichen, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' }
+
+// Die Formel, wie der Bauer sie liest: Spaltentitel und Zahlen mit Zeichen dazwischen.
+export function formelAlsText(formel: Formel, titelVon: (kennung: string) => string): string {
+  return formel.glieder.map((glied, i) => {
+    const text = 'zahl' in glied
+      ? zahlText(glied.zahl, STELLEN_MAX)
+      : (titelVon(glied.spalte) || '?')
+    return i === 0 ? text : `${ZEICHEN_TEXT[formel.zeichen[i - 1] ?? '*']} ${text}`
+  }).join(' ')
+}
+
+function alsRundung(roh: unknown): Rundung {
+  if (!roh || typeof roh !== 'object') return { ...RUNDEN_STANDARD }
   const o = roh as Record<string, unknown>
   const stellen = typeof o.stellen === 'number'
-    && Number.isInteger(o.stellen) && o.stellen >= 0 && o.stellen <= 6
+    && Number.isInteger(o.stellen) && o.stellen >= 0 && o.stellen <= STELLEN_MAX
     ? o.stellen
-    : standard.stellen
+    : RUNDEN_STANDARD.stellen
   const richtung = o.richtung === 'auf' || o.richtung === 'ab' || o.richtung === 'kfm'
     ? o.richtung
-    : standard.richtung
+    : RUNDEN_STANDARD.richtung
   return { stellen, richtung }
 }
 
-function alsPlatz(roh: unknown, standard: Rundung): RechnungsPlatz {
-  if (!roh || typeof roh !== 'object') return { spalte: '', runden: { ...standard } }
+function alsGlied(roh: unknown): Glied | null {
+  if (!roh || typeof roh !== 'object') return null
   const o = roh as Record<string, unknown>
+  if (typeof o.zahl === 'number' && Number.isFinite(o.zahl)) return { zahl: o.zahl }
+  if (typeof o.spalte === 'string') return { spalte: o.spalte.trim() }
+  return null
+}
+
+function istZeichen(roh: unknown): roh is Rechenzeichen {
+  return RECHENZEICHEN.includes(roh as Rechenzeichen)
+}
+
+// undefined, wenn keine brauchbare Formel dasteht.
+export function formelVonRoh(roh: unknown): Formel | undefined {
+  if (!roh || typeof roh !== 'object' || Array.isArray(roh)) return undefined
+  const o = roh as Record<string, unknown>
+  if (!Array.isArray(o.glieder) || !Array.isArray(o.zeichen)) return undefined
+  const glieder = o.glieder.map(alsGlied)
+  if (glieder.length === 0 || glieder.some((g) => g === null)) return undefined
+  if (o.zeichen.length !== glieder.length - 1 || !o.zeichen.every(istZeichen)) return undefined
   return {
-    spalte: typeof o.spalte === 'string' ? o.spalte : '',
-    runden: alsRundung(o.runden, standard),
+    glieder: glieder as Glied[],
+    zeichen: [...o.zeichen],
+    runden: alsRundung(o.runden),
   }
 }
 
-// null nur, wenn gar nichts Brauchbares dasteht: eine Rechnung ohne belegte
-// Plaetze kommt zurueck, damit das Formular nichts verliert.
-export function rechnungVonAttribut(roh: unknown): Rechnung | null {
-  let wert: unknown = roh
-  if (typeof roh === 'string') {
-    const t = roh.trim()
-    if (t === '') return null
-    try {
-      wert = JSON.parse(t)
-    } catch {
-      return null
-    }
-  }
-  if (!wert || typeof wert !== 'object' || Array.isArray(wert)) return null
-  const o = wert as Record<string, unknown>
-  const leer = leereRechnung()
-  return {
-    menge: alsPlatz(o.menge, leer.menge.runden),
-    anzahl: alsPlatz(o.anzahl, leer.anzahl.runden),
-    dosis: alsPlatz(o.dosis, leer.dosis.runden),
-    tage: alsPlatz(o.tage, leer.tage.runden),
-  }
-}
-
-// Eine gestrichene Spalte darf keinen Zeiger hinterlassen: der Platz wird leer
-// und damit unbenutzt, denn ihre Kennung kann eine neue Spalte wieder bekommen.
-// Unveraendert kommt dieselbe Rechnung zurueck.
-export function ohneSpalten(r: Rechnung, gestrichen: readonly string[]): Rechnung {
-  const weg = new Set(gestrichen)
-  if (!PLATZ_KEYS.some((k) => weg.has(r[k].spalte))) return r
-  const out = { ...r }
-  for (const k of PLATZ_KEYS) {
-    if (weg.has(out[k].spalte)) out[k] = { ...out[k], spalte: '' }
-  }
-  return out
-}
-
-export function rechnungAlsAttribut(r: Rechnung): string {
-  return JSON.stringify(r)
+// Eine gestrichene Spalte darf kein Glied hinterlassen: ihre Kennung kann eine
+// neue Spalte wieder bekommen. Unveraendert kommt dieselbe Formel zurueck,
+// undefined heisst, es bleibt kein Glied.
+export function ohneGliederAuf(formel: Formel, gestrichen: ReadonlySet<string>): Formel | undefined {
+  const weg = (glied: Glied): boolean => 'spalte' in glied && gestrichen.has(glied.spalte)
+  if (!formel.glieder.some(weg)) return formel
+  const glieder: Glied[] = []
+  const zeichen: Rechenzeichen[] = []
+  formel.glieder.forEach((glied, i) => {
+    if (weg(glied)) return
+    if (glieder.length > 0) zeichen.push(formel.zeichen[i - 1] ?? '*')
+    glieder.push(glied)
+  })
+  if (glieder.length === 0) return undefined
+  return { glieder, zeichen, runden: formel.runden }
 }

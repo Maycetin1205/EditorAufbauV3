@@ -1,5 +1,4 @@
 // Haelt Tipp-Lauf und erfasste Zeilen einer Tabelle zusammen.
-import type { Rechnung } from '../../core/data/rechnung'
 import { verknuepfungenVon } from '../shared/fremdeQuellen'
 import { ErfassungsLauf } from './erfassungsLauf'
 import type { ErfassungsUmfeld } from './erfassungsZeile'
@@ -54,19 +53,13 @@ export class ErfassungsAnschluss {
     return this._zeilen.map((z) => z.kennung)
   }
 
-  umfeld(
-    el: HTMLElement,
-    spalten: readonly Spalte[],
-    quelleId: string,
-    rechnung: Rechnung | null = null,
-  ): ErfassungsUmfeld {
+  umfeld(el: HTMLElement, spalten: readonly Spalte[], quelleId: string): ErfassungsUmfeld {
     const verknuepfungen = verknuepfungenVon(el)
     return {
       spalten,
       quelleId,
       paareZu: (id) => verknuepfungen.find((v) => v.quelleId === id)?.keyPairs ?? [],
       partnerVon: (id) => verknuepfungen.find((v) => v.quelleId === id)?.partnerId ?? '',
-      rechnung,
     }
   }
 
