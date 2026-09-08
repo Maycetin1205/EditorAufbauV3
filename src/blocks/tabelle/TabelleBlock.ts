@@ -1,52 +1,26 @@
-// Baustein Tabelle: haelt Spalten, Ansicht, Erfassung und Vormerkungen zusammen.
-import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
+// Baustein Tabelle: zeigt die Zeilen einer Quelle, sucht, sortiert, blaettert, waehlt eine Zeile.
+import { html, nothing, type CSSResultGroup, type PropertyValues, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { styleMap } from 'lit/directives/style-map.js'
-import { SE_FOKUS_EVENT } from '../../softengine/bridge'
-import { rechnungVonAttribut } from '../../core/data/rechnung'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
-import type {
-  ErfassungsFaehigkeit,
-  ListenBindung,
-  SatzWahl,
-  VormerkArt,
-} from '../../core/blocks/BlockDefinition'
+import type { ListenBindung, SatzWahl } from '../../core/blocks/BlockDefinition'
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
-import { vorschlagStil } from '../shared/vorschlagListe'
-import { geheInZelle, zellenEingabeStil, zellenFelder } from '../shared/zellenEingabe'
-import {
-  FENSTER_HOEHE,
-  fensterBreiteFuer,
-  schliesseNachschlagenFuer,
-  spaltenStellenTpl,
-} from './nachschlagen'
-import {
-  erfassungsZeileFuer,
-  type ErfassungsWirt,
-} from './erfassungsBedienung'
-import { ErfassungsAnschluss } from './erfassungsAnschluss'
-import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZeile'
 import {
   connectTable,
   disconnectTable,
-  hatSatzNummer,
   leiteZeilenAb,
   type BereitgestellteZeile,
   type Datenbesitz,
 } from './seRuntime'
 import {
   coerceSpalten,
-  rechnungNachSpalten,
   spaltenSicht,
   standardSpalten,
   tryCoerceSpalten,
   type Spalte,
 } from './spalten'
-import { ZeilenBearbeitung } from './zeilenBearbeitung'
-import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
-import { meldeVormerkungen } from '../shared/vormerkStand'
 import { AnsichtsStand } from './ansichtsStand'
 import { aktiviereZeile, ZeilenWahl, zeileDoppelt } from './zeilenAktivierung'
 import { BreitenStand } from './spaltenBreite'
@@ -54,15 +28,22 @@ import { SpaltenWahlStand } from './spaltenWahl'
 import { ZEILEN_HOEHE } from './seitengroesse'
 import { tabelleAnsicht, zeigtEchteDaten } from './tabelleAnsicht'
 import { SPALTEN_BINDUNG, TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
-import { tabelleFuss, tabelleKoerper } from './tabelleKoerper'
-import { erfassungStil, tabelleStil } from './tabelleStil'
+import {
+  OHNE_SCHMUCK,
+  tabelleFuss,
+  tabelleKoerper,
+  type Unterzeilen,
+  type Zeilenschmuck,
+} from './tabelleKoerper'
+import { tabelleStil } from './tabelleStil'
 
 export { coerceSpalten, type Spalte } from './spalten'
 
 export class TabelleBlock extends BasicBlock {
-  static readonly blockType = 'tabelle'
-  static readonly tagName = 'ff-tabelle'
-  static readonly displayName = 'Tabelle'
+  // Als string, nicht als Literal: die Erfassung erbt und traegt eigene Namen.
+  static readonly blockType: string = 'tabelle'
+  static readonly tagName: string = 'ff-tabelle'
+  static readonly displayName: string = 'Tabelle'
   static readonly category: BlockCategory = 'anzeige'
 
   static readonly acceptsDataSource = true
@@ -70,19 +51,8 @@ export class TabelleBlock extends BasicBlock {
   static readonly satzWahl: SatzWahl = {}
   static readonly kannAuswahlFolgen = true
 
-  static readonly kannErfassen: ErfassungsFaehigkeit = {
-    wenn: { attributeName: 'erfassung', equals: 'ja' },
-  }
-
-  static readonly aenderungsSchluessel = 'aenderbar'
-
-  static readonly kannLoeschen: ErfassungsFaehigkeit = {
-    wenn: { attributeName: 'loeschbar', equals: 'ja' },
-  }
-
   static readonly blockEvents = [
     { key: 'onRowClick', name: 'Zeile gewählt' },
-
     { key: 'onRowDblClick', name: 'Zeile doppelt geklickt' },
   ]
 
@@ -92,26 +62,17 @@ export class TabelleBlock extends BasicBlock {
     source: '',
     spalten: standardSpalten(),
     suche: 'ja',
-
-    erfassung: 'nein',
-
     blaettern: 'ja',
-
-    loeschbar: 'nein',
-
     kopfzeile: 'ja',
-
     spaltenwahl: 'nein',
-
     tagField: '',
-
-    rechnung: '',
-
     leerText: LEER_TEXT_STANDARD,
   }
   static override readonly customProperties = TABELLE_EIGENSCHAFTEN
 
   static readonly raster = { startW: 24, startH: 14, minW: 6, minH: 4 }
+
+  static override styles: CSSResultGroup = [BasicBlock.styles, leerStil, tabelleStil]
 
   @property({
     converter: {
@@ -126,19 +87,13 @@ export class TabelleBlock extends BasicBlock {
 
   @property() suche = 'ja'
 
-  @property() erfassung = 'nein'
-
   @property() blaettern = 'ja'
-
-  @property() loeschbar = 'nein'
 
   @property() kopfzeile = 'ja'
 
   @property() spaltenwahl = 'nein'
 
   @property() leerText = LEER_TEXT_STANDARD
-
-  @property() rechnung = ''
 
   @property({ attribute: false }) datenzeilen: string[][] = []
 
@@ -169,10 +124,6 @@ export class TabelleBlock extends BasicBlock {
     merktSortierung: () => !this.imEditor,
   })
 
-  private _erfassung = new ErfassungsAnschluss()
-
-  private readonly _lauf = new LaufStand(() => this.requestUpdate())
-
   private readonly _wahl = new SpaltenWahlStand({
     baustein: this,
     an: () => this.spaltenwahlAn,
@@ -181,17 +132,6 @@ export class TabelleBlock extends BasicBlock {
   })
 
   private readonly _zeilenWahl = new ZeilenWahl(this)
-
-  private readonly _zeilen = new ZeilenBearbeitung({
-    baustein: this,
-    spalten: () => this.spaltenListe(),
-    rohzeilen: () => this.rohzeilen,
-    datenzeilen: () => this.datenzeilen,
-    melde: () => this.requestUpdate(),
-    lauf: this._lauf,
-    erfassungAn: () => this.erfassungAn,
-    fokussiereErfassungsZelle: (index) => this.fokussiereErfassungsZelle(index),
-  })
 
   get besitz(): Datenbesitz {
     return this._besitz
@@ -219,79 +159,13 @@ export class TabelleBlock extends BasicBlock {
     this.requestUpdate()
   }
 
-  private setzeAbgeleitetesZurueck(): void {
+  protected setzeAbgeleitetesZurueck(): void {
     this.rohzeilen = []
     this.datenzeilen = []
     this.datenGeliefert = false
     this._zeilenWahl.vergiss()
     this.durchAuswahlGefiltert = false
     this._ansicht.zuruecksetzen()
-    this._erfassung.zuruecksetzen()
-  }
-
-  // Diese vier Getter sind der Laufzeit-Vertrag der Kette am Knopf: sie liest
-  // sie ueber die Element-Referenz.
-  get erfassteZeilen(): readonly (readonly string[])[] {
-    return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map((v) => v.werte)
-  }
-
-  get erfassteSchluessel(): readonly string[] {
-    return this._erfassung.vormerkungen(this.erfassungsUmfeld()).map((v) => v.kennung)
-  }
-
-  get geaenderteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
-    return this._zeilen.geaenderteZeilen
-  }
-
-  get geloeschteZeilen(): readonly { satz: string; werte: readonly string[] }[] {
-    return this._zeilen.geloeschteZeilen
-  }
-
-  zeileSchreibt(art: VormerkArt, schluessel: string): void {
-    this._lauf.schreibt(art, schluessel)
-  }
-
-  zeileGescheitert(art: VormerkArt, schluessel: string, meldung: string): void {
-    this._lauf.gescheitert(art, schluessel, meldung)
-  }
-
-  laufFertig(art: VormerkArt, geschrieben: readonly string[]): void {
-    this._lauf.fertig(art, geschrieben)
-    if (art === 'erfasst') {
-      const bewegt = this._erfassung.markiereGeschrieben(this.erfassungsUmfeld(), geschrieben)
-      if (bewegt) this.requestUpdate()
-      return
-    }
-    this._zeilen.austragen(art, geschrieben)
-  }
-
-  vergissGeschriebene(): void {
-    if (this._erfassung.vergissGeschriebene()) this.requestUpdate()
-  }
-
-  private erfasstStand(index: number): ZeilenZeichen {
-    return this._lauf.zeigt(
-      'erfasst',
-      this._erfassung.schluessel[index] ?? '',
-      this._erfassung.istGeschrieben(index) ? 'geschrieben' : 'erfasst',
-    )
-  }
-
-  private erfasseZeile(): boolean {
-    if (!this._erfassung.erfasse(this.erfassungsUmfeld())) return false
-    this.requestUpdate()
-    this.fokussiereErfassungsZelle(0)
-    this.zeigeLetzteErfasste()
-    return true
-  }
-
-  // Ans Ende rollen statt zur Zeile: die klebende Erfassungszeile gilt dem
-  // Browser als sichtbar, er rollt darum von selbst nicht.
-  private zeigeLetzteErfasste(): void {
-    void this.updateComplete.then(() => {
-      const koerper = this.shadowRoot?.querySelector<HTMLElement>('.koerper')
-      if (koerper) koerper.scrollTop = koerper.scrollHeight
-    })
   }
 
   fokussiereSuche(): boolean {
@@ -303,96 +177,41 @@ export class TabelleBlock extends BasicBlock {
     this.requestUpdate()
   }
 
-  private get hatQuelle(): boolean {
+  protected get hatQuelle(): boolean {
     return this._besitz === 'provided'
       ? true
       : zeigtEchteDaten(this.imEditor, this.source)
   }
 
-  private spaltenListe(): Spalte[] {
+  protected spaltenListe(): Spalte[] {
     return coerceSpalten(this.spalten)
-  }
-
-  @property({ attribute: false }) fensterDialogIndex = -1
-
-  // Ueber `aendere`, damit die Rechnung mitzieht und ein Undo-Schritt entsteht.
-  private aendereSpalte(index: number, teil: Partial<Spalte>): void {
-    const alt = this.spaltenListe()
-    if (alt[index] === undefined) return
-    this.aendere(alt.map((s, i) => (i === index ? { ...s, ...teil } : s)))
-  }
-
-  private fensterDialogTpl(index: number): TemplateResult {
-    const spalte = this.spaltenListe()[index]
-    const spalten = fensterSpaltenIn(this.erfassungsUmfeld(), index)
-    return spaltenStellenTpl({
-      titel: spalte?.titel ?? '',
-      spalten,
-      breite: spalte?.fensterBreite ?? fensterBreiteFuer(spalten.length),
-      hoehe: spalte?.fensterHoehe ?? FENSTER_HOEHE,
-      onGroesse: (detail) => {
-        const schluessel = detail.achse === 'breite' ? 'fensterBreite' : 'fensterHoehe'
-        // „standard" heisst zurueck zur Automatik: der Wert wird geloescht,
-        // nicht auf eine Zahl gesetzt.
-        this.aendereSpalte(index, {
-          [schluessel]: detail.geste === 'standard' ? undefined : detail.wert,
-        })
-      },
-      onAendern: (neu) => this.aendereSpalte(index, { fensterSpalten: neu as Spalte[] }),
-      // Die Feldwahl bleibt stumm: Fenster- und Tabellenspalten heissen beide
-      // `spalten`, ein Klick traefe die Spalte der Tabelle.
-      onFeldWahl: () => {},
-      onSchliessen: () => { this.fensterDialogIndex = -1 },
-    })
   }
 
   private get zeilenHoehe(): number {
     return ZEILEN_HOEHE
   }
 
-  private get erfassungAn(): boolean {
-    return this.erfassung === 'ja'
+  // Der Wert einer Zelle, wie Suche, Sortierung und Summe ihn sehen.
+  protected zellWert(rohIndex: number, platz: number): string {
+    return this.datenzeilen[rohIndex]?.[platz] ?? ''
   }
 
-  private erfassungsWirt(): ErfassungsWirt {
-    return {
-      baustein: this,
-      lauf: this._erfassung.lauf,
-      umfeld: () => this.erfassungsUmfeld(),
-      melde: () => this.requestUpdate(),
-      fokussiere: (index) => this.fokussiereErfassungsZelle(index),
-      erfasseZeile: () => this.erfasseZeile(),
-    }
+  // Die zwei Naehte fuer die Erfassung. Die Tabelle selbst haengt an ihre
+  // Zeilen nichts und stellt nichts darunter.
+  protected zeilenSchmuck(): (rohIndex: number | null) => Zeilenschmuck {
+    return () => OHNE_SCHMUCK
   }
 
-  private fokussiereErfassungsZelle(index: number): void {
-    void this.updateComplete.then(() => {
-      geheInZelle(zellenFelder(this.shadowRoot, '.zeile.erfassung', index)[0])
-    })
+  protected unterZeilen(): Unterzeilen | null {
+    return null
   }
 
-  private erfassungsUmfeld(): ErfassungsUmfeld {
-    return this._erfassung.umfeld(
-      this,
-      this.spaltenListe(),
-      this.source,
-      rechnungVonAttribut(this.rechnung),
-    )
+  // Ein Undo-Schritt je Aenderung der Spaltenliste.
+  protected aendere(spalten: Spalte[]): void {
+    this.meldeProp('spalten', spalten)
   }
 
-  // Rechnung und Spalten in EINER Geste melden, sonst braucht ein Loeschen
-  // zwei Mal Strg+Z.
-  private aendere(spalten: Spalte[]): void {
-    const rechnung = rechnungNachSpalten(this.rechnung, this.spaltenListe(), spalten)
-    if (rechnung === null) {
-      this.meldeProp('spalten', spalten)
-      return
-    }
-    this.meldeProp('rechnung', rechnung, 'beginn')
-    this.meldeProp('spalten', spalten, 'ende')
-  }
-
-  private meldeProp(attr: string, value: unknown, geste?: 'beginn' | 'ende'): void {
+  protected meldeProp(attr: string, value: unknown, geste?: 'beginn' | 'ende'): void {
     this.dispatchEvent(
       new CustomEvent('ff-prop-change', {
         detail: { attr, value, ...(geste === undefined ? {} : { geste }) },
@@ -402,31 +221,9 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
-  // Fokus aus dem ERP geht in die Erfassungszeile; ohne sie meldet sich die
-  // Tabelle nicht und die Bruecke sucht weiter.
-  private readonly nimmSeFokus = (ereignis: Event): void => {
-    if (ereignis.defaultPrevented || !this.erfassungAn) return
-    if (this.imEditor) return
-    ereignis.preventDefault()
-    this.fokussiereErfassungsZelle(0)
-  }
-
-  private readonly maskenTaste = (e: KeyboardEvent): void => {
-    if (this.imEditor || e.key !== 'Insert' || !this.erfassungAn) return
-    const tabellen = Array.from(this.ownerDocument.querySelectorAll<TabelleBlock>('ff-tabelle'))
-    const pfad = e.composedPath()
-    const zustaendig = tabellen.find((t) => pfad.includes(t))
-      ?? tabellen.find((t) => t.erfassungAn)
-    if (zustaendig !== this) return
-    e.preventDefault()
-    this.fokussiereErfassungsZelle(0)
-  }
-
   override connectedCallback(): void {
     super.connectedCallback()
     if (this._besitz === 'softengine') connectTable(this)
-    document.addEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
-    document.addEventListener('keydown', this.maskenTaste)
     this._ansicht.beobachte()
   }
 
@@ -439,33 +236,18 @@ export class TabelleBlock extends BasicBlock {
     // Die fluechtigen Breiten haengen am Platz der Spalte; aendert sich die
     // Liste, gilt wieder die gleichmaessige Aufteilung.
     if (changed.has('spalten')) this._breiten.vergessen()
-    if (!this.erfassungAn || this.imEditor) return
-    this._erfassung.lauf.aktualisiereVorschlaege(this.erfassungsUmfeld())
   }
 
   protected override updated(): void {
     this._ansicht.nachRendern()
-    meldeVormerkungen(this)
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback()
     this._wahl.loese()
-    document.removeEventListener(SE_FOKUS_EVENT, this.nimmSeFokus)
-    document.removeEventListener('keydown', this.maskenTaste)
     this._ansicht.loese()
-    schliesseNachschlagenFuer(this)
     disconnectTable(this)
   }
-
-  static override styles = [
-    BasicBlock.styles,
-    leerStil,
-    tabelleStil,
-    vorschlagStil,
-    zellenEingabeStil,
-    erfassungStil,
-  ]
 
   private get spaltenwahlAn(): boolean {
     return this.spaltenwahl === 'ja'
@@ -484,6 +266,8 @@ export class TabelleBlock extends BasicBlock {
 
     const sicht = spaltenSicht(spalten, this.imEditor, this._wahl.weg())
 
+    const unten = this.unterZeilen()
+
     const ansicht = tabelleAnsicht({
       spalten,
       gezeichnet: sicht.spalten,
@@ -497,9 +281,8 @@ export class TabelleBlock extends BasicBlock {
       sortAuf: this._ansicht.sortAuf,
       wunschSeite: this._ansicht.seite,
       gemessen: this._ansicht.mass,
-      erfassungAn: this.erfassungAn,
-      erfassteAnzahl: this._erfassung.zeilen.length,
-      wertVon: (zeile, spalte) => this._zeilen.zellWert(zeile, spalte),
+      belegteZeilen: unten?.anzahl ?? 0,
+      wertVon: (zeile, spalte) => this.zellWert(zeile, spalte),
       blaettert: this.blaettern === 'ja',
     })
     return html`<div class="tabelle" style=${styleMap({
@@ -526,31 +309,16 @@ export class TabelleBlock extends BasicBlock {
         sortSpalte: this._ansicht.sortSpalte,
         sortAuf: this._ansicht.sortAuf,
         zeilen: ansicht.zeilen,
+        wertVon: (zeile, spalte) => this.zellWert(zeile, spalte),
         linealTakte: ansicht.linealTakte,
-        datenzeilen: this.datenzeilen,
         hatQuelle: ansicht.hatQuelle,
         auswahlIndex: this._zeilenWahl.platzIn(this.rohzeilen),
-        aendernMoeglich: !this.imEditor && ansicht.hatQuelle && hatSatzNummer(this),
-        loeschbar: this.loeschbar === 'ja'
-          && !this.imEditor
-          && ansicht.hatQuelle
-          && hatSatzNummer(this),
-        zeilenStand: this._zeilen,
         leer: ansicht.leer,
         leerText: this.leerText,
-        erfasste: this._erfassung.zeilen,
-        erfasstStand: (index) => this.erfasstStand(index),
-        korrekturPlatz: this.erfassungAn ? this._erfassung.korrekturPlatz : null,
-        erfassung: this.erfassungAn
-          ? erfassungsZeileFuer(
-              this.erfassungsWirt(),
-              ansicht.cols,
-              // Kein Lineal mehr uebrig: die Zeile sitzt ganz unten, unter
-              // ihr ist kein Platz fuer die Vorschlagsliste.
-              this._erfassung.korrekturPlatz === null && (ansicht.linealTakte ?? 1) <= 0,
-              sicht,
-            )
-          : nothing,
+        schmuck: this.zeilenSchmuck(),
+        unten: unten === null
+          ? nothing
+          : unten.zeichne({ sicht, cols: ansicht.cols, linealTakte: ansicht.linealTakte }),
       }, {
         setzeSuchtext: (text) => this._ansicht.setzeSuchtext(text),
         oeffneSpaltenwahl: (e) => this.oeffneSpaltenwahl(e),
@@ -568,15 +336,6 @@ export class TabelleBlock extends BasicBlock {
           this.requestUpdate()
         },
         zeileDoppelt: (rohIndex) => zeileDoppelt(this, this.rohzeilen, rohIndex),
-        nimmErfassteZeile: (index) => {
-          if (this._erfassung.entferne(index)) this.requestUpdate()
-        },
-        holeErfassteZeile: (index) => {
-          if (!this._erfassung.zurueckholen(this.erfassungsUmfeld(), index)) return
-          this.requestUpdate()
-          this.fokussiereErfassungsZelle(0)
-        },
-        schalteLoeschung: (rohIndex) => this._zeilen.schalteLoeschung(rohIndex),
       })}
       ${tabelleFuss({
         hatQuelle: ansicht.hatQuelle,
@@ -592,9 +351,6 @@ export class TabelleBlock extends BasicBlock {
       }, {
         blaettere: (zu) => this._ansicht.blaettere(zu),
       })}
-      ${this.imEditor && this.spaltenListe()[this.fensterDialogIndex] !== undefined
-        ? this.fensterDialogTpl(this.fensterDialogIndex)
-        : nothing}
     </div>`
   }
 }

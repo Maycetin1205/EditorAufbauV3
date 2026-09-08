@@ -93,9 +93,9 @@ function knoten(
 export function referenzBaum(): BlockTree {
   const tree: BlockTree = {
     [ROOT_ID]: knoten(ROOT_ID, ROOT_TYPE, '', {}, [
-      't1', 'f1', 'b1', 'c1', 'k1', 'n1', 'tx1', 'bi1', 'd1', 'tr1', 'p1',
+      't1', 't2', 'f1', 'b1', 'c1', 'k1', 'n1', 'tx1', 'bi1', 'd1', 'tr1', 'p1',
     ]),
-    t1: knoten('t1', 'tabelle', ROOT_ID, {
+    t1: knoten('t1', 'erfassung', ROOT_ID, {
       rasterX: 0, rasterY: 3, rasterW: 8, rasterH: 22,
       source: 'q-pos',
       [WEITERE_QUELLEN_PROP]: [{ quelleId: 'q-art', partnerId: '', keyPairs: [] }],
@@ -104,8 +104,15 @@ export function referenzBaum(): BlockTree {
         { kennung: 'sp-bez', titel: 'Bezeichnung', feld: '45_60', art: 'text', fuellFeld: 'q-art::bez' },
         { kennung: 'sp-menge', titel: 'Menge', feld: '164_8', art: 'text', aenderbar: true },
       ],
-      erfassung: 'ja',
       loeschbar: 'ja',
+    }),
+    t2: knoten('t2', 'tabelle', ROOT_ID, {
+      rasterX: 10, rasterY: 25, rasterW: 14, rasterH: 12,
+      source: 'q-pos',
+      spalten: [
+        { kennung: 'sp-art', titel: 'ArtNr', feld: '18_25' },
+        { kennung: 'sp-bez', titel: 'Bezeichnung', feld: '45_60' },
+      ],
     }),
     f1: knoten('f1', 'formfeld', ROOT_ID, {
       rasterX: 5, rasterY: 0, rasterW: 8, rasterH: 3,

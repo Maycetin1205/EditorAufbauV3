@@ -38,12 +38,20 @@ export function migrateKanbanVorlage(
   return entfernt
 }
 
+// Tabelle und Erfassung teilen sich die Spaltenliste; Migrationen an den
+// Spalten gelten fuer beide.
+const TABELLENARTIG = new Set(['tabelle', 'erfassung'])
+
+function istTabellenartig(node: { type?: unknown }): boolean {
+  return typeof node.type === 'string' && TABELLENARTIG.has(node.type)
+}
+
 export function migrateKnopfAusTabelle(
   src: Record<string, { type?: unknown; childIds?: unknown }>,
 ): RohEntfernt[] {
   const entfernt: RohEntfernt[] = []
   for (const node of Object.values(src)) {
-    if (!node || typeof node !== 'object' || node.type !== 'tabelle') continue
+    if (!node || typeof node !== 'object' || !istTabellenartig(node)) continue
     if (!Array.isArray(node.childIds)) continue
     node.childIds = node.childIds.filter((cid) => {
       const kind = typeof cid === 'string' ? src[cid] : undefined
@@ -236,7 +244,7 @@ function schreibeRechnungUm(node: RohKnoten, spalten: readonly Record<string, un
 
 export function migrateSpaltenKennungen(src: Record<string, RohKnoten>): void {
   const tabellen = Object.values(src)
-    .filter((n) => n && typeof n === 'object' && n.type === 'tabelle')
+    .filter((n) => n && typeof n === 'object' && istTabellenartig(n))
   for (const node of tabellen) vergebeKennungen(rohSpalten(node))
   for (const node of Object.values(src)) {
     if (!node || typeof node !== 'object') continue
@@ -250,7 +258,7 @@ export function migrateSpaltenKennungen(src: Record<string, RohKnoten>): void {
 // ROHDATEN raus, sonst vermisst die Verlustpruefung sie beim Laden.
 export function migrateErfassungsRollenWeg(src: Record<string, RohKnoten>): void {
   for (const node of Object.values(src)) {
-    if (!node || typeof node !== 'object' || node.type !== 'tabelle') continue
+    if (!node || typeof node !== 'object' || !istTabellenartig(node)) continue
     if (!node.props || typeof node.props !== 'object') continue
     const spalten = rohProps(node).spalten
     if (!Array.isArray(spalten)) continue
@@ -261,6 +269,34 @@ export function migrateErfassungsRollenWeg(src: Record<string, RohKnoten>): void
       delete e.rollenQuelle
       delete e.erfassung
       delete e.vorbelegung
+    }
+  }
+}
+
+// Erfassen, Aendern und Loeschen sind aus der Tabelle in den Baustein Erfassung
+// gezogen. Eine gespeicherte Tabelle, die davon etwas tat, wird zur Erfassung;
+// die reine Liste verliert die Angaben dazu, sonst vermisst die Verlustpruefung
+// sie. Laeuft als letzte Rohstufe, damit die aelteren noch "tabelle" sehen.
+const NUR_ERFASSUNG_JE_SPALTE = ['aenderbar', 'fuellFeld', 'fensterSpalten', 'fensterBreite', 'fensterHoehe']
+
+export function migrateErfassungAlsBaustein(src: Record<string, RohKnoten>): void {
+  for (const node of Object.values(src)) {
+    if (!node || typeof node !== 'object' || node.type !== 'tabelle') continue
+    const props = rohProps(node)
+    const spalten = rohSpalten(node)
+    const schreibt = props.erfassung === 'ja'
+      || props.loeschbar === 'ja'
+      || (typeof props.rechnung === 'string' && props.rechnung.trim() !== '')
+      || spalten.some((s) => s.aenderbar === true)
+    delete props.erfassung
+    if (schreibt) {
+      node.type = 'erfassung'
+      continue
+    }
+    delete props.loeschbar
+    delete props.rechnung
+    for (const spalte of spalten) {
+      for (const key of NUR_ERFASSUNG_JE_SPALTE) delete spalte[key]
     }
   }
 }

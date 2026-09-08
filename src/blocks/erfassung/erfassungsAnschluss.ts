@@ -3,7 +3,7 @@ import type { Rechnung } from '../../core/data/rechnung'
 import { verknuepfungenVon } from '../shared/fremdeQuellen'
 import { ErfassungsLauf } from './erfassungsLauf'
 import type { ErfassungsUmfeld } from './erfassungsZeile'
-import type { Spalte } from './spalten'
+import type { Spalte } from '../tabelle/spalten'
 
 export class ErfassungsAnschluss {
   readonly lauf = new ErfassungsLauf()

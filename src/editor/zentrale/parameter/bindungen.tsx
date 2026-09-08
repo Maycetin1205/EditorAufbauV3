@@ -145,10 +145,10 @@ export function ZellenBindung({ binding, wahlen, onChange }: BindungsProps) {
   return (
     <Paar>
       <PickerControl
-        bezeichnung={erfasst ? 'Tabelle mit Erfassungszeile' : 'Tabelle mit den Zeilen'}
+        bezeichnung="Erfassung"
         gruppen={[{ key: 'tabellen', eintraege: bausteinEintraege(liste, binding.blockId) }]}
         wert={binding.blockId ?? ''}
-        platzhalter="— Tabelle —"
+        platzhalter="— Erfassung —"
         onWaehle={(id) => onChange({ ...binding, blockId: id, value: '' })}
       />
       <PickerControl

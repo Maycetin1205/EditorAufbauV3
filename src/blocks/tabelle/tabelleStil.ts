@@ -1,4 +1,4 @@
-// Das Aussehen der Tabelle und ihrer Erfassungszeile.
+// Das Aussehen der Tabelle.
 import { css } from 'lit'
 
 export const tabelleStil = css`
@@ -85,14 +85,6 @@ export const tabelleStil = css`
 
       .koerper > .zeile { flex: none; }
 
-      /* Die Erfassungszeile klebt bedingungslos unten, nicht nur bei
-         „Blaettern = Nein": sonst tippte der Bediener ins Unsichtbare. */
-      .koerper > .zeile.erfassung {
-        position: sticky;
-        bottom: 0;
-        z-index: 1;
-      }
-
       .lineal {
         flex: 1 1 auto;
         min-height: 0;
@@ -167,27 +159,6 @@ export const tabelleStil = css`
         font-variant-numeric: tabular-nums;
       }
       .kopf > div.z { justify-content: flex-end; text-align: right; }
-
-      /* Platz vor der ersten Zelle fuer den Statuspunkt. */
-      .kopf > div:first-of-type,
-      .zeile > div:first-of-type { padding-left: calc(var(--se-zell-x) + 14px); }
-      .zeile[data-status]::before {
-        position: absolute;
-        left: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        content: '';
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--se-faint);
-        pointer-events: none;
-      }
-      .fehltext {
-        margin-left: 8px;
-        font-size: var(--se-fs-sm);
-        color: var(--se-red);
-      }
 
       .kopf > div {
         display: flex;
@@ -326,78 +297,11 @@ export const tabelleStil = css`
         gap: 6px;
       }
 
-      .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
-
-      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle; der Klartext
-         haengt im title. */
-      .zeile[data-status="erfasst"] { background: var(--se-accent-soft); }
-      .zeile[data-status="erfasst"]::before,
-      .zeile[data-status="schreibt"]::before { background: var(--se-accent); }
-      .zeile[data-status="geaendert"]::before,
-      .zeile[data-status="loeschung"]::before { background: var(--se-amber); }
-      .zeile[data-status="loeschung"] { background: var(--se-red-shell); }
-      .zeile[data-status="schreibt"] { animation: se-schreibt 1.1s ease-in-out infinite; }
-      .zeile[data-status="geschrieben"] { color: var(--se-muted); }
-      .zeile[data-status="fehler"] { background: var(--se-red-shell); }
-      .zeile[data-status="fehler"]::before { background: var(--se-red); }
-      @keyframes se-schreibt { 50% { opacity: 0.55; } }
-      @media (prefers-reduced-motion: reduce) {
-        .zeile[data-status="schreibt"] { animation: none; }
-      }
-
-      /* Traeger fuer das Kreuz am rechten Rand der Zeile. */
-      .zeile { position: relative; }
-      .zeile-weg {
-        position: absolute;
-        right: 2px;
-        top: 50%;
-        transform: translateY(-50%);
-        padding: 0 4px;
-        font-family: var(--se-font);
-        font-size: var(--se-fs-sm);
-        line-height: 1;
-        color: var(--se-faint);
-        background: var(--se-panel);
-        border: 0;
-        border-radius: var(--se-r-sm);
-        cursor: pointer;
-        opacity: 0;
-      }
-      .zeile:hover .zeile-weg,
-      .zeile.geloescht .zeile-weg,
-      .zeile-weg:focus { opacity: 1; }
-      .zeile-weg:hover { color: var(--se-red); background: var(--se-red-soft); }
-
-      .zeile-weg.zeile-weg-anzeige { opacity: 1; cursor: default; }
-
       mark {
         padding: 0 1px;
         color: inherit;
         background: var(--se-amber-soft);
         border-radius: 2px;
-      }
-
-      /* Eine tippbare Zelle bleibt eine ZELLE, kein Formularfeld: sechs davon in
-         einer Zeile flackerten sonst beim Ueberfahren. Der transparente Rahmen
-         bleibt, er haelt die Hoehe. */
-      /* Die Zelle gibt ihr Polster an das Feld ab, zusammen ergeben sie wieder
-         --se-zell-x. */
-      /* Eine Zelle mit Eingabestelle laesst die Vorschlagsliste heraushaengen. */
-      .zeile > div.tippbar,
-      .zeile.erfassung > div {
-        display: flex;
-        align-items: center;
-        overflow: visible;
-        padding: 0 calc(var(--se-zell-x) - var(--se-eingabe-x) - var(--se-border));
-      }
-      .zeile > div.tippbar:first-of-type,
-      .zeile.erfassung > div:first-of-type {
-        padding-left: calc(var(--se-zell-x) + 14px - var(--se-eingabe-x) - var(--se-border));
-      }
-
-      .vorgemerkt {
-        color: var(--se-amber);
-        font-weight: 600;
       }
 
       .summen {
@@ -427,19 +331,4 @@ export const tabelleStil = css`
         opacity: 0.3;
         cursor: default;
       }
-`
-
-export const erfassungStil = css`
-      .zeile.erfassung {
-        flex: none;
-        background: var(--se-panel-2);
-        border-top: var(--se-border) solid var(--se-line);
-      }
-
-      :host([data-ff-editor]) .zeile.erfassung > div { color: var(--se-muted); }
-
-      /* Das Wegnehm-Kreuz ist dasselbe .zeile-weg wie an der gebuchten Zeile:
-         absolut rechts, sonst schoebe es den Wert der ersten Zelle beiseite. */
-      .zeile.erfasst { flex: none; }
-      :host(:not([data-ff-editor])) .zeile.erfasst { cursor: pointer; }
 `

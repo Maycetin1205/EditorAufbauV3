@@ -4,7 +4,7 @@ import {
   fensterBreiteFuer,
   FENSTER_HOEHE,
   oeffneNachschlagen,
-} from './nachschlagen'
+} from '../tabelle/nachschlagen'
 import type { ErfassungsLauf } from './erfassungsLauf'
 import {
   erfassungsZeileTpl,
@@ -12,7 +12,7 @@ import {
   zielIn,
   type ErfassungsUmfeld,
 } from './erfassungsZeile'
-import type { Spaltensicht } from './spalten'
+import type { Spaltensicht } from '../tabelle/spalten'
 
 export interface ErfassungsWirt {
   baustein: HTMLElement

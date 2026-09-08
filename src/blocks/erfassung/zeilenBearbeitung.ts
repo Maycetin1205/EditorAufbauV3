@@ -1,8 +1,8 @@
 // Vormerkungen an gebuchten Zeilen: Zellwerte aendern, Zeilen zum Loeschen merken.
 import type { VormerkArt } from '../../core/blocks/BlockDefinition'
 import { geheInZelle, zellenFelder } from '../shared/zellenEingabe'
-import { zeilenIndexVon } from './seRuntime'
-import type { Spalte } from './spalten'
+import { zeilenIndexVon } from '../tabelle/seRuntime'
+import type { Spalte } from '../tabelle/spalten'
 import type { LaufStand, ZeilenZeichen } from './zeilenStatus'
 
 // Die gebuchten Zeilen, ohne die Erfassungszeile: die haengt unten und waere
@@ -21,8 +21,6 @@ export interface ZeilenWirt {
   melde: () => void
 
   lauf: LaufStand
-
-  erfassungAn: () => boolean
 
   fokussiereErfassungsZelle: (index: number) => void
 }
@@ -185,7 +183,7 @@ export class ZeilenBearbeitung {
     let ziel = jetzt + schritt
     if (ziel > felder.length - 1) {
       // Enter unter der letzten Zeile: weiter in die Erfassungszeile.
-      if (enterModus && this.wirt.erfassungAn()) {
+      if (enterModus) {
         this.wirt.fokussiereErfassungsZelle(0)
         return
       }

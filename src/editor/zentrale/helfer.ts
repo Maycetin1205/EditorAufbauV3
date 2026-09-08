@@ -97,7 +97,7 @@ export interface AuswahlGeberOption {
   felder: readonly DataSourceField[]
 }
 
-// Eine Tabelle mit eingeschalteter Erfassungszeile. Die Spalten kommen generisch
+// Ein Baustein, der erfasst. Die Spalten kommen generisch
 // aus der Listen-Bindung des Bausteins.
 export interface ErfassungsOption {
   blockId: string

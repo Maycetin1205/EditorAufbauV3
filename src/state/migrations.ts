@@ -39,6 +39,8 @@ const WEGGEFALLENE_PROPS: ReadonlyArray<readonly [string, string]> = [
 
   ['tabelle', 'proSeite'],
   ['tabelle', 'zeilenWaehler'],
+  ['erfassung', 'proSeite'],
+  ['erfassung', 'zeilenWaehler'],
 ]
 
 export function weggefalleneProps(rohBaum: Record<string, unknown>): string[] {

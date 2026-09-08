@@ -17,7 +17,7 @@ import {
 import { useEditor } from '../../state/useEditor'
 import { useAbschnitt } from './abschnittStand'
 
-// Sie gehoert zur Tabelle, deren Erfassungszeile sie rechnet, und wird darum hier
+// Sie gehoert zur Erfassung, deren Zeile sie rechnet, und wird darum hier
 // bedient und nicht im Datencenter: sie ist nichts Maskenweites.
 
 const RICHTUNGEN: WahlOption[] = [

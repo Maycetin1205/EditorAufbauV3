@@ -81,6 +81,16 @@
       "braucht": []
     },
     {
+      "name": "erfassung",
+      "datei": "ff-erfassung.js",
+      "bausteine": [
+        "erfassung"
+      ],
+      "braucht": [
+        "tabelle"
+      ]
+    },
+    {
       "name": "formfeld",
       "datei": "ff-formfeld.js",
       "bausteine": [

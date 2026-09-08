@@ -18,6 +18,7 @@ import {
 } from './migrations'
 import {
   migrateAnzeigeFeldAufSpalten,
+  migrateErfassungAlsBaustein,
   migrateErfassungsRollenWeg,
   migrateKanbanVorlage,
   migrateKnopfAusTabelle,
@@ -59,6 +60,7 @@ export function sanitizeTree(
   for (const { id, grund } of rohEntfernt) {
     meldungen?.absichtlichEntfernt?.(id, grund)
   }
+  migrateErfassungAlsBaustein(src)
 
   const addChild = (parentId: string, childId: unknown): void => {
     if (typeof childId !== 'string' || tree[childId]) return

@@ -12,7 +12,8 @@ export interface RuntimeTableElement extends HTMLElement {
   durchAuswahlGefiltert: boolean
   datenGeliefert: boolean
 
-  vergissGeschriebene: () => void
+  // Nur die Erfassung hat Geschriebenes zu vergessen.
+  vergissGeschriebene?: () => void
 }
 
 function spaltenVon(el: HTMLElement): Spalte[] {
@@ -37,7 +38,7 @@ export function hatSatzNummer(el: HTMLElement): boolean {
 
 function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
   // Erst die Lieferung von SoftEngine beweist den neuen Stand.
-  if (lieferung) el.vergissGeschriebene()
+  if (lieferung) el.vergissGeschriebene?.()
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {
     el.datenzeilen = []

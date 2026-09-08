@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { migrateSpaltenKennungen } from './migrationenRoh'
+import { migrateErfassungAlsBaustein, migrateSpaltenKennungen } from './migrationenRoh'
 
 // Die Lade-Migration zur Spalten-Kennung: alte Masken sprachen
 // Spalten ueber Platznummer (Ketten) bzw. Belegfeld (Rechnung) an — beides
@@ -111,4 +111,26 @@ test('die Migration setzt neue Kennungen ueber die hoechste, nicht in die Luecke
   migrateSpaltenKennungen(src)
   const spalten = src.t1.props.spalten as { kennung?: string }[]
   expect(spalten.map((s) => s.kennung)).toEqual(['s1', 's4', 's3'])
+})
+
+test('eine Tabelle, die schreibt, wird zur Erfassung; die Liste verliert die Schreib-Angaben', () => {
+  const src = {
+    e: { type: 'tabelle', props: { erfassung: 'ja', spalten: [{ kennung: 's1', titel: 'A', feld: '1_1' }] } },
+    l: { type: 'tabelle', props: { loeschbar: 'ja', spalten: [] } },
+    t: {
+      type: 'tabelle',
+      props: {
+        erfassung: 'nein',
+        loeschbar: 'nein',
+        rechnung: '',
+        spalten: [{ kennung: 's1', titel: 'A', feld: '1_1', aenderbar: false, fuellFeld: 'q::x' }],
+      },
+    },
+  }
+  migrateErfassungAlsBaustein(src)
+  expect(src.e.type).toBe('erfassung')
+  expect('erfassung' in src.e.props).toBe(false)
+  expect(src.l.type).toBe('erfassung')
+  expect(src.t.type).toBe('tabelle')
+  expect(src.t.props).toEqual({ spalten: [{ kennung: 's1', titel: 'A', feld: '1_1' }] })
 })

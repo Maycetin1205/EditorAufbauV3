@@ -3,7 +3,7 @@ import {
   nachschlagEintraege,
   quellenZeilen,
   type Eintrag,
-} from './nachschlagen'
+} from '../tabelle/nachschlagen'
 import { getField } from '../../softengine/data'
 import { passendeVorschlaege, VORSCHLAEGE_MAX } from '../shared/vorschlagListe'
 import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
@@ -15,8 +15,8 @@ import {
   type PlatzKey,
   type PlatzWert,
 } from '../../core/data/rechnung'
-import { alsZahl } from './sortierung'
-import { spalteMitKennung } from './spalten'
+import { alsZahl } from '../tabelle/sortierung'
+import { spalteMitKennung } from '../tabelle/spalten'
 import {
   anzeigeSpalteIn,
   passendeSaetze,

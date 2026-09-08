@@ -1,0 +1,68 @@
+// Die Eigenschaften der Erfassung und ihrer Spalten: die der Tabelle, plus alles, was schreibt.
+import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
+import type { EintragsSchalter, ListenBindung } from '../../core/blocks/BlockDefinition'
+import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
+import { jaNeinProperty } from '../shared/jaNeinProperty'
+import { coerceSpalten, ohneSpalte, rechnungNachSpalten, type Spalte } from '../tabelle/spalten'
+import { SPALTEN_BINDUNG, TABELLE_EIGENSCHAFTEN } from '../tabelle/tabelleEigenschaften'
+
+const LOESCHBAR = jaNeinProperty(
+  'loeschbar',
+  'Zeilen löschbar',
+  'Kreuz an jeder Zeile: merkt sie zum Löschen vor.',
+  { requiresDataSource: true },
+)
+
+// Hinter der Suchzeile, wo der Schalter in der Tabelle stand.
+export const ERFASSUNG_EIGENSCHAFTEN: PropertyDescription[] = TABELLE_EIGENSCHAFTEN
+  .flatMap((p) => (p.attributeName === 'suche' ? [p, LOESCHBAR] : [p]))
+
+const AENDERBAR: EintragsSchalter = {
+  key: 'aenderbar',
+  label: 'In der Zeile änderbar',
+  kurz: 'änderbar',
+  standard: true,
+  nurEigeneQuelle: true,
+}
+
+export const ERFASSUNG_SPALTEN_BINDUNG: ListenBindung = {
+  ...SPALTEN_BINDUNG,
+
+  // Rechnung und Spalten in EINER Geste, sonst braucht ein Loeschen zwei Mal
+  // Strg+Z.
+  eintragWeg: (props, index) => {
+    const alt = coerceSpalten(props.spalten)
+    const neu = ohneSpalte(alt, index)
+    if (neu === alt) return {}
+    const rechnung = rechnungNachSpalten(props.rechnung, alt, neu)
+    return { spalten: [...neu], ...(rechnung === null ? {} : { rechnung }) }
+  },
+
+  // Ohne Einstellung rechnet sich das Fenster bei jedem Oeffnen aus den
+  // Spalten derselben Hilfsquelle.
+  eintragsUnterFenster: {
+    label: 'Suchfenster…',
+    hinweis: 'Ohne Einstellung nimmt es die Spalten derselben Hilfsquelle.',
+    eigenschaft: 'fensterDialogIndex',
+  },
+
+  eintragsSchalter: (SPALTEN_BINDUNG.eintragsSchalter ?? [])
+    .flatMap((s) => (s.key === 'summe' ? [s, AENDERBAR] : [s])),
+
+  eintragsFeldWahl: [
+    {
+      key: 'fuellFeld',
+      // Die Beschriftung muss sagen, WANN das Feld gilt.
+      label: 'Nachschlagen',
+      hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.',
+      nurFremdeQuellen: true,
+    },
+  ],
+}
+
+export function spalteAenderbar(spalte: Spalte): boolean {
+  const eintrag = spalte as unknown as Record<string, unknown>
+  return spalte.feld !== ''
+    && schalterFuer(ERFASSUNG_SPALTEN_BINDUNG, eintrag).includes(AENDERBAR)
+    && schalterAn(AENDERBAR, eintrag)
+}

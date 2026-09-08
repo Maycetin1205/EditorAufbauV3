@@ -3,36 +3,20 @@ import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { jaNeinProperty } from '../shared/jaNeinProperty'
 import { leerTextProperty } from '../shared/leerZustand'
 import type { ListenBindung } from '../../core/blocks/BlockDefinition'
-import { schalterAn, schalterFuer } from '../../core/blocks/listenBindung'
 import {
   coerceSpalten,
   fuegeSpalteAn,
   mitVerschobenerSpalte,
   ohneSpalte,
-  rechnungNachSpalten,
   SPALTEN_MAX,
   STANDARD_TITEL,
-  type Spalte,
 } from './spalten'
 
 export const TABELLE_EIGENSCHAFTEN: PropertyDescription[] = [
   jaNeinProperty(
-    'tabelleAnsicht',
+    'suche',
     'Suchzeile',
     'Zeigt über der Tabelle ein Feld, mit dem der Bediener den Inhalt durchsucht.',
-    { requiresDataSource: true },
-  ),
-
-  jaNeinProperty(
-    'erfassung',
-    'Erfassungszeile',
-    'Eine leere Zeile zum Tippen neuer Positionen.',
-  ),
-
-  jaNeinProperty(
-    'loeschbar',
-    'Zeilen löschbar',
-    'Kreuz an jeder Zeile: merkt sie zum Löschen vor.',
     { requiresDataSource: true },
   ),
 
@@ -78,22 +62,12 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   eintragWeg: (props, index) => {
     const alt = coerceSpalten(props.spalten)
     const neu = ohneSpalte(alt, index)
-    if (neu === alt) return {}
-    const rechnung = rechnungNachSpalten(props.rechnung, alt, neu)
-    return { spalten: [...neu], ...(rechnung === null ? {} : { rechnung }) }
+    return neu === alt ? {} : { spalten: [...neu] }
   },
   eintragVerschieben: (props, von, nach) => {
     const alt = coerceSpalten(props.spalten)
     const neu = mitVerschobenerSpalte(alt, von, nach)
     return neu === alt ? {} : { spalten: [...neu] }
-  },
-
-  // Ohne Einstellung rechnet sich das Fenster bei jedem Oeffnen aus den
-  // Tabellenspalten.
-  eintragsUnterFenster: {
-    label: 'Suchfenster…',
-    hinweis: 'Ohne Einstellung nimmt es die Spalten derselben Hilfsquelle.',
-    eigenschaft: 'fensterDialogIndex',
   },
 
   eintragStellen: '[data-ff-eintrag]',
@@ -105,13 +79,6 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       kurz: 'Summe',
     },
     {
-      key: 'aenderbar',
-      label: 'In der Zeile änderbar',
-      kurz: 'änderbar',
-      standard: true,
-      nurEigeneQuelle: true,
-    },
-    {
       key: 'versteckt',
       label: 'In der Maske ausblenden',
       kurz: 'ausgeblendet',
@@ -119,24 +86,4 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   ],
 
   herkunftProp: 'spaltenHerkunft',
-
-  eintragsFeldWahl: [
-    {
-      key: 'fuellFeld',
-
-      // Die Beschriftung muss sagen, WANN das Feld gilt.
-      label: 'Nachschlagen',
-      hinweis: 'Beim Erfassen füllt der gewählte Satz der Hilfsquelle diese Zelle.',
-      nurFremdeQuellen: true,
-    },
-  ],
-}
-
-export function spalteAenderbar(spalte: Spalte): boolean {
-  const eintrag = spalte as unknown as Record<string, unknown>
-  const schalter = SPALTEN_BINDUNG.eintragsSchalter?.find((s) => s.key === 'aenderbar')
-  return schalter !== undefined
-    && spalte.feld !== ''
-    && schalterFuer(SPALTEN_BINDUNG, eintrag).includes(schalter)
-    && schalterAn(schalter, eintrag)
 }

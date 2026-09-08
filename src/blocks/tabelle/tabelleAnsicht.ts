@@ -32,9 +32,8 @@ export interface AnsichtFrage {
 
   gemessen: Zeilenmass | null
 
-  erfassungAn: boolean
-
-  erfassteAnzahl: number
+  // Zeilen, die unter den Daten stehen und Platz auf der Seite brauchen.
+  belegteZeilen: number
 
   wertVon: (rohIndex: number, spalte: number) => string
 
@@ -109,14 +108,14 @@ export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
 
   const hatQuelle = frage.hatQuelle
 
-  // Mit Erfassungszeile gibt es keinen Leerzustand: die Zeile IST der Inhalt.
-  const leer = frage.erfassungAn
+  // Mit belegten Zeilen darunter gibt es keinen Leerzustand: sie SIND der Inhalt.
+  const leer = frage.belegteZeilen > 0
     ? false
     : zeigtLeerzustand(hatQuelle, frage.datenGeliefert, frage.datenzeilen.length)
 
   const alleSichtbar = sichtbareIndizes(frage)
 
-  const belegt = frage.erfassungAn ? 1 + frage.erfassteAnzahl : 0
+  const belegt = frage.belegteZeilen
   const gemessenPassen = frage.gemessen === null
     ? null
     : Math.max(1, frage.gemessen.passen - belegt)

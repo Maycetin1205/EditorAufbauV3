@@ -199,8 +199,7 @@ export function Inspector() {
           </Gruppe>
         )}
 
-        {/* Zielbild-Reihenfolge: ... Aktionen -> Rechnung (nur Tabellen mit
-            Erfassungszeile). */}
+        {/* Zielbild-Reihenfolge: ... Aktionen -> Rechnung (nur die Erfassung). */}
         {kannRechnen(block) && <RechnungSektion block={block} />}
 
         {generalProps.length === 0 && !showDataSection && !hatAktionen
