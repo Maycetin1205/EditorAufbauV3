@@ -326,23 +326,6 @@ export const tabelleStil = css`
         gap: 6px;
       }
 
-      .buchen {
-        height: 24px;
-        padding: 0 12px;
-        font-family: var(--se-font);
-        font-size: var(--se-fs);
-        font-weight: 600;
-        line-height: 1;
-        color: var(--se-panel);
-        background: var(--se-accent);
-        border: var(--se-border) solid var(--se-accent);
-        border-radius: var(--se-r-md);
-        cursor: pointer;
-      }
-      .buchen:hover { background: var(--se-accent-dark); border-color: var(--se-accent-dark); }
-      .buchen:disabled { opacity: 0.5; cursor: default; }
-      .buchen:disabled:hover { background: var(--se-accent); border-color: var(--se-accent); }
-
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
 
       /* Der Zeilen-Status ist der Punkt vor der ersten Zelle; der Klartext

@@ -333,31 +333,19 @@ export interface FussLage {
   blaettert: boolean
 
   leer: boolean
-
-  erfassungAn: boolean
-
-  imEditor: boolean
-
-  buchen: { offen: number } | null
 }
 
 export interface FussHandeln {
   blaettere: (zu: number) => void
-  buche: () => void
 }
 
 export function tabelleFuss(
   lage: FussLage,
   tun: FussHandeln,
 ): TemplateResult | typeof nothing {
-  const noetig = lage.hatQuelle
-    || lage.erfassungAn
-    || lage.seiten > 1
-    || lage.summen.length > 0
-    || lage.suchtAktiv
-    || lage.auswahlAktiv
-  if (lage.leer || !noetig) return nothing
-  const buchen = lage.buchen
+  // Der Fuss steht auch ohne Quelle: im Editor zeigt er die Form der Maske,
+  // die Zahlen sind Striche. Nur der Leerzustand nimmt ihm den Platz.
+  if (lage.leer) return nothing
   return html`<div class="fusszeile">
     <div class="seiten-info">${datensatzText({
       hatQuelle: lage.hatQuelle,
@@ -386,15 +374,6 @@ export function tabelleFuss(
           @click=${() => tun.blaettere(lage.seite + 1)}
         >›</button>
       </div>`}
-      ${buchen === null ? nothing : html`<button
-        class="buchen"
-        type="button"
-        ?disabled=${buchen.offen === 0}
-        title=${lage.imEditor
-          ? 'In der Maske: schreibt die erfassten Zeilen über die Kette „Buchen" (F5)'
-          : 'F5'}
-        @click=${() => tun.buche()}
-      >${buchen.offen > 0 ? `Buchen (${buchen.offen})` : 'Buchen'}</button>`}
     </div>
   </div>`
 }
