@@ -13,8 +13,8 @@ fehlt, wird nicht geraten, sondern getestet.
 - LF-only, reines ASCII. Escaping macht der Export maschinell
   (`export/serializer.ts`). Schlägt `validateMaskHtml` an, lädt SoftEngine die
   Datei gar nicht erst.
-- Bilder und Schriften werden in die Maske eingebettet, nie nachgeladen. Ihre
-  Laufzeit liegt dagegen als eigene Dateien im Maskenordner (siehe 13).
+- Bilder, Schriften und die Laufzeit werden in die Maske eingebettet, nie
+  nachgeladen (siehe 13).
 - Zwei SE-Marker traegt jede Maske: `JWHtmlStart` in Zeile 1 und `JWHtmlEnde` in
   der letzten (`export/validator.ts`).
 
@@ -296,10 +296,9 @@ steht hier nur als Wissen:
   gelesen, nicht per Echttest). Fehlt die Bruecke, meldet die Maske
   „SoftEngine-Anschluss nicht gefunden".
 - Ein Skript im Maskenordner (`<script src="fftest.js">`) wird ebenfalls
-  geladen (belegt 2026-08-28). Darauf liegt die Laufzeit der Maske:
-  `ff-basis.js` und je benutztem Baustein eine Datei, klassische Skripte in
-  Ladereihenfolge. Ob der SoftEngine-Browser sie zwischenspeichert, ist NICHT
-  belegt — das entscheidet ein Echttest.
+  geladen (belegt 2026-08-28, als zwoelf Laufzeitdateien belegt 2026-09-08).
+  Die Laufzeit steht trotzdem in der Maske selbst: eine HTML plus eine JSON,
+  weil der Kunde einen festen Stand bekommt und nichts nachgeladen wird.
 - Der SoftEngine-Browser versteht Klassen-Static-Bloecke (`static {}`,
   Chromium 94) und damit auch `inset` (87): die von Vite 8 gebaute Laufzeit
   laeuft, alle Bausteine erscheinen, Artikel-Nachschlagen geht (belegt

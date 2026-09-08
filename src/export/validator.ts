@@ -35,22 +35,14 @@ export function validateMaskHtml(html: string): CheckResult[] {
   check('genau 1 <style>', styles === 1, `gefunden: ${styles}`)
 
   check(
-    'Laufzeit-Basis eingebunden',
-    html.includes('<script src="ff-basis.js"></script>'),
-    'ohne die Basisdatei bleibt jeder Baustein stumm',
-  )
-  check(
-    'kein Baustein-Code in der Datei',
-    !html.includes('customElements.define'),
-    'die Laufzeit gehoert in die Dateien daneben',
+    'Laufzeit eingebettet',
+    html.includes('customElements.define'),
+    'ohne die Laufzeit bleibt jeder Baustein stumm',
   )
 
-  // Geladen wird nur die eigene Laufzeit: die Bruecke bringt JWHtmlStart selbst
-  // mit, alles andere waere ein fremdes Skript in der Maske.
-  const fremde = [...html.matchAll(/<script[^>]*\ssrc="([^"]*)"/g)]
-    .map((treffer) => treffer[1])
-    .filter((src) => !/^ff-[a-z]+\.js$/.test(src))
-  check('nur eigene Laufzeitdateien', fremde.length === 0, fremde.join(', '))
+  // Die Bruecke bringt JWHtmlStart selbst mit; die Maske laedt nichts nach.
+  const fremde = [...html.matchAll(/<script[^>]*\ssrc="([^"]*)"/g)].map((treffer) => treffer[1])
+  check('kein fremdes Skript', fremde.length === 0, fremde.join(', '))
 
   check('DOCTYPE vorhanden', html.includes('<!DOCTYPE html>'))
   check('Wurzel-Fluss vorhanden', html.includes('class="ff-root"'))

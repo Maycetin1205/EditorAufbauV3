@@ -46,10 +46,11 @@ Maske.
   in `blocks/shared/`. `blocks/register.ts` meldet alle an.
 - `src/softengine/`: die Bruecke zu SoftEngine (Anmeldung, Daten,
   Relationen). Kennt keinen Baustein.
-- `src/export/`: schreibt die Maske. Die Laufzeit liegt als Dateien daneben:
-  `ff-basis.js` und je benutztem Baustein eine (`laufzeitTeile.ts`,
-  gebaut von `tools/laufzeitBauen.mjs`). `validator.ts` prueft nur die
-  Dateiform (SE-Marker, LF, ASCII), nie Fachliches.
+- `src/export/`: schreibt die Maske, eine HTML plus die SEvariablen. Die
+  Laufzeit steht als ein Skript darin: `ff-basis` und je benutztem Baustein
+  ein Teil aus `src/export/generated/` (`laufzeitTeile.ts`, gebaut von
+  `tools/laufzeitBauen.mjs`). `validator.ts` prueft nur die Dateiform
+  (SE-Marker, LF, ASCII), nie Fachliches.
 - `src/state/`: der Editor-Zustand (`Editor.ts`, Historie, Speichern,
   Migration alter Staende).
 - `src/editor/`: die Bedienoberflaeche (React), `src/ui/werkbank/` ihre
