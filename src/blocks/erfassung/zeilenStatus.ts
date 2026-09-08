@@ -21,11 +21,11 @@ export interface ZeilenZeichen {
 
 const TITEL: Record<ZeilenStatus, string> = {
   gebucht: '',
-  erfasst: 'Neue Zeile — noch nicht geschrieben',
-  geaendert: 'Geändert — noch nicht geschrieben',
-  loeschung: 'Zum Löschen vorgemerkt — noch nicht geschrieben',
+  erfasst: 'Neu',
+  geaendert: 'Geändert',
+  loeschung: 'Wird gelöscht',
   schreibt: 'Wird geschrieben …',
-  geschrieben: 'Hinausgeschickt — bleibt stehen, bis neue Daten kommen',
+  geschrieben: 'Hinausgeschickt',
   fehler: 'Nicht geschrieben',
 }
 

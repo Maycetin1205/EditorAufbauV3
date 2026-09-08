@@ -69,8 +69,10 @@ Maske.
 5. SoftEngine-Kontrakte nur aus Echttests; sie stehen in
    `docs/softengine-wiki/kontrakte.md`. Installations-Individuelles
    (Relations-Nummern, Werkzeug-Nummern, Felder) sind Daten, nie Code.
-6. Der SoftEngine-Browser ist aelter als Chromium 87: kein `inset`, nichts
-   Neueres im Export.
+6. Der SoftEngine-Browser versteht mindestens Chromium 94: die Laufzeit mit
+   Klassen-Static-Bloecken laeuft dort (Echttest, kontrakte.md 13). Nichts
+   Neueres im Export als das, was das Buendel heute schon braucht, ohne
+   Echttest.
 7. Tabellen-Spalten: Zustand und ERP-Kontrakt haengen am Platz in der vollen
    Spaltenliste; gefiltert wird nur beim Zeichnen (`spaltenSicht`).
 8. Neue Bezeichner deutsch, bestehende englische bleiben.

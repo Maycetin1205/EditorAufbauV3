@@ -300,6 +300,10 @@ steht hier nur als Wissen:
   `ff-basis.js` und je benutztem Baustein eine Datei, klassische Skripte in
   Ladereihenfolge. Ob der SoftEngine-Browser sie zwischenspeichert, ist NICHT
   belegt — das entscheidet ein Echttest.
+- Der SoftEngine-Browser versteht Klassen-Static-Bloecke (`static {}`,
+  Chromium 94) und damit auch `inset` (87): die von Vite 8 gebaute Laufzeit
+  laeuft, alle Bausteine erscheinen, Artikel-Nachschlagen geht (belegt
+  2026-09-08). Die genaue Chromium-Nummer ist noch nicht gemessen.
 - Nebenbeobachtung: `CONECT` wird ZWEIMAL gesendet, Empfang trotzdem nur
   1 Paket. Ungeklärt.
 
