@@ -124,11 +124,31 @@ export interface AenderungsTraegerElement {
   geaenderteZeilen: readonly { satz: string; werte: readonly string[] }[]
 }
 
-// Der Laufzeit-Vertrag der Faehigkeit `vergisstGeschriebene`: der Baustein haelt
-// die Zeilen, die er ans ERP gesendet hat, und laesst sie los, sobald SoftEngine
-// neue Daten liefert.
-export interface GeschriebeneZeilenElement {
-  vergissGeschriebene: () => void
+// Was eine Lieferung von SoftEngine ueber ihre Zeilen sagt, ohne dass der
+// Baustein die Quelle kennt.
+export interface Lieferung {
+  zeilen: readonly unknown[]
+
+  satzVon: (zeile: unknown) => string
+
+  lies: (zeile: unknown, feld: string) => string
+}
+
+// Der Laufzeit-Vertrag der Faehigkeit `haeltGesendete`: der Baustein haelt die
+// Zeilen, die er ans ERP gesendet hat, und laesst jede erst los, wenn sie in
+// einer Lieferung wieder auftaucht. null = keine Quelle, dann ist nichts zu
+// beweisen.
+export interface GesendeteZeilenElement {
+  pruefeAnkunft: (lieferung: Lieferung | null) => void
+}
+
+// Was von einer abgearbeiteten Zeile uebrig bleibt: ihre Kennung im Bericht und
+// die Satznummer, mit der sie wirklich hinausging. Ohne die zweite waere eine
+// neue Position in der naechsten Lieferung nur noch ueber ihre Felder zu finden.
+export interface GeschriebeneZeile {
+  schluessel: string
+
+  satz: string
 }
 
 // Der Bericht des Ketten-Laufs an den Baustein, dessen Liste er abarbeitet.
@@ -138,7 +158,7 @@ export interface GeschriebeneZeilenElement {
 export interface LaufBerichtElement {
   zeileSchreibt: (art: VormerkArt, schluessel: string) => void
   zeileGescheitert: (art: VormerkArt, schluessel: string, meldung: string) => void
-  laufFertig: (art: VormerkArt, geschrieben: readonly string[]) => void
+  laufFertig: (art: VormerkArt, geschrieben: readonly GeschriebeneZeile[]) => void
 }
 
 export interface BlockDefinition {
@@ -185,10 +205,10 @@ export interface BlockDefinition {
   // geben. Welcher das ist, steht damit in der Registry und nicht im Ketten-Code.
   aenderungsSchluessel?: string
 
-  // Gesetzt heisst: dieser Baustein haelt gesendete Zeilen und vergisst sie erst
-  // auf eine Lieferung hin. Steht in der Registry, damit der Datenstrom nicht am
-  // Element nach einer Methode fragen muss.
-  vergisstGeschriebene?: boolean
+  // Gesetzt heisst: dieser Baustein haelt gesendete Zeilen und laesst sie erst
+  // los, wenn eine Lieferung sie zeigt. Steht in der Registry, damit der
+  // Datenstrom nicht am Element nach einer Methode fragen muss.
+  haeltGesendete?: boolean
 
   bindableSpots?: readonly BindableSpot[]
 

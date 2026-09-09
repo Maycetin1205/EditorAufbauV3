@@ -9,6 +9,7 @@ import {
 import type {
   AenderungsTraegerElement,
   ErfassungsTraegerElement,
+  GeschriebeneZeile,
   LaufBerichtElement,
   LoeschTraegerElement,
   VormerkArt,
@@ -187,6 +188,14 @@ function zeilenKontext(
   return { ...context, PINDEX: zeile.satz }
 }
 
+// Mit welcher Satznummer die Zeile wirklich hinausging: die eigene, sonst die,
+// die ein Schritt der Kette fuer sie geholt hat. Ohne sie waere eine neue
+// Position in der naechsten Lieferung nur noch ueber ihre Felder zu finden.
+function satzDesLaufs(mitschrift: Mitschrift, zeile: LaufZeile): string {
+  if (zeile.satz !== '') return zeile.satz
+  return mitschrift.values.PINDEX ?? ''
+}
+
 export async function laufeSchritte(
   el: HTMLElement,
   steps: readonly RuntimeStep[],
@@ -311,7 +320,9 @@ export async function runEvent(
   locks.add(eventKey)
   try {
     const abschnitte = abschnitteVon(steps)
-    const berichte: { traeger: ZeilenTraeger; art: VormerkArt; fertige: string[] }[] = []
+    const berichte: {
+      traeger: ZeilenTraeger; art: VormerkArt; fertige: GeschriebeneZeile[]
+    }[] = []
     let geschrieben = false
     let abgebrochen = false
 
@@ -345,7 +356,7 @@ export async function runEvent(
       zeilenAbschnitte += 1
       if (zeilen.length === 0) continue
       vorgemerkteZeilen += zeilen.length
-      const bericht = { traeger, art: abschnitt.art, fertige: [] as string[] }
+      const bericht = { traeger, art: abschnitt.art, fertige: [] as GeschriebeneZeile[] }
       berichte.push(bericht)
       for (const zeile of zeilen) {
         traeger.zeileSchreibt?.(abschnitt.art, zeile.schluessel)
@@ -363,7 +374,10 @@ export async function runEvent(
           abgebrochen = true
           break
         }
-        bericht.fertige.push(zeile.schluessel)
+        bericht.fertige.push({
+          schluessel: zeile.schluessel,
+          satz: satzDesLaufs(ergebnis.mitschrift, zeile),
+        })
       }
       if (abgebrochen) break
     }

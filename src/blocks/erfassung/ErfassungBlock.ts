@@ -4,10 +4,13 @@ import { property } from 'lit/decorators.js'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type {
   ErfassungsFaehigkeit,
+  GeschriebeneZeile,
+  Lieferung,
   ListenBindung,
   VormerkArt,
 } from '../../core/blocks/BlockDefinition'
 import { SE_FOKUS_EVENT } from '../../softengine/bridge'
+import { meldeFehler } from '../../softengine/meldung'
 import { BasicBlock } from '../base/BasicBlock'
 import { vorschlagStil } from '../shared/vorschlagListe'
 import { meldeVormerkungen } from '../shared/vormerkStand'
@@ -45,6 +48,8 @@ import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZeile'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 
+const NICHT_ANGEKOMMEN = 'Nicht im Beleg angekommen.'
+
 export class ErfassungBlock extends TabelleBlock {
   static override readonly blockType = 'erfassung'
   static override readonly tagName = 'ff-erfassung'
@@ -59,7 +64,7 @@ export class ErfassungBlock extends TabelleBlock {
     wenn: { attributeName: 'loeschbar', equals: 'ja' },
   }
 
-  static readonly vergisstGeschriebene = true
+  static readonly haeltGesendete = true
 
   static override readonly listenBindung: ListenBindung = ERFASSUNG_SPALTEN_BINDUNG
 
@@ -131,19 +136,28 @@ export class ErfassungBlock extends TabelleBlock {
     this._lauf.gescheitert(art, schluessel, meldung)
   }
 
-  laufFertig(art: VormerkArt, geschrieben: readonly string[]): void {
-    this._lauf.fertig(art, geschrieben)
+  laufFertig(art: VormerkArt, geschrieben: readonly GeschriebeneZeile[]): void {
+    const schluessel = geschrieben.map((z) => z.schluessel)
+    this._lauf.fertig(art, schluessel)
     if (art === 'erfasst') {
       if (this._erfassung.markiereGeschrieben(this.erfassungsUmfeld(), geschrieben)) {
         this.requestUpdate()
       }
       return
     }
-    this._zeilen.austragen(art, geschrieben)
+    this._zeilen.austragen(art, schluessel)
   }
 
-  vergissGeschriebene(): void {
-    if (this._erfassung.vergissGeschriebene()) this.requestUpdate()
+  // Der Vertrag der Faehigkeit haeltGesendete: die Lieferung entscheidet, welche
+  // hinausgeschickte Zeile im Beleg steht. Die fehlenden bleiben vorgemerkt und
+  // tragen die Fehlermarke, bis der naechste Lauf sie noch einmal versucht.
+  pruefeAnkunft(lieferung: Lieferung | null): void {
+    const bericht = this._erfassung.pruefeAnkunft(lieferung, this.spaltenListe())
+    for (const kennung of bericht.fehlende) {
+      this._lauf.gescheitert('erfasst', kennung, NICHT_ANGEKOMMEN)
+    }
+    if (bericht.meldung !== '') meldeFehler(bericht.meldung)
+    if (bericht.geaendert) this.requestUpdate()
   }
 
   protected override setzeAbgeleitetesZurueck(): void {

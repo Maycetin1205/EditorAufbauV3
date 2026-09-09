@@ -129,6 +129,10 @@ export function frischeDatenAnfordern(): void {
     }
   } catch { /* nicht in SE */ }
   if (!angefordert) refreshDataBasis()
+  // Ein Stand, der schon vor dem Schreiben hereinkam, kann die eben gesendete
+  // Zeile nicht enthalten: als Beweis taugt er nicht, sonst hiesse es „nicht
+  // angekommen", bevor die ERP ueberhaupt geantwortet hat.
+  ausstehendeLieferung = false
   klingeln(false)
 }
 

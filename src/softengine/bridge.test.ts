@@ -70,8 +70,8 @@ test('ein fehlerfrei verteilter Stand wird nicht noch einmal verteilt', () => {
   expect(gerufen).toEqual([])
 })
 
-// An diesem Schalter haengt, ob eine hinausgeschickte Erfassungszeile aus der
-// Maske verschwinden darf (tabelle/seRuntime: vergissGeschriebene).
+// An diesem Schalter haengt, ob eine hinausgeschickte Erfassungszeile geprueft
+// und freigegeben wird (tabelle/seRuntime: pruefeAnkunft).
 test('ein Anstoss ist keine Lieferung', () => {
   meldeAnstoss()
   expect(gerufen).toEqual(['A', 'B:anstoss'])

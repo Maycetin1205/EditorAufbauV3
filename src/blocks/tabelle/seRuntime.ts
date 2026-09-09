@@ -1,11 +1,11 @@
 // Die Tabelle am SoftEngine-Datenstrom: anmelden, Zeilen ableiten, Satznummer lesen.
-import type { GeschriebeneZeilenElement } from '../../core/blocks/BlockDefinition'
+import type { GesendeteZeilenElement } from '../../core/blocks/BlockDefinition'
 import { definitionFuerTag } from '../../core/blocks/blockRegistry'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, satzIndexVon } from '../../softengine/data'
 import { auswahlWiederfinden, geberIdVon, zeilenNachAuswahl } from '../shared/auswahl'
 import { macheDatenAnschluss } from '../shared/datenAnschluss'
-import { holeDatenVorspann } from '../shared/datenVorspann'
+import { holeDatenVorspann, type DatenVorspann } from '../shared/datenVorspann'
 import { tryCoerceSpalten, type Spalte } from './spalten'
 
 export interface RuntimeTableElement extends HTMLElement {
@@ -18,10 +18,16 @@ export interface RuntimeTableElement extends HTMLElement {
 // Wer gesendete Zeilen haelt, sagt die Registry; die Liste selbst haelt keine.
 // Danach ist der Ruf unbedingt: eine gemeldete Faehigkeit ohne Vertrag faellt
 // auf, statt still nichts zu tun.
-function vergissGeschriebene(el: HTMLElement): void {
-  if (definitionFuerTag(el.tagName)?.vergisstGeschriebene !== true) return
-  const traeger = el as unknown as GeschriebeneZeilenElement
-  traeger.vergissGeschriebene()
+function pruefeAnkunft(el: HTMLElement, vorspann: DatenVorspann | null): void {
+  if (definitionFuerTag(el.tagName)?.haeltGesendete !== true) return
+  const traeger = el as unknown as GesendeteZeilenElement
+  traeger.pruefeAnkunft(vorspann === null ? null : {
+    // Vor der Auswahl gefiltert: eine Position, die der Auswahlfilter
+    // wegnimmt, steht trotzdem im Beleg.
+    zeilen: vorspann.zeilen,
+    satzVon: (zeile) => satzIndexVon(vorspann.quelle, zeile),
+    lies: vorspann.lies,
+  })
 }
 
 function spaltenVon(el: HTMLElement): Spalte[] {
@@ -45,9 +51,9 @@ export function hatSatzNummer(el: HTMLElement): boolean {
 }
 
 function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
-  // Erst die Lieferung von SoftEngine beweist den neuen Stand.
-  if (lieferung) vergissGeschriebene(el)
   const vorspann = holeDatenVorspann(el)
+  // Erst die Lieferung von SoftEngine beweist den neuen Stand.
+  if (lieferung) pruefeAnkunft(el, vorspann)
   if (!vorspann) {
     el.datenzeilen = []
     return

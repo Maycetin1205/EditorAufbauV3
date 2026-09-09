@@ -16,8 +16,8 @@ vi.mock('./relations', () => ({
 }))
 
 // Der Hol-Lauf haengt am Zeilenklick, nicht an einem SoftEngine-Schub: er
-// darf nur ANSTOSSEN. Meldete er eine Lieferung, verwuerfe die Tabelle daran
-// ihre hinausgeschickten Erfassungszeilen (s. vergissGeschriebene).
+// darf nur ANSTOSSEN. Meldete er eine Lieferung, haelte die Erfassung ihre
+// hinausgeschickten Zeilen daran fuer nicht angekommen (s. pruefeAnkunft).
 vi.mock('./bridge', () => ({ meldeAnstoss: () => { anstoesse += 1 } }))
 
 vi.mock('./meldung', () => ({ meldeFehler: (text: string) => { gemeldet.push(text) } }))
