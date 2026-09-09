@@ -4,9 +4,10 @@ import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Marke } from '@/ui/werkbank/Marke'
 import { actionValueTargets, auswahlGeberImBaum } from '../../core/blocks/treeQuery'
-import { ergebnisSchritteVor, stepTypeName, type ActionStep } from '../../core/data/aktionen'
+import { ergebnisSchritteVor, type ActionStep } from '../../core/data/aktionen'
 import { formatRelationSyntax } from '../../core/data/relations'
 import { stepProblem } from '../../core/data/schrittPruefung'
+import { schrittName } from './beschriftungen'
 import { istFensterSeite } from '../../state/pageOps'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
@@ -98,7 +99,7 @@ export function SchrittListe({
   // schlicht „Relation", und welche es ist, sagt die Marke rechts.
         const was = s.type === 'RELATION' && relation && !istUngetaufteVorlage(relation)
           ? relation.name
-          : stepTypeName(s.type)
+          : schrittName(s.type)
         const zus = schrittZusammenfassung(
           s, was, relation, ed.tree, dataSources.list,
           (id) => steps.findIndex((x) => x.id === id) + 1,

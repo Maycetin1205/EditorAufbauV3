@@ -2,7 +2,8 @@
 import { useMemo, type RefObject } from 'react'
 import { Liste, type ListeGruppe } from '@/ui/werkbank/Liste'
 import { Popover } from '@/ui/werkbank/Popover'
-import { artFuer, type DataSource } from '../../core/data/dataSources'
+import type { DataSource } from '../../core/data/dataSources'
+import { quellenWorte } from './beschriftungen'
 import {
   uebernahmeFelder,
   uebernahmeTabellen,
@@ -33,7 +34,7 @@ function leerHinweisFuer(
 ): string {
   if (quellen.length === 0) return 'Es ist keine Datenquelle angelegt.'
   const gesehen = quellen
-    .map((q) => `${q.name} (${artFuer(q.kind).name}, ${q.fields.length} Felder)`)
+    .map((q) => `${q.name} (${quellenWorte(q.kind).name}, ${q.fields.length} Felder)`)
     .join(' · ')
   return ziel === 'idb'
     ? `Keine Quelle mit Tabellen-Kennung. Angesehen: ${gesehen}`

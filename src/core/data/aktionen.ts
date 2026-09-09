@@ -9,24 +9,17 @@ export type StepTypeKey =
   | 'POPUP_OPEN'
   | 'POPUP_CLOSE'
 
-export interface StepTypeSpec {
-  key: StepTypeKey
-  name: string
-}
+// Die Reihenfolge im Waehler. Wie sie heissen, steht im Editor
+// (editor/zentrale/beschriftungen.ts).
+export const STEP_TYPE_KEYS: readonly StepTypeKey[] = [
 
-export const STEP_TYPES: readonly StepTypeSpec[] = [
+  'START_TOOL',
+  'BW_LINK',
+  'RELATION',
 
-  { key: 'START_TOOL', name: 'START_TOOL' },
-  { key: 'BW_LINK', name: 'BW-Befehl' },
-  { key: 'RELATION', name: 'Relation' },
-
-  { key: 'POPUP_OPEN', name: 'Popup öffnen' },
-  { key: 'POPUP_CLOSE', name: 'Popup schließen' },
+  'POPUP_OPEN',
+  'POPUP_CLOSE',
 ]
-
-export function stepTypeName(typeKey: string): string {
-  return STEP_TYPES.find((t) => t.key === typeKey)?.name ?? typeKey
-}
 
 export const ACTION_VALUE_ID_ATTR = 'data-ff-block-id'
 

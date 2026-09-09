@@ -5,7 +5,6 @@ import { unknownPlaceholders } from './relations'
 import {
   abschnitteVon,
   AKTIONS_PLATZHALTER,
-  stepTypeName,
   type ActionParamBinding,
   type ActionStep,
 } from './aktionen'
@@ -51,29 +50,28 @@ export function stepProblem(
     && ergebnisIds !== undefined
     && !ergebnisIds.includes(binding.value)
   if (step.type === 'POPUP_OPEN' || step.type === 'POPUP_CLOSE') {
-    const name = stepTypeName(step.type)
-    if (step.popupId.trim() === '') return `Schritt "${name}" hat kein Popup gewählt.`
+    if (step.popupId.trim() === '') return 'Der Popup-Schritt hat kein Popup gewählt.'
     if (popupIds && !popupIds.includes(step.popupId)) {
-      return `Schritt "${name}" verweist auf eine gelöschte Popup-Seite.`
+      return 'Der Popup-Schritt verweist auf eine gelöschte Popup-Seite.'
     }
     return null
   }
   if (step.type === 'BW_LINK') {
     if (step.befehl.trim() === '') {
-      return `Schritt "${stepTypeName(step.type)}" hat keinen Befehl.`
+      return 'Schritt "BW-Befehl" hat keinen Befehl.'
     }
     return null
   }
   if (step.type === 'START_TOOL') {
     if (step.toolNr.trim() === '') {
-      return `Schritt "${stepTypeName(step.type)}" hat keine Nummer.`
+      return 'Schritt "START_TOOL" hat keine Nummer.'
     }
     if (step.toolParams.some((param) => param.trim() === '')) {
-      return `Schritt "${stepTypeName(step.type)}" hat einen leeren Parameter.`
+      return 'Schritt "START_TOOL" hat einen leeren Parameter.'
     }
     const unknown = step.toolParams.flatMap((param) => unknownPlaceholders(param, AKTIONS_PLATZHALTER))
     if (unknown.length > 0) {
-      return `Schritt "${stepTypeName(step.type)}" hat einen unbekannten Platzhalter.`
+      return 'Schritt "START_TOOL" hat einen unbekannten Platzhalter.'
     }
     return null
   }

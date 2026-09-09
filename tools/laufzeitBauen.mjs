@@ -45,16 +45,35 @@ function globalerName(id) {
 
 const NUR_TYP = /^\s*type\s/
 
-// Was diese Datei zur Laufzeit braucht. Reine Typ-Importe zaehlen nicht: sie
-// verschwinden beim Uebersetzen und wuerden sonst Teile aneinanderbinden.
+// Die Namen einer Import-Klammer, so wie das Ziel sie exportiert: 'a as b'
+// zaehlt als 'a', ein eingestreutes 'type X' faellt weg.
+function namenAus(klausel, spec) {
+  const klammer = /\{([^}]*)\}/.exec(klausel)
+  const davor = klausel.slice(0, klammer ? klammer.index : klausel.length).trim()
+  if (davor !== '' && davor !== ',') {
+    throw new Error(`Import "${spec}": "${davor}" — die Laufzeit kennt nur { Name }-Importe.`)
+  }
+  if (!klammer) return []
+  return klammer[1]
+    .split(',')
+    .map((stueck) => stueck.trim())
+    .filter((stueck) => stueck !== '' && !NUR_TYP.test(stueck))
+    .map((stueck) => stueck.split(/\s+as\s+/)[0].trim())
+}
+
+// Was diese Datei zur Laufzeit braucht: je Ziel die Namen, die sie anfasst.
+// Reine Typ-Importe zaehlen nicht: sie verschwinden beim Uebersetzen und wuerden
+// sonst Teile aneinanderbinden. In der Klausel steht kein Anfuehrungszeichen,
+// sonst schluckte sie eine Import-Zeile ohne Namen davor mit.
 function importeVon(quelltext) {
   const gefunden = []
-  const mitNamen = /(?:^|\n)\s*(?:import|export)\b([\s\S]*?)\bfrom\s*['"]([^'"]+)['"]/g
+  const mitNamen = /(?:^|\n)\s*(?:import|export)\b([^'"]*?)\bfrom\s*['"]([^'"]+)['"]/g
   for (const treffer of quelltext.matchAll(mitNamen)) {
-    if (!NUR_TYP.test(treffer[1])) gefunden.push(treffer[2])
+    if (NUR_TYP.test(treffer[1])) continue
+    gefunden.push({ spec: treffer[2], namen: namenAus(treffer[1], treffer[2]) })
   }
   const nurWirkung = /(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g
-  for (const treffer of quelltext.matchAll(nurWirkung)) gefunden.push(treffer[1])
+  for (const treffer of quelltext.matchAll(nurWirkung)) gefunden.push({ spec: treffer[1], namen: [] })
   return gefunden
 }
 
@@ -82,15 +101,16 @@ function bauplan() {
     }
   }
 
-  // Hingestellt wird nur, was ein Baustein von aussen anfasst; alles Weitere
-  // zieht ein Teil ueber diese Module nach und faellt sonst beim Bauen heraus.
-  const stelltHin = new Map([...dateienJeTeil.keys()].map((teil) => [teil, new Set()]))
+  // Hingestellt wird nur, was ein Baustein von aussen anfasst, und davon nur die
+  // Namen: alles Weitere zieht ein Teil ueber diese Module nach und faellt sonst
+  // beim Bauen heraus.
+  const stelltHin = new Map([...dateienJeTeil.keys()].map((teil) => [teil, new Map()]))
   const braucht = new Map([...dateienJeTeil.keys()].map((teil) => [teil, new Set()]))
 
   for (const [teil, dateien] of dateienJeTeil) {
     if (teil === BASIS) continue
     for (const datei of dateien) {
-      for (const spec of importeVon(readFileSync(datei, 'utf8'))) {
+      for (const { spec, namen } of importeVon(readFileSync(datei, 'utf8'))) {
         const ziel = aufloesen(spec, path.dirname(datei))
         const eigen = ziel.startsWith(QUELLE + '/')
         if (eigen && !LAUFZEIT_WURZELN.some((w) => ziel.startsWith(w + '/'))) {
@@ -98,7 +118,9 @@ function bauplan() {
         }
         const zielTeil = eigen ? teilVon(ziel) : BASIS
         if (zielTeil === teil) continue
-        stelltHin.get(zielTeil).add(ziel)
+        const hin = stelltHin.get(zielTeil)
+        if (!hin.has(ziel)) hin.set(ziel, new Set())
+        for (const name of namen) hin.get(ziel).add(name)
         if (zielTeil !== BASIS) braucht.get(teil).add(zielTeil)
       }
     }
@@ -145,10 +167,17 @@ function schreibeEinstieg(name, dateien, stelltHin) {
     : dateien.filter((datei) => /Block\.ts$/.test(datei)).map((datei) => `import '${datei}'`)
   const rumpf = stelltHin.size === 0 ? [] : ['window.FF = window.FF || {};']
   let nr = 0
-  for (const modul of [...stelltHin].sort()) {
+  for (const [modul, namen] of [...stelltHin].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    const liste = [...namen].sort()
+    // Nur die benutzten Namen, nicht das ganze Modul: was kein Teil anfasst,
+    // faellt beim Bauen heraus. Ohne Namen bleibt allein die Wirkung der Datei.
+    if (liste.length === 0) {
+      kopf.push(`import '${modul}'`)
+      continue
+    }
     const marke = `t${nr++}`
-    kopf.push(`import * as ${marke} from '${modul}'`)
-    rumpf.push(`${globalerName(modul)} = ${marke};`)
+    kopf.push(`import { ${liste.map((n) => `${n} as ${marke}$${n}`).join(', ')} } from '${modul}'`)
+    rumpf.push(`${globalerName(modul)} = { ${liste.map((n) => `${n}: ${marke}$${n}`).join(', ')} };`)
   }
   const einstieg = `${ENTWURF}/${name}.ts`
   mkdirSync(ENTWURF, { recursive: true })
@@ -161,7 +190,7 @@ async function baueTeil(vite, name, plan, ziel) {
   const globals = {}
   for (const [teil, module] of plan.stelltHin) {
     if (teil === name) continue
-    for (const modul of module) globals[modul] = globalerName(modul)
+    for (const modul of module.keys()) globals[modul] = globalerName(modul)
   }
 
   await vite.build({

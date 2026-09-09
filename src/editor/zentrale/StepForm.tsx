@@ -6,7 +6,7 @@ import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Zeile } from '@/ui/werkbank/Zeile'
 import {
-  STEP_TYPES,
+  STEP_TYPE_KEYS,
   defaultRelationParams,
   ergebnisSchritteVor,
   schritteVor,
@@ -23,6 +23,7 @@ import {
   loeschTraegerImBaum,
 } from '../../core/blocks/treeQuery'
 import { relationMatchesSearch } from '../../core/data/relations'
+import { schrittName } from './beschriftungen'
 import { FeldUebernahmePicker } from './FeldUebernahmePicker'
 import {
   feldUebernahmeArt,
@@ -222,7 +223,7 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
       <SelectControl
         label="Aktion"
         value={entwurf.typ}
-        options={STEP_TYPES.map((entry) => ({ value: entry.key, label: entry.name }))}
+        options={STEP_TYPE_KEYS.map((key) => ({ value: key, label: schrittName(key) }))}
         onChange={(value) => dispatch({ art: 'typ', typ: value as StepTypeKey })}
       />
 

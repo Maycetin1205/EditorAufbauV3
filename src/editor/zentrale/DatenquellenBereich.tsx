@@ -11,6 +11,7 @@ import {
   quellenKennung,
   type DataSource,
 } from '../../core/data/dataSources'
+import { quellenWorte } from './beschriftungen'
 import { parseDtkBytes, type DtkTabelle } from '../../core/data/dtkImport'
 import { bausteineMitQuelle } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
@@ -133,7 +134,7 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
                     {unvollstaendig(s) && (
                       <TriangleAlert size={12} className="shrink-0 text-fehler" />
                     )}
-                    <Marke technisch={false}>{artFuer(s.kind).name}</Marke>
+                    <Marke technisch={false}>{quellenWorte(s.kind).name}</Marke>
                   </>
                 )}
                 unten={(
@@ -178,7 +179,7 @@ export function DatenquellenBereich({ bereiche }: { bereiche?: ReactNode }) {
             <div>
               <h3 className="text-ui font-semibold text-tinte">{auswahl.name}</h3>
               <p className="text-matt">
-                {artFuer(auswahl.kind).name}
+                {quellenWorte(auswahl.kind).name}
                 {kennung(auswahl) !== '' ? ` · ${kennung(auswahl)}` : ''}
               </p>
             </div>

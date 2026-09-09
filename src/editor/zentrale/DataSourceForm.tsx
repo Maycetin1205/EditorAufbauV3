@@ -34,6 +34,7 @@ import { RelationAuswahl } from './RelationAuswahl'
 import { PickerControl } from '../inspector/controls/PickerControl'
 import { SelectControl } from '../inspector/controls/SelectControl'
 import { FeldListe } from './FeldListe'
+import { quellenWorte } from './beschriftungen'
 import {
   LEERE_ZEILE,
   zeileFromField,
@@ -96,6 +97,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   const [holSuche, setHolSuche] = useState('')
 
   const art = artFuer(kind)
+  const worte = quellenWorte(kind)
   const kennungEingeben = tabellenKennungNoetig(art)
 
   const kopfsatzEingeben = art.kopfsatzMoeglich
@@ -157,8 +159,9 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   function waehleArt(neu: DataSourceKind): void {
     setKind(neu)
     const neueArt = artFuer(neu)
-    if (neueArt.standardFelder.length > 0 && !zeilen.some(zeileGefuellt)) {
-      setZeilen(neueArt.standardFelder.map((f) => zeileFromField(f)))
+    const standardFelder = quellenWorte(neu).standardFelder
+    if (standardFelder.length > 0 && !zeilen.some(zeileGefuellt)) {
+      setZeilen(standardFelder.map((f) => zeileFromField(f)))
     }
     if (neueArt.kopfsatzStandard !== '' && kopfsatzEingabe.trim() === '') {
       setKopfsatzEingabe(neueArt.kopfsatzStandard)
@@ -175,7 +178,7 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   else if (nameDoppelt) nameFehler = 'Diesen Namen trägt schon eine andere Quelle.'
   const kennungFehler =
     kennungEingeben && kennungFromInput(kennungEingabe, art.idbKurzform) === ''
-      ? `${art.kennungLabel} fehlt (z. B. ${art.kennungBeispiel}).`
+      ? `${worte.kennungLabel} fehlt (z. B. ${worte.kennungBeispiel}).`
       : ''
 
   const kopfsatzFehler =
@@ -291,17 +294,17 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         <SelectControl
           label="Art"
           value={kind}
-          options={QUELLEN_ARTEN.map((a) => ({ value: a.id, label: a.name }))}
+          options={QUELLEN_ARTEN.map((a) => ({ value: a.id, label: quellenWorte(a.id).name }))}
           onChange={(v) => waehleArt(v as DataSourceKind)}
         />
 
         {kennungEingeben && (
-          <Zeile label={art.kennungLabel} fehler={zeigeFehler ? kennungFehler : undefined}>
+          <Zeile label={worte.kennungLabel} fehler={zeigeFehler ? kennungFehler : undefined}>
             {(f) => (
               <Feld
                 {...f}
                 value={kennungEingabe}
-                placeholder={`z. B. ${art.kennungBeispiel}`}
+                placeholder={`z. B. ${worte.kennungBeispiel}`}
                 className="w-32"
                 onChange={(e) => setKennungEingabe(e.target.value)}
               />
@@ -439,8 +442,8 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
 
         <FeldListe
           spaltenNamen={art.spaltenNamen}
-          spaltenLabel={art.spaltenLabel}
-          spaltenBeispiel={art.spaltenBeispiel}
+          spaltenLabel={worte.spaltenLabel}
+          spaltenBeispiel={worte.spaltenBeispiel}
           zeilen={zeilen}
           setZeilen={setZeilen}
           zeilenFehler={zeilenFehler}
