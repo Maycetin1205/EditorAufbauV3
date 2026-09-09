@@ -298,10 +298,13 @@ export class ErfassungBlock extends TabelleBlock {
   }
 
   // Fokus aus dem ERP geht in die Erfassungszeile; ohne Antwort sucht die
-  // Bruecke weiter.
+  // Bruecke weiter. Steht die Schreibmarke schon in einer Zelle, bleibt sie
+  // dort: das ERP fragt auch mitten im Tippen.
   private readonly nimmSeFokus = (ereignis: Event): void => {
     if (ereignis.defaultPrevented || this.imEditor) return
     ereignis.preventDefault()
+    if (this.shadowRoot?.activeElement instanceof HTMLInputElement) return
+    window.focus()
     this.fokussiereErfassungsZelle(0)
   }
 
