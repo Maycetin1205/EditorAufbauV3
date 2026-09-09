@@ -1,5 +1,4 @@
 // Das Raster der Maskenflaeche: Spalten, Zeilen und der Platz eines Bausteins darin.
-import { propertySichtbar, type PropertyVisibilityCondition } from './PropertyDescription'
 import { styleToCss } from './styleCss'
 
 export const RASTER = { spalten: 24, spaltePx: 40, zeilePx: 12, gapPx: 8 } as const
@@ -17,11 +16,6 @@ export interface RasterSpec {
   minW: number
   minH: number
   breiteZiehbar: boolean
-  varianten: readonly RasterVariante[]
-}
-
-export interface RasterVariante extends Partial<Omit<RasterSpec, 'varianten'>> {
-  wenn: PropertyVisibilityCondition
 }
 
 const RASTER_FALLBACK: RasterSpec = {
@@ -30,7 +24,6 @@ const RASTER_FALLBACK: RasterSpec = {
   minW: 1,
   minH: 1,
   breiteZiehbar: true,
-  varianten: [],
 }
 
 export const RASTER_DEFAULTS: Record<string, unknown> = {
@@ -58,21 +51,8 @@ export function parseRasterPos(props: Record<string, unknown>): RasterPos {
 
 export function rasterSpecOf(
   def: { raster?: Partial<RasterSpec> } | undefined,
-  props: Record<string, unknown> = {},
 ): RasterSpec {
-  const basis: RasterSpec = { ...RASTER_FALLBACK, ...(def?.raster ?? {}) }
-  for (const v of basis.varianten) {
-    if (!propertySichtbar(v.wenn, props)) continue
-    return {
-      startW: v.startW ?? basis.startW,
-      startH: v.startH ?? basis.startH,
-      minW: v.minW ?? basis.minW,
-      minH: v.minH ?? basis.minH,
-      breiteZiehbar: v.breiteZiehbar ?? basis.breiteZiehbar,
-      varianten: basis.varianten,
-    }
-  }
-  return basis
+  return { ...RASTER_FALLBACK, ...(def?.raster ?? {}) }
 }
 
 export function rasterFlaecheStyle(): Record<string, string | number> {

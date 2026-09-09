@@ -23,18 +23,6 @@ type VormerkTraeger = HTMLElement
 
 // Gezaehlt werden ZEILEN, nicht Zellen: die Summe ist zugleich die Zahl der
 // Laeufe, die der Knopf vor sich hat.
-export function vormerkText(erfasst: number, geaendert: number, geloescht: number): string {
-  const teile: string[] = []
-  if (erfasst > 0) teile.push(erfasst === 1 ? '1 neue Zeile' : `${erfasst} neue Zeilen`)
-  if (geaendert > 0) {
-    teile.push(geaendert === 1 ? '1 geänderte Zeile' : `${geaendert} geänderte Zeilen`)
-  }
-  if (geloescht > 0) {
-    teile.push(geloescht === 1 ? '1 Löschung' : `${geloescht} Löschungen`)
-  }
-  return teile.length === 0 ? '' : `${teile.join(', ')} vorgemerkt`
-}
-
 export function vormerkSumme(zahlen: VormerkZahlen): number {
   return zahlen.erfasst + zahlen.geaendert + zahlen.geloescht
 }

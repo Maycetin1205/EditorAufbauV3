@@ -12,7 +12,6 @@ import {
   aufAuswahlHoeren,
   auswahlFuer,
   auswahlNummer,
-  beimAuswahlZuruecksetzen,
   geberIdVon,
   merkmalVon,
 } from './auswahl'
@@ -86,11 +85,6 @@ export function darfLaden(quelleId: string, abdruck: string, durchBedienung: boo
   return true
 }
 
-export function setzeLadeSpurZurueck(): void {
-  letzterAbdruck.clear()
-  stillGeladen.clear()
-}
-
 function pruefeHolendeQuellen(durchBedienung: boolean): void {
   const liste: unknown = seGlobal().FF_DATA_SOURCES
   if (!Array.isArray(liste)) return
@@ -130,7 +124,4 @@ export function verdrahteHolendeQuellen(): void {
   // Stand die Lieferung schon, als der erste Baustein sich anschloss, kommt
   // fuer sie kein `lieferung`-Ruf mehr.
   if (hasSeData()) holeWertQuellen()
-// Faellt die Auswahl komplett weg, muss der Abdruck mit weg: sonst gilt der
-// alte Stand weiter als schon geholt.
-  beimAuswahlZuruecksetzen(setzeLadeSpurZurueck)
 }

@@ -35,7 +35,6 @@ import {
   freieZeileAuf,
   istRasterFlaeche,
   neuerBlockAnZelle,
-  startgroesseNachziehen,
   verschiebeInContainer,
   zelleneinzug,
   zellenGroesse,
@@ -211,7 +210,7 @@ export class Editor extends Subject<Editor> {
     node.parentId = parent.id
 
     if (istRasterFlaeche(parent)) {
-      const spec = rasterSpecOf(getBlockDefinition(type), node.props)
+      const spec = rasterSpecOf(getBlockDefinition(type))
       const y = freieZeileAuf(this._tree, parent.id)
       node.props = { ...node.props, rasterX: 0, rasterY: y, rasterW: spec.startW, rasterH: spec.startH }
     }
@@ -312,8 +311,6 @@ export class Editor extends Subject<Editor> {
         }
       }
     }
-
-    next[id] = startgroesseNachziehen(def, node.props, next[id])
 
     // Verschwindet eine Kennung aus einer Liste, darf kein Ketten-Parameter mehr
     // auf sie zeigen; die Ketten koennen auf anderen Bausteinen liegen.

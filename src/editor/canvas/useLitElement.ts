@@ -4,8 +4,6 @@ import type { RefObject } from 'react'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import {
   bindingProp,
-  fremdeQuelleVon,
-  listeLesen,
   zerlegeBindung,
   type BindableSpot,
 } from '../../core/blocks/BlockDefinition'
@@ -126,18 +124,6 @@ export function useLitElement({
       } else {
         elAny[bindingProp(spot.prop)] = ''
       }
-    }
-  // Je Listeneintrag der Klarname seiner FREMDEN Quelle. Nur der Editor kennt die
-  // Bibliothek, er rechnet es aus. Es geht als EIGENSCHAFT hinueber, nie als
-  // Attribut: der Export schreibt Attribute aus dem Baum.
-    const bindung = getBlockDefinition(block.type)?.listenBindung
-    const herkunftProp = bindung?.herkunftProp
-    if (bindung && herkunftProp !== undefined) {
-      elAny[herkunftProp] = listeLesen(block.props[bindung.prop], bindung).map((eintrag) => {
-        const quelleId = fremdeQuelleVon(bindung, eintrag)
-        if (quelleId === '') return ''
-        return quellen.find((q) => q.source.id === quelleId)?.source.name ?? ''
-      })
     }
 
     elAny.editable = !!selected

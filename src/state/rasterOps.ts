@@ -40,20 +40,6 @@ export function freiePositionFuerKopie(
   }
 }
 
-export function startgroesseNachziehen(
-  def: Parameters<typeof rasterSpecOf>[0],
-  vorherProps: Record<string, unknown>,
-  node: BlockNode,
-): BlockNode {
-  const vorher = rasterSpecOf(def, vorherProps)
-  const nachher = rasterSpecOf(def, node.props)
-  if (vorher.startW === nachher.startW && vorher.startH === nachher.startH) return node
-  return {
-    ...node,
-    props: { ...node.props, rasterW: nachher.startW, rasterH: nachher.startH },
-  }
-}
-
 export function verschiebeInContainer(
   tree: BlockTree,
   id: string,
@@ -113,7 +99,7 @@ export function zelleneinzug(
   if (collectSubtree(tree, id).includes(parentId)) return null
   const gleicheFlaeche = node.parentId === parentId
   const cur = parseRasterPos(node.props)
-  const spec = rasterSpecOf(getBlockDefinition(node.type), node.props)
+  const spec = rasterSpecOf(getBlockDefinition(node.type))
   const w = gleicheFlaeche ? cur.w : spec.startW
   const h = gleicheFlaeche ? cur.h : spec.startH
   const nx = Math.max(0, Math.min(x, RASTER.spalten - w))
@@ -171,7 +157,7 @@ export function neuerBlockAnZelle(
   const { nodes, rootId } = createBlockSubtree(type)
   const node = nodes[rootId]
   node.parentId = parent.id
-  const spec = rasterSpecOf(getBlockDefinition(type), node.props)
+  const spec = rasterSpecOf(getBlockDefinition(type))
   const nx = Math.max(0, Math.min(x, RASTER.spalten - spec.startW))
   const ny = Math.max(0, y)
   node.props = { ...node.props, rasterX: nx, rasterY: ny, rasterW: spec.startW, rasterH: spec.startH }

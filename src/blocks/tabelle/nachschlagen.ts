@@ -273,8 +273,6 @@ function fensterTpl(args: FensterArgs): TemplateResult {
   return html`<ff-dialog-rahmen
     viewport
     escape-schliesst
-    ohne-modal
-    inhalt-fest
     ?ziehbar=${editor !== undefined}
     ?data-ff-nachschlagen=${editor === undefined}
     style=${editor !== undefined ? 'z-index:40' : nothing}

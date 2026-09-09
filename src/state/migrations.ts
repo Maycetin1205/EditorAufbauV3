@@ -105,7 +105,7 @@ function migrationsBreite(node: BlockNode): number {
     return Math.min(RASTER.spalten, Math.max(1, Math.ceil(w / PX_PRO_ZELLE)))
   }
   if (w === 'fill') return RASTER.spalten
-  return rasterSpecOf(getBlockDefinition(node.type), node.props).startW
+  return rasterSpecOf(getBlockDefinition(node.type)).startW
 }
 
 function rasterFlaechenIds(tree: BlockTree): string[] {
@@ -148,14 +148,14 @@ export function migrateRasterBreitenReparatur(tree: BlockTree): boolean {
 
     const istKaputt = (node: BlockNode): boolean => {
       const p = parseRasterPos(node.props)
-      const startW = rasterSpecOf(getBlockDefinition(node.type), node.props).startW
+      const startW = rasterSpecOf(getBlockDefinition(node.type)).startW
       return p.x === 0 && p.w === RASTER.spalten && startW < RASTER.spalten
     }
     if (!kinder.some(istKaputt)) continue
 
     const groessen = kinder.map((node) => {
       const p = parseRasterPos(node.props)
-      const w = istKaputt(node) ? rasterSpecOf(getBlockDefinition(node.type), node.props).startW : p.w
+      const w = istKaputt(node) ? rasterSpecOf(getBlockDefinition(node.type)).startW : p.w
       return { w, h: p.h }
     })
     const positionen = stapeleUntereinander(groessen)
@@ -177,7 +177,7 @@ export function migratePopupInhaltAufRaster(tree: BlockTree): boolean {
       .filter((n): n is BlockNode => Boolean(n))
     if (kinder.length === 0) continue
     const positionen = stapeleUntereinander(kinder.map((n) => {
-      const spec = rasterSpecOf(getBlockDefinition(n.type), n.props)
+      const spec = rasterSpecOf(getBlockDefinition(n.type))
       return { w: spec.startW, h: spec.startH }
     }))
     kinder.forEach((n, i) => {

@@ -84,6 +84,4 @@ export const SPALTEN_BINDUNG: ListenBindung = {
       kurz: 'ausgeblendet',
     },
   ],
-
-  herkunftProp: 'spaltenHerkunft',
 }

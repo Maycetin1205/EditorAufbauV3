@@ -17,7 +17,6 @@ export function merkmalVon(zeile: unknown): string {
 // Quelle gewinnt die juengste Wahl.
 const zustand = new Map<string, { zeile: unknown; merkmal: string; nummer: number }>()
 const hoerer = new Set<(durchBedienung: boolean) => void>()
-const zuruecksetzer = new Set<() => void>()
 
 let wahlZaehler = 0
 
@@ -111,17 +110,6 @@ export function klareAuswahl(geberId: string): void {
   if (!zustand.has(geberId)) return
   zustand.delete(geberId)
   melde(false)
-}
-
-// Wer eigene Spuren zur Auswahl haelt, laesst sie hier mitloeschen.
-export function beimAuswahlZuruecksetzen(cb: () => void): void {
-  zuruecksetzer.add(cb)
-}
-
-export function setzeAuswahlZurueck(): void {
-  zustand.clear()
-  wahlZaehler = 0
-  zuruecksetzer.forEach((cb) => cb())
 }
 
 const AUSWAHL_FOLGE_ATTR = AUSWAHL_FOLGE_PROP.toLowerCase()

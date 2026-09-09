@@ -79,7 +79,6 @@ export class NaviEintragBlock extends BasicBlock {
       }
       :host([aktiv]) .zeichen { background: var(--se-panel); }
 
-      :host([ton='sonne'])   { --ton: var(--se-amber); }
       :host([ton='salbei'])  { --ton: var(--se-green); }
       :host([ton='himmel'])  { --ton: var(--se-blue); }
       :host([ton='flieder']) { --ton: var(--se-violet); }

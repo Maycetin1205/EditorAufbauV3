@@ -1,5 +1,5 @@
-// Baustein Karte: ein Kaertchen mit Titel, Text, Reiter und Avatar.
-import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
+// Baustein Karte: ein Kaertchen mit Titel, Text, Datum und Chip.
+import { html, nothing, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
@@ -34,7 +34,6 @@ export class CardBlock extends BasicBlock {
     heading2: '',
     time: '',
     date: '',
-    avatar: '',
     meta: '',
     text: '',
     chipText: '',
@@ -43,7 +42,6 @@ export class CardBlock extends BasicBlock {
     heading2Field: '',
     timeField: '',
     dateField: '',
-    avatarField: '',
     metaField: '',
     textField: '',
     chipTextField: '',
@@ -52,7 +50,6 @@ export class CardBlock extends BasicBlock {
   static readonly bindableSpots: BindableSpotsFor<typeof CardBlock.defaultProps> = [
     { prop: 'time', label: 'Zeit' },
     { prop: 'date', label: 'Datum' },
-    { prop: 'avatar', label: 'Avatar' },
     { prop: 'heading', label: 'Titel' },
     { prop: 'heading2', label: 'Titel 2' },
     { prop: 'meta', label: 'Unterzeile' },
@@ -74,7 +71,6 @@ export class CardBlock extends BasicBlock {
   @property() heading2 = ''
   @property() time = ''
   @property() date = ''
-  @property() avatar = ''
   @property() meta = ''
   @property() text = ''
   @property() chipText = ''
@@ -82,7 +78,6 @@ export class CardBlock extends BasicBlock {
   @property() heading2Field = ''
   @property() timeField = ''
   @property() dateField = ''
-  @property() avatarField = ''
   @property() metaField = ''
   @property() textField = ''
   @property() chipTextField = ''
@@ -97,57 +92,23 @@ export class CardBlock extends BasicBlock {
     >${this[prop]}</span>`
   }
 
-  private hatReiter(): boolean {
-    return this.imEditor || this.date.trim() !== '' || this.time.trim() !== ''
-  }
-
-  override updated(changed: PropertyValues): void {
-    super.updated(changed)
-    this.toggleAttribute('hat-reiter', this.hatReiter())
-  }
-
   override render(): TemplateResult {
     const v = coerceStatusVariant(this.chipVariant)
 
     const editor = this.imEditor
     const zeigt = (wert: string) => editor || wert.trim() !== ''
 
-    const reiter = this.hatReiter()
-    const kopf = zeigt(this.avatar) || zeigt(this.heading) || zeigt(this.meta)
-    const fuss = zeigt(this.heading2) || zeigt(this.chipText)
-    return html`<div class="card v-${v}${reiter ? '' : ' ohne-reiter'}">
-      ${reiter
-        ? html`<span class="reiter">
-            ${zeigt(this.date) ? this.stelle('date', 'datum') : nothing}
-            ${zeigt(this.time) ? this.stelle('time', 'zeit') : nothing}
-          </span>`
-        : nothing}
-      ${kopf
-        ? html`<div class="kopf">
-            ${zeigt(this.avatar)
-              ? html`<span
-                  class="avatar"
-                  data-ff-spot="avatar"
-                  ?data-ff-bound=${this.avatarField !== ''}
-                >${this.avatar.trim() === ''
-                  ? nothing
-                  : html`<img
-                      src=${this.avatar}
-                      alt=""
-                      aria-hidden="true"
-                      @error=${(e: Event) => { (e.target as HTMLElement).hidden = true }}
-                    />`}</span>`
-              : nothing}
-            <div class="namen">
-              ${zeigt(this.heading) ? this.stelle('heading', 'name') : nothing}
-              ${zeigt(this.meta) ? this.stelle('meta', 'zusatz') : nothing}
-            </div>
-          </div>`
-        : nothing}
+    const fuss = zeigt(this.heading2) || zeigt(this.date) || zeigt(this.time)
+      || zeigt(this.chipText)
+    return html`<div class="card v-${v}">
+      ${zeigt(this.heading) ? this.stelle('heading', 'name') : nothing}
+      ${zeigt(this.meta) ? this.stelle('meta', 'zusatz') : nothing}
       ${zeigt(this.text) ? this.stelle('text', 'grund') : nothing}
       ${fuss
         ? html`<div class="fuss">
             ${zeigt(this.heading2) ? this.stelle('heading2', 'fussl') : nothing}
+            ${zeigt(this.date) ? this.stelle('date', 'datum') : nothing}
+            ${zeigt(this.time) ? this.stelle('time', 'zeit') : nothing}
             ${zeigt(this.chipText)
               ? html`<span
                   class="chip v-${v}"

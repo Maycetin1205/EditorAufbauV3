@@ -30,8 +30,6 @@
     `]}onClose(){this.imEditor||this.removeAttribute(`offen`)}updated(e){super.updated(e),e.has(`offen`)&&this.offen&&(this.imEditor||this.updateComplete.then(()=>{this.offen&&this.isConnected&&(o(this)??(this.shadowRoot?o(this.shadowRoot):null))?.focus()}))}render(){return e.html`<ff-dialog-rahmen
         .breite=${this.breite}
         .hoehe=${this.hoehe}
-        ohne-modal
-        inhalt-fest
         ?escape-schliesst=${this.offen&&!this.imEditor}
         @ff-dialog-schliessen=${this.onClose}
       >

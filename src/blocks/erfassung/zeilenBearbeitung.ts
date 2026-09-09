@@ -45,7 +45,7 @@ export class ZeilenBearbeitung {
     const spaltenAnzahl = this.wirt.spalten().length
     const plaetze = this.satzPlaetze()
     const raus: { satz: string; werte: readonly string[] }[] = []
-    for (const { satz } of this.aenderungen.proSatz()) {
+    for (const satz of this.aenderungen.saetze()) {
       const rohIndex = plaetze.get(satz)
       // Die Zeile ist seit der Aenderung aus der Liste verschwunden; mit leeren
       // Werten zu schreiben hiesse, den Satz im ERP leerzuraeumen.
@@ -82,14 +82,6 @@ export class ZeilenBearbeitung {
       else weg = this.geloescht.delete(satz) || weg
     }
     if (weg) this.wirt.melde()
-  }
-
-  vorgemerkteAenderungen(): number {
-    return this.geaenderteZeilen.length
-  }
-
-  vorgemerkteLoeschungen(): number {
-    return this.geloeschteZeilen.length
   }
 
   // Was der Lauf meldet, schlaegt die Vormerkung; unter den Vormerkungen
@@ -222,14 +214,6 @@ export class ZeilenBearbeitung {
   }
 }
 
-export interface Aenderung {
-  satz: string
-
-  spalte: number
-
-  wert: string
-}
-
 const TRENNER = '\u0000'
 
 function schluessel(satz: string, spalte: number): string {
@@ -259,15 +243,12 @@ export class AenderungsSpeicher {
     return this.werte.size
   }
 
-  proSatz(): { satz: string; aenderungen: Aenderung[] }[] {
-    const raus: { satz: string; aenderungen: Aenderung[] }[] = []
-    for (const [k, wert] of this.werte) {
-      const [satz, spalteRoh] = k.split(TRENNER)
-      const spalte = Number(spalteRoh)
-      const vorhanden = raus.find((e) => e.satz === satz)
-      const eintrag = { satz, spalte, wert }
-      if (vorhanden) vorhanden.aenderungen.push(eintrag)
-      else raus.push({ satz, aenderungen: [eintrag] })
+  // Jede vorgemerkte Satznummer einmal, in der Reihenfolge der ersten Aenderung.
+  saetze(): string[] {
+    const raus: string[] = []
+    for (const k of this.werte.keys()) {
+      const satz = k.slice(0, k.indexOf(TRENNER))
+      if (!raus.includes(satz)) raus.push(satz)
     }
     return raus
   }

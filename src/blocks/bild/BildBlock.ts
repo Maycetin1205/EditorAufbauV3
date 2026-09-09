@@ -26,8 +26,6 @@ export class BildBlock extends BasicBlock {
   static override styles = [
     BasicBlock.styles,
     css`
-      :host { display: block; }
-
       .flaeche {
         box-sizing: border-box;
         display: flex;

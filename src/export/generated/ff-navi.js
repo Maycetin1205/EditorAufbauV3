@@ -28,7 +28,6 @@
       }
       :host([aktiv]) .zeichen { background: var(--se-panel); }
 
-      :host([ton='sonne'])   { --ton: var(--se-amber); }
       :host([ton='salbei'])  { --ton: var(--se-green); }
       :host([ton='himmel'])  { --ton: var(--se-blue); }
       :host([ton='flieder']) { --ton: var(--se-violet); }
@@ -41,7 +40,7 @@
         text-overflow: ellipsis;
       }
     `]}constructor(){super(),this.seite=``,this.seitename=``,this.ton=`sonne`,this.addEventListener(`click`,()=>this.melde())}melde(){let e={ansicht:this.seitename};this.dispatchEvent(new CustomEvent(a.SEITEN_WECHSEL_EVENT,{detail:e,bubbles:!0,composed:!0}))}render(){return e.html`<span class="zeichen"></span>
-      <span class="name">${this.seitename===``?`—`:this.seitename}</span>`}};s([(0,i.property)()],l.prototype,`seite`,void 0),s([(0,i.property)()],l.prototype,`seitename`,void 0),s([(0,i.property)({reflect:!0})],l.prototype,`ton`,void 0),t.BasicBlock.defineAndRegister(l);var u=`aktiv`;function d(e){return Array.from(e.querySelectorAll(l.tagName))}function f(e,t){let n=d(e),r=t??n.find(e=>e.hasAttribute(u))??n[0];for(let e of n)e===r?e.setAttribute(u,``):e.removeAttribute(u)}function p(e){let t=e.hasAttribute(`offen`);for(let n of d(e))n.toggleAttribute(`breit`,t)}function m(e){return e.getAttribute(`name`)??String(o.AnsichtBlock.defaultProps.name)}function h(e,t){let n=e;for(;n&&n.parentElement!==t;)n=n.parentElement;return n}function g(e,t){let n=e.ownerDocument,r=Array.from(n.querySelectorAll(o.AnsichtBlock.tagName)),i=r[0]?.parentElement??null;if(!i)return;let a=h(e,i);if(!a)return;let s=r.find(e=>m(e)===t)??null;for(let e of Array.from(i.children))e!==a&&((r.includes(e)?e===s:s===null)?e.removeAttribute(`hidden`):e.setAttribute(`hidden`,``))}var _=new WeakMap,v=new WeakSet;function y(e){let t=t=>{let n=t.detail;n&&(f(e,t.target instanceof Element?t.target:void 0),e.removeAttribute(`offen`),p(e),!e.hasAttribute(`data-ff-editor`)&&g(e,n.ansicht))};e.addEventListener(a.SEITEN_WECHSEL_EVENT,t),_.set(e,t)}function b(e){let t=_.get(e);t&&(e.removeEventListener(a.SEITEN_WECHSEL_EVENT,t),_.delete(e))}function x(e){if(f(e),p(e),e.hasAttribute(`data-ff-editor`)||v.has(e))return;let t=d(e)[0];if(!t)return;v.add(e);let n=()=>g(e,t.seitename);e.ownerDocument.readyState===`loading`?e.ownerDocument.addEventListener(`DOMContentLoaded`,n,{once:!0}):queueMicrotask(n)}var S=l.blockType,C=class extends t.BasicBlock{static{this.blockType=`navi`}static{this.tagName=`ff-navi`}static{this.displayName=`Navi`}static{this.category=`layout`}static{this.acceptsChildren=!0}static{this.allowedChildTypes=[S]}static{this.addChildButton={label:`Eintrag`,childType:S}}static{this.containerHint=!1}static{this.defaultProps={}}static{this.customProperties=[]}static{this.maskenRand=!0}static{this.allowedParentTypes=[n.ROOT_TYPE]}static{this.raster={startW:5,startH:24,minW:3,minH:3}}static{this.styles=[t.BasicBlock.styles,e.css`
+      <span class="name">${this.seitename===``?`—`:this.seitename}</span>`}};s([(0,i.property)()],l.prototype,`seite`,void 0),s([(0,i.property)()],l.prototype,`seitename`,void 0),s([(0,i.property)({reflect:!0})],l.prototype,`ton`,void 0),t.BasicBlock.defineAndRegister(l);var u=`aktiv`;function d(e){return Array.from(e.querySelectorAll(l.tagName))}function f(e,t){let n=d(e),r=t??n.find(e=>e.hasAttribute(u))??n[0];for(let e of n)e===r?e.setAttribute(u,``):e.removeAttribute(u)}function p(e){let t=e.hasAttribute(`offen`);for(let n of d(e))n.toggleAttribute(`breit`,t)}function m(e){return e.getAttribute(`name`)??String(o.AnsichtBlock.defaultProps.name)}function h(e,t){let n=e;for(;n&&n.parentElement!==t;)n=n.parentElement;return n}function g(e,t){let n=e.ownerDocument,r=Array.from(n.querySelectorAll(o.AnsichtBlock.tagName)),i=r[0]?.parentElement??null;if(!i)return;let a=h(e,i);if(!a)return;let s=r.find(e=>m(e)===t)??null;for(let e of Array.from(i.children))e!==a&&((r.includes(e)?e===s:s===null)?e.removeAttribute(`hidden`):e.setAttribute(`hidden`,``))}var _=new WeakSet;function v(e){e.addEventListener(a.SEITEN_WECHSEL_EVENT,t=>{let n=t.detail;n&&(f(e,t.target instanceof Element?t.target:void 0),e.removeAttribute(`offen`),p(e),!e.hasAttribute(`data-ff-editor`)&&g(e,n.ansicht))})}function y(e){if(f(e),p(e),e.hasAttribute(`data-ff-editor`)||_.has(e))return;let t=d(e)[0];if(!t)return;_.add(e);let n=()=>g(e,t.seitename);e.ownerDocument.readyState===`loading`?e.ownerDocument.addEventListener(`DOMContentLoaded`,n,{once:!0}):queueMicrotask(n)}var b=l.blockType,x=class extends t.BasicBlock{static{this.blockType=`navi`}static{this.tagName=`ff-navi`}static{this.displayName=`Navi`}static{this.category=`layout`}static{this.acceptsChildren=!0}static{this.allowedChildTypes=[b]}static{this.addChildButton={label:`Eintrag`,childType:b}}static{this.containerHint=!1}static{this.defaultProps={}}static{this.customProperties=[]}static{this.maskenRand=!0}static{this.allowedParentTypes=[n.ROOT_TYPE]}static{this.styles=[t.BasicBlock.styles,e.css`
       :host {
         height: 100%;
         width: ${r.RAND.breite}px;
@@ -99,7 +98,7 @@
         overflow-y: auto;
       }
       .eintraege slot { display: contents; }
-    `]}connectedCallback(){super.connectedCallback(),y(this)}disconnectedCallback(){super.disconnectedCallback(),b(this)}klappen(){this.toggleAttribute(`offen`),p(this)}render(){return e.html`<div class="leiste">
+    `]}connectedCallback(){super.connectedCallback(),v(this)}klappen(){this.toggleAttribute(`offen`),p(this)}render(){return e.html`<div class="leiste">
         <div class="kopf">
           <button
             class="schalter"
@@ -113,6 +112,6 @@
           </button>
         </div>
         <div class="eintraege">
-          <slot @slotchange=${()=>x(this)}></slot>
+          <slot @slotchange=${()=>y(this)}></slot>
         </div>
-      </div>`}};t.BasicBlock.defineAndRegister(C)})(FF.lit,FF.blocks$base$BasicBlock,FF.core$blocks$BlockData,FF.core$blocks$maskenRand,FF.lit$decorators$js,FF.core$blocks$seitenWechsel,FF.blocks$ansicht$AnsichtBlock);
+      </div>`}};t.BasicBlock.defineAndRegister(x)})(FF.lit,FF.blocks$base$BasicBlock,FF.core$blocks$BlockData,FF.core$blocks$maskenRand,FF.lit$decorators$js,FF.core$blocks$seitenWechsel,FF.blocks$ansicht$AnsichtBlock);

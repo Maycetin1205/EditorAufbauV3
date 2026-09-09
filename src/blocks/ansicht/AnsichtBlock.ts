@@ -16,8 +16,6 @@ export class AnsichtBlock extends BasicBlock {
   static readonly pageBlock = true
   static readonly flaechenSeite = true
 
-  static readonly resizableWidth = false
-  static readonly containerHint = false
   static readonly defaultProps = {
     name: 'Ansicht',
   }

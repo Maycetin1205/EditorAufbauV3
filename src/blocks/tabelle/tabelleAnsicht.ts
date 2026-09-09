@@ -147,8 +147,6 @@ export function tabelleAnsicht(frage: AnsichtFrage): TabelleAnsicht {
   }
 }
 
-export { zeilePasst }
-
 function passendeIndizes(
   zeilen: readonly (readonly string[])[],
   suchtext: string,

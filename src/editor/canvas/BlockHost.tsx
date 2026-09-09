@@ -87,7 +87,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
   const resizable = def?.resizableWidth ?? true
   const heightResizable = def?.resizableHeight === true
 
-  const rasterSpec = rasterSpecOf(def, block.props)
+  const rasterSpec = rasterSpecOf(def)
 
   const rand = istRandBaustein(block)
   const rasterZiehbar = raster && !rand
@@ -163,7 +163,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
           onStart={(e) => startRasterResize(e, 'x')}
           onReset={() => {
             const node = blockRef.current
-            editor.updateProperty(node.id, 'rasterW', rasterSpecOf(getBlockDefinition(node.type), node.props).startW)
+            editor.updateProperty(node.id, 'rasterW', rasterSpecOf(getBlockDefinition(node.type)).startW)
           }}
         />
       )}
@@ -174,7 +174,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
           onStart={(e) => startRasterResize(e, 'y')}
           onReset={() => {
             const node = blockRef.current
-            editor.updateProperty(node.id, 'rasterH', rasterSpecOf(getBlockDefinition(node.type), node.props).startH)
+            editor.updateProperty(node.id, 'rasterH', rasterSpecOf(getBlockDefinition(node.type)).startH)
           }}
         />
       )}

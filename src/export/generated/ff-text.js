@@ -2,8 +2,6 @@
       .text {
         font-family: var(--se-font);
 
-        color: var(--se-ink);
-
         --text-zeilenhoehe: var(--se-lh);
         line-height: var(--text-zeilenhoehe);
         white-space: pre-wrap;
@@ -11,11 +9,6 @@
       }
 
       .text:empty { min-height: calc(1em * var(--text-zeilenhoehe)); }
-
-      :host([data-ff-editor]) .text:empty::before {
-        content: 'Text …';
-        color: var(--se-faint);
-      }
     `]}render(){let t={fontSize:`${S(this.groesse)}px`,fontWeight:v[C(this.gewicht)],textAlign:y[w(this.ausrichtung)],color:b[T(this.farbe)]};return e.html`<div
       class="text"
       style=${(0,n.styleMap)(t)}

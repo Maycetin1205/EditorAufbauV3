@@ -101,8 +101,6 @@ export class PopupBlock extends BasicBlock {
     return html`<ff-dialog-rahmen
         .breite=${this.breite}
         .hoehe=${this.hoehe}
-        ohne-modal
-        inhalt-fest
         ?escape-schliesst=${this.offen && !this.imEditor}
         @ff-dialog-schliessen=${this.onClose}
       >

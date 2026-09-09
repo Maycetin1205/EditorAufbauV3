@@ -51,8 +51,6 @@ function schalteUm(navi: Element, ansichtsName: string): void {
   }
 }
 
-const horcher = new WeakMap<Element, (e: Event) => void>()
-
 const gestartet = new WeakSet<Element>()
 
 export function verbindeNavi(navi: Element): void {
@@ -67,14 +65,6 @@ export function verbindeNavi(navi: Element): void {
     schalteUm(navi, detail.ansicht)
   }
   navi.addEventListener(SEITEN_WECHSEL_EVENT, auf)
-  horcher.set(navi, auf)
-}
-
-export function trenneNavi(navi: Element): void {
-  const auf = horcher.get(navi)
-  if (!auf) return
-  navi.removeEventListener(SEITEN_WECHSEL_EVENT, auf)
-  horcher.delete(navi)
 }
 
 export function naviAktualisiert(navi: Element): void {

@@ -31,7 +31,6 @@ export interface ActionValueSpot {
 
 export {
   feldWahlenLesen,
-  fremdeQuelleVon,
   listenStandardTitel,
   listeFuerExport,
   listeLesen,

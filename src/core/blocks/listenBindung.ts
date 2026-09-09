@@ -22,11 +22,6 @@ export interface ListenBindung {
 
   eintragsFeldWahl?: readonly EintragsFeldWahl[]
 
-  // Element-Eigenschaft, in die der EDITOR je Eintrag den Klarnamen der fremden
-  // Quelle schreibt. Sie steht bewusst NICHT in defaultProps: daran haengt, dass
-  // der Export sie nicht mitschreibt.
-  herkunftProp?: string
-
   // Editier-Vorgaenge als reine Funktionen ueber den Props: sie geben die
   // geaenderten Props zurueck, leer heisst nicht erlaubt.
   eintragNeu?: (props: Readonly<Record<string, unknown>>) => Record<string, unknown>
@@ -116,25 +111,6 @@ export function feldWahlenLesen(
     const roh = eintrag[wahl.key]
     return { wahl, wert: typeof roh === 'string' ? roh : '' }
   })
-}
-
-// Aus welcher FREMDEN Quelle ein Eintrag seinen Wert nimmt, leer bei der eigenen.
-// Das Fuellfeld fuehrt, weil es beim Erfassen zieht und man es dem Eintrag sonst
-// nicht ansieht.
-export function fremdeQuelleVon(
-  b: ListenBindung,
-  eintrag: Record<string, unknown>,
-): string {
-  const haupt = eintrag[b.feldKey]
-  const kandidaten = [
-    ...feldWahlenLesen(b, eintrag).map((f) => f.wert),
-    typeof haupt === 'string' ? haupt : '',
-  ]
-  for (const wert of kandidaten) {
-    const { quelleId } = zerlegeBindung(wert)
-    if (quelleId !== '') return quelleId
-  }
-  return ''
 }
 
 export function listenStandardTitel(b: ListenBindung, index: number): string {

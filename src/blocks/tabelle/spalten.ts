@@ -193,18 +193,6 @@ export function fuegeSpalteAn(spalten: readonly Spalte[]): Spalte[] {
   return mitKennungen([...spalten, neueSpalte(spalten.length)])
 }
 
-// Eine Stelle fuer beide Wege: das Kreuz am Spaltenkopf nennt seinen Platz, der
-// Minus-Knopf meint den letzten. Die letzte Spalte bleibt stehen.
-export function entferneSpalte(
-  index: number,
-  liste: () => Spalte[],
-  aendere: (spalten: Spalte[]) => void,
-): void {
-  const l = liste()
-  const neu = ohneSpalte(l, index)
-  if (neu !== l) aendere([...neu])
-}
-
 // Dieselbe Liste zurueck heisst „nicht erlaubt" (letzte Spalte, Platz ausserhalb).
 // Die Formeln der anderen verlieren ihre Glieder auf die gestrichene Spalte.
 export function ohneSpalte(spalten: readonly Spalte[], index: number): readonly Spalte[] {
@@ -234,15 +222,4 @@ export function mitVerschobenerSpalte(
   const [spalte] = l.splice(von, 1)
   l.splice(ziel, 0, spalte)
   return l
-}
-
-export function verschiebeSpalteAn(
-  von: number,
-  nach: number,
-  liste: () => Spalte[],
-  aendere: (spalten: Spalte[]) => void,
-): void {
-  const l = liste()
-  const neu = mitVerschobenerSpalte(l, von, nach)
-  if (neu !== l) aendere([...neu])
 }

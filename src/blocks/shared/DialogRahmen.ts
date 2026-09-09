@@ -133,10 +133,8 @@ export class DialogRahmen extends LitElement {
     .inhalt {
       flex: 1 1 auto;
       min-height: 0;
-      overflow: auto;
+      overflow: hidden;
     }
-
-    :host([inhalt-fest]) .inhalt { overflow: hidden; }
 
     .anfasser {
       position: absolute;
@@ -168,9 +166,6 @@ export class DialogRahmen extends LitElement {
   @property({ type: Number }) hoehe = 380
   @property({ type: Boolean, reflect: true }) viewport = false
   @property({ type: Boolean, attribute: 'escape-schliesst' }) escapeSchliesst = false
-
-  @property({ type: Boolean, attribute: 'ohne-modal' }) ohneModal = false
-  @property({ type: Boolean, reflect: true, attribute: 'inhalt-fest' }) inhaltFest = false
 
   // Nur der Editor setzt das: zur Laufzeit hat der Bediener an der Groesse
   // nichts zu stellen.
@@ -275,7 +270,6 @@ export class DialogRahmen extends LitElement {
         <section
           class="fenster"
           role="dialog"
-          aria-modal=${this.ohneModal ? nothing : 'true'}
           aria-labelledby="dialog-titel"
           style="width:${breite}px;height:${hoehe}px"
         >

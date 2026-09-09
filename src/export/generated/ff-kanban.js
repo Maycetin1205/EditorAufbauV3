@@ -1,5 +1,5 @@
 (function(e,t,n,r,i,a,o,s,c,l,u,d,f,p,m){var h=e.css`
-  ::slotted(:not([hat-reiter])) { margin-top: 24px; }
+  ::slotted(*) { margin-top: 24px; }
   slot { display: contents; }
 `;function g(e,t,n,r){var i=arguments.length,a=i<3?t:r===null?r=Object.getOwnPropertyDescriptor(t,n):r,o;if(typeof Reflect==`object`&&typeof Reflect.decorate==`function`)a=Reflect.decorate(e,t,n,r);else for(var s=e.length-1;s>=0;s--)(o=e[s])&&(a=(i<3?o(a):i>3?o(t,n,a):o(t,n))||a);return i>3&&a&&Object.defineProperty(t,n,a),a}var _=`frei · hierher ziehen`,v=`ff-zimmer-inhalt`,y=class extends t.BasicBlock{constructor(...e){super(...e),this.heading=`Neues Zimmer`,this.leerHinweis=``}static{this.blockType=`kanban-zimmer`}static{this.tagName=`ff-kanban-zimmer`}static{this.displayName=`Kanban-Zimmer`}static{this.category=`anzeige`}static{this.acceptsChildren=!0}static{this.allowedChildTypes=[n.CardBlock.blockType]}static{this.childDirection=`column`}static{this.showInPalette=!1}static{this.containerHint=!1}static{this.allowedParentTypes=[`kanban-spalte`]}static{this.lockedWidth=`fill`}static{this.resizableWidth=!1}static{this.defaultProps={heading:`Neues Zimmer`}}static{this.styles=[t.BasicBlock.styles,r.leerStil,h,o.zielStil,e.css`
       :host { display: block; }

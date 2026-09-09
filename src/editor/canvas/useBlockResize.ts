@@ -33,7 +33,7 @@ export function useBlockResize(
     if (!el) return
     const node = blockRef.current
     const pos = parseRasterPos(node.props)
-    const spec = rasterSpecOf(getBlockDefinition(node.type), node.props)
+    const spec = rasterSpecOf(getBlockDefinition(node.type))
     const rect = el.getBoundingClientRect()
     if (achse === 'x') {
       zieheGroesse(editor, e, {

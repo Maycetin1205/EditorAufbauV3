@@ -90,7 +90,7 @@ function verteileImBand(
     const kind = src[cid]
     if (!kind || typeof kind.type !== 'string') continue
     const props = rohProps(kind)
-    const w = Math.min(RASTER.spalten, rasterSpecOf(getBlockDefinition(kind.type), props).startW)
+    const w = Math.min(RASTER.spalten, rasterSpecOf(getBlockDefinition(kind.type)).startW)
     if (x + w > RASTER.spalten) {
       x = 0
       y += band.h

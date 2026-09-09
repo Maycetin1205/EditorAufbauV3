@@ -6,7 +6,7 @@ import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { ROOT_TYPE } from '../../core/blocks/BlockData'
 import { RAND } from '../../core/blocks/maskenRand'
 import { NaviEintragBlock } from './NaviEintragBlock'
-import { naviAktualisiert, verbindeNavi, trenneNavi, zeigeBreite } from './seRuntime'
+import { naviAktualisiert, verbindeNavi, zeigeBreite } from './seRuntime'
 
 const EINTRAG = NaviEintragBlock.blockType
 
@@ -25,8 +25,6 @@ export class NaviBlock extends BasicBlock {
   static readonly maskenRand = true
 
   static readonly allowedParentTypes = [ROOT_TYPE]
-
-  static readonly raster = { startW: 5, startH: 24, minW: 3, minH: 3 }
 
   static override styles = [
     BasicBlock.styles,
@@ -94,11 +92,6 @@ export class NaviBlock extends BasicBlock {
   override connectedCallback(): void {
     super.connectedCallback()
     verbindeNavi(this)
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback()
-    trenneNavi(this)
   }
 
   private klappen(): void {
