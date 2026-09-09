@@ -6,7 +6,7 @@ import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { FlowDirection, FlowWidth } from '../../core/blocks/flowLayout'
 import { CardBlock } from '../card/CardBlock'
 import { leerStil, leerZustand } from '../shared/leerZustand'
-import { ZIEL_KLASSE, zielStil } from '../shared/zielStil'
+import { ZIEL_KLASSE, zielStil } from './zielStil'
 import { kartenAbstandStil } from './kartenAbstand'
 
 export const ZIMMER_LEER_TEXT = 'frei · hierher ziehen'

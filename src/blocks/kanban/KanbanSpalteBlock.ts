@@ -8,12 +8,12 @@ import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { CardBlock } from '../card/CardBlock'
 import { jaNeinProperty } from '../shared/jaNeinProperty'
 import { leerStil, leerZustand } from '../shared/leerZustand'
-import { ZIEL_KLASSE, zielStil } from '../shared/zielStil'
 import {
   coerceStatusVariant,
   statusVariantProperty,
   type StatusVariant,
 } from '../shared/statusVariant'
+import { ZIEL_KLASSE, zielStil } from './zielStil'
 import { kartenAbstandStil } from './kartenAbstand'
 import { KanbanZimmerBlock, ZIMMER_INHALT_EVENT } from './KanbanZimmerBlock'
 

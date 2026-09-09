@@ -5,12 +5,12 @@ import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, getField, rowsFor } from '../../softengine/data'
 import { meldeFehler } from '../../softengine/meldung'
 import { zeilenNachAuswahl } from '../shared/auswahl'
-import { lupeZeichen } from '../shared/lupeZeichen'
 import {
   DIALOG_RAHMEN_TAG,
   type DialogGroesseDetail,
   type DialogRahmen,
 } from '../shared/DialogRahmen'
+import { lupeZeichen } from './lupeZeichen'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from './spalten'
 import type { TabelleBlock } from './TabelleBlock'
 import {

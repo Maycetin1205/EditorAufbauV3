@@ -1,6 +1,6 @@
 // Suchtreffer in einem Zellwert hervorheben.
 import { html, type TemplateResult } from 'lit'
-import { woerterVon } from './textSuche'
+import { woerterVon } from '../shared/textSuche'
 
 const SONDERZEICHEN = /[.*+?^${}()|[\]\\]/g
 
