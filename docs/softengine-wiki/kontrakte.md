@@ -299,10 +299,10 @@ steht hier nur als Wissen:
   geladen (belegt 2026-08-28, als zwoelf Laufzeitdateien belegt 2026-09-08).
   Die Laufzeit steht trotzdem in der Maske selbst: eine HTML plus eine JSON,
   weil der Kunde einen festen Stand bekommt und nichts nachgeladen wird.
-- Der SoftEngine-Browser versteht Klassen-Static-Bloecke (`static {}`,
-  Chromium 94) und damit auch `inset` (87): die von Vite 8 gebaute Laufzeit
-  laeuft, alle Bausteine erscheinen, Artikel-Nachschlagen geht (belegt
-  2026-09-08). Die genaue Chromium-Nummer ist noch nicht gemessen.
+- Der Browser der WinUI-Belegerfassung ist Edge WebView2, Kennung
+  `Chrome/152.0.0.0 ... Edg/152.0.0.0` (gemessen 2026-09-09). Er aktualisiert
+  sich selbst; die von Vite 8 gebaute Laufzeit laeuft, alle Bausteine
+  erscheinen, Artikel-Nachschlagen geht (belegt 2026-09-08).
 - Nebenbeobachtung: `CONECT` wird ZWEIMAL gesendet, Empfang trotzdem nur
   1 Paket. Ungeklärt.
 
