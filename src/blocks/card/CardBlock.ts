@@ -100,7 +100,7 @@ export class CardBlock extends BasicBlock {
 
     const fuss = zeigt(this.heading2) || zeigt(this.date) || zeigt(this.time)
       || zeigt(this.chipText)
-    return html`<div class="card v-${v}">
+    return html`<div class="card">
       ${zeigt(this.heading) ? this.stelle('heading', 'name') : nothing}
       ${zeigt(this.meta) ? this.stelle('meta', 'zusatz') : nothing}
       ${zeigt(this.text) ? this.stelle('text', 'grund') : nothing}

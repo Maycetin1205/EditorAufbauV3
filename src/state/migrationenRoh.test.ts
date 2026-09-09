@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import {
   migrateErfassungAlsBaustein,
+  migrateFarbwerteAufFarbwelten,
   migrateRechnungAlsFormel,
   migrateSpaltenKennungen,
 } from './migrationenRoh'
@@ -173,4 +174,24 @@ test('die Rechnung mit festen Plaetzen wird zur Formel an der Mengenspalte', () 
   })
   expect(src.e.props.spalten[1]).not.toHaveProperty('formel')
   expect(src.leer.props).toEqual({ spalten: [{ kennung: 's1', titel: 'A', feld: '1_1' }] })
+})
+
+// Navi-Eintrag und Text hatten eigene Farbnamen fuer dieselben Farben. Hier
+// haengt, dass eine gespeicherte Maske ihre Farbe behaelt statt still auf die
+// Vorgabe zu fallen.
+test('alte Farbnamen werden zu Werten der einen Farbliste', () => {
+  const src = {
+    n1: { type: 'navi-eintrag', props: { ton: 'salbei' }, childIds: [] },
+    n2: { type: 'navi-eintrag', props: { ton: 'koralle' }, childIds: [] },
+    n3: { type: 'navi-eintrag', props: { ton: 'danger' }, childIds: [] },
+    tx1: { type: 'text', props: { farbe: 'warnung' }, childIds: [] },
+    tx2: { type: 'text', props: { farbe: 'gedaempft' }, childIds: [] },
+  }
+  migrateFarbwerteAufFarbwelten(src)
+  expect(src.n1.props.ton).toBe('success')
+  // Koralle gibt es in der einen Liste nicht mehr.
+  expect(src.n2.props.ton).toBe('info')
+  expect(src.n3.props.ton).toBe('danger')
+  expect(src.tx1.props.farbe).toBe('warning')
+  expect(src.tx2.props.farbe).toBe('gedaempft')
 })

@@ -26,6 +26,9 @@ export type PropertyKind =
 export interface PropertySelectOption {
   value: string
   label: string
+// Traegt die Option eine Farbe, zeichnet der Inspector Kacheln statt einer
+// Liste — aber nur, wenn ALLE Optionen eine haben. Der Wert ist fertiges CSS.
+  farbe?: string
 }
 
 export interface PropertyVisibilityCondition {

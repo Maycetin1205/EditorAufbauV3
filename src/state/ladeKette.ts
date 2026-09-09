@@ -20,6 +20,7 @@ import {
   migrateAnzeigeFeldAufSpalten,
   migrateErfassungAlsBaustein,
   migrateErfassungsRollenWeg,
+  migrateFarbwerteAufFarbwelten,
   migrateKanbanVorlage,
   migrateKnopfAusTabelle,
   migrateRechnungAlsFormel,
@@ -52,6 +53,7 @@ export function sanitizeTree(
   }
   migrateAnzeigeFeldAufSpalten(src)
   migrateErfassungsRollenWeg(src)
+  migrateFarbwerteAufFarbwelten(src)
   migrateSpaltenKennungen(src)
   const rohEntfernt = [
     ...migrateKanbanVorlage(src),

@@ -5,14 +5,11 @@ import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { SEITEN_WECHSEL_EVENT, type SeitenWechselDetail } from '../../core/blocks/seitenWechsel'
-
-const TOENE: readonly { wert: string; name: string }[] = [
-  { wert: 'sonne', name: 'Sonnengelb' },
-  { wert: 'salbei', name: 'Salbeigrün' },
-  { wert: 'himmel', name: 'Himmelblau' },
-  { wert: 'flieder', name: 'Flieder' },
-  { wert: 'koralle', name: 'Koralle' },
-]
+import {
+  coerceStatusVariant,
+  farbweltStil,
+  statusVariantProperty,
+} from '../shared/statusVariant'
 
 export class NaviEintragBlock extends BasicBlock {
   static readonly blockType = 'navi-eintrag'
@@ -26,7 +23,7 @@ export class NaviEintragBlock extends BasicBlock {
   static readonly defaultProps = {
     seite: '',
     seitename: '',
-    ton: 'sonne',
+    ton: 'info',
   }
 
   static override readonly customProperties: PropertyDescription[] = [
@@ -38,20 +35,14 @@ export class NaviEintragBlock extends BasicBlock {
       klarnameProp: 'seitename',
       nurImEditor: true,
     },
-    {
-      attributeName: 'ton',
-      name: 'Farbe',
-      description: 'Farbe des Zeichens vor dem Namen.',
-      kind: 'select',
-      options: TOENE.map((t) => ({ value: t.wert, label: t.name })),
-    },
+    statusVariantProperty('ton', 'Farbe des Zeichens vor dem Namen.', 'Farbe'),
   ]
 
   static override styles = [
     BasicBlock.styles,
+    farbweltStil,
     css`
       :host {
-        --ton: var(--se-amber);
         display: flex;
         align-items: center;
         gap: 13px;
@@ -75,14 +66,9 @@ export class NaviEintragBlock extends BasicBlock {
         height: 22px;
         flex: none;
         border-radius: 50%;
-        background: var(--ton);
+        background: var(--fw-stark);
       }
       :host([aktiv]) .zeichen { background: var(--se-panel); }
-
-      :host([ton='salbei'])  { --ton: var(--se-green); }
-      :host([ton='himmel'])  { --ton: var(--se-blue); }
-      :host([ton='flieder']) { --ton: var(--se-violet); }
-      :host([ton='koralle']) { --ton: var(--se-accent); }
 
       .name { display: none; }
       :host([breit]) .name {
@@ -95,7 +81,7 @@ export class NaviEintragBlock extends BasicBlock {
 
   @property() seite = ''
   @property() seitename = ''
-  @property({ reflect: true }) ton = 'sonne'
+  @property() ton = 'info'
 
   constructor() {
     super()
@@ -112,7 +98,7 @@ export class NaviEintragBlock extends BasicBlock {
   }
 
   override render(): TemplateResult {
-    return html`<span class="zeichen"></span>
+    return html`<span class="zeichen v-${coerceStatusVariant(this.ton)}"></span>
       <span class="name">${this.seitename === '' ? '—' : this.seitename}</span>`
   }
 }

@@ -14,12 +14,6 @@
 
       .card:hover { border-color: var(--se-faint); }
 
-      .card.v-danger {
-        border-color: var(--se-accent);
-        background: var(--se-red-soft);
-      }
-      .card.v-danger:hover { border-color: var(--se-accent-dark); }
-
       :host([data-ff-auswahl]) .card {
         border-color: var(--se-accent);
         background: var(--se-accent-soft);
@@ -94,7 +88,7 @@
       data-ff-spot=${t}
       ?data-ff-bound=${this[`${t}Field`]!==``}
       @dblclick=${e=>this.inlineEdit(e,t)}
-    >${this[t]}</span>`}render(){let t=(0,r.coerceStatusVariant)(this.chipVariant),n=this.imEditor,i=e=>n||e.trim()!==``,a=i(this.heading2)||i(this.date)||i(this.time)||i(this.chipText);return e.html`<div class="card v-${t}">
+    >${this[t]}</span>`}render(){let t=(0,r.coerceStatusVariant)(this.chipVariant),n=this.imEditor,i=e=>n||e.trim()!==``,a=i(this.heading2)||i(this.date)||i(this.time)||i(this.chipText);return e.html`<div class="card">
       ${i(this.heading)?this.stelle(`heading`,`name`):e.nothing}
       ${i(this.meta)?this.stelle(`meta`,`zusatz`):e.nothing}
       ${i(this.text)?this.stelle(`text`,`grund`):e.nothing}

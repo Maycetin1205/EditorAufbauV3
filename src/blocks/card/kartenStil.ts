@@ -17,12 +17,6 @@ export const kartenStil = css`
 
       .card:hover { border-color: var(--se-faint); }
 
-      .card.v-danger {
-        border-color: var(--se-accent);
-        background: var(--se-red-soft);
-      }
-      .card.v-danger:hover { border-color: var(--se-accent-dark); }
-
       :host([data-ff-auswahl]) .card {
         border-color: var(--se-accent);
         background: var(--se-accent-soft);

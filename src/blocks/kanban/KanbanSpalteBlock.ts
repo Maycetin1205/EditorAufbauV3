@@ -10,6 +10,7 @@ import { jaNeinProperty } from '../shared/jaNeinProperty'
 import { leerStil, leerZustand } from '../shared/leerZustand'
 import {
   coerceStatusVariant,
+  farbweltStil,
   statusVariantProperty,
   type StatusVariant,
 } from '../shared/statusVariant'
@@ -70,6 +71,7 @@ export class KanbanSpalteBlock extends BasicBlock {
     leerStil,
     kartenAbstandStil,
     zielStil,
+    farbweltStil,
     css`
 
       :host {
@@ -85,15 +87,10 @@ export class KanbanSpalteBlock extends BasicBlock {
         flex: 1 1 auto;
         min-height: 0;
         overflow: hidden;
-        background: var(--col-soft);
+        background: var(--fw-sanft);
         border-radius: var(--se-r-lg);
         font-family: var(--se-font);
       }
-
-      .col.v-info { --col-strong: var(--se-blue); --col-soft: var(--se-blue-soft); }
-      .col.v-success { --col-strong: var(--se-green); --col-soft: var(--se-green-soft); }
-      .col.v-warning { --col-strong: var(--se-amber); --col-soft: var(--se-amber-soft); }
-      .col.v-danger { --col-strong: var(--se-red); --col-soft: var(--se-red-soft); }
 
       .head {
         flex: none;
@@ -107,7 +104,7 @@ export class KanbanSpalteBlock extends BasicBlock {
         flex: none;
         width: 8px;
         height: 8px;
-        background: var(--col-strong);
+        background: var(--fw-stark);
       }
 
       .title {
@@ -127,7 +124,7 @@ export class KanbanSpalteBlock extends BasicBlock {
         line-height: 1;
         border-radius: var(--se-r-sm);
         background: var(--se-panel);
-        border: var(--se-border) solid var(--col-strong);
+        border: var(--se-border) solid var(--fw-stark);
         text-align: center;
         font-family: var(--se-mono);
         font-size: var(--se-fs-sm);

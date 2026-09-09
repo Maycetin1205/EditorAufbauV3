@@ -6,6 +6,7 @@ import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { BindableSpotsFor } from '../../core/blocks/BlockDefinition'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
+import { FARBWELTEN, farbweltOptionen } from '../shared/statusVariant'
 import { connectText, disconnectText } from './seRuntime'
 
 const GROESSE_MIN = 6
@@ -17,16 +18,18 @@ type Gewicht = keyof typeof GEWICHTE
 const AUSRICHTUNGEN = { links: 'left', mitte: 'center', rechts: 'right' } as const
 type Ausrichtung = keyof typeof AUSRICHTUNGEN
 
-const FARBEN = {
-  standard: 'var(--se-ink)',
-  gedaempft: 'var(--se-muted)',
-  akzent: 'var(--se-accent)',
-  erfolg: 'var(--se-green)',
-  warnung: 'var(--se-amber)',
-  fehler: 'var(--se-red)',
-} as const
-type Farbe = keyof typeof FARBEN
-const FARBE_STANDARD: Farbe = 'standard'
+// Drei neutrale Toene, dann die Farbwelten der Maske: eigene Farbnamen
+// erfindet der Text nicht.
+const NEUTRALE_FARBEN: readonly { wert: string; name: string; token: string }[] = [
+  { wert: 'standard', name: 'Standard', token: '--se-ink' },
+  { wert: 'gedaempft', name: 'Gedämpft', token: '--se-muted' },
+  { wert: 'akzent', name: 'Akzent', token: '--se-accent' },
+]
+const FARBEN: Record<string, string> = {
+  ...Object.fromEntries(NEUTRALE_FARBEN.map((f) => [f.wert, `var(${f.token})`])),
+  ...Object.fromEntries(FARBWELTEN.map((f) => [f.wert, `var(${f.stark})`])),
+}
+const FARBE_STANDARD = 'standard'
 
 function coerceGroesse(v: unknown): number {
   if (v === 'ueberschrift') return 15
@@ -44,8 +47,8 @@ function coerceAusrichtung(v: unknown): Ausrichtung {
   return typeof v === 'string' && v in AUSRICHTUNGEN ? (v as Ausrichtung) : 'links'
 }
 
-function coerceFarbe(v: unknown): Farbe {
-  return typeof v === 'string' && v in FARBEN ? (v as Farbe) : FARBE_STANDARD
+function coerceFarbe(v: unknown): string {
+  return typeof v === 'string' && v in FARBEN ? v : FARBE_STANDARD
 }
 
 export class TextBlock extends BasicBlock {
@@ -113,12 +116,8 @@ export class TextBlock extends BasicBlock {
       name: 'Farbe',
       description: 'Textfarbe aus den Farben der Maske.',      kind: 'select',
       options: [
-        { value: 'standard', label: 'Standard' },
-        { value: 'gedaempft', label: 'Gedämpft' },
-        { value: 'akzent', label: 'Akzent' },
-        { value: 'erfolg', label: 'Erfolg' },
-        { value: 'warnung', label: 'Warnung' },
-        { value: 'fehler', label: 'Fehler' },
+        ...NEUTRALE_FARBEN.map((f) => ({ value: f.wert, label: f.name, farbe: `var(${f.token})` })),
+        ...farbweltOptionen(),
       ],
     },
   ]
@@ -142,7 +141,7 @@ export class TextBlock extends BasicBlock {
   @property({ type: Number }) groesse: number = GROESSE_STANDARD
   @property() gewicht = 'normal'
   @property() ausrichtung = 'links'
-  @property() farbe: string = FARBE_STANDARD
+  @property() farbe = FARBE_STANDARD
   @property() text = 'Text'
   @property() source = ''
   @property() textField = ''

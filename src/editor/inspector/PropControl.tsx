@@ -16,7 +16,6 @@ import { SegmentControl } from './controls/SegmentControl'
 import { SelectControl } from './controls/SelectControl'
 import { TextareaControl } from './controls/TextareaControl'
 import { TextControl } from './controls/TextControl'
-import { allOptionsHaveColor } from './optionColors'
 
 // Die zwei Rueckrufe, die der Inspector durchreicht: sie klammern eine Eingabe zu
 // EINEM Undo-Schritt. Nicht zu verwechseln mit der Eingabesitzung, dem Hook, der
@@ -246,7 +245,8 @@ export function PropControl({
         onChange: set,
       }
 
-      return allOptionsHaveColor(opts)
+      // Kacheln nur, wenn jede Option ihre Farbe mitbringt; sonst die Liste.
+      return opts.length > 0 && opts.every((o) => o.farbe !== undefined)
         ? <ColorTileControl {...gemeinsam} />
         : <SelectControl {...gemeinsam} />
     }

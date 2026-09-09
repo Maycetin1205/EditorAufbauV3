@@ -43,7 +43,7 @@
         <slot @slotchange=${this.onSlotChange}></slot>
         ${(0,r.leerZustand)(this.leerHinweis)}
       </div>
-    </div>`}};_([(0,i.property)()],b.prototype,`heading`,void 0),_([(0,i.property)({attribute:!1})],b.prototype,`leerHinweis`,void 0),t.BasicBlock.defineAndRegister(b);var x=class extends t.BasicBlock{static{this.blockType=`kanban-spalte`}static{this.tagName=`ff-kanban-spalte`}static{this.displayName=`Kanban-Spalte`}static{this.category=`anzeige`}static{this.acceptsChildren=!0}static{this.allowedChildTypes=[n.CardBlock.blockType,b.blockType]}static{this.addChildButton={label:`Zimmer`,childType:b.blockType}}static{this.childDirection=`column`}static{this.showInPalette=!1}static{this.containerHint=!1}static{this.allowedParentTypes=[`kanban`]}static{this.lockedWidth=`fill`}static{this.resizableWidth=!1}static{this.defaultProps={variant:`info`,heading:`Neue Spalte`,auffang:`nein`,zimmerField:``}}static{this.customProperties=[(0,o.statusVariantProperty)(`variant`,`Bedeutung der Spalte — bestimmt ihre Farbwelt (Kopf, Fläche, Rahmen).`),(0,a.jaNeinProperty)(`auffang`,`Auffangspalte`,`Einträge ohne passenden Spaltentitel landen hier.`,{requiresDataSource:!0,exclusiveAmongSiblings:!0}),{attributeName:`zimmerField`,name:`Unterteilen nach`,description:`Feld, das das Zimmer bestimmt. Wirkt nur mit Zimmern.`,kind:`field`}]}static{this.styles=[t.BasicBlock.styles,r.leerStil,g,h,e.css`
+    </div>`}};_([(0,i.property)()],b.prototype,`heading`,void 0),_([(0,i.property)({attribute:!1})],b.prototype,`leerHinweis`,void 0),t.BasicBlock.defineAndRegister(b);var x=class extends t.BasicBlock{static{this.blockType=`kanban-spalte`}static{this.tagName=`ff-kanban-spalte`}static{this.displayName=`Kanban-Spalte`}static{this.category=`anzeige`}static{this.acceptsChildren=!0}static{this.allowedChildTypes=[n.CardBlock.blockType,b.blockType]}static{this.addChildButton={label:`Zimmer`,childType:b.blockType}}static{this.childDirection=`column`}static{this.showInPalette=!1}static{this.containerHint=!1}static{this.allowedParentTypes=[`kanban`]}static{this.lockedWidth=`fill`}static{this.resizableWidth=!1}static{this.defaultProps={variant:`info`,heading:`Neue Spalte`,auffang:`nein`,zimmerField:``}}static{this.customProperties=[(0,o.statusVariantProperty)(`variant`,`Bedeutung der Spalte — bestimmt ihre Farbwelt (Kopf, Fläche, Rahmen).`),(0,a.jaNeinProperty)(`auffang`,`Auffangspalte`,`Einträge ohne passenden Spaltentitel landen hier.`,{requiresDataSource:!0,exclusiveAmongSiblings:!0}),{attributeName:`zimmerField`,name:`Unterteilen nach`,description:`Feld, das das Zimmer bestimmt. Wirkt nur mit Zimmern.`,kind:`field`}]}static{this.styles=[t.BasicBlock.styles,r.leerStil,g,h,o.farbweltStil,e.css`
 
       :host {
         display: flex;
@@ -58,15 +58,10 @@
         flex: 1 1 auto;
         min-height: 0;
         overflow: hidden;
-        background: var(--col-soft);
+        background: var(--fw-sanft);
         border-radius: var(--se-r-lg);
         font-family: var(--se-font);
       }
-
-      .col.v-info { --col-strong: var(--se-blue); --col-soft: var(--se-blue-soft); }
-      .col.v-success { --col-strong: var(--se-green); --col-soft: var(--se-green-soft); }
-      .col.v-warning { --col-strong: var(--se-amber); --col-soft: var(--se-amber-soft); }
-      .col.v-danger { --col-strong: var(--se-red); --col-soft: var(--se-red-soft); }
 
       .head {
         flex: none;
@@ -80,7 +75,7 @@
         flex: none;
         width: 8px;
         height: 8px;
-        background: var(--col-strong);
+        background: var(--fw-stark);
       }
 
       .title {
@@ -100,7 +95,7 @@
         line-height: 1;
         border-radius: var(--se-r-sm);
         background: var(--se-panel);
-        border: var(--se-border) solid var(--col-strong);
+        border: var(--se-border) solid var(--fw-stark);
         text-align: center;
         font-family: var(--se-mono);
         font-size: var(--se-fs-sm);

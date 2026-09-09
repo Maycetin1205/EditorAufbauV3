@@ -2,7 +2,6 @@
 import type { PropertySelectOption } from '../../../core/blocks/PropertyDescription'
 import { Farbfeld } from '@/ui/werkbank/Farbfeld'
 import { Zeile } from '@/ui/werkbank/Zeile'
-import { optionColor } from '../optionColors'
 
 interface ColorTileControlProps {
   label: string
@@ -20,7 +19,7 @@ export function ColorTileControl({ label, description, value, options, onChange 
           {options.map((o) => (
             <Farbfeld
               key={o.value}
-              farbe={optionColor(o.value)}
+              farbe={o.farbe}
               name={o.label}
               gewaehlt={o.value === value}
               onWaehle={() => onChange(o.value)}

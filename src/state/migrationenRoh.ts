@@ -273,6 +273,32 @@ export function migrateErfassungsRollenWeg(src: Record<string, RohKnoten>): void
   }
 }
 
+// Der Navi-Eintrag hatte eigene Farbnamen, der Text eigene fuer dieselben drei
+// Farben; beide waehlen jetzt aus der einen Farbliste. Flieder und Koralle gibt
+// es dort nicht mehr, sie werden zum neutralen Hinweis.
+const ALTE_FARBWERTE: ReadonlyArray<readonly [string, string, Record<string, string>]> = [
+  ['navi-eintrag', 'ton', {
+    sonne: 'warning',
+    salbei: 'success',
+    himmel: 'info',
+    flieder: 'info',
+    koralle: 'info',
+  }],
+  ['text', 'farbe', { erfolg: 'success', warnung: 'warning', fehler: 'danger' }],
+]
+
+export function migrateFarbwerteAufFarbwelten(src: Record<string, RohKnoten>): void {
+  for (const node of Object.values(src)) {
+    if (!node || typeof node !== 'object') continue
+    for (const [typ, prop, tafel] of ALTE_FARBWERTE) {
+      if (node.type !== typ) continue
+      const props = rohProps(node)
+      const alt = props[prop]
+      if (typeof alt === 'string' && tafel[alt]) props[prop] = tafel[alt]
+    }
+  }
+}
+
 // Erfassen, Aendern und Loeschen sind aus der Tabelle in den Baustein Erfassung
 // gezogen. Eine gespeicherte Tabelle, die davon etwas tat, wird zur Erfassung;
 // die reine Liste verliert die Angaben dazu, sonst vermisst die Verlustpruefung

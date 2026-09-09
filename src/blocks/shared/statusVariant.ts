@@ -1,44 +1,57 @@
-// Die vier Statusfarben und der Chip, der sie traegt.
-import { css } from 'lit'
-import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
+// Die eine Farbliste der Maske: Wert, Klarname, Farbpaar. Wer eine Farbe
+// anbietet, nimmt sie hier her — der Inspector die Kachel, der Baustein die
+// Klasse v-<wert> und darin --fw-stark und --fw-sanft.
+import { css, unsafeCSS } from 'lit'
+import type {
+  PropertyDescription,
+  PropertySelectOption,
+} from '../../core/blocks/PropertyDescription'
 
 export type StatusVariant = 'info' | 'success' | 'warning' | 'danger'
 
-const STATUS_VARIANTS: readonly StatusVariant[] = [
-  'info',
-  'success',
-  'warning',
-  'danger',
+interface Farbwelt {
+  wert: StatusVariant
+  name: string
+  // Die Namen der Token, nicht die Werte: die Farben stehen in masken-tokens.css.
+  stark: string
+  sanft: string
+}
+
+export const FARBWELTEN: readonly Farbwelt[] = [
+  { wert: 'info', name: 'Hinweis', stark: '--se-blue', sanft: '--se-blue-soft' },
+  { wert: 'success', name: 'Erfolg', stark: '--se-green', sanft: '--se-green-soft' },
+  { wert: 'warning', name: 'Warnung', stark: '--se-amber', sanft: '--se-amber-soft' },
+  { wert: 'danger', name: 'Fehler', stark: '--se-red', sanft: '--se-red-soft' },
 ]
 
 export function coerceStatusVariant(value: string): StatusVariant {
-  return (STATUS_VARIANTS as readonly string[]).includes(value)
-    ? (value as StatusVariant)
-    : 'info'
+  return FARBWELTEN.some((f) => f.wert === value) ? (value as StatusVariant) : 'info'
 }
 
-const STATUS_BEDEUTUNGEN: readonly { wert: StatusVariant; name: string }[] = [
-  { wert: 'info', name: 'Hinweis' },
-  { wert: 'success', name: 'Erfolg' },
-  { wert: 'warning', name: 'Warnung' },
-  { wert: 'danger', name: 'Fehler' },
-]
+export function farbweltOptionen(): PropertySelectOption[] {
+  return FARBWELTEN.map((f) => ({ value: f.wert, label: f.name, farbe: `var(${f.stark})` }))
+}
 
 export function statusVariantProperty(
   attributeName: string,
   description: string,
+  name = 'Bedeutung',
 ): PropertyDescription {
   return {
     attributeName,
-    name: 'Bedeutung',
+    name,
     description,
     kind: 'select',
-
-    options: STATUS_BEDEUTUNGEN.map((b) => ({ value: b.wert, label: b.name })),
+    options: farbweltOptionen(),
   }
 }
 
+export const farbweltStil = css`${unsafeCSS(FARBWELTEN
+  .map((f) => `.v-${f.wert} { --fw-stark: var(${f.stark}); --fw-sanft: var(${f.sanft}); }`)
+  .join('\n  '))}`
+
 export const chipStyles = css`
+  ${farbweltStil}
 
   .chip {
     display: inline-flex;
@@ -54,7 +67,7 @@ export const chipStyles = css`
     line-height: 1.3;
     letter-spacing: 0.02em;
     color: var(--se-ink);
-    background: var(--se-panel-2);
+    background: var(--fw-sanft);
     white-space: nowrap;
   }
 
@@ -63,14 +76,6 @@ export const chipStyles = css`
     flex: none;
     width: 6px;
     height: 6px;
-    background: var(--chip-punkt, var(--se-faint));
-  }
-  .chip.v-info { background: var(--se-blue-soft); --chip-punkt: var(--se-blue); }
-  .chip.v-success { background: var(--se-green-soft); --chip-punkt: var(--se-green); }
-  .chip.v-warning { background: var(--se-amber-soft); --chip-punkt: var(--se-amber); }
-  .chip.v-danger {
-    background: var(--se-red);
-    color: var(--se-panel);
-    --chip-punkt: var(--se-panel);
+    background: var(--fw-stark);
   }
 `
