@@ -1,4 +1,5 @@
 // Die Aktionskette eines Bausteins: Schritte, Parameter und wie sie gelesen werden.
+import type { VormerkArt } from '../blocks/BlockDefinition'
 import type { RelationTemplate } from './relations'
 
 export type StepTypeKey =
@@ -55,7 +56,13 @@ export const ACTION_PARAM_SOURCES = [
 
 const GESPEICHERTE_PARAM_QUELLEN = [...ACTION_PARAM_SOURCES, 'aus'] as const
 
-export const ZELLEN_PARAM_QUELLEN = ['erfassungszelle', 'aenderungszelle', 'loeschzelle'] as const
+// Je Zell-Quelle die Vormerk-Liste, deren Zeilen sie liest. Daraus schneidet
+// der Lauf seine Abschnitte, ohne einen Bausteintyp zu kennen.
+export const ZELLEN_PARAM_QUELLEN: Record<string, VormerkArt> = {
+  erfassungszelle: 'erfasst',
+  aenderungszelle: 'geaendert',
+  loeschzelle: 'geloescht',
+}
 
 export type ActionParamSource = (typeof GESPEICHERTE_PARAM_QUELLEN)[number]
 
@@ -79,16 +86,25 @@ export interface ErgebnisSchritt {
   quelleId?: string
 }
 
-export function ergebnisSchritteVor(
+// Die Schritte VOR diesem. Der Ausschnitt ist ein Anfang der Kette, darum
+// bleibt der Platz darin die Schrittnummer.
+export function schritteVor(
   chain: readonly ActionStep[],
   stepId: string | undefined, // undefined = neuer Schritt ans Kettenende
+): readonly ActionStep[] {
+  const eigene = stepId === undefined ? -1 : chain.findIndex((s) => s.id === stepId)
+  return eigene < 0 ? chain : chain.slice(0, eigene)
+}
+
+export function ergebnisSchritteVor(
+  chain: readonly ActionStep[],
+  stepId: string | undefined,
   relations: readonly RelationTemplate[] | undefined,
 ): ErgebnisSchritt[] {
-  const eigene = stepId === undefined ? -1 : chain.findIndex((s) => s.id === stepId)
-  const bis = eigene < 0 ? chain.length : eigene
+  const vorher = schritteVor(chain, stepId)
   const out: ErgebnisSchritt[] = []
-  for (let i = 0; i < bis; i++) {
-    const s = chain[i]
+  for (let i = 0; i < vorher.length; i++) {
+    const s = vorher[i]
     if (s.type !== 'RELATION') continue
     const rel = relations?.find((r) => r.id === s.relationId)
     if (!rel || rel.verb !== 'GET_RELATION') continue
@@ -151,7 +167,11 @@ export type PopupStep = PopupOpenStep | PopupCloseStep
 export type ActionStep = StartToolStep | BwLinkStep | RelationStep | PopupStep
 export type BlockEventsMap = Record<string, ActionStep[]>
 
-export const AKTIONS_PLATZHALTER = ['PINDEX', 'VALUE', 'ZIMMER', 'NOW_DATE'] as const
+// Die Satznummer heisst in einer Schreib-Relation {PINDEX} und in einer
+// Loesch-Relation {DROP_PINDEX}; leer taugt sie in keiner von beiden.
+export const SATZ_PLATZHALTER = ['PINDEX', 'DROP_PINDEX'] as const
+
+export const AKTIONS_PLATZHALTER = [...SATZ_PLATZHALTER, 'VALUE', 'ZIMMER', 'NOW_DATE'] as const
 
 export function defaultRelationParams(
   relation: Pick<RelationTemplate, 'params'>,
@@ -305,7 +325,7 @@ function withoutEditorId(
     if (b.source === 'step_result') return { ...b, value: stepPosition(b.value) }
     // Spalten-Kennung -> Platz: die Laufzeit greift die Zeilenwerte ueber den
     // Index, sie kennt keine Kennungen.
-    if ((ZELLEN_PARAM_QUELLEN as readonly string[]).includes(b.source)) {
+    if (ZELLEN_PARAM_QUELLEN[b.source] !== undefined) {
       return { ...b, value: spaltenIndex(b.blockId ?? '', b.value) }
     }
     return { ...b }
@@ -384,4 +404,63 @@ export function parseBlockEvents(raw: string | null): Record<string, RuntimeStep
     if (!broken && steps.length > 0) out[key] = steps
   }
   return out
+}
+
+// Beide Formen eines Schritts: der Baum-Schritt mit Spalten-Kennungen und der
+// Export-Schritt mit Plaetzen. Fuer die Abschnitte zaehlt nur, WORAUS ein
+// Parameter liest.
+type SchrittForm = ActionStep | RuntimeStep
+
+interface ZeilenBezug {
+  art: VormerkArt
+
+  // Leer heisst: EIN Schritt liest zwei verschiedene Listen.
+  blockId: string
+}
+
+// Kein Bausteintyp kommt vor: es zaehlt allein, was in den Parametern steht.
+function zeilenBezugVon(step: SchrittForm): ZeilenBezug | null {
+  if (step.type !== 'RELATION') return null
+  let treffer: ZeilenBezug | null = null
+  for (const binding of [...step.params, ...step.extraParams]) {
+    const art = ZELLEN_PARAM_QUELLEN[binding.source]
+    const blockId = binding.blockId ?? ''
+    if (art === undefined || blockId === '') continue
+    if (treffer && (treffer.art !== art || treffer.blockId !== blockId)) {
+      return { art, blockId: '' } // zwei Listen in EINEM Schritt -> Fehler im Lauf
+    }
+    treffer = { art, blockId }
+  }
+  return treffer
+}
+
+interface Abschnitt {
+  art: 'einmal' | VormerkArt
+
+  blockId: string
+
+  // Die Plaetze IN DER GANZEN KETTE: die Schrittzahl bleibt stabil, auch wenn
+  // nur ein Teil laeuft.
+  plaetze: Set<number>
+}
+
+// Ein Schritt ohne Zeilen-Bezug haengt sich an den laufenden Abschnitt an, sonst
+// risse „Satz anlegen, dann seine Felder schreiben" auseinander.
+export function abschnitteVon(steps: readonly SchrittForm[]): Abschnitt[] {
+  const raus: Abschnitt[] = []
+  for (const [platz, step] of steps.entries()) {
+    const bezug = zeilenBezugVon(step)
+    const letzter = raus[raus.length - 1]
+    if (bezug === null) {
+      if (letzter) letzter.plaetze.add(platz)
+      else raus.push({ art: 'einmal', blockId: '', plaetze: new Set([platz]) })
+      continue
+    }
+    if (letzter && letzter.art === bezug.art && letzter.blockId === bezug.blockId) {
+      letzter.plaetze.add(platz)
+      continue
+    }
+    raus.push({ art: bezug.art, blockId: bezug.blockId, plaetze: new Set([platz]) })
+  }
+  return raus
 }

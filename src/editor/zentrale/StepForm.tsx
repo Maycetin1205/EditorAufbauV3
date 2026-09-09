@@ -9,6 +9,7 @@ import {
   STEP_TYPES,
   defaultRelationParams,
   ergebnisSchritteVor,
+  schritteVor,
   type ActionStep,
   type StepTypeKey,
 } from '../../core/data/aktionen'
@@ -149,8 +150,9 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
       ergebnisIds,
       auswahlen.actionValueRefs,
       auswahlen.geberIds,
+      schritteVor(kette, step?.id),
     ),
-    [kandidat, vorlagen, quellen, auswahlen, ergebnisIds],
+    [kandidat, vorlagen, quellen, auswahlen, ergebnisIds, kette, step?.id],
   )
 
   const bindung = (index: number) => bindungFuer(entwurf, vorgaben, index)

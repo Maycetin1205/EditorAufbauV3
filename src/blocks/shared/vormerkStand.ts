@@ -1,12 +1,12 @@
 // Wie viel noch zu schreiben ist: gezaehlt an einer Stelle, gezeigt am Baustein und am Knopf.
-import { parseBlockEvents } from '../../core/data/aktionen'
+import { abschnitteVon, parseBlockEvents } from '../../core/data/aktionen'
 import type {
   AenderungsTraegerElement,
   ErfassungsTraegerElement,
   LoeschTraegerElement,
   VormerkArt,
 } from '../../core/blocks/BlockDefinition'
-import { abschnitteVon, sucheTraeger } from './seAktionen'
+import { sucheTraeger } from './seAktionen'
 
 export const VORMERK_EVENT = 'ff-vormerkungen'
 

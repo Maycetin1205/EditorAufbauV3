@@ -3,6 +3,7 @@ import type { DataSource } from './dataSources'
 import type { RelationTemplate } from './relations'
 import { unknownPlaceholders } from './relations'
 import {
+  abschnitteVon,
   AKTIONS_PLATZHALTER,
   stepTypeName,
   type ActionParamBinding,
@@ -40,6 +41,10 @@ export function stepProblem(
   actionValues?: readonly { blockId: string; prop: string }[],
 
   auswahlGeberIds?: readonly string[],
+
+  // Die Schritte VOR diesem; ohne sie bleibt die Frage nach der Loeschzeile
+  // ungestellt, denn sie haengt am ganzen Abschnitt.
+  vorher?: readonly ActionStep[],
 ): string | null {
   const ergebnisKaputt = (binding: ActionParamBinding | undefined): boolean =>
     binding?.source === 'step_result'
@@ -111,6 +116,15 @@ export function stepProblem(
   )
   if (missingGeber) {
     return 'Schritt "Relation" liest die gewählte Zeile eines Bausteins, den es nicht mehr gibt (oder der keine Auswahl mehr gibt).'
+  }
+  // {DROP_PINDEX} fuellt nur ein Abschnitt, der GELOESCHTE Zeilen abarbeitet.
+  // Sonst ginge die Loesch-Relation mit leerer Satznummer hinaus.
+  if (
+    vorher !== undefined
+    && allBindings.some((b) => b?.source === 'context' && b.value === 'DROP_PINDEX')
+    && abschnitteVon([...vorher, step]).at(-1)?.art !== 'geloescht'
+  ) {
+    return 'Schritt "Relation" braucht die Satznummer der gelöschten Zeile — dafür muss ein Parameter eine gelöschte Zeile lesen.'
   }
   if (allBindings.some(ergebnisKaputt)) {
     return 'Schritt "Relation": ein Parameter zeigt auf keinen GET-Schritt davor.'

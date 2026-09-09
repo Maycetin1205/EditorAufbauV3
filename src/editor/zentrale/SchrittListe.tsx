@@ -88,6 +88,7 @@ export function SchrittListe({
           ergebnisSchritteVor(steps, s.id, relations.list).map((g) => g.id),
           actionValueRefs,
           geberIds,
+          steps.slice(0, i),
         )
         const relation = s.type === 'RELATION' ? relations.get(s.relationId) : undefined
         const popupName = s.type === 'POPUP_OPEN' || s.type === 'POPUP_CLOSE'

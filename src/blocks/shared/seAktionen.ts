@@ -1,5 +1,11 @@
 // Eine Aktionskette laufen lassen: Abschnitte bilden, Schritte senden, je Zeile berichten.
-import { ACTION_VALUE_ID_ATTR, parseBlockEvents, type RuntimeStep } from '../../core/data/aktionen'
+import {
+  ACTION_VALUE_ID_ATTR,
+  abschnitteVon,
+  parseBlockEvents,
+  SATZ_PLATZHALTER,
+  type RuntimeStep,
+} from '../../core/data/aktionen'
 import type {
   AenderungsTraegerElement,
   ErfassungsTraegerElement,
@@ -106,61 +112,6 @@ const laufend = new WeakMap<HTMLElement, Set<string>>()
 export function meldeKettenFehler(fehler: unknown): void {
   const text = fehler instanceof Error ? fehler.message : String(fehler)
   meldeFehler('Aktionskette fehlgeschlagen: ' + text)
-}
-
-type ListenArt = 'einmal' | VormerkArt
-
-const ZELLEN_HERKUNFT: Record<string, VormerkArt> = {
-  erfassungszelle: 'erfasst',
-  aenderungszelle: 'geaendert',
-  loeschzelle: 'geloescht',
-}
-
-interface Abschnitt {
-  art: ListenArt
-
-  blockId: string
-
-  // Die Plaetze IN DER GANZEN KETTE: die Schrittzahl bleibt stabil, auch wenn
-  // nur ein Teil laeuft.
-  plaetze: Set<number>
-}
-
-// Kein Bausteintyp kommt vor: es zaehlt allein, was in den Parametern steht.
-function zeilenBezug(step: RuntimeStep): { art: VormerkArt; blockId: string } | null {
-  if (step.type !== 'RELATION') return null
-  let treffer: { art: VormerkArt; blockId: string } | null = null
-  for (const binding of [...step.params, ...step.extraParams]) {
-    const art = ZELLEN_HERKUNFT[binding.source]
-    const blockId = binding.blockId ?? ''
-    if (art === undefined || blockId === '') continue
-    if (treffer && (treffer.art !== art || treffer.blockId !== blockId)) {
-      return { art, blockId: '' } // zwei Listen in EINEM Schritt -> unten Fehler
-    }
-    treffer = { art, blockId }
-  }
-  return treffer
-}
-
-// Ein Schritt ohne Zeilen-Bezug haengt sich an den laufenden Abschnitt an, sonst
-// risse „Satz anlegen, dann seine Felder schreiben" auseinander.
-export function abschnitteVon(steps: readonly RuntimeStep[]): Abschnitt[] {
-  const raus: Abschnitt[] = []
-  for (const [platz, step] of steps.entries()) {
-    const bezug = zeilenBezug(step)
-    const letzter = raus[raus.length - 1]
-    if (bezug === null) {
-      if (letzter) letzter.plaetze.add(platz)
-      else raus.push({ art: 'einmal', blockId: '', plaetze: new Set([platz]) })
-      continue
-    }
-    if (letzter && letzter.art === bezug.art && letzter.blockId === bezug.blockId) {
-      letzter.plaetze.add(platz)
-      continue
-    }
-    raus.push({ art: bezug.art, blockId: bezug.blockId, plaetze: new Set([platz]) })
-  }
-  return raus
 }
 
 // Jedes Stueck des Vertrags ist optional, damit die Kette auch einen Baustein
@@ -300,12 +251,18 @@ export async function laufeSchritte(
       return { geschrieben, fehler: text, mitschrift: mitschrift() }
     }
 
-    // Ein PUT mit leerem {PINDEX} schriebe ins Nichts und meldet nichts zurueck.
-    const brauchtSatz = [...step.params, ...step.extraParams]
-      .some((b) => b.source === 'context' && b.value === 'PINDEX')
-    if (brauchtSatz && (values.PINDEX ?? '') === '') {
-      const text = `Schritt ${platz + 1} der Kette braucht die Satznummer der Zeile — sie fehlt `
-        + `(Relation Nr. ${relation.nr}). Nichts geschrieben.`
+    const bindungen = [...step.params, ...step.extraParams]
+
+    // Eine leere Satznummer trifft keinen Satz: der PUT schriebe ins Nichts, die
+    // Loesch-Relation loeschte nichts — und beide meldeten nichts zurueck.
+    const fehlenderSatz = SATZ_PLATZHALTER.find((name) =>
+      bindungen.some((b) => b.source === 'context' && b.value === name)
+      && (values[name] ?? '') === '')
+    if (fehlenderSatz !== undefined) {
+      const loeschen = fehlenderSatz === 'DROP_PINDEX'
+      const text = `Schritt ${platz + 1} der Kette braucht die Satznummer der `
+        + `${loeschen ? 'zu löschenden Zeile' : 'Zeile'} — sie fehlt `
+        + `(Relation Nr. ${relation.nr}). ${loeschen ? 'Nichts gelöscht.' : 'Nichts geschrieben.'}`
       meldeFehler(text)
       return { geschrieben, fehler: text, mitschrift: mitschrift() }
     }
@@ -318,8 +275,7 @@ export async function laufeSchritte(
       gewaehlteZeile: auswahlFuer,
       ...(zeilenZelle ? { zeilenZelle } : {}),
     }
-    const params = [...step.params, ...step.extraParams]
-      .map((binding) => resolveActionParam(binding, runtimeValues))
+    const params = bindungen.map((binding) => resolveActionParam(binding, runtimeValues))
     const antwort = await executeRelation(relation, params)
     const result = antwort.wert
     stepResults[platz] = result

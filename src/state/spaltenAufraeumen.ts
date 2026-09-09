@@ -37,7 +37,7 @@ function schrittOhneZeiger(
   let getroffen = 0
   const abraeumen = (liste: ActionParamBinding[]): ActionParamBinding[] =>
     liste.map((b) => {
-      const zeigt = (ZELLEN_PARAM_QUELLEN as readonly string[]).includes(b.source)
+      const zeigt = ZELLEN_PARAM_QUELLEN[b.source] !== undefined
         && (b.blockId ?? '') === blockId
         && weg.has(b.value)
       if (!zeigt) return b
