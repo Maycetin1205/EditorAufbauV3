@@ -117,12 +117,25 @@ export function stepProblem(
   }
   // {DROP_PINDEX} fuellt nur ein Abschnitt, der GELOESCHTE Zeilen abarbeitet.
   // Sonst ginge die Loesch-Relation mit leerer Satznummer hinaus.
+  const abschnittsArt = vorher === undefined
+    ? undefined
+    : abschnitteVon([...vorher, step]).at(-1)?.art
   if (
     vorher !== undefined
     && allBindings.some((b) => b?.source === 'context' && b.value === 'DROP_PINDEX')
-    && abschnitteVon([...vorher, step]).at(-1)?.art !== 'geloescht'
+    && abschnittsArt !== 'geloescht'
   ) {
     return 'Schritt "Relation" braucht die Satznummer der gelöschten Zeile — dafür muss ein Parameter eine gelöschte Zeile lesen.'
+  }
+  // Eine erfasste Zeile steht noch nicht im ERP, hat also keine Satznummer.
+  // {PINDEX} bleibt dann leer, es sei denn ein Schritt davor hat eine geholt
+  // und legt sie unter diesem Namen ab.
+  if (
+    abschnittsArt === 'erfasst'
+    && allBindings.some((b) => b?.source === 'context' && b.value === 'PINDEX')
+    && !(vorher ?? []).some((s) => s.resultKey === 'PINDEX')
+  ) {
+    return 'Schritt "Relation": erfasste Zeilen haben keine Satznummer — davor einen Schritt setzen, der sie holt oder den Satz anlegt (GET oder PUTADD), und diesen Parameter auf sein Ergebnis binden.'
   }
   if (allBindings.some(ergebnisKaputt)) {
     return 'Schritt "Relation": ein Parameter zeigt auf keinen GET-Schritt davor.'

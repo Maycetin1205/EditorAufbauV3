@@ -30,45 +30,52 @@ export const RELATION_GRUPPEN: PropertySelectOption[] = [
   { value: 'schreiben', label: 'Schreiben' },
 ]
 
-// Zwei Texte je Platzhalter, weil zwei Stellen ihn zeigen: `name` in Menuezeilen,
-// `hinweis` in der Parameter-Tabelle.
+// Zwei Texte je Platzhalter, weil zwei Stellen ihn zeigen: `name` als
+// Beschriftung neben dem rohen Code, `hinweis` in der Parameter-Tabelle.
 export const PLATZHALTER_KLARTEXT: Record<string, { name: string; hinweis: string }> = {
   FELD_POS: {
-    name: 'Feld-Position',
+    name: 'Position',
     hinweis: 'Feld-Position (aus dem gebundenen Feld)',
   },
   FELD_LEN: {
-    name: 'Feld-Länge',
+    name: 'Länge',
     hinweis: 'Feld-Länge (aus dem gebundenen Feld)',
   },
   PINDEX: {
-    name: 'Satznummer der Zeile',
+    name: 'Satznummer',
     hinweis: 'Nummer des Datensatzes',
   },
   SELKEY: {
-    name: 'Schlüssel der Zeile',
+    name: 'Schlüssel',
     hinweis: 'Schlüssel der gewählten Zeile',
   },
   DROP_PINDEX: {
-    name: 'Satznummer der Löschzeile',
+    name: 'Satznummer der Löschung',
     hinweis: 'Satznummer der Löschzeile (automatisch)',
   },
   RELID: {
-    name: 'Tabellen-ID der Quelle',
+    name: 'Tabelle',
     hinweis: 'Tabellen-ID der Datenquelle (ohne IDB-Präfix)',
   },
   VALUE: {
-    name: 'Neuer Wert',
+    name: 'Wert',
     hinweis: 'Neuer Wert (z. B. Titel der Zielspalte)',
   },
   ZIMMER: {
-    name: 'Ziel-Zimmer',
+    name: 'Zimmer',
     hinweis: 'Titel des Ziel-Zimmers beim Ablegen (leer ohne Zimmer)',
   },
   NOW_DATE: {
     name: 'Heutiges Datum',
     hinweis: 'Heutiges Datum',
   },
+}
+
+// Der Klarname eines Parameters, wenn die Vorlage an dieser Stelle GENAU einen
+// Platzhalter vorsieht. Alles andere ('L', '45_60', leer) heisst wie es dasteht.
+export function platzhalterName(roh: string): string {
+  const name = /^\{([A-Za-z0-9_]+)\}$/.exec(roh.trim())?.[1]
+  return name === undefined ? '' : PLATZHALTER_KLARTEXT[name]?.name ?? name
 }
 
 export function parameterBedeutung(param: string): string {

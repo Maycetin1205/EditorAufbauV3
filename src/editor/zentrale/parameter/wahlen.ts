@@ -46,4 +46,8 @@ export interface QuellenEintrag {
 
   // Wahr = es gibt nichts, woraus diese Quelle waehlen koennte.
   leer?: (wahlen: ParameterWahlen) => boolean
+
+  // Was an dieser Stelle wirklich hinausgeht, in Worten. Steht in der
+  // Vorschauzeile des Schritts anstelle des rohen Parameters.
+  text: (binding: ActionParamBinding, wahlen: ParameterWahlen) => string
 }

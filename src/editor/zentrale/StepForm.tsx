@@ -48,6 +48,7 @@ import {
 } from './schrittEntwurf'
 import { ParameterZeile } from './ParameterZeile'
 import type { ParameterWahlen } from './parameter/wahlen'
+import { relationsVorschau } from './parameter/vorschau'
 import { RelationAuswahl } from './RelationAuswahl'
 import { useRelations } from '../../state/useRelations'
 import { useDataSources } from '../../state/useDataSources'
@@ -330,6 +331,15 @@ export function StepForm({ step, kette, onSave, onClose }: StepFormProps) {
                   </div>
                 )}
               </Gruppe>
+
+              {/* Was der Schritt wirklich hinausschickt, in einer Zeile: dieselbe
+                  Syntax wie im ERP, an den offenen Stellen der Klartext der
+                  Bindung. Sie haengt am Kandidaten, folgt also jeder Aenderung. */}
+              {kandidat.type === 'RELATION' && (
+                <p className="break-all font-mono text-dicht text-matt">
+                  {relationsVorschau(relation, kandidat.params, kandidat.extraParams, wahlen)}
+                </p>
+              )}
               {entwurf.uebernahmeBestaetigung && (
                 <p className="text-ui text-matt">{entwurf.uebernahmeBestaetigung}</p>
               )}
