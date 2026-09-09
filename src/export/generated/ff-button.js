@@ -20,12 +20,8 @@
       button:active { background: var(--se-accent-dark); border-color: var(--se-ink); }
       button:focus-visible { outline: 2px solid var(--se-accent); outline-offset: 2px; }
 
-      button:disabled { cursor: default; opacity: 0.5; }
-      button:disabled:hover { background: var(--se-accent); border-color: var(--se-accent); }
-
       :host([fuellt]) button { width: 100%; height: 100%; }
     `]}render(){let t=this.vormerkungen,n=t===void 0?0:(0,i.vormerkSumme)(t);return e.html`<button
       data-ff-editable
-      ?disabled=${t!==void 0&&n===0}
       @dblclick=${e=>this.inlineEdit(e,`label`)}
-    >${t===void 0||n===0?this.label:`${this.label} (${n})`}</button>`}connectedCallback(){super.connectedCallback(),(0,r.connectClickAktionen)(this,`onClick`),!this.imEditor&&(document.addEventListener(i.VORMERK_EVENT,this.zaehleVormerkungen),this.zaehleVormerkungen())}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener(i.VORMERK_EVENT,this.zaehleVormerkungen)}};a([(0,t.property)()],o.prototype,`label`,void 0),a([(0,t.property)({attribute:!1})],o.prototype,`vormerkungen`,void 0),n.BasicBlock.defineAndRegister(o)})(FF.lit,FF.lit$decorators$js,FF.blocks$base$BasicBlock,FF.blocks$shared$seAktionen,FF.blocks$shared$vormerkStand);
+    >${n===0?this.label:`${this.label} (${n})`}</button>`}connectedCallback(){super.connectedCallback(),(0,r.connectClickAktionen)(this,`onClick`),!this.imEditor&&(document.addEventListener(i.VORMERK_EVENT,this.zaehleVormerkungen),this.zaehleVormerkungen())}disconnectedCallback(){super.disconnectedCallback(),document.removeEventListener(i.VORMERK_EVENT,this.zaehleVormerkungen)}};a([(0,t.property)()],o.prototype,`label`,void 0),a([(0,t.property)({attribute:!1})],o.prototype,`vormerkungen`,void 0),n.BasicBlock.defineAndRegister(o)})(FF.lit,FF.lit$decorators$js,FF.blocks$base$BasicBlock,FF.blocks$shared$seAktionen,FF.blocks$shared$vormerkStand);

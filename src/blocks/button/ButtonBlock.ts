@@ -51,9 +51,6 @@ export class ButtonBlock extends BasicBlock {
       button:active { background: var(--se-accent-dark); border-color: var(--se-ink); }
       button:focus-visible { outline: 2px solid var(--se-accent); outline-offset: 2px; }
 
-      button:disabled { cursor: default; opacity: 0.5; }
-      button:disabled:hover { background: var(--se-accent); border-color: var(--se-accent); }
-
       :host([fuellt]) button { width: 100%; height: 100%; }
     `,
   ]
@@ -61,7 +58,8 @@ export class ButtonBlock extends BasicBlock {
   @property() label = 'Schaltfläche'
 
   // Liest die Kette dieses Knopfs Vormerkungen, steht ihre Zahl im Label.
-  // undefined heisst: gewoehnlicher Knopf.
+  // undefined heisst: gewoehnlicher Knopf. Abgeschaltet wird er NIE:
+  // ohne Vormerkung sagt die Kette im Balken, warum nichts hinausging.
   @property({ attribute: false }) vormerkungen: VormerkZahlen | undefined = undefined
 
   private readonly zaehleVormerkungen = (): void => {
@@ -73,9 +71,8 @@ export class ButtonBlock extends BasicBlock {
     const offen = zahlen === undefined ? 0 : vormerkSumme(zahlen)
     return html`<button
       data-ff-editable
-      ?disabled=${zahlen !== undefined && offen === 0}
       @dblclick=${(e: MouseEvent) => this.inlineEdit(e, 'label')}
-    >${zahlen === undefined || offen === 0 ? this.label : `${this.label} (${offen})`}</button>`
+    >${offen === 0 ? this.label : `${this.label} (${offen})`}</button>`
   }
 
   override connectedCallback(): void {

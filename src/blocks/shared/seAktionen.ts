@@ -315,6 +315,10 @@ export async function runEvent(
     let geschrieben = false
     let abgebrochen = false
 
+    // Ein Abschnitt laeuft je vorgemerkter Zeile: null Zeilen = null Laeufe.
+    let zeilenAbschnitte = 0
+    let vorgemerkteZeilen = 0
+
     let mitschrift: Mitschrift | undefined
     for (const abschnitt of abschnitte) {
       if (abschnitt.art === 'einmal') {
@@ -328,17 +332,19 @@ export async function runEvent(
       }
       if (abschnitt.blockId === '') {
         meldeFehler('Ein Schritt liest Zellen aus zwei verschiedenen Listen — das geht nicht.')
+        abgebrochen = true
         break
       }
       const traeger = sucheTraeger(el.ownerDocument ?? document, abschnitt.blockId)
       const zeilen = traeger && zeilenDerListe(traeger, abschnitt.art)
       if (!traeger || !zeilen) {
         meldeFehler('Den Baustein, dessen Zellen die Kette liest, gibt es in dieser Maske nicht.')
+        abgebrochen = true
         break
       }
-      // Keine Zeile heisst kein Lauf und kein Fehler: der Bediener sieht in der
-      // Tabelle, dass nichts ansteht.
+      zeilenAbschnitte += 1
       if (zeilen.length === 0) continue
+      vorgemerkteZeilen += zeilen.length
       const bericht = { traeger, art: abschnitt.art, fertige: [] as string[] }
       berichte.push(bericht)
       for (const zeile of zeilen) {
@@ -360,6 +366,11 @@ export async function runEvent(
         bericht.fertige.push(zeile.schluessel)
       }
       if (abgebrochen) break
+    }
+    // Sonst ist ein Knopf, dem die Vormerkungen fehlen, von einem Knopf ohne
+    // Wirkung nicht zu unterscheiden.
+    if (!abgebrochen && zeilenAbschnitte > 0 && vorgemerkteZeilen === 0) {
+      meldeFehler('Nichts zum Speichern vorgemerkt.')
     }
     // Ausgetragen wird erst, wenn ALLE Abschnitte durch sind: ein spaeterer
     // Abschnitt kann dieselbe Liste noch einmal lesen.
