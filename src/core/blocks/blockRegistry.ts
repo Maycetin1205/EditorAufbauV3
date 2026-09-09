@@ -20,6 +20,12 @@ export function getAllBlockDefinitions(): BlockDefinition[] {
   return Array.from(registry.values())
 }
 
+// Die Bausteinart hinter einem Element: die Laufzeit hat nur seinen Tag.
+export function definitionFuerTag(tagName: string): BlockDefinition | undefined {
+  const tag = tagName.toLowerCase()
+  return Array.from(registry.values()).find((def) => def.tagName.toLowerCase() === tag)
+}
+
 export function canContain(parentType: string, childType: string): boolean {
   const child = registry.get(childType)
   if (child?.allowedParentTypes && !child.allowedParentTypes.includes(parentType)) {

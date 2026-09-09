@@ -5,6 +5,7 @@ import type { Vorschlag } from '../shared/vorschlagListe'
 import { zellenEingabeTpl } from '../shared/zellenEingabe'
 import { fensterSpaltenOder } from '../tabelle/nachschlagen'
 import { ZELLE_PLATZHALTER, type Spalte } from '../tabelle/spalten'
+import type { ErfassungsSpalte } from './erfassungsSpalte'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
 import type { SchluesselPaar } from '../../core/data/sourceLinks'
 import { getField } from '../../softengine/data'
@@ -86,7 +87,7 @@ export interface Zellenziel {
 }
 
 export interface ErfassungsUmfeld {
-  spalten: readonly Spalte[]
+  spalten: readonly ErfassungsSpalte[]
 
   quelleId: string
 
@@ -96,7 +97,7 @@ export interface ErfassungsUmfeld {
 }
 
 export function zellenzielVon(
-  spalte: Spalte | undefined,
+  spalte: ErfassungsSpalte | undefined,
   tabellenQuelleId: string,
 ): Zellenziel {
   const fuell = (spalte?.fuellFeld ?? '').trim()

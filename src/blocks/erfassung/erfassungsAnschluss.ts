@@ -2,7 +2,7 @@
 import { verknuepfungenVon } from '../shared/fremdeQuellen'
 import { ErfassungsLauf } from './erfassungsLauf'
 import type { ErfassungsUmfeld } from './erfassungsZeile'
-import type { Spalte } from '../tabelle/spalten'
+import type { ErfassungsSpalte } from './erfassungsSpalte'
 
 export class ErfassungsAnschluss {
   readonly lauf = new ErfassungsLauf()
@@ -53,7 +53,7 @@ export class ErfassungsAnschluss {
     return this._zeilen.map((z) => z.kennung)
   }
 
-  umfeld(el: HTMLElement, spalten: readonly Spalte[], quelleId: string): ErfassungsUmfeld {
+  umfeld(el: HTMLElement, spalten: readonly ErfassungsSpalte[], quelleId: string): ErfassungsUmfeld {
     const verknuepfungen = verknuepfungenVon(el)
     return {
       spalten,

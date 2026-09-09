@@ -7,6 +7,7 @@ import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { ListenBindung, SatzWahl } from '../../core/blocks/BlockDefinition'
 import { geberIdVon } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
+import { OHNE_SCHMUCK, type Unterzeilen, type Zeilenschmuck } from '../shared/zeilenNaehte'
 import {
   connectTable,
   disconnectTable,
@@ -28,16 +29,8 @@ import { SpaltenWahlStand } from './spaltenWahl'
 import { ZEILEN_HOEHE } from './seitengroesse'
 import { tabelleAnsicht, zeigtEchteDaten } from './tabelleAnsicht'
 import { SPALTEN_BINDUNG, TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
-import {
-  OHNE_SCHMUCK,
-  tabelleFuss,
-  tabelleKoerper,
-  type Unterzeilen,
-  type Zeilenschmuck,
-} from './tabelleKoerper'
+import { tabelleFuss, tabelleKoerper } from './tabelleKoerper'
 import { tabelleStil } from './tabelleStil'
-
-export { coerceSpalten, type Spalte } from './spalten'
 
 export class TabelleBlock extends BasicBlock {
   // Als string, nicht als Literal: die Erfassung erbt und traegt eigene Namen.
@@ -196,8 +189,8 @@ export class TabelleBlock extends BasicBlock {
     return this.datenzeilen[rohIndex]?.[platz] ?? ''
   }
 
-  // Die zwei Naehte fuer die Erfassung. Die Tabelle selbst haengt an ihre
-  // Zeilen nichts und stellt nichts darunter.
+  // Die zwei Naehte einer erbenden Tabelle, die schreibt. Die Liste selbst
+  // haengt an ihre Zeilen nichts und stellt nichts darunter.
   protected zeilenSchmuck(): (rohIndex: number | null) => Zeilenschmuck {
     return () => OHNE_SCHMUCK
   }

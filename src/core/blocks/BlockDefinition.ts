@@ -124,6 +124,13 @@ export interface AenderungsTraegerElement {
   geaenderteZeilen: readonly { satz: string; werte: readonly string[] }[]
 }
 
+// Der Laufzeit-Vertrag der Faehigkeit `vergisstGeschriebene`: der Baustein haelt
+// die Zeilen, die er ans ERP gesendet hat, und laesst sie los, sobald SoftEngine
+// neue Daten liefert.
+export interface GeschriebeneZeilenElement {
+  vergissGeschriebene: () => void
+}
+
 // Der Bericht des Ketten-Laufs an den Baustein, dessen Liste er abarbeitet.
 // Ohne ihn waere ein Lauf alles-oder-nichts: ein Fehler in Zeile 3 von 10 naehme
 // auch den Vormerkungen 4-10 ihre Chance. laufFertig kommt erst, wenn ALLE
@@ -177,6 +184,11 @@ export interface BlockDefinition {
   // Gesetzt heisst: dieser Baustein kann einer Kette die GEAENDERTEN Zeilen
   // geben. Welcher das ist, steht damit in der Registry und nicht im Ketten-Code.
   aenderungsSchluessel?: string
+
+  // Gesetzt heisst: dieser Baustein haelt gesendete Zeilen und vergisst sie erst
+  // auf eine Lieferung hin. Steht in der Registry, damit der Datenstrom nicht am
+  // Element nach einer Methode fragen muss.
+  vergisstGeschriebene?: boolean
 
   bindableSpots?: readonly BindableSpot[]
 

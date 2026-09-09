@@ -12,6 +12,7 @@ import { BasicBlock } from '../base/BasicBlock'
 import { vorschlagStil } from '../shared/vorschlagListe'
 import { meldeVormerkungen } from '../shared/vormerkStand'
 import { geheInZelle, zellenEingabeStil, zellenFelder } from '../shared/zellenEingabe'
+import { OHNE_SCHMUCK, type Unterzeilen, type Zeilenschmuck } from '../shared/zeilenNaehte'
 import {
   FENSTER_HOEHE,
   fensterBreiteFuer,
@@ -21,7 +22,6 @@ import {
 import { hatSatzNummer } from '../tabelle/seRuntime'
 import { standardSpalten, type Spalte } from '../tabelle/spalten'
 import { TabelleBlock } from '../tabelle/TabelleBlock'
-import { OHNE_SCHMUCK, type Unterzeilen, type Zeilenschmuck } from '../tabelle/tabelleKoerper'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
 import { erfassungsZeileFuer, type ErfassungsWirt } from './erfassungsBedienung'
 import {
@@ -35,6 +35,11 @@ import {
   loeschKreuzTpl,
   tippZelleTpl,
 } from './erfassungsKoerper'
+import {
+  coerceErfassungsSpalten,
+  tryCoerceErfassungsSpalten,
+  type ErfassungsSpalte,
+} from './erfassungsSpalte'
 import { erfassungStil } from './erfassungStil'
 import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZeile'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
@@ -54,6 +59,8 @@ export class ErfassungBlock extends TabelleBlock {
     wenn: { attributeName: 'loeschbar', equals: 'ja' },
   }
 
+  static readonly vergisstGeschriebene = true
+
   static override readonly listenBindung: ListenBindung = ERFASSUNG_SPALTEN_BINDUNG
 
   static override readonly defaultProps = {
@@ -70,6 +77,15 @@ export class ErfassungBlock extends TabelleBlock {
     zellenEingabeStil,
     erfassungStil,
   ]
+
+  @property({
+    converter: {
+      fromAttribute: (v: string | null): ErfassungsSpalte[] =>
+        v ? tryCoerceErfassungsSpalten(v) : standardSpalten(),
+      toAttribute: (v: ErfassungsSpalte[]): string => JSON.stringify(v),
+    },
+  })
+  override spalten: ErfassungsSpalte[] = standardSpalten()
 
   @property() loeschbar = 'nein'
 
@@ -137,6 +153,10 @@ export class ErfassungBlock extends TabelleBlock {
 
   protected override zellWert(rohIndex: number, platz: number): string {
     return this._zeilen.zellWert(rohIndex, platz)
+  }
+
+  protected override spaltenListe(): ErfassungsSpalte[] {
+    return coerceErfassungsSpalten(this.spalten)
   }
 
   private erfassungsUmfeld(): ErfassungsUmfeld {
@@ -260,7 +280,7 @@ export class ErfassungBlock extends TabelleBlock {
     }
   }
 
-  private aendereSpalte(index: number, teil: Partial<Spalte>): void {
+  private aendereSpalte(index: number, teil: Partial<ErfassungsSpalte>): void {
     const alt = this.spaltenListe()
     if (alt[index] === undefined) return
     this.aendere(alt.map((s, i) => (i === index ? { ...s, ...teil } : s)))

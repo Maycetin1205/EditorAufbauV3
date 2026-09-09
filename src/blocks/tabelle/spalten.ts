@@ -13,19 +13,8 @@ export interface Spalte {
 
   summe?: boolean
 
-  aenderbar?: boolean
-
-  fuellFeld?: string
-
-  // Rechnet die Zelle der Erfassungszeile aus anderen Spalten; Getipptes geht vor.
+  // Rechnet die Zelle aus anderen Spalten; Getipptes geht vor.
   formel?: Formel
-
-  // Das Suchfenster dieser Zelle (F4). LEER heisst Automatik: das Fenster nimmt
-  // die Spalten der Tabelle, die auf dieselbe Hilfsquelle zeigen.
-  fensterSpalten?: Spalte[]
-
-  fensterBreite?: number
-  fensterHoehe?: number
 
   // Jeder Zustand und jeder ERP-Kontrakt haengt am PLATZ in der vollen Liste;
   // versteckte Spalten fallen erst beim Zeichnen weg.
@@ -80,12 +69,6 @@ export function mitKennungen(spalten: readonly Spalte[]): Spalte[] {
   return spalten.map((s, i) => (s.kennung === kennungen[i] ? s : { ...s, kennung: kennungen[i] }))
 }
 
-export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): number {
-  const t = kennung.trim()
-  if (t === '') return -1
-  return spalten.findIndex((s) => s.kennung === t)
-}
-
 export function standardSpalten(): Spalte[] {
   return mitKennungen([neueSpalte(0)])
 }
@@ -95,17 +78,6 @@ function alsBreite(v: unknown): number | undefined {
   if (!Number.isFinite(zahl)) return undefined
   const gerundet = Math.round(zahl)
   return gerundet < SPALTEN_MIN_BREITE ? SPALTEN_MIN_BREITE : gerundet
-}
-
-// Unter 120 px ist kein Fenster mehr, ueber 2000 passt es auf keinen Bildschirm.
-const FENSTER_MIN = 120
-const FENSTER_MAX = 2000
-
-function fensterMass(v: unknown): number | undefined {
-  if (v === undefined || v === null || v === '') return undefined
-  const zahl = typeof v === 'number' ? v : Number(v)
-  if (!Number.isFinite(zahl)) return undefined
-  return Math.min(FENSTER_MAX, Math.max(FENSTER_MIN, Math.round(zahl)))
 }
 
 function alsSpalte(x: unknown, index: number): Spalte {
@@ -122,26 +94,9 @@ function alsSpalte(x: unknown, index: number): Spalte {
 
       ...(typeof o.summe === 'boolean' ? { summe: o.summe } : {}),
 
-      ...(typeof o.aenderbar === 'boolean' ? { aenderbar: o.aenderbar } : {}),
-
       ...(typeof o.versteckt === 'boolean' ? { versteckt: o.versteckt } : {}),
 
-      ...(typeof o.fuellFeld === 'string' && o.fuellFeld.trim() !== ''
-        ? { fuellFeld: o.fuellFeld.trim() }
-        : {}),
-
       ...(formel === undefined ? {} : { formel }),
-
-      // Eine leere Liste ist dasselbe wie keine: zurueck zur Automatik.
-      ...(Array.isArray(o.fensterSpalten) && o.fensterSpalten.length > 0
-        ? { fensterSpalten: o.fensterSpalten.map((s, i) => alsSpalte(s, i)) }
-        : {}),
-
-      ...(fensterMass(o.fensterBreite) === undefined
-        ? {} : { fensterBreite: fensterMass(o.fensterBreite) as number }),
-
-      ...(fensterMass(o.fensterHoehe) === undefined
-        ? {} : { fensterHoehe: fensterMass(o.fensterHoehe) as number }),
     }
   }
 

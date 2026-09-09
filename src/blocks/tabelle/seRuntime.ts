@@ -1,4 +1,6 @@
 // Die Tabelle am SoftEngine-Datenstrom: anmelden, Zeilen ableiten, Satznummer lesen.
+import type { GeschriebeneZeilenElement } from '../../core/blocks/BlockDefinition'
+import { definitionFuerTag } from '../../core/blocks/blockRegistry'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, satzIndexVon } from '../../softengine/data'
 import { auswahlWiederfinden, geberIdVon, zeilenNachAuswahl } from '../shared/auswahl'
@@ -11,9 +13,15 @@ export interface RuntimeTableElement extends HTMLElement {
   rohzeilen: unknown[]
   durchAuswahlGefiltert: boolean
   datenGeliefert: boolean
+}
 
-  // Nur die Erfassung hat Geschriebenes zu vergessen.
-  vergissGeschriebene?: () => void
+// Wer gesendete Zeilen haelt, sagt die Registry; die Liste selbst haelt keine.
+// Danach ist der Ruf unbedingt: eine gemeldete Faehigkeit ohne Vertrag faellt
+// auf, statt still nichts zu tun.
+function vergissGeschriebene(el: HTMLElement): void {
+  if (definitionFuerTag(el.tagName)?.vergisstGeschriebene !== true) return
+  const traeger = el as unknown as GeschriebeneZeilenElement
+  traeger.vergissGeschriebene()
 }
 
 function spaltenVon(el: HTMLElement): Spalte[] {
@@ -38,7 +46,7 @@ export function hatSatzNummer(el: HTMLElement): boolean {
 
 function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
   // Erst die Lieferung von SoftEngine beweist den neuen Stand.
-  if (lieferung) el.vergissGeschriebene?.()
+  if (lieferung) vergissGeschriebene(el)
   const vorspann = holeDatenVorspann(el)
   if (!vorspann) {
     el.datenzeilen = []

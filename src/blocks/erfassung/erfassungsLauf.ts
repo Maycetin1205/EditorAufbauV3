@@ -9,7 +9,7 @@ import { passendeVorschlaege, VORSCHLAEGE_MAX } from '../shared/vorschlagListe'
 import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
 import { rechneFormel, zahlStreng, zahlText } from '../../core/data/rechnung'
 import { alsZahl } from '../tabelle/sortierung'
-import { spalteMitKennung } from '../tabelle/spalten'
+import { spalteMitKennung } from './erfassungsSpalte'
 import {
   anzeigeSpalteIn,
   passendeSaetze,
