@@ -42,6 +42,7 @@ export class KanbanSpalteBlock extends BasicBlock {
   static readonly defaultProps = {
     variant: 'info',
     heading: 'Neue Spalte',
+    wert: '',
     auffang: 'nein',
     zimmerField: '',
   }
@@ -54,9 +55,16 @@ export class KanbanSpalteBlock extends BasicBlock {
     jaNeinProperty(
       'auffang',
       'Auffangspalte',
-      'Eintr\u00E4ge ohne passenden Spaltentitel landen hier.',
+      'Eintr\u00E4ge ohne passenden Wert landen hier.',
       { requiresDataSource: true, exclusiveAmongSiblings: true },
     ),
+
+    {
+      attributeName: 'wert',
+      name: 'Wert im ERP',
+      description: 'Steht im Statusfeld, wenn eine Karte hier liegt. Leer: der Titel.',
+      kind: 'text',
+    },
 
     {
       attributeName: 'zimmerField',
@@ -147,6 +155,7 @@ export class KanbanSpalteBlock extends BasicBlock {
 
   @property() variant: StatusVariant = 'info'
   @property() heading = 'Neue Spalte'
+  @property() wert = ''
 
   @property({ attribute: false }) leerHinweis = ''
 

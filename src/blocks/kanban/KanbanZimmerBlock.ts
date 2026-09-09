@@ -4,6 +4,7 @@ import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { FlowDirection, FlowWidth } from '../../core/blocks/flowLayout'
+import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { CardBlock } from '../card/CardBlock'
 import { leerStil, leerZustand } from '../shared/leerZustand'
 import { ZIEL_KLASSE, zielStil } from './zielStil'
@@ -30,7 +31,17 @@ export class KanbanZimmerBlock extends BasicBlock {
   static readonly resizableWidth = false
   static readonly defaultProps = {
     heading: 'Neues Zimmer',
+    wert: '',
   }
+
+  static override readonly customProperties: PropertyDescription[] = [
+    {
+      attributeName: 'wert',
+      name: 'Wert im ERP',
+      description: 'Steht im Feld der Unterteilung, wenn eine Karte hier liegt. Leer: der Titel.',
+      kind: 'text',
+    },
+  ]
 
   static override styles = [
     BasicBlock.styles,
@@ -67,6 +78,7 @@ export class KanbanZimmerBlock extends BasicBlock {
   ]
 
   @property() heading = 'Neues Zimmer'
+  @property() wert = ''
 
   @property({ attribute: false }) leerHinweis = ''
 

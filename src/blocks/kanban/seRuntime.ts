@@ -71,16 +71,23 @@ function spotsForTag(tagName: string) {
   return def?.bindableSpots ?? []
 }
 
+// Der Wert, den das ERP kennt. Der Titel ist Anzeige: umbenennen darf die
+// Zuordnung nicht verstellen. Nur wenn niemand einen Wert gesetzt hat, bleibt
+// es beim Titel, sonst ginge nach dem Anlegen einer Spalte gar nichts hinaus.
+function zuordnungsWert(el: HTMLElement, standardTitel: string): string {
+  const wert = (el.getAttribute('wert') ?? '').trim()
+  if (wert !== '') return wert
+  return el.getAttribute('heading') ?? standardTitel
+}
+
 function zielZimmer(column: HTMLElement, row: unknown): HTMLElement | null {
   const zimmer = zimmerOf(column)
   if (zimmer.length === 0) return null
   const feld = column.getAttribute('zimmerfield') ?? ''
   if (feld === '') return zimmer[0]
 
-  const titel = zimmer.map(
-    (z) => z.getAttribute('heading') ?? KanbanZimmerBlock.defaultProps.heading,
-  )
-  const idx = columnIndexFor(getField(row, feld), titel)
+  const werte = zimmer.map((z) => zuordnungsWert(z, KanbanZimmerBlock.defaultProps.heading))
+  const idx = columnIndexFor(getField(row, feld), werte)
   return idx >= 0 ? zimmer[idx] : zimmer[0]
 }
 
@@ -108,7 +115,7 @@ function hydrate(board: HTMLElement): void {
   const rows = vorspann.zeilen
 
   const columnValues = columns.map(
-    (c) => c.getAttribute('heading') ?? KanbanSpalteBlock.defaultProps.heading,
+    (c) => zuordnungsWert(c, KanbanSpalteBlock.defaultProps.heading),
   )
   const spots = spotsForTag(template.tagName)
   const catchIdx = catchColumnIndex(columns.map((c) => c.getAttribute('auffang')))
@@ -194,9 +201,11 @@ function handleDrop(board: HTMLElement, column: HTMLElement, zimmer: HTMLElement
   if (!dragged || dragged.board !== board) return
   const data = cardData.get(dragged.card)
   if (!data) return
-  const targetValue = column.getAttribute('heading') ?? ''
+  const targetValue = zuordnungsWert(column, KanbanSpalteBlock.defaultProps.heading)
 
-  const zimmerValue = zimmer?.getAttribute('heading') ?? ''
+  const zimmerValue = zimmer
+    ? zuordnungsWert(zimmer, KanbanZimmerBlock.defaultProps.heading)
+    : ''
   runEvent(board, 'onCardDrop', {
     PINDEX: data.pindex,
     VALUE: targetValue,

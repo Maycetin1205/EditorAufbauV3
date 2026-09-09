@@ -140,8 +140,10 @@ export function referenzBaum(): BlockTree {
     k1: knoten('k1', 'kanban', ROOT_ID, {
       rasterX: 9, rasterY: 3, rasterW: 15, rasterH: 22, source: 'q-pos', statusField: '18_25',
     }, ['ks1']),
-    ks1: knoten('ks1', 'kanban-spalte', 'k1', { heading: 'Offen', variant: 'info' }, ['kz1']),
-    kz1: knoten('kz1', 'kanban-zimmer', 'ks1', { heading: 'Zimmer 1' }),
+    ks1: knoten('ks1', 'kanban-spalte', 'k1', {
+      heading: 'Offen', wert: 'ART-B', variant: 'info',
+    }, ['kz1']),
+    kz1: knoten('kz1', 'kanban-zimmer', 'ks1', { heading: 'Zimmer 1', wert: 'Z1' }),
     n1: knoten('n1', 'navi', ROOT_ID, {}, ['ne1']),
     ne1: knoten('ne1', 'navi-eintrag', 'n1', {}),
     tx1: knoten('tx1', 'text', ROOT_ID, { rasterX: 17, rasterY: 0, rasterW: 7, rasterH: 3 }),
