@@ -65,13 +65,15 @@ export class FormFeldBlock extends BasicBlock {
 
   static readonly listenBindung = NACHSCHLAG_SPALTEN_BINDUNG
 
-  // Die Spalten des Fensters wohnen am Feld; eingestellt werden sie im
-  // Inspector, aufgemacht wird die Sektion mit der Lupe.
+  // Die Angaben des Fensters wohnen am Feld; eingestellt wird es IM Fenster,
+  // das die Lupe aufmacht.
   static readonly suchFenster: SuchFenster = {
     spaltenKey: 'nachschlagSpalten',
     breiteKey: 'fensterBreite',
     hoeheKey: 'fensterHoehe',
     quelleProp: 'nachschlagQuelle',
+    speicherFeldProp: 'speicherFeld',
+    speicherTitelProp: 'speicherTitel',
     automatik: 'Ohne Spalten zeigt das Fenster eine: das gespeicherte Feld.'
       + ' Die erste Spalte ist, was nach der Wahl im Feld steht.',
     stelle: '.lupe',

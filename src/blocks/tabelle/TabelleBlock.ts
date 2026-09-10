@@ -171,7 +171,9 @@ export class TabelleBlock extends BasicBlock {
   }
 
   protected get hatQuelle(): boolean {
-    return this._besitz === 'provided'
+    // Im Editor liefert auch niemand Zeilen: dann gelten dieselben Striche wie
+    // bei einer Tabelle ohne Quelle, statt einer leeren weissen Flaeche.
+    return this._besitz === 'provided' && !this.imEditor
       ? true
       : zeigtEchteDaten(this.imEditor, this.source)
   }

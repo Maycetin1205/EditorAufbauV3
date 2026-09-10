@@ -69,7 +69,7 @@ export class ErfassungBlock extends TabelleBlock {
   static readonly haeltGesendete = true
 
   // Jede Spalte mit Hilfsquelle hat ihr eigenes Suchfenster (F4); eingestellt
-  // wird es im Inspector.
+  // wird es IM Fenster, das der Spaltenkopf aufmacht.
   static readonly suchFenster: SuchFenster = {
     eintraegeProp: 'spalten',
     titelKey: 'titel',

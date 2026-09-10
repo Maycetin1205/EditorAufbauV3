@@ -5,7 +5,12 @@ import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, getField, rowsFor } from '../../softengine/data'
 import { meldeFehler } from '../../softengine/meldung'
 import { zeilenNachAuswahl } from '../shared/auswahl'
-import { DIALOG_RAHMEN_TAG, type DialogRahmen } from '../shared/DialogRahmen'
+import {
+  DIALOG_GROESSE_EVENT,
+  DIALOG_RAHMEN_TAG,
+  type DialogGroesseDetail,
+  type DialogRahmen,
+} from '../shared/DialogRahmen'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from './spalten'
 import type { TabelleBlock } from './TabelleBlock'
 import {
@@ -74,6 +79,15 @@ export interface NachschlagenArgs {
   // Was der Bediener schon getippt hat; es steht beim Aufmachen in der Suche des
   // Fensters.
   suchtext?: string
+
+  // Nur der Editor: dieselbe Flaeche wie beim Bediener, aber ohne ERP-Daten
+  // (Striche in den Zeilen) und mit den zwei Zieh-Anfassern am Rand. Gesetzt
+  // heisst zugleich: der Baustein zeichnet als Editor-Element.
+  imEditor?: boolean
+
+  // Was der gezogene Rand schreiben soll. undefined = zurueck auf die
+  // Automatik (Doppelklick auf den Anfasser).
+  setzeMass?: (achse: 'breite' | 'hoehe', wert: number | undefined) => void
 }
 
 export interface Eintrag {
@@ -219,6 +233,23 @@ export function automatikSpalten(args: SpaltenQuelle): Spalte[] {
 
 function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[]): TemplateResult {
   const eigene = coerceNachschlagSpalten([...args.spalten])
+  const spalten = fensterSpaltenOder(eigene, () => automatikSpalten(args))
+
+  // Im Editor gibt es keine Zeilen zu zeigen. bereitgestellteZeilen gar nicht
+  // erst zu setzen ist der Unterschied zwischen „Striche" und „Diese Quelle hat
+  // keine Saetze": erst eine Lieferung setzt datenGeliefert.
+  if (args.imEditor === true) {
+    return html`<ff-tabelle
+      data-ff-editor
+      fuellt
+      suche="ja"
+      spaltenwahl="ja"
+      style="--se-r-lg:0px"
+      .besitz=${'provided'}
+      .spalten=${spalten}
+    ></ff-tabelle>`
+  }
+
   const einspaltig = nurEineSpalte(
     anzeigeFeldVon(eigene, args.speicherFeld),
     args.speicherFeld,
@@ -231,7 +262,7 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
     spaltenwahl="ja"
     style="--se-r-lg:0px"
     .besitz=${'provided'}
-    .spalten=${fensterSpaltenOder(eigene, () => automatikSpalten(args))}
+    .spalten=${spalten}
     .leerText=${'Diese Quelle hat keine Sätze.'}
     .bereitgestellteZeilen=${eintraege.map((e) => ({
       rohzeile: e.satz,
@@ -242,9 +273,27 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
   ></ff-tabelle>`
 }
 
+// Der Rahmen aendert sich nicht selbst. Waehrend des Ziehens setzen wir die
+// Kante zur Ansicht direkt am Element; geschrieben wird EINMAL beim Loslassen,
+// sonst laege nach einem Zug ein Dutzend Schritte in der Historie.
+function verdrahteZiehen(dialog: DialogRahmen, args: NachschlagenArgs): void {
+  dialog.addEventListener(DIALOG_GROESSE_EVENT, (event) => {
+    const detail = (event as CustomEvent<DialogGroesseDetail>).detail
+    if (detail.geste === 'standard') {
+      args.setzeMass?.(detail.achse, undefined)
+      return
+    }
+    if (detail.achse === 'breite') dialog.breite = detail.wert
+    else dialog.hoehe = detail.wert
+    if (detail.geste === 'ende') args.setzeMass?.(detail.achse, detail.wert)
+  })
+}
+
 export function oeffneNachschlagen(args: NachschlagenArgs): void {
   let eintraege = args.eintraege
-  if (eintraege === undefined) {
+  // Im Editor gibt es keine Quelle zu befragen; das Fenster zeigt seine Form,
+  // nicht seinen Inhalt.
+  if (eintraege === undefined && args.imEditor !== true) {
     const ergebnis = holeEintraege(args)
     if (!ergebnis.ok) {
       meldeFehler(ergebnis.grund === 'unvollstaendig'
@@ -254,6 +303,8 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
     }
     eintraege = ergebnis.eintraege
   }
+  // Im Editor bleibt sie leer: es gibt keine Zeile, die man waehlen koennte.
+  const gefunden = eintraege ?? []
 
   schliesse(false)
 
@@ -263,18 +314,20 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
     viewport
     escape-schliesst
     data-ff-nachschlagen
+    ?ziehbar=${args.imEditor === true}
     .titel=${args.titel !== '' ? args.titel : 'Nachschlagen'}
     .breite=${args.breite}
     .hoehe=${args.hoehe}
     @ff-dialog-schliessen=${() => schliesse()}
     @click=${(e: Event) => e.stopPropagation()}
-  >${laufzeitTabelleTpl(args, eintraege)}</ff-dialog-rahmen>`, halter)
+  >${laufzeitTabelleTpl(args, gefunden)}</ff-dialog-rahmen>`, halter)
 
   const dialog = halter.querySelector<DialogRahmen>(DIALOG_RAHMEN_TAG)
   const tabelle = halter.querySelector<TabelleBlock>('ff-tabelle')
+  if (dialog && args.imEditor === true) verdrahteZiehen(dialog, args)
   tabelle?.addEventListener(ZEILE_AKTIVIERT_EVENT, (event) => {
     const detail = (event as CustomEvent<ZeileAktiviertDetail>).detail
-    const eintrag = eintraege[detail.rohIndex]
+    const eintrag = gefunden[detail.rohIndex]
     if (!eintrag) return
     schliesse()
     args.onUebernehmen(eintrag.anzeige, eintrag.wert, eintrag.satz)

@@ -20,13 +20,13 @@ import { istRandBaustein } from '../../core/blocks/maskenRand'
 import { rasterSpecOf } from '../../core/blocks/rasterLayout'
 import { bindbareStellenVon, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
 import { useEditorInstance } from '../../state/EditorContext'
-import { oeffneAbschnitt } from '../inspector/abschnittStand'
 import { loescheBaustein } from '../../state/loescheBaustein'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
 import { AuswahlLeiste } from './AuswahlLeiste'
 import { SpaltenBedienung } from './SpaltenBedienung'
 import { useFeldBindung } from './FeldBindung'
+ import { fensterStandVon, oeffneFensterImEditor } from './fensterStand'
 import { useBlockResize } from './useBlockResize'
 import { useLitElement } from './useLitElement'
 
@@ -88,19 +88,25 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
     suchFenster: def?.suchFenster,
     quellen,
     containerRef,
+    element,
     onSelect,
   })
 
-  // Die Lupe im Baustein ist eine Editor-Hilfe: der Wirt faengt ihren Klick ab
-  // und macht den Abschnitt auf, in dem das Fenster eingestellt wird.
+  // Die Lupe macht im Editor dasselbe Fenster auf wie beim Bediener. Der Wirt
+  // faengt ihren Klick ab und gibt dem Fenster den Weg zu seinen Eigenschaften;
+  // eingestellt wird darin, nicht daneben.
   const fensterStelle = def?.suchFenster?.stelle
-  const aufFensterStelle = (e: ReactMouseEvent<HTMLDivElement>): boolean => {
-    if (fensterStelle === undefined) return false
+  const aufFensterStelle = (e: ReactMouseEvent<HTMLDivElement>): number | null => {
+    if (fensterStelle === undefined) return null
     for (const t of e.nativeEvent.composedPath()) {
-      if (t === e.currentTarget) return false
-      if (t instanceof HTMLElement && t.matches(fensterStelle)) return true
+      if (t === e.currentTarget) return null
+      if (t instanceof HTMLElement && t.matches(fensterStelle)) {
+        // Ohne eigene Kennung ist es das eine Fenster des Bausteins.
+        const platz = Number(t.getAttribute('data-ff-eintrag'))
+        return Number.isInteger(platz) && platz >= 0 ? platz : 0
+      }
     }
-    return false
+    return null
   }
 
   const { startResize, startRasterResize } = useBlockResize(editor, blockRef, elementRef, rootRef)
@@ -122,7 +128,17 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
     <div
       ref={rootRef}
       onClick={(e) => {
-        if (aufFensterStelle(e)) oeffneAbschnitt('suchfenster')
+        const platz = aufFensterStelle(e)
+        const fenster = def?.suchFenster
+        if (platz !== null && fenster !== undefined && elementRef.current) {
+          const stand = fensterStandVon(editor, block, fenster, platz)
+          if (stand) {
+            e.stopPropagation()
+            oeffneFensterImEditor(elementRef.current, stand)
+            onSelect?.(false)
+            return
+          }
+        }
         onClick(e)
       }}
       onDoubleClick={onDoubleClick}

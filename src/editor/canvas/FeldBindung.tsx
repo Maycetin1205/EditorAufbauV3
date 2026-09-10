@@ -20,7 +20,7 @@ import type { Editor } from '../../state/Editor'
 import { wendeProps } from '../../state/propsPatch'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
-import { oeffneAbschnitt } from '../inspector/abschnittStand'
+import { fensterStandVon, oeffneFensterImEditor } from './fensterStand'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 import { oeffneDatencenter } from '../zentrale/oeffnen'
 import { FieldPicker, type PickerGruppe } from './FieldPicker'
@@ -39,6 +39,9 @@ interface FeldBindungArgs {
   quellen: readonly QuelleInReichweite[]
 
   containerRef: RefObject<HTMLDivElement | null>
+
+  // Das Lit-Element selbst, kein Ref: das Suchfenster braucht es als Anker.
+  element: HTMLElement | null
 
   onSelect?: (aufStelle: boolean) => void
 }
@@ -84,6 +87,7 @@ export function useFeldBindung({
   suchFenster,
   quellen,
   containerRef,
+  element,
   onSelect,
 }: FeldBindungArgs): {
   onClick: (e: ReactMouseEvent<HTMLDivElement>) => void
@@ -158,10 +162,16 @@ export function useFeldBindung({
     return () => el.removeEventListener('ff-listen-bind', handler)
   }, [containerRef, listenBindung])
 
-  // Die Spalten des Suchfensters stellt der Inspector; der Knopf am Spaltenkopf
-  // macht nur dessen Abschnitt auf.
+  // Eingestellt wird das Suchfenster IM Fenster; der Knopf am Spaltenkopf macht
+  // es auf, so wie die Lupe in der Zelle.
   const eigenesFenster = suchFenster?.eintraegeProp !== undefined
     && suchFenster.eintraegeProp === listenBindung?.prop
+
+  const oeffneFenster = (platz: number): void => {
+    if (!element || suchFenster === undefined) return
+    const stand = fensterStandVon(editor, block, suchFenster, platz)
+    if (stand) oeffneFensterImEditor(element, stand)
+  }
 
   const gruppen = pickerGruppen(quellen)
 
@@ -276,12 +286,12 @@ export function useFeldBindung({
               onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
             }))}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
-            weiter={!eigenesFenster ? undefined : {
+            weiter={!eigenesFenster || suchFenster === undefined ? undefined : {
               label: 'Suchfenster…',
               onOeffne: () => {
-                oeffneAbschnitt('suchfenster')
-            // Der Spaltenkopf-Picker macht zu: sonst laegen zwei Einstellflaechen
-            // fuer dieselbe Spalte uebereinander.
+                oeffneFenster(listenPicker.index)
+                // Der Spaltenkopf-Picker macht zu: sonst laege eine zweite
+                // Einstellflaeche fuer dieselbe Spalte darueber.
                 setListenPicker(null)
               },
             }}

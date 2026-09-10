@@ -107,9 +107,13 @@ export interface SuchFenster {
   hoeheKey: string
 
   // Woher die Felder des Fensters kommen: eine Quellen-Eigenschaft am Baustein
-  // oder die Bindung in diesem Schluessel des Eintrags.
+  // oder die Bindung in diesem Schluessel des Eintrags. Die Bindung im Eintrag
+  // traegt das gespeicherte Feld gleich mit; am Baustein steht es woanders.
   quelleProp?: string
   quelleKey?: string
+
+  speicherFeldProp?: string
+  speicherTitelProp?: string
 
   // Die Ueberschrift eines Eintrags-Fensters.
   titelKey?: string
