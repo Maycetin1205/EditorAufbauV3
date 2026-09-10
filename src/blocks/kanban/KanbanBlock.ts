@@ -45,7 +45,7 @@ export class KanbanBlock extends BasicBlock {
     leerText: LEER_TEXT_STANDARD,
   }
 
-  static readonly raster = { startW: 24, startH: 20, minW: 6, minH: 8 }
+  static readonly raster = { startW: 48, startH: 20, minW: 12, minH: 8 }
   static override readonly customProperties: PropertyDescription[] = [
     {
       attributeName: 'statusField',

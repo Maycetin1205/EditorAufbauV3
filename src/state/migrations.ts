@@ -10,7 +10,7 @@ import {
 import { istSeitenBaustein, istFlaechenSeite } from './pageOps'
 import { createEmptyTree, normalizeProps } from './treeOps'
 
-export const CURRENT_SCHEMA_VERSION = 6
+export const CURRENT_SCHEMA_VERSION = 7
 
 export const DEMO_CLEANUP_BEFORE_SCHEMA = 5
 
@@ -75,6 +75,23 @@ export function migrateFlatBlocks(blocks: unknown[]): BlockTree {
     tree[ROOT_ID].childIds.push(b.id)
   }
   return tree
+}
+
+// Stufe 7: das Raster wurde von 24 auf 48 Spalten verfeinert, jede gespeicherte
+// Spaltenzahl gilt also doppelt. Nur x und w: die Zeilen sind 12 px geblieben.
+// Die Zahlen aus dem Baustein (startW) stehen schon im feinen Raster, darum
+// laeuft diese Stufe VOR den aelteren, die daraus Positionen bilden.
+export function migrateRasterFeiner(tree: BlockTree): boolean {
+  let migriert = false
+  for (const node of Object.values(tree)) {
+    const alt = parseRasterPos(node.props)
+    const w = Math.min(RASTER.spalten, alt.w * 2)
+    const x = Math.max(0, Math.min(alt.x * 2, RASTER.spalten - w))
+    if (x === alt.x && w === alt.w) continue
+    node.props = { ...node.props, rasterX: x, rasterW: w }
+    migriert = true
+  }
+  return migriert
 }
 
 export function migrateRootKanbanToViewportFill(tree: BlockTree): boolean {

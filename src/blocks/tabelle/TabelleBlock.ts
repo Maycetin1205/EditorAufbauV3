@@ -63,7 +63,7 @@ export class TabelleBlock extends BasicBlock {
   }
   static override readonly customProperties = TABELLE_EIGENSCHAFTEN
 
-  static readonly raster = { startW: 24, startH: 14, minW: 6, minH: 4 }
+  static readonly raster = { startW: 48, startH: 14, minW: 12, minH: 4 }
 
   static override styles: CSSResultGroup = [BasicBlock.styles, leerStil, tabelleStil]
 

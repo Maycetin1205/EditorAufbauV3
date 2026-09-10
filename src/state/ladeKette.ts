@@ -11,6 +11,7 @@ import {
   migrateFlowToRaster,
   migratePopupInhaltAufRaster,
   migrateRasterBreitenReparatur,
+  migrateRasterFeiner,
   migrateRasterHoehenReset,
   migrateRootKanbanToViewportFill,
   putzeAlteKartenDemos,
@@ -158,6 +159,10 @@ export function baumAusRohdaten(parsed: {
 
   const schemaVersion = typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1
   let schemaAdvanced = false
+  // Ausser der Reihe zuerst: Stufe 7 rechnet die gespeicherten Spaltenzahlen in
+  // das feine Raster um. Die aelteren Stufen bilden ihre Positionen aus den
+  // Bausteinen, die schon im feinen Raster stehen, und wuerden doppelt zaehlen.
+  if (schemaVersion < 7) schemaAdvanced = migrateRasterFeiner(tree) || schemaAdvanced
   if (schemaVersion < 2) schemaAdvanced = migrateRootKanbanToViewportFill(tree) || schemaAdvanced
   if (schemaVersion < 3) schemaAdvanced = migrateFlowToRaster(tree) || schemaAdvanced
 

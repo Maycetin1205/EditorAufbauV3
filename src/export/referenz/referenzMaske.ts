@@ -96,7 +96,7 @@ export function referenzBaum(): BlockTree {
       't1', 't2', 'f1', 'b1', 'c1', 'k1', 'n1', 'tx1', 'bi1', 'd1', 'tr1', 'p1',
     ]),
     t1: knoten('t1', 'erfassung', ROOT_ID, {
-      rasterX: 0, rasterY: 3, rasterW: 8, rasterH: 22,
+      rasterX: 0, rasterY: 3, rasterW: 16, rasterH: 22,
       source: 'q-pos',
       [WEITERE_QUELLEN_PROP]: [{ quelleId: 'q-art', partnerId: '', keyPairs: [] }],
       spalten: [
@@ -117,7 +117,7 @@ export function referenzBaum(): BlockTree {
       loeschbar: 'ja',
     }),
     t2: knoten('t2', 'tabelle', ROOT_ID, {
-      rasterX: 10, rasterY: 25, rasterW: 14, rasterH: 12,
+      rasterX: 20, rasterY: 25, rasterW: 28, rasterH: 12,
       source: 'q-pos',
       spalten: [
         { kennung: 'sp-art', titel: 'ArtNr', feld: '18_25' },
@@ -125,20 +125,20 @@ export function referenzBaum(): BlockTree {
       ],
     }),
     f1: knoten('f1', 'formfeld', ROOT_ID, {
-      rasterX: 5, rasterY: 0, rasterW: 8, rasterH: 3,
+      rasterX: 10, rasterY: 0, rasterW: 16, rasterH: 3,
       fieldType: 'text',
       placeholder: 'Bezeichnung',
       source: 'q-pos',
       valueField: '45_60',
     }),
     b1: knoten('b1', 'button', ROOT_ID, {
-      rasterX: 13, rasterY: 0, rasterW: 4, rasterH: 3, label: 'Schreiben',
+      rasterX: 26, rasterY: 0, rasterW: 8, rasterH: 3, label: 'Schreiben',
     }),
     c1: knoten('c1', 'card', ROOT_ID, {
-      rasterX: 0, rasterY: 25, rasterW: 6, rasterH: 12, heading: 'Karte', headingField: '45_60',
+      rasterX: 0, rasterY: 25, rasterW: 12, rasterH: 12, heading: 'Karte', headingField: '45_60',
     }),
     k1: knoten('k1', 'kanban', ROOT_ID, {
-      rasterX: 9, rasterY: 3, rasterW: 15, rasterH: 22, source: 'q-pos', statusField: '18_25',
+      rasterX: 18, rasterY: 3, rasterW: 30, rasterH: 22, source: 'q-pos', statusField: '18_25',
     }, ['ks1']),
     ks1: knoten('ks1', 'kanban-spalte', 'k1', {
       heading: 'Offen', wert: 'ART-B', variant: 'info',
@@ -146,10 +146,10 @@ export function referenzBaum(): BlockTree {
     kz1: knoten('kz1', 'kanban-zimmer', 'ks1', { heading: 'Zimmer 1', wert: 'Z1' }),
     n1: knoten('n1', 'navi', ROOT_ID, {}, ['ne1']),
     ne1: knoten('ne1', 'navi-eintrag', 'n1', {}),
-    tx1: knoten('tx1', 'text', ROOT_ID, { rasterX: 17, rasterY: 0, rasterW: 7, rasterH: 3 }),
-    bi1: knoten('bi1', 'bild', ROOT_ID, { rasterX: 6, rasterY: 25, rasterW: 3, rasterH: 12 }),
-    d1: knoten('d1', 'datum', ROOT_ID, { rasterX: 0, rasterY: 0, rasterW: 5, rasterH: 3 }),
-    tr1: knoten('tr1', 'trenner', ROOT_ID, { rasterX: 9, rasterY: 25, rasterW: 1, rasterH: 12 }),
+    tx1: knoten('tx1', 'text', ROOT_ID, { rasterX: 34, rasterY: 0, rasterW: 14, rasterH: 3 }),
+    bi1: knoten('bi1', 'bild', ROOT_ID, { rasterX: 12, rasterY: 25, rasterW: 6, rasterH: 12 }),
+    d1: knoten('d1', 'datum', ROOT_ID, { rasterX: 0, rasterY: 0, rasterW: 10, rasterH: 3 }),
+    tr1: knoten('tr1', 'trenner', ROOT_ID, { rasterX: 18, rasterY: 25, rasterW: 2, rasterH: 12 }),
     p1: knoten('p1', 'popup', ROOT_ID, { name: 'Hinweis' }, ['tx2']),
     tx2: knoten('tx2', 'text', 'p1', {}),
   }

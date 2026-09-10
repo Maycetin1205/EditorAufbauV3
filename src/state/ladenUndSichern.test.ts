@@ -128,6 +128,38 @@ test('eine aufgeloeste Zeile meldet nichts — ihr Inhalt bleibt an Ort und Stel
   expect(meldungsText()).toBe('')
 })
 
+test('ein Stand aus dem groben Raster kommt im feinen doppelt so breit an', () => {
+  const tree = {
+    ...wurzelBaum(['t1', 'b1']),
+    t1: {
+      id: 't1', type: 'tabelle', parentId: ROOT_ID, childIds: [],
+      props: { rasterX: 0, rasterY: 3, rasterW: 24, rasterH: 14 },
+    },
+    b1: {
+      id: 'b1', type: 'button', parentId: ROOT_ID, childIds: [],
+      props: { rasterX: 20, rasterY: 0, rasterW: 4, rasterH: 2 },
+    },
+  }
+  speicher.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, tree, selectedId: null }))
+
+  const geladen = loadFromStorage()
+  expect(geladen?.tree.t1?.props).toMatchObject({ rasterX: 0, rasterW: 48, rasterY: 3, rasterH: 14 })
+  expect(geladen?.tree.b1?.props).toMatchObject({ rasterX: 40, rasterW: 8, rasterY: 0, rasterH: 2 })
+})
+
+test('ein Stand im feinen Raster wird nicht noch einmal verdoppelt', () => {
+  const props = { rasterX: 40, rasterY: 0, rasterW: 8, rasterH: 2 }
+  const tree = {
+    ...wurzelBaum(['b1']),
+    b1: { id: 'b1', type: 'button', parentId: ROOT_ID, childIds: [], props },
+  }
+  speicher.setItem(STORAGE_KEY, JSON.stringify({
+    schemaVersion: CURRENT_SCHEMA_VERSION, tree, selectedId: null,
+  }))
+
+  expect(loadFromStorage()?.tree.b1?.props).toMatchObject(props)
+})
+
 interface TestEintrag { id: string; name?: string }
 
 const TEST_BAUPLAN: VorlagenBauplan<TestEintrag> = {

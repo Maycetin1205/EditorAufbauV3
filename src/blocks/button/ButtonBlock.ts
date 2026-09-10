@@ -23,7 +23,7 @@ export class ButtonBlock extends BasicBlock {
 
   static readonly blockEvents = [{ key: 'onClick', name: 'Klick' }]
 
-  static readonly raster = { startW: 4, startH: 2, minW: 2, minH: 2 }
+  static readonly raster = { startW: 8, startH: 2, minW: 4, minH: 2 }
 
   static override readonly customProperties: PropertyDescription[] = []
 

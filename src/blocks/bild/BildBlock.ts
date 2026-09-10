@@ -12,7 +12,7 @@ export class BildBlock extends BasicBlock {
   static readonly category: BlockCategory = 'anzeige'
   static readonly defaultProps = { quelle: '' }
 
-  static readonly raster = { startW: 6, startH: 6, minW: 1, minH: 1 }
+  static readonly raster = { startW: 12, startH: 6, minW: 2, minH: 1 }
 
   static override readonly customProperties: PropertyDescription[] = [
     {

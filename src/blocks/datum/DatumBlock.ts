@@ -15,7 +15,7 @@ export class DatumBlock extends BasicBlock {
   static readonly defaultProps = {}
   static override readonly customProperties: PropertyDescription[] = []
 
-  static readonly raster = { startW: 9, startH: 2, minW: 5, minH: 2 }
+  static readonly raster = { startW: 18, startH: 2, minW: 10, minH: 2 }
 
   static override styles = [
     BasicBlock.styles,

@@ -22,7 +22,7 @@ export class TrennerBlock extends BasicBlock {
   static readonly defaultProps = { width: 'fill', richtung: RICHTUNG_STANDARD }
   static readonly resizableWidth = false
 
-  static readonly raster = { startW: 24, startH: 1, minW: 1, minH: 1 }
+  static readonly raster = { startW: 48, startH: 1, minW: 2, minH: 1 }
   static override readonly customProperties: PropertyDescription[] = [
     {
       attributeName: 'richtung',

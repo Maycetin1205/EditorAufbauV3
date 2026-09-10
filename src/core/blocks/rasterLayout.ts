@@ -1,7 +1,7 @@
 // Das Raster der Maskenflaeche: Spalten, Zeilen und der Platz eines Bausteins darin.
 import { styleToCss } from './styleCss'
 
-export const RASTER = { spalten: 24, spaltePx: 40, zeilePx: 12, gapPx: 8 } as const
+export const RASTER = { spalten: 48, spaltePx: 20, zeilePx: 12, gapPx: 4 } as const
 
 export interface RasterPos {
   x: number
@@ -19,9 +19,9 @@ export interface RasterSpec {
 }
 
 const RASTER_FALLBACK: RasterSpec = {
-  startW: 6,
+  startW: 12,
   startH: 3,
-  minW: 1,
+  minW: 2,
   minH: 1,
   breiteZiehbar: true,
 }

@@ -115,7 +115,7 @@ export class FormFeldBlock extends BasicBlock {
     darstellung: 'standard',
   }
 
-  static readonly raster = { startW: 6, startH: 2, minW: 2, minH: 2 }
+  static readonly raster = { startW: 12, startH: 2, minW: 4, minH: 2 }
 
   static override readonly customProperties = FELD_EIGENSCHAFTEN
 

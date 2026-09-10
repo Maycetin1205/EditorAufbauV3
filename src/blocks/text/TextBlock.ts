@@ -76,7 +76,7 @@ export class TextBlock extends BasicBlock {
     textField: '',
   }
 
-  static readonly raster = { startW: 6, startH: 2, minW: 1, minH: 1 }
+  static readonly raster = { startW: 12, startH: 2, minW: 2, minH: 1 }
 
   static override readonly customProperties: PropertyDescription[] = [
     {
