@@ -28,14 +28,6 @@ const AENDERBAR: EintragsSchalter = {
 export const ERFASSUNG_SPALTEN_BINDUNG: ListenBindung = {
   ...SPALTEN_BINDUNG,
 
-  // Ohne Einstellung rechnet sich das Fenster bei jedem Oeffnen aus den
-  // Spalten derselben Hilfsquelle.
-  eintragsUnterFenster: {
-    label: 'Suchfenster…',
-    hinweis: 'Ohne Einstellung nimmt es die Spalten derselben Hilfsquelle.',
-    eigenschaft: 'fensterDialogIndex',
-  },
-
   eintragsSchalter: (SPALTEN_BINDUNG.eintragsSchalter ?? [])
     .flatMap((s) => (s.key === 'summe' ? [s, AENDERBAR] : [s])),
 

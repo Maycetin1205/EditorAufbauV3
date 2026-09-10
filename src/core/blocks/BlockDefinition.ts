@@ -92,6 +92,38 @@ export interface SatzWahl {
 
 export type QuellenFaehigkeit = boolean | { wenn: PropertyVisibilityCondition }
 
+// Das Nachschlage-Fenster einer Stelle: WO seine Spalten und sein Mass stehen.
+// Eingestellt wird es im Inspector, der Baustein haelt nur die Eigenschaften und
+// liest sie beim Oeffnen.
+export interface SuchFenster {
+  // Ohne Angabe hat der Baustein EIN Fenster in seinen eigenen Eigenschaften.
+  // Mit ihr hat jeder Eintrag dieser Liste eines (die Spalten der Erfassung).
+  eintraegeProp?: string
+
+  spaltenKey: string
+
+  breiteKey: string
+
+  hoeheKey: string
+
+  // Woher die Felder des Fensters kommen: eine Quellen-Eigenschaft am Baustein
+  // oder die Bindung in diesem Schluessel des Eintrags.
+  quelleProp?: string
+  quelleKey?: string
+
+  // Die Ueberschrift eines Eintrags-Fensters.
+  titelKey?: string
+
+  // Was ohne gestellte Spalten geschieht, in Worten fuer den Bauer.
+  automatik: string
+
+  // CSS-Auswahl der Stelle im Baustein, deren Klick die Sektion aufmacht (die
+  // Lupe). Der Wirt faengt den Klick ab; der Baustein zeichnet dafuer nichts.
+  stelle?: string
+
+  wenn?: PropertyVisibilityCondition
+}
+
 // Die Faehigkeit „Erfassungszeile": der Baustein nimmt neue Zeilen entgegen,
 // bevor sie im ERP existieren. Editor, Export und Laufzeit lesen dieselbe
 // Deklaration.
@@ -200,6 +232,8 @@ export interface BlockDefinition {
   kannErfassen?: ErfassungsFaehigkeit
 
   kannLoeschen?: ErfassungsFaehigkeit
+
+  suchFenster?: SuchFenster
 
   // Gesetzt heisst: dieser Baustein kann einer Kette die GEAENDERTEN Zeilen
   // geben. Welcher das ist, steht damit in der Registry und nicht im Ketten-Code.

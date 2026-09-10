@@ -1,4 +1,4 @@
-// Eine Eingabestelle in einer Zelle: dasselbe Feld, ob die Zeile neu oder gebucht ist.
+// Die EINE Eingabestelle mit Vorschlagsliste: Erfassungszelle und Formularfeld.
 import { css, html, nothing, type TemplateResult } from 'lit'
 import { vorschlagListeTpl, type Vorschlag } from './vorschlagListe'
 
@@ -6,28 +6,40 @@ import { vorschlagListeTpl, type Vorschlag } from './vorschlagListe'
 // geschrieben. Automatisch = aus einem gewaehlten Satz gefuellt.
 export type ZellenZustand = 'ruhig' | 'geaendert' | 'automatisch'
 
-export interface ZellenEingabeLage {
+export interface EingabeStelleLage {
   wert: string
 
+  // Beschriftung fuer die Vorlesehilfe; die Zelle nimmt ihren Spaltentitel.
   titel: string
 
-  // Leer heisst keiner; er erscheint erst, wenn der Bediener in der Zeile steht.
+  // Leer heisst keiner. In der Zelle erscheint er erst, wenn der Bediener in der
+  // Zeile steht; das Formularfeld zeichnet seinen eigenen darueber.
   platzhalter: string
 
-  // Der Platz in der VOLLEN Spaltenliste, nicht die Nummer des gezeichneten
-  // Feldes: eine versteckte Spalte davor traefe sonst die falsche Zelle.
-  platz: number
+  // Die Klasse des Eingabefeldes: die Zelle traegt darin ihren Zustand, das
+  // Formularfeld sein `ctrl`.
+  klasse: string
 
-  zustand: ZellenZustand
+  // Die Klasse des Halters, an dem die Liste haengt. Er braucht
+  // `position: relative`; das steht beim jeweiligen Baustein.
+  halterKlasse: string
+
+  // Nur die Zelle: der Platz in der VOLLEN Spaltenliste, nicht die Nummer des
+  // gezeichneten Feldes — eine versteckte Spalte davor traefe sonst die falsche
+  // Zelle.
+  platz?: number
 
   vorschlaege: readonly Vorschlag[]
 
   marke: number
 
-  listeNachOben: boolean
+  listeNachOben?: boolean
+
+  // Was im Feld mit drinsteht: die Lupe des Formularfelds.
+  neben?: TemplateResult
 }
 
-export interface ZellenEingabeHandeln {
+export interface EingabeStelleHandeln {
   tippen: (text: string) => void
 
   taste: (e: KeyboardEvent) => void
@@ -39,28 +51,35 @@ export interface ZellenEingabeHandeln {
   setzeMarke: (index: number) => void
 }
 
-const KLASSE: Record<ZellenZustand, string> = {
+const ZELL_KLASSE: Record<ZellenZustand, string> = {
   ruhig: 'zell-eingabe',
   geaendert: 'zell-eingabe geaendert',
   automatisch: 'zell-eingabe auto',
 }
 
-export function zellenEingabeTpl(
-  lage: ZellenEingabeLage,
-  tun: ZellenEingabeHandeln,
+export function zellenKlasse(zustand: ZellenZustand): string {
+  return ZELL_KLASSE[zustand]
+}
+
+export function eingabeStelleTpl(
+  lage: EingabeStelleLage,
+  tun: EingabeStelleHandeln,
 ): TemplateResult {
-  return html`<div class=${lage.listeNachOben ? 'zell-halter nach-oben' : 'zell-halter'}>
+  return html`<div
+    class=${lage.listeNachOben === true ? `${lage.halterKlasse} nach-oben` : lage.halterKlasse}
+  >
     <input
-      class=${KLASSE[lage.zustand]}
+      class=${lage.klasse}
       type="text"
-      data-spalte=${lage.platz}
-      aria-label=${lage.titel}
-      placeholder=${lage.platzhalter}
+      data-spalte=${lage.platz ?? nothing}
+      aria-label=${lage.titel !== '' ? lage.titel : nothing}
+      placeholder=${lage.platzhalter !== '' ? lage.platzhalter : nothing}
       .value=${lage.wert}
       @input=${(e: Event) => tun.tippen((e.target as HTMLInputElement).value)}
       @keydown=${(e: KeyboardEvent) => tun.taste(e)}
       @blur=${(e: Event) => tun.verlassen((e.target as HTMLInputElement).value)}
     />
+    ${lage.neben ?? nothing}
     ${lage.vorschlaege.length === 0 ? nothing : vorschlagListeTpl({
       eintraege: lage.vorschlaege,
       marke: lage.marke,

@@ -1,5 +1,5 @@
 // Baustein Erfassung: eine Tabelle, die neue Zeilen annimmt, gebuchte aendert und loescht.
-import { html, nothing, type CSSResultGroup, type PropertyValues, type TemplateResult } from 'lit'
+import { nothing, type CSSResultGroup, type PropertyValues } from 'lit'
 import { property } from 'lit/decorators.js'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type {
@@ -7,6 +7,7 @@ import type {
   GeschriebeneZeile,
   Lieferung,
   ListenBindung,
+  SuchFenster,
   VormerkArt,
 } from '../../core/blocks/BlockDefinition'
 import { SE_FOKUS_EVENT } from '../../softengine/bridge'
@@ -16,14 +17,9 @@ import { vorschlagStil } from '../shared/vorschlagListe'
 import { meldeVormerkungen } from '../shared/vormerkStand'
 import { geheInZelle, zellenEingabeStil, zellenFelder } from '../shared/zellenEingabe'
 import { OHNE_SCHMUCK, type Unterzeilen, type Zeilenschmuck } from '../shared/zeilenNaehte'
-import {
-  FENSTER_HOEHE,
-  fensterBreiteFuer,
-  schliesseNachschlagenFuer,
-  spaltenStellenTpl,
-} from '../tabelle/nachschlagen'
+import { schliesseNachschlagenFuer } from '../tabelle/nachschlagen'
 import { hatSatzNummer } from '../tabelle/seRuntime'
-import { standardSpalten, type Spalte } from '../tabelle/spalten'
+import { standardSpalten } from '../tabelle/spalten'
 import { TabelleBlock } from '../tabelle/TabelleBlock'
 import { ErfassungsAnschluss } from './erfassungsAnschluss'
 import { erfassungsZeileFuer, type ErfassungsWirt } from './erfassungsBedienung'
@@ -44,7 +40,7 @@ import {
   type ErfassungsSpalte,
 } from './erfassungsSpalte'
 import { erfassungStil } from './erfassungStil'
-import { fensterSpaltenIn, type ErfassungsUmfeld } from './erfassungsZeile'
+import type { ErfassungsUmfeld } from './erfassungsZeile'
 import { ZeilenBearbeitung } from './zeilenBearbeitung'
 import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 
@@ -65,6 +61,18 @@ export class ErfassungBlock extends TabelleBlock {
   }
 
   static readonly haeltGesendete = true
+
+  // Jede Spalte mit Hilfsquelle hat ihr eigenes Suchfenster (F4); eingestellt
+  // wird es im Inspector.
+  static readonly suchFenster: SuchFenster = {
+    eintraegeProp: 'spalten',
+    titelKey: 'titel',
+    quelleKey: 'fuellFeld',
+    spaltenKey: 'fensterSpalten',
+    breiteKey: 'fensterBreite',
+    hoeheKey: 'fensterHoehe',
+    automatik: 'Ohne Spalten nimmt das Fenster die Spalten derselben Hilfsquelle.',
+  }
 
   static override readonly listenBindung: ListenBindung = ERFASSUNG_SPALTEN_BINDUNG
 
@@ -93,8 +101,6 @@ export class ErfassungBlock extends TabelleBlock {
   override spalten: ErfassungsSpalte[] = standardSpalten()
 
   @property() loeschbar = 'nein'
-
-  @property({ attribute: false }) fensterDialogIndex = -1
 
   private readonly _erfassung = new ErfassungsAnschluss()
 
@@ -292,43 +298,6 @@ export class ErfassungBlock extends TabelleBlock {
         })
       },
     }
-  }
-
-  private aendereSpalte(index: number, teil: Partial<ErfassungsSpalte>): void {
-    const alt = this.spaltenListe()
-    if (alt[index] === undefined) return
-    this.aendere(alt.map((s, i) => (i === index ? { ...s, ...teil } : s)))
-  }
-
-  private fensterDialogTpl(index: number): TemplateResult {
-    const spalte = this.spaltenListe()[index]
-    const spalten = fensterSpaltenIn(this.erfassungsUmfeld(), index)
-    return spaltenStellenTpl({
-      titel: spalte?.titel ?? '',
-      spalten,
-      breite: spalte?.fensterBreite ?? fensterBreiteFuer(spalten.length),
-      hoehe: spalte?.fensterHoehe ?? FENSTER_HOEHE,
-      onGroesse: (detail) => {
-        const schluessel = detail.achse === 'breite' ? 'fensterBreite' : 'fensterHoehe'
-        // „standard" heisst zurueck zur Automatik: der Wert wird geloescht,
-        // nicht auf eine Zahl gesetzt.
-        this.aendereSpalte(index, {
-          [schluessel]: detail.geste === 'standard' ? undefined : detail.wert,
-        })
-      },
-      onAendern: (neu) => this.aendereSpalte(index, { fensterSpalten: neu as Spalte[] }),
-      // Die Feldwahl bleibt stumm: Fenster- und Tabellenspalten heissen beide
-      // `spalten`, ein Klick traefe die Spalte der Tabelle.
-      onFeldWahl: () => {},
-      onSchliessen: () => { this.fensterDialogIndex = -1 },
-    })
-  }
-
-  override render(): TemplateResult {
-    const dialog = this.imEditor && this.spaltenListe()[this.fensterDialogIndex] !== undefined
-      ? this.fensterDialogTpl(this.fensterDialogIndex)
-      : nothing
-    return html`${super.render()}${dialog}`
   }
 
   // Fokus aus dem ERP geht in die Erfassungszeile; ohne Antwort sucht die

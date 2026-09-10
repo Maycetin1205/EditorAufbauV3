@@ -17,6 +17,7 @@ import { AuswahlFolgeSektion } from './AuswahlFolgeSektion'
 import { PropControl } from './PropControl'
 import { QuellenListe } from './QuellenListe'
 import { RechnungSektion } from './RechnungSektion'
+import { SuchfensterSektion } from './SuchfensterSektion'
 
 interface InspectorZeile {
   row?: string
@@ -135,6 +136,12 @@ export function Inspector() {
 
   const hatAktionen = def.blockEvents !== undefined && def.blockEvents.length > 0
 
+  // Die Sektion steht nur da, wo wirklich nachgeschlagen wird.
+  const suchFenster = def.suchFenster !== undefined
+    && propertySichtbar(def.suchFenster.wenn, block.props)
+    ? def.suchFenster
+    : undefined
+
   return (
     <Panel
       titel={blockName}
@@ -191,6 +198,8 @@ export function Inspector() {
           </div>
         )}
 
+        {suchFenster && <SuchfensterSektion block={block} fenster={suchFenster} />}
+
         {darfAuswahlFolgen(block) && <AuswahlFolgeSektion block={block} />}
 
         {hatAktionen && (
@@ -203,7 +212,7 @@ export function Inspector() {
         {kannRechnen(block) && <RechnungSektion block={block} />}
 
         {generalProps.length === 0 && !showDataSection && !hatAktionen
-          && !darfAuswahlFolgen(block) && (
+          && suchFenster === undefined && !darfAuswahlFolgen(block) && (
             // Sonst steht der Bediener vor einer leeren Flaeche und weiss nicht,
             // ob der Baustein nichts kann oder der Editor kaputt ist.
           <p className="text-ui text-matt">Keine Einstellungen.</p>

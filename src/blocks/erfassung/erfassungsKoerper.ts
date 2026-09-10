@@ -1,7 +1,7 @@
 // Zeichnet, was die Erfassung an die Tabelle haengt: Tippzelle, Kreuz, erfasste Zeilen.
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
-import { zellenEingabeTpl } from '../shared/zellenEingabe'
+import { eingabeStelleTpl, zellenKlasse } from '../shared/zellenEingabe'
 import { alsZahl } from '../tabelle/sortierung'
 import type { Spalte } from '../tabelle/spalten'
 import type { ZeilenBearbeitung } from './zeilenBearbeitung'
@@ -13,15 +13,15 @@ export function tippZelleTpl(
   platz: number,
   spalte: Spalte,
 ): TemplateResult {
-  return html`<div class="tippbar" role="cell">${zellenEingabeTpl({
+  return html`<div class="tippbar" role="cell">${eingabeStelleTpl({
     wert: stand.zellWert(rohIndex, platz),
     titel: spalte.titel,
     platzhalter: '',
+    klasse: zellenKlasse(stand.istGeaendert(rohIndex, platz) ? 'geaendert' : 'ruhig'),
+    halterKlasse: 'zell-halter',
     platz,
-    zustand: stand.istGeaendert(rohIndex, platz) ? 'geaendert' : 'ruhig',
     vorschlaege: [],
     marke: 0,
-    listeNachOben: false,
   }, {
     tippen: (text) => stand.tippeZelle(rohIndex, platz, text),
     taste: (e) => stand.tasteZelle(rohIndex, platz, e),

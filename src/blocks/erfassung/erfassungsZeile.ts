@@ -2,7 +2,7 @@
 import { html, nothing, type TemplateResult } from 'lit'
 import { styleMap } from 'lit/directives/style-map.js'
 import type { Vorschlag } from '../shared/vorschlagListe'
-import { zellenEingabeTpl } from '../shared/zellenEingabe'
+import { eingabeStelleTpl, zellenKlasse } from '../shared/zellenEingabe'
 import { fensterSpaltenOder } from '../tabelle/nachschlagen'
 import { ZELLE_PLATZHALTER, type Spalte } from '../tabelle/spalten'
 import type { ErfassungsSpalte } from './erfassungsSpalte'
@@ -56,12 +56,13 @@ export function erfassungsZeileTpl(
       // Eine freie Zelle hat nichts nachzuschlagen; ihre Liste bliebe leer.
       const frei = zellenzielVon(spalte, lage.quelleId).art === 'frei'
       const liste = !frei && lage.tippSpalte === platz
-      return html`<div role="cell">${zellenEingabeTpl({
+      return html`<div role="cell">${eingabeStelleTpl({
         wert: lage.wert(platz),
         titel: spalte.titel,
         platzhalter: spalte.titel,
+        klasse: zellenKlasse(lage.automatisch(platz) ? 'automatisch' : 'ruhig'),
+        halterKlasse: 'zell-halter',
         platz,
-        zustand: lage.automatisch(platz) ? 'automatisch' : 'ruhig',
         vorschlaege: liste ? lage.vorschlaege : [],
         marke: lage.marke,
         listeNachOben: lage.listeNachOben,

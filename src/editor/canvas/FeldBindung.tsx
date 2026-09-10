@@ -11,15 +11,16 @@ import {
   listeLesen,
   type BindableSpot,
   type ListenBindung,
+  type SuchFenster,
 } from '../../core/blocks/BlockDefinition'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
-import { getBlockDefinition } from '../../core/blocks/blockRegistry'
 import { quellenKennung } from '../../core/data/dataSources'
 import { paarKlartext, type QuelleInReichweite } from '../../core/data/sourceLinks'
 import type { Editor } from '../../state/Editor'
 import { wendeProps } from '../../state/propsPatch'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
+import { oeffneAbschnitt } from '../inspector/abschnittStand'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 import { oeffneDatencenter } from '../zentrale/oeffnen'
 import { FieldPicker, type PickerGruppe } from './FieldPicker'
@@ -32,6 +33,8 @@ interface FeldBindungArgs {
   selected: boolean | undefined
   bindableSpots: readonly BindableSpot[]
   listenBindung: ListenBindung | undefined
+
+  suchFenster: SuchFenster | undefined
 
   quellen: readonly QuelleInReichweite[]
 
@@ -78,6 +81,7 @@ export function useFeldBindung({
   selected,
   bindableSpots,
   listenBindung,
+  suchFenster,
   quellen,
   containerRef,
   onSelect,
@@ -154,22 +158,10 @@ export function useFeldBindung({
     return () => el.removeEventListener('ff-listen-bind', handler)
   }, [containerRef, listenBindung])
 
-  // Das Unterfenster zeichnet der BAUSTEIN, nicht der Editor: es lebt in seinem
-  // Schatten-DOM. Der Editor merkt sich nur, welcher Eintrag dran ist, und der
-  // Effekt traegt es am Element ein. Der Auftrag ist ein frisches Objekt je Klick,
-  // sonst liefe der Effekt beim zweiten Oeffnen derselben Spalte nicht wieder.
-  const [unterFenster, setUnterFenster] = useState<{ index: number } | null>(null)
-
-  useEffect(() => {
-    if (unterFenster === null) return
-    const unter = listenBindung?.eintragsUnterFenster
-    const tag = getBlockDefinition(block.type)?.tagName
-    if (unter === undefined || tag === undefined) return
-    const el = containerRef.current?.querySelector(
-      tag,
-    ) as (HTMLElement & Record<string, unknown>) | null
-    if (el) el[unter.eigenschaft] = unterFenster.index
-  }, [block.type, containerRef, listenBindung, unterFenster])
+  // Die Spalten des Suchfensters stellt der Inspector; der Knopf am Spaltenkopf
+  // macht nur dessen Abschnitt auf.
+  const eigenesFenster = suchFenster?.eintraegeProp !== undefined
+    && suchFenster.eintraegeProp === listenBindung?.prop
 
   const gruppen = pickerGruppen(quellen)
 
@@ -284,11 +276,10 @@ export function useFeldBindung({
               onSchalte: (an) => schreibeInEintrag(listenPicker, { [s.key]: an }),
             }))}
             current={String(eintrag[listenBindung.feldKey] ?? '')}
-            weiter={listenBindung.eintragsUnterFenster === undefined ? undefined : {
-              label: listenBindung.eintragsUnterFenster.label,
-              hinweis: listenBindung.eintragsUnterFenster.hinweis,
+            weiter={!eigenesFenster ? undefined : {
+              label: 'Suchfenster…',
               onOeffne: () => {
-                setUnterFenster({ index: listenPicker.index })
+                oeffneAbschnitt('suchfenster')
             // Der Spaltenkopf-Picker macht zu: sonst laegen zwei Einstellflaechen
             // fuer dieselbe Spalte uebereinander.
                 setListenPicker(null)

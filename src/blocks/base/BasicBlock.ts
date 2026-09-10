@@ -55,6 +55,7 @@ function beschreibe(BlockClass: BlockComponentStatic): void {
     kannErfassen: BlockClass.kannErfassen,
     aenderungsSchluessel: BlockClass.aenderungsSchluessel,
     kannLoeschen: BlockClass.kannLoeschen,
+    suchFenster: BlockClass.suchFenster,
     haeltGesendete: BlockClass.haeltGesendete,
     bindableSpots: BlockClass.bindableSpots,
     actionValueSpots: BlockClass.actionValueSpots,

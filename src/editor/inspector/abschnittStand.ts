@@ -1,5 +1,5 @@
 // Welche Abschnitte des Inspectors aufgeklappt sind — eine Voreinstellung des Arbeitsplatzes.
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Der Stand geht nicht in den Baum, nicht in die Historie und nicht in den
 // Export, darum ein eigener Schluessel.
@@ -12,6 +12,7 @@ export type AbschnittName =
   | 'auswahlFolgen'
   | 'aktionen'
   | 'rechnung'
+  | 'suchfenster'
 
 // Zugeklappt ist die Vorgabe: offen ist der Inspector einer Tabelle laenger als
 // das Fenster.
@@ -38,24 +39,50 @@ function lese(): Record<string, boolean> {
   }
 }
 
-function merke(name: AbschnittName, offen: boolean): void {
+// Der Stand liegt WAEHREND der Sitzung im Speicher des Fensters; der
+// Browserspeicher ist nur sein Gedaechtnis ueber die Sitzung hinaus. Sonst
+// oeffnete `oeffneAbschnitt` nichts, wo der Speicher gesperrt ist.
+let stand: Record<string, boolean> | null = null
+
+function alle(): Record<string, boolean> {
+  if (stand === null) stand = lese()
+  return stand
+}
+
+const horcher = new Set<() => void>()
+
+function setze(name: AbschnittName, offen: boolean): void {
+  alle()[name] = offen
   try {
-    if (typeof localStorage === 'undefined') return
-    localStorage.setItem(SCHLUESSEL, JSON.stringify({ ...lese(), [name]: offen }))
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(SCHLUESSEL, JSON.stringify(alle()))
+    }
   } catch {
   // Nicht merken zu koennen ist kein Grund, das Zuklappen scheitern zu lassen.
   }
+  for (const melde of [...horcher]) melde()
 }
 
-// Liefert den Stand eines Abschnitts und den Schalter dazu. Gelesen wird beim
-// Anmelden, also auch beim Wechsel des Bausteins.
-export function useAbschnitt(name: AbschnittName): [boolean, (offen: boolean) => void] {
-  const [offen, setOffen] = useState<boolean>(() => lese()[name] ?? VORGABE)
+// Von aussen aufmachen: die Lupe am Baustein und der Knopf am Spaltenkopf
+// zeigen auf ihren Abschnitt, statt ein eigenes Fenster zu bauen.
+export function oeffneAbschnitt(name: AbschnittName): void {
+  setze(name, true)
+}
 
-  const schalte = useCallback((neu: boolean) => {
-    setOffen(neu)
-    merke(name, neu)
+// Liefert den Stand eines Abschnitts und den Schalter dazu.
+export function useAbschnitt(name: AbschnittName): [boolean, (offen: boolean) => void] {
+  const [offen, setOffen] = useState<boolean>(() => alle()[name] ?? VORGABE)
+
+  useEffect(() => {
+    const melde = (): void => setOffen(alle()[name] ?? VORGABE)
+    horcher.add(melde)
+    melde()
+    return () => {
+      horcher.delete(melde)
+    }
   }, [name])
+
+  const schalte = useCallback((neu: boolean) => setze(name, neu), [name])
 
   return [offen, schalte]
 }

@@ -1,5 +1,12 @@
 // Der Wirt eines Bausteins auf der Leinwand: Auswahl, Anfasser, Editor-Hilfen.
-import { useLayoutEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import type { BlockNode } from '../../core/blocks/BlockData'
@@ -13,6 +20,7 @@ import { istRandBaustein } from '../../core/blocks/maskenRand'
 import { rasterSpecOf } from '../../core/blocks/rasterLayout'
 import { bindbareStellenVon, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
 import { useEditorInstance } from '../../state/EditorContext'
+import { oeffneAbschnitt } from '../inspector/abschnittStand'
 import { loescheBaustein } from '../../state/loescheBaustein'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
@@ -77,10 +85,23 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
     selected,
     bindableSpots,
     listenBindung: def?.listenBindung,
+    suchFenster: def?.suchFenster,
     quellen,
     containerRef,
     onSelect,
   })
+
+  // Die Lupe im Baustein ist eine Editor-Hilfe: der Wirt faengt ihren Klick ab
+  // und macht den Abschnitt auf, in dem das Fenster eingestellt wird.
+  const fensterStelle = def?.suchFenster?.stelle
+  const aufFensterStelle = (e: ReactMouseEvent<HTMLDivElement>): boolean => {
+    if (fensterStelle === undefined) return false
+    for (const t of e.nativeEvent.composedPath()) {
+      if (t === e.currentTarget) return false
+      if (t instanceof HTMLElement && t.matches(fensterStelle)) return true
+    }
+    return false
+  }
 
   const { startResize, startRasterResize } = useBlockResize(editor, blockRef, elementRef, rootRef)
 
@@ -100,7 +121,10 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
   return (
     <div
       ref={rootRef}
-      onClick={onClick}
+      onClick={(e) => {
+        if (aufFensterStelle(e)) oeffneAbschnitt('suchfenster')
+        onClick(e)
+      }}
       onDoubleClick={onDoubleClick}
       data-block-id={block.id}
       style={{

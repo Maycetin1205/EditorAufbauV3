@@ -19,8 +19,6 @@ import {
   type ErfassungsUmfeld,
 } from './erfassungsZeile'
 
-export type ErfassungsTaste = TastenFolge | 'weiter' | 'leeren' | 'liste-auf'
-
 // null = leer, 'fehler' = belegt, aber nicht als Zahl lesbar.
 type GegebeneZahl = number | null | 'fehler'
 
@@ -131,32 +129,19 @@ export class ErfassungsLauf {
     return (getippt === undefined || gerechnet) && this.wertVon(umfeld, index) !== ''
   }
 
-  entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): ErfassungsTaste {
-    const listeOffen = this._tippSpalte === index && this.liste.offen
-    // Tab ist immer die Weiter-Taste; das grosse Fenster oeffnen nur Enter und F4.
-    if (taste === 'Tab') {
-      if (listeOffen && this.liste.eindeutig) taste = 'Enter'
-      else return 'weiter'
-    }
-    if (taste === 'F4') {
-      if (zielIn(umfeld, index).art === 'frei') return 'nichts'
-      return this.eintraege(umfeld, index).length === 0 ? 'nichts' : 'fenster'
-    }
-    const wert = this.wertVon(umfeld, index)
-    if (taste === 'Escape' && !listeOffen) return wert === '' ? 'nichts' : 'leeren'
-    if (zielIn(umfeld, index).art === 'frei') return taste === 'Enter' ? 'weiter' : 'nichts'
-    if (taste === 'ArrowDown' && !listeOffen) {
-      return zielIn(umfeld, index).art === 'verknuepft' ? 'liste-auf' : 'nichts'
-    }
-    const folge = this.liste.folgeFuer(taste, { listeOffen, feldLeer: wert === '' })
+  // Die Zelle entscheidet nichts selbst: sie sagt dem Stand, wie sie steht, und
+  // der Stand kennt die Tasten (dieselbe Logik wie im Formularfeld).
+  entscheideTaste(umfeld: ErfassungsUmfeld, index: number, taste: string): TastenFolge {
+    const ziel = zielIn(umfeld, index)
+    const folge = this.liste.folgeFuer(taste, {
+      listeOffen: this._tippSpalte === index && this.liste.offen,
+      feldLeer: this.wertVon(umfeld, index) === '',
+      getippt: this.getippt.get(index) !== undefined,
+      nachschlagbar: ziel.art === 'verknuepft',
+      hatSaetze: () => this.eintraege(umfeld, index).length > 0,
+      springt: true,
+    })
     if (folge === 'liste-zu') this._listeAuf = -1
-    // Enter im LEEREN Feld springt weiter.
-    else if (folge === 'fenster' && wert === '') return 'weiter'
-    else if (folge === 'fenster' && this.eintraege(umfeld, index).length === 0) return 'weiter'
-    else if (folge === 'nichts' && taste === 'Enter' && wert !== '') {
-      const getippt = this.getippt.get(index) !== undefined
-      if (!getippt || zielIn(umfeld, index).art !== 'verknuepft') return 'weiter'
-    }
     return folge
   }
 

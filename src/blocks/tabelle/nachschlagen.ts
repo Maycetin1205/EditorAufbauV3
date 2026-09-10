@@ -1,16 +1,11 @@
 // Das Nachschlage-Fenster: dieselbe Flaeche fuer die Editor-Lupe und die Laufzeit-Wahl.
-import { html, nothing, render, type TemplateResult } from 'lit'
+import { html, render, type TemplateResult } from 'lit'
 import type { ListenBindung } from '../../core/blocks/listenBindung'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, getField, rowsFor } from '../../softengine/data'
 import { meldeFehler } from '../../softengine/meldung'
 import { zeilenNachAuswahl } from '../shared/auswahl'
-import {
-  DIALOG_RAHMEN_TAG,
-  type DialogGroesseDetail,
-  type DialogRahmen,
-} from '../shared/DialogRahmen'
-import { lupeZeichen } from './lupeZeichen'
+import { DIALOG_RAHMEN_TAG, type DialogRahmen } from '../shared/DialogRahmen'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from './spalten'
 import type { TabelleBlock } from './TabelleBlock'
 import {
@@ -25,35 +20,6 @@ export const FENSTER_HOEHE = 380
 // Spalten ihrer Quelle mit, das koennen sechs sein.
 export function fensterBreiteFuer(spalten: number): number {
   return Math.min(900, Math.max(FENSTER_BREITE, 160 + 180 * spalten))
-}
-
-export function nachschlagFeldTpl(args: {
-  wert: string
-  onTippen: (wert: string) => void
-  onTaste: (e: KeyboardEvent) => void
-  onVerlassen: () => void
-  onLupe: () => void
-
-  liste: TemplateResult | typeof nothing
-}): TemplateResult {
-  return html`<div class="nachschlag">
-    <input
-      class="ctrl"
-      type="text"
-      .value=${args.wert}
-      @input=${(e: Event) => args.onTippen((e.target as HTMLInputElement).value)}
-      @keydown=${args.onTaste}
-      @blur=${() => args.onVerlassen()}
-    />
-    <button
-      class="lupe"
-      type="button"
-      aria-label="Nachschlagen"
-      title="Nachschlagen"
-      @click=${() => args.onLupe()}
-    >${lupeZeichen()}</button>
-    ${args.liste}
-  </div>`
 }
 
 // Die Spalten des Fensters wohnen am FELD und werden an der Lupe eingestellt.
@@ -251,48 +217,6 @@ export function automatikSpalten(args: SpaltenQuelle): Spalte[] {
   return [{ kennung: '', titel, feld: args.speicherFeld }]
 }
 
-interface FensterArgs {
-  titel: string
-
-  breite: number
-  hoehe: number
-
-  inhalt: TemplateResult
-  onSchliessen: () => void
-
-  // Gesetzt = Editor-Weg: das Fenster ist ziehbar und liegt unter den
-  // Editor-Overlays; pointerdown und dblclick bleiben drin, damit Klicks den
-  // Baustein nicht ziehen oder waehlen.
-  editor?: { onGroesse: (detail: DialogGroesseDetail) => void }
-}
-
-// Editor-Lupe und Laufzeit-Lupe bauen hier dasselbe Geruest, nicht zwei Kopien.
-function fensterTpl(args: FensterArgs): TemplateResult {
-  const stop = (e: Event): void => e.stopPropagation()
-  const editor = args.editor
-  return html`<ff-dialog-rahmen
-    viewport
-    escape-schliesst
-    ?ziehbar=${editor !== undefined}
-    ?data-ff-nachschlagen=${editor === undefined}
-    style=${editor !== undefined ? 'z-index:40' : nothing}
-    .titel=${args.titel !== '' ? args.titel : 'Nachschlagen'}
-    .breite=${args.breite}
-    .hoehe=${args.hoehe}
-    @ff-dialog-groesse=${editor === undefined ? nothing : (e: Event) => {
-      e.stopPropagation()
-      editor.onGroesse((e as CustomEvent<DialogGroesseDetail>).detail)
-    }}
-    @ff-dialog-schliessen=${(e: Event) => {
-      if (editor !== undefined) e.stopPropagation()
-      args.onSchliessen()
-    }}
-    @click=${stop}
-    @pointerdown=${editor === undefined ? nothing : stop}
-    @dblclick=${editor === undefined ? nothing : stop}
-  >${args.inhalt}</ff-dialog-rahmen>`
-}
-
 function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[]): TemplateResult {
   const eigene = coerceNachschlagSpalten([...args.spalten])
   const einspaltig = nurEineSpalte(
@@ -335,13 +259,16 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
 
   const halter = document.createElement('div')
   halter.style.display = 'contents'
-  render(fensterTpl({
-    titel: args.titel,
-    breite: args.breite,
-    hoehe: args.hoehe,
-    inhalt: laufzeitTabelleTpl(args, eintraege),
-    onSchliessen: () => schliesse(),
-  }), halter)
+  render(html`<ff-dialog-rahmen
+    viewport
+    escape-schliesst
+    data-ff-nachschlagen
+    .titel=${args.titel !== '' ? args.titel : 'Nachschlagen'}
+    .breite=${args.breite}
+    .hoehe=${args.hoehe}
+    @ff-dialog-schliessen=${() => schliesse()}
+    @click=${(e: Event) => e.stopPropagation()}
+  >${laufzeitTabelleTpl(args, eintraege)}</ff-dialog-rahmen>`, halter)
 
   const dialog = halter.querySelector<DialogRahmen>(DIALOG_RAHMEN_TAG)
   const tabelle = halter.querySelector<TabelleBlock>('ff-tabelle')
@@ -366,63 +293,4 @@ export function oeffneNachschlagen(args: NachschlagenArgs): void {
       if (dialog.isConnected) tabelle.fokussiereSuche()
     })
   }
-}
-
-export interface SpaltenStellenArgs {
-  titel: string
-
-  spalten: readonly Spalte[]
-
-  breite: number
-  hoehe: number
-
-  onAendern: (spalten: Spalte[]) => void
-
-  onGroesse: (detail: DialogGroesseDetail) => void
-
-  onFeldWahl: (detail: { index: number; top: number; left: number; liste?: Spalte[] }) => void
-  onSchliessen: () => void
-}
-
-// Editor-Weg der Lupe: dasselbe Fenster, aber die Tabelle im Editor-Modus mit
-// ihrer Spalten-Bedienung. Sie lebt im Shadow-DOM des Feldes, damit die
-// Aenderungen als normale Ereignisse beim Editor ankommen (Undo).
-export function spaltenStellenTpl(args: SpaltenStellenArgs): TemplateResult {
-  return fensterTpl({
-    titel: args.titel,
-    breite: args.breite,
-    hoehe: args.hoehe,
-    onSchliessen: args.onSchliessen,
-    editor: { onGroesse: args.onGroesse },
-    inhalt: html`<ff-tabelle
-      data-ff-editor
-      fuellt
-      suche="ja"
-      style="--se-r-lg:0px"
-      .spalten=${[...args.spalten]}
-      .editable=${true}
-      @ff-prop-change=${(e: Event) => {
-        e.stopPropagation()
-        const detail = (e as CustomEvent<{ attr?: string; value?: unknown }>).detail
-        if (detail?.attr !== 'spalten') return
-        args.onAendern(coerceSpalten(detail.value))
-      }}
-      @ff-listen-bind=${(e: Event) => {
-        e.stopPropagation()
-        const d = (e as CustomEvent<{
-          index?: number
-          top?: number
-          left?: number
-          liste?: Spalte[]
-        }>).detail
-        if (typeof d?.index !== 'number') return
-        args.onFeldWahl({
-          index: d.index,
-          top: d.top ?? 0,
-          left: d.left ?? 0,
-          ...(Array.isArray(d.liste) ? { liste: d.liste } : {}),
-        })
-      }}
-    ></ff-tabelle>`,
-  })
 }

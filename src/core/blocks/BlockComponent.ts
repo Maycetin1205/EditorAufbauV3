@@ -8,6 +8,7 @@ import type {
   ListenBindung,
   QuellenFaehigkeit,
   SatzWahl,
+  SuchFenster,
 } from './BlockDefinition'
 import type { FlowDirection, FlowWidth } from './flowLayout'
 import type { RasterSpec } from './rasterLayout'
@@ -54,6 +55,8 @@ export interface BlockComponentStatic {
   readonly aenderungsSchluessel?: string
 
   readonly kannLoeschen?: ErfassungsFaehigkeit
+
+  readonly suchFenster?: SuchFenster
 
   readonly haeltGesendete?: boolean
 

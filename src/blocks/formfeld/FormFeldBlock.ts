@@ -8,10 +8,12 @@ import type {
   BindableSpotsFor,
   QuellenFaehigkeit,
   SatzWahl,
+  SuchFenster,
 } from '../../core/blocks/BlockDefinition'
 import { geberIdVon, klareAuswahl, setzeAuswahl } from '../shared/auswahl'
-import { passendeVorschlaege, vorschlagListeTpl, vorschlagStil } from '../shared/vorschlagListe'
-import { VorschlagStand } from '../shared/vorschlagStand'
+import { passendeVorschlaege, VORSCHLAEGE_MAX, vorschlagStil } from '../shared/vorschlagListe'
+import { tasteVon, VorschlagStand } from '../shared/vorschlagStand'
+import { eingabeStelleTpl } from '../shared/zellenEingabe'
 import { FELD_EIGENSCHAFTEN } from './feldEigenschaften'
 import {
   connectField,
@@ -26,22 +28,19 @@ import {
   PH_KLASSE,
   type FeldTyp,
 } from './feldTypen'
+import { lupeZeichen } from '../tabelle/lupeZeichen'
 import {
-  automatikSpalten,
   coerceNachschlagSpalten,
   einzigenTrefferFinden,
   type Eintrag,
   FENSTER_BREITE,
   FENSTER_HOEHE,
-  fensterSpaltenOder,
   folgeBeimVerlassen,
   holeEintraege,
   NACHSCHLAG_SPALTEN_BINDUNG,
-  nachschlagFeldTpl,
   oeffneNachschlagen,
   satzPasstZurAuswahl,
   schliesseNachschlagenFuer,
-  spaltenStellenTpl,
 } from '../tabelle/nachschlagen'
 import type { Spalte } from '../tabelle/spalten'
 
@@ -65,6 +64,19 @@ export class FormFeldBlock extends BasicBlock {
   }
 
   static readonly listenBindung = NACHSCHLAG_SPALTEN_BINDUNG
+
+  // Die Spalten des Fensters wohnen am Feld; eingestellt werden sie im
+  // Inspector, aufgemacht wird die Sektion mit der Lupe.
+  static readonly suchFenster: SuchFenster = {
+    spaltenKey: 'nachschlagSpalten',
+    breiteKey: 'fensterBreite',
+    hoeheKey: 'fensterHoehe',
+    quelleProp: 'nachschlagQuelle',
+    automatik: 'Ohne Spalten zeigt das Fenster eine: das gespeicherte Feld.'
+      + ' Die erste Spalte ist, was nach der Wahl im Feld steht.',
+    stelle: '.lupe',
+    wenn: { attributeName: 'fieldType', equals: 'nachschlagen' },
+  }
 
   static readonly bindableSpots: BindableSpotsFor<typeof FormFeldBlock.defaultProps> = [
     {
@@ -129,8 +141,6 @@ export class FormFeldBlock extends BasicBlock {
   @property({ type: Number }) fensterHoehe = FENSTER_HOEHE
   @property() einzigerTreffer = 'nein'
   @property() darstellung = 'standard'
-
-  @state() private spaltenDialog = false
 
   @state() private anzeige = ''
 
@@ -197,24 +207,34 @@ export class FormFeldBlock extends BasicBlock {
       }
       case 'nachschlagen':
 
-        return nachschlagFeldTpl({
+        return eingabeStelleTpl({
           wert: this.getippt ?? this.anzeige,
-          onTippen: (wert) => {
+          titel: this.placeholder,
+    // Der Platzhalter des Feldes ist eine eigene Schicht ueber dem Kasten.
+          platzhalter: '',
+          klasse: 'ctrl',
+          halterKlasse: 'nachschlag',
+          vorschlaege: this.liste.treffer,
+          marke: this.liste.marke,
+          neben: html`<button
+            class="lupe"
+            type="button"
+            aria-label="Nachschlagen"
+            title="Nachschlagen"
+            @click=${() => this.onLupe()}
+          >${lupeZeichen()}</button>`,
+        }, {
+          tippen: (wert) => {
             this.getippt = wert
             this.liste.vonVorn()
           },
-          onTaste: (e) => this.onNachschlagTaste(e),
-          onVerlassen: () => this.onNachschlagVerlassen(),
-          onLupe: () => this.onLupe(),
-          liste: !this.liste.offen ? nothing : vorschlagListeTpl({
-            eintraege: this.liste.treffer,
-            marke: this.liste.marke,
-            onWaehlen: (i) => this.uebernimmVorschlag(i),
-            onMarke: (i) => {
-              this.liste.setzeMarke(i)
-              this.requestUpdate()
-            },
-          }),
+          taste: (e) => this.onNachschlagTaste(e),
+          verlassen: () => this.onNachschlagVerlassen(),
+          waehleVorschlag: (i) => this.uebernimmVorschlag(i),
+          setzeMarke: (i) => {
+            this.liste.setzeMarke(i)
+            this.requestUpdate()
+          },
         })
       default:
 
@@ -230,12 +250,10 @@ export class FormFeldBlock extends BasicBlock {
     }
   }
 
+  // Im Editor faengt der Wirt den Klick auf die Lupe ab und oeffnet die
+  // Inspector-Sektion; der Baustein zeichnet dafuer nichts.
   private onLupe(suchtext = ''): void {
-    if (this.imEditor) {
-      // Editor-Weg: dasselbe Fenster, aber zum EINSTELLEN der Spalten.
-      this.spaltenDialog = true
-      return
-    }
+    if (this.imEditor) return
     oeffneNachschlagen({
       el: this,
       quelleId: this.nachschlagQuelle,
@@ -251,68 +269,8 @@ export class FormFeldBlock extends BasicBlock {
     })
   }
 
-  // Der Startpunkt im Einstell-Fenster: die gespeicherten Spalten, sonst der
-  // heutige Automatik-Stand als konkrete Zeilen.
-  private spaltenEffektiv(): Spalte[] {
-    return fensterSpaltenOder(this.nachschlagSpalten, () => automatikSpalten({
-      speicherFeld: this.speicherFeld,
-      speicherTitel: this.speicherTitel,
-    }))
-  }
-
-  // Der eine Weg, mit dem dieser Baustein eine Eigenschaft an den Editor meldet.
-  // `geste` gesetzt: der Editor klammert 'beginn' bis 'ende' zu einem Undo-Schritt.
-  private meldeProp(attr: string, value: unknown, geste?: 'beginn' | 'ende'): void {
-    this.dispatchEvent(new CustomEvent('ff-prop-change', {
-      detail: { attr, value, ...(geste === undefined ? {} : { geste }) },
-      bubbles: true,
-      composed: true,
-    }))
-  }
-
-  private spaltenDialogTpl(): TemplateResult {
-    return spaltenStellenTpl({
-      titel: this.placeholder,
-      spalten: this.spaltenEffektiv(),
-      breite: this.fensterBreite,
-      hoehe: this.fensterHoehe,
-      onGroesse: (detail) => {
-    // Der Rahmen aendert sich nicht selbst: der Editor speichert und gibt die
-    // neue Groesse zurueck. `geste` klammert den Zug zu einem Undo-Schritt.
-        const attr = detail.achse === 'breite' ? 'fensterBreite' : 'fensterHoehe'
-        if (detail.geste === 'standard') {
-          this.meldeProp(attr, FormFeldBlock.defaultProps[attr])
-          return
-        }
-        this.meldeProp(
-          attr,
-          detail.wert,
-          detail.geste === 'laeuft' ? undefined : detail.geste,
-        )
-      },
-      onAendern: (spalten) => {
-        this.meldeProp('nachschlagSpalten', spalten)
-      },
-      onFeldWahl: (detail) => {
-    // detail traegt die ANGEZEIGTE Liste mit, auch den Automatik-Stand: der
-    // Editor braucht sie, solange nachschlagSpalten leer ist.
-        this.dispatchEvent(new CustomEvent('ff-listen-bind', {
-          detail: { prop: 'nachschlagSpalten', ...detail },
-          bubbles: true,
-          composed: true,
-        }))
-      },
-      onSchliessen: () => { this.spaltenDialog = false },
-    })
-  }
-
   protected override willUpdate(changed: PropertyValues): void {
     super.willUpdate(changed)
-    // Der Einstell-Dialog gehoert zum Typ „nachschlagen" und bliebe beim
-    // Typwechsel sonst offen.
-    if (changed.has('fieldType') && coerceFeldTyp(this.fieldType) !== 'nachschlagen') {
-      this.spaltenDialog = false
-    }
     this.liste.zeige(this.berechneVorschlaege())
   }
 
@@ -327,7 +285,8 @@ export class FormFeldBlock extends BasicBlock {
   // gefiltert und gekuerzt. Ohne Quelle bleibt die Liste still leer: eine Meldung
   // bei jedem Tastendruck waere unbrauchbar.
   private berechneVorschlaege(): Eintrag[] {
-    if (this.getippt === null || this.liste.zugemacht) return []
+    if (this.liste.zugemacht) return []
+    if (this.getippt === null && !this.liste.aufgemacht) return []
     if (coerceFeldTyp(this.fieldType) !== 'nachschlagen') return []
     if (this.imEditor) return []
     const ergebnis = holeEintraege({
@@ -336,24 +295,46 @@ export class FormFeldBlock extends BasicBlock {
       speicherFeld: this.speicherFeld,
       spalten: this.nachschlagSpalten,
     })
-    return ergebnis.ok ? passendeVorschlaege(ergebnis.eintraege, this.getippt) : []
+    if (!ergebnis.ok) return []
+    // Aufgemacht heisst alles zeigen, sonst bleibt die Liste dem Getippten
+    // vorbehalten.
+    const getippt = this.getippt ?? ''
+    if (getippt === '') {
+      return this.liste.aufgemacht ? ergebnis.eintraege.slice(0, VORSCHLAEGE_MAX) : []
+    }
+    return passendeVorschlaege(ergebnis.eintraege, getippt)
   }
 
   // Escape kommt hier NICHT an, wenn ein Fenster offen ist: dessen Rahmen hoert
   // am window in der Abfang-Phase und schliesst sich selbst.
   private onNachschlagTaste(e: KeyboardEvent): void {
     if (this.imEditor) return
-    const folge = this.liste.folgeFuer(e.key, {
+    const folge = this.liste.folgeFuer(tasteVon(e), {
       listeOffen: this.liste.offen,
       feldLeer: (this.getippt ?? this.anzeige) === '',
+      getippt: this.getippt !== null,
+      nachschlagbar: true,
+    // Das Fenster meldet selbst, wenn Quelle oder „Gespeichert wird" fehlen;
+    // darum darf hier jede Taste hineinlaufen.
+      hatSaetze: () => true,
+    // Ein Feld hat keine naechste Zelle: weiter fuehrt der Browser mit Tab.
+      springt: false,
     })
     if (folge === 'nichts') {
       if (e.key === 'Enter') e.preventDefault()
       return
     }
-    e.preventDefault()
+    // Nach der Uebernahme mit Tab geht der Fokus weiter, wie der Browser ihn
+    // fuehrt; jede andere Taste bleibt im Feld.
+    if (e.key !== 'Tab') e.preventDefault()
     if (folge === 'uebernehmen') this.uebernimmVorschlag(this.liste.marke)
     else if (folge === 'fenster') this.onLupe(this.getippt ?? '')
+    else if (folge === 'liste-auf') this.liste.aufmachen()
+    else if (folge === 'leeren') {
+      this.getippt = null
+      this.leereNachschlagen()
+      this.dispatchEvent(new Event('change'))
+    }
     this.requestUpdate()
   }
 
@@ -367,6 +348,7 @@ export class FormFeldBlock extends BasicBlock {
     this.satz = undefined
     this.anzeige = ''
     this.value = ''
+    this.liste.ruhe()
     klareAuswahl(geberIdVon(this))
   }
 
@@ -458,9 +440,6 @@ export class FormFeldBlock extends BasicBlock {
           ? this.textTpl(`ph ${PH_KLASSE[typ] ?? ''}`.trim(), !leer, wertBindbar && this.valueField !== '')
           : nothing}
       </div>
-      ${this.spaltenDialog && this.imEditor
-        ? this.spaltenDialogTpl()
-        : nothing}
     </div>`
   }
 

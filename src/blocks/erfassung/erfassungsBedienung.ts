@@ -5,6 +5,7 @@ import {
   FENSTER_HOEHE,
   oeffneNachschlagen,
 } from '../tabelle/nachschlagen'
+import { tasteVon } from '../shared/vorschlagStand'
 import type { ErfassungsLauf } from './erfassungsLauf'
 import {
   erfassungsZeileTpl,
@@ -88,8 +89,7 @@ function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
     wirt.melde()
     return
   }
-  const gedrueckt = e.key === 'ArrowDown' && e.altKey ? 'F4' : e.key
-  const folge = wirt.lauf.entscheideTaste(wirt.umfeld(), index, gedrueckt)
+  const folge = wirt.lauf.entscheideTaste(wirt.umfeld(), index, tasteVon(e))
   if (folge === 'nichts') {
     if (e.key === 'Enter') e.preventDefault()
     return

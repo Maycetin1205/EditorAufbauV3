@@ -32,16 +32,6 @@ export interface ListenBindung {
     nach: number,
   ) => Record<string, unknown>
 
-  // Eine weiterfuehrende Einstellung, die der BAUSTEIN selbst zeichnet, weil sie
-  // ein eigenes Fenster braucht. Der Editor setzt dafuer nur `eigenschaft` am
-  // Element: eine Eigenschaft ueberlebt den naechsten Rendervorgang, eine
-  // Methode nicht.
-  eintragsUnterFenster?: {
-    label: string
-    hinweis?: string
-    eigenschaft: string
-  }
-
   // CSS-Auswahl der Stellen, an denen der Editor die Eintraege anfasst. Er legt
   // seine Bedienung darueber; der Baustein zeichnet dafuer nichts.
   eintragStellen?: string
