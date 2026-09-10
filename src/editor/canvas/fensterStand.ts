@@ -1,15 +1,17 @@
 // Ein Suchfenster aus der Sicht des Editors: woher es seine Angaben nimmt und
-// wohin der gezogene Rand sie zurueckschreibt. Eingestellt wird IM Fenster;
-// diese Datei ist nur der Weg dorthin.
+// wohin der gezogene Rand und der Spaltenkopf sie zurueckschreiben. Eingestellt
+// wird IM Fenster; diese Datei ist nur der Weg dorthin.
 import { coerceErfassungsSpalten } from '../../blocks/erfassung/erfassungsSpalte'
 import { fensterSpaltenIn } from '../../blocks/erfassung/erfassungsZeile'
 import {
   FENSTER_HOEHE,
+  automatikSpalten,
   coerceNachschlagSpalten,
   fensterBreiteFuer,
   oeffneNachschlagen,
 } from '../../blocks/tabelle/nachschlagen'
-import type { Spalte } from '../../blocks/tabelle/spalten'
+import { DIALOG_RAHMEN_TAG, type DialogRahmen } from '../../blocks/shared/DialogRahmen'
+import { SPALTEN_MAX, type Spalte } from '../../blocks/tabelle/spalten'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { zerlegeBindung, type SuchFenster } from '../../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
@@ -25,10 +27,18 @@ export interface FensterStand {
 
   titel: string
 
+  // Was das Fenster ZEIGT: die gestellten Spalten oder die Automatik. Nie leer,
+  // damit der Kopf im Fenster immer etwas zum Anfassen hat.
   spalten: readonly Spalte[]
+
+  // Ob die Liste vom Bauer gestellt ist. Nur dann heisst „letzte Spalte weg"
+  // etwas: die Automatik hat nichts wegzunehmen.
+  gestellt: boolean
 
   breite: number
   hoehe: number
+
+  setzeSpalten: (spalten: readonly Spalte[]) => void
 
   setzeMass: (achse: 'breite' | 'hoehe', wert: number | undefined) => void
 }
@@ -57,19 +67,28 @@ function standAmBaustein(
   const quelleId = String(block.props[fenster.quelleProp ?? ''] ?? '')
   if (quelleId === '') return null
   const standard = getBlockDefinition(block.type)?.defaultProps ?? {}
-  const spalten = coerceNachschlagSpalten(block.props[fenster.spaltenKey])
+  const gestellt = coerceNachschlagSpalten(block.props[fenster.spaltenKey])
+  const speicherFeld = String(block.props[fenster.speicherFeldProp ?? ''] ?? '')
+  const speicherTitel = String(block.props[fenster.speicherTitelProp ?? ''] ?? '')
+  const spalten = gestellt.length > 0
+    ? gestellt
+    : automatikSpalten({ speicherFeld, speicherTitel })
   return {
     quelleId,
-    speicherFeld: String(block.props[fenster.speicherFeldProp ?? ''] ?? ''),
-    speicherTitel: String(block.props[fenster.speicherTitelProp ?? ''] ?? ''),
+    speicherFeld,
+    speicherTitel,
     titel: 'Nachschlagen',
     spalten,
+    gestellt: gestellt.length > 0,
     breite: alsZahl(block.props[fenster.breiteKey])
       ?? alsZahl(standard[fenster.breiteKey])
       ?? fensterBreiteFuer(spalten.length),
     hoehe: alsZahl(block.props[fenster.hoeheKey])
       ?? alsZahl(standard[fenster.hoeheKey])
       ?? FENSTER_HOEHE,
+    setzeSpalten: (neu) => {
+      ed.updateProperty(block.id, fenster.spaltenKey, [...neu])
+    },
     // Ohne Mass gilt am Baustein die Vorgabe seines Typs: eine Eigenschaft dort
     // ist nie leer.
     setzeMass: (achse, wert) => {
@@ -93,60 +112,137 @@ function standJeEintrag(
   const { quelleId, code } = zerlegeBindung(String(eintrag[fenster.quelleKey ?? ''] ?? ''))
   // Nur eine Zelle mit Hilfsquelle schlaegt nach; die anderen haben kein Fenster.
   if (quelleId === '') return null
+  const titel = String(eintrag[fenster.titelKey ?? ''] ?? '')
   // Grundsatz 1: dieselbe Spaltenliste wie beim Bediener, auch die automatische.
   // Sie aus den Nachbarspalten zu bilden kann heute nur die Erfassung selbst;
   // ein Registry-Eintrag dafuer waere die saubere Form, wenn es der zweite
   // Baustein braucht.
-  const spalten = fensterSpaltenIn({
+  const ausSpalten = fensterSpaltenIn({
     spalten: coerceErfassungsSpalten(block.props[prop]),
     quelleId: String(block.props.source ?? ''),
     paareZu: () => [],
     partnerVon: () => '',
   }, platz)
-  const titel = String(eintrag[fenster.titelKey ?? ''] ?? '')
+  const spalten = ausSpalten.length > 0
+    ? ausSpalten
+    : automatikSpalten({ speicherFeld: code, speicherTitel: titel })
+
+  // Die Schluessel dieses Eintrags schreiben: gelesen wird immer der FRISCHE
+  // Stand, nicht der beim Aufmachen. Sonst nahm ein gezogener Rand eine
+  // Spaltenwahl von vorhin wieder zurueck.
+  const schreibe = (teil: Record<string, unknown>): void => {
+    const jetzt = ed.getNode(block.id)
+    if (!jetzt) return
+    const next = rohEintraege(jetzt, prop)
+    const ziel = next[platz]
+    if (!ziel) return
+    for (const [key, wert] of Object.entries(teil)) {
+      // `undefined` LOESCHT den Schluessel: keine Angabe heisst Automatik, und
+      // ein leerer Wert reiste sonst in jede Maskendatei mit.
+      if (wert === undefined) delete ziel[key]
+      else ziel[key] = wert
+    }
+    ed.updateProperty(block.id, prop, next)
+  }
+
   return {
     quelleId,
     speicherFeld: code,
     speicherTitel: titel,
     titel: titel !== '' ? titel : `Spalte ${platz + 1}`,
     spalten,
+    gestellt: coerceNachschlagSpalten(eintrag[fenster.spaltenKey]).length > 0,
     breite: alsZahl(eintrag[fenster.breiteKey]) ?? fensterBreiteFuer(spalten.length),
     hoehe: alsZahl(eintrag[fenster.hoeheKey]) ?? FENSTER_HOEHE,
-    setzeMass: (achse, wert) => {
-      const next = rohEintraege(block, prop)
-      const ziel = next[platz]
-      if (!ziel) return
-      const key = achse === 'breite' ? fenster.breiteKey : fenster.hoeheKey
-      // `undefined` LOESCHT den Schluessel: keine Angabe heisst Automatik, und
-      // ein leerer Wert reiste sonst in jede Maskendatei mit.
-      if (wert === undefined) delete ziel[key]
-      else ziel[key] = wert
-      ed.updateProperty(block.id, prop, next)
-    },
+    setzeSpalten: (neu) => schreibe({
+      [fenster.spaltenKey]: neu.length === 0 ? undefined : [...neu],
+    }),
+    setzeMass: (achse, wert) => schreibe({
+      [achse === 'breite' ? fenster.breiteKey : fenster.hoeheKey]: wert,
+    }),
   }
 }
 
 export function fensterStandVon(
   ed: Editor,
-  block: BlockNode,
+  blockId: string,
   fenster: SuchFenster,
   platz: number,
 ): FensterStand | null {
+  const block = ed.getNode(blockId)
+  if (!block) return null
   return fenster.eintraegeProp === undefined
     ? standAmBaustein(ed, block, fenster)
     : standJeEintrag(ed, block, fenster, platz)
 }
 
+// Der leere Kopf rechts: er gehoert keiner Spalte, sein Klick fuegt die naechste
+// an. Nur im Editor, darum steht er hier und nicht im Baustein.
+const LEERER_KOPF: Spalte = { kennung: '', titel: '', feld: '' }
+
+export function fensterSpaltenMitLeerem(stand: FensterStand): Spalte[] {
+  const spalten = [...stand.spalten]
+  return spalten.length >= SPALTEN_MAX ? spalten : [...spalten, { ...LEERER_KOPF }]
+}
+
+// Das eine Fenster, das im Editor offen ist: nachschlagen.ts macht das vorige
+// immer zu. Seine Spaltenkoepfe bedient die Shell, nicht der Wirt des
+// Bausteins — darum eine Anmeldestelle und kein Zustand im BlockHost.
+export interface OffenesFenster {
+  blockId: string
+  fenster: SuchFenster
+  platz: number
+}
+
+// Der Rahmen des offenen Fensters, an seiner Marke am document.body gefunden.
+// Nachgeschlagen statt festgehalten: null heisst zugleich „steht nicht mehr".
+export function fensterRahmenImEditor(): DialogRahmen | null {
+  return document.body.querySelector<DialogRahmen>(
+    `${DIALOG_RAHMEN_TAG}[data-ff-nachschlagen]`,
+  )
+}
+
+let offen: OffenesFenster | null = null
+const horcher = new Set<() => void>()
+
+export function offenesFensterImEditor(): OffenesFenster | null {
+  return offen
+}
+
+export function beiFensterWechsel(fn: () => void): () => void {
+  horcher.add(fn)
+  return () => {
+    horcher.delete(fn)
+  }
+}
+
+function melde(neu: OffenesFenster | null): void {
+  offen = neu
+  for (const fn of [...horcher]) fn()
+}
+
+export function fensterImEditorVergessen(): void {
+  if (offen !== null) melde(null)
+}
+
 // Dieselbe Flaeche wie beim Bediener, nur ohne Saetze und mit den zwei
-// Zieh-Anfassern: was der Bauer hier zieht, steht danach als Eigenschaft im
-// Baum, also nimmt Strg+Z es zurueck.
-export function oeffneFensterImEditor(el: HTMLElement, stand: FensterStand): void {
+// Zieh-Anfassern: was der Bauer hier zieht oder waehlt, steht danach als
+// Eigenschaft im Baum, also nimmt Strg+Z es zurueck.
+export function oeffneFensterImEditor(
+  ed: Editor,
+  el: HTMLElement,
+  blockId: string,
+  fenster: SuchFenster,
+  platz: number,
+): boolean {
+  const stand = fensterStandVon(ed, blockId, fenster, platz)
+  if (stand === null) return false
   oeffneNachschlagen({
     el,
     quelleId: stand.quelleId,
     speicherFeld: stand.speicherFeld,
     speicherTitel: stand.speicherTitel,
-    spalten: stand.spalten,
+    spalten: fensterSpaltenMitLeerem(stand),
     titel: stand.titel,
     breite: stand.breite,
     hoehe: stand.hoehe,
@@ -154,4 +250,7 @@ export function oeffneFensterImEditor(el: HTMLElement, stand: FensterStand): voi
     setzeMass: stand.setzeMass,
     onUebernehmen: () => {},
   })
+  if (fensterRahmenImEditor() === null) return false
+  melde({ blockId, fenster, platz })
+  return true
 }

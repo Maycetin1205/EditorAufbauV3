@@ -100,6 +100,9 @@ interface FieldPickerProps {
   // Fenster ab und der Klick danach oeffnet es wieder.
   anker?: RefObject<HTMLElement | null>
 
+  // Gesetzt, wo der Picker ueber einem Fenster der Maske liegt.
+  ebene?: number
+
   top: number
   left: number
 
@@ -193,6 +196,7 @@ export function FieldPicker({
   quellenWahl,
   current,
   anker,
+  ebene,
   top,
   left,
   onPick,
@@ -210,7 +214,7 @@ export function FieldPicker({
 
   const [zielKey, setZielKey] = useState(HAUPTFELD)
 
-  const ebene2 = weitereFelder ?? []
+  const weitereZiele = weitereFelder ?? []
 
   const ziele: readonly PickerFeld[] = [
     {
@@ -219,7 +223,7 @@ export function FieldPicker({
       aktuell: current ?? '',
       onWaehle: onPick,
     },
-    ...ebene2,
+    ...weitereZiele,
   ]
   const aktiv = ziele.find((z) => z.key === zielKey) ?? ziele[0]
 
@@ -249,6 +253,7 @@ export function FieldPicker({
       oben={top}
       links={left}
       anker={anker}
+      ebene={ebene}
       onClose={onClose}
       imBildHalten
       escapeAbfangen
@@ -310,7 +315,7 @@ export function FieldPicker({
             ist der halbe Sinn der Spalte, nicht eine seltene Zusatzeinstellung.
             Zugeklappt bleibt nur, was man selten anfasst. Ohne Hilfsquelle
             waere es sinnlos — dann erscheint es nicht. */}
-        {ebene2.map(feldZeile)}
+        {weitereZiele.map(feldZeile)}
 
         {/* Die Schalter stehen OFFEN, nebeneinander in einer Zeile. Zugeklappt
             merkte niemand, dass es sie gibt — und „In der Zeile aenderbar"

@@ -12,6 +12,10 @@ import { cn } from '@/lib/utils'
 
 const RAND = 8
 
+// Ueber einem Fenster der Maske: dessen Dialograhmen stapelt sich ganz oben,
+// also muss die Bedienung darueber noch eine Stufe hoeher.
+export const EBENE_UEBER_MASKENFENSTER = 2147483647
+
 interface AuswahlFensterProps {
   bezeichnung: string
 
@@ -23,6 +27,9 @@ interface AuswahlFensterProps {
   anker?: RefObject<HTMLElement | null>
 
   className: string
+
+  // Wie hoch das Fenster stapelt. Ohne Angabe die Stufe der Werkbank.
+  ebene?: number
   imBildHalten?: boolean
   escapeAbfangen?: boolean
   onClose: () => void
@@ -35,6 +42,7 @@ export function AuswahlFenster({
   links,
   anker,
   className,
+  ebene = 50,
   imBildHalten = false,
   escapeAbfangen = false,
   onClose,
@@ -107,7 +115,7 @@ export function AuswahlFenster({
         e.preventDefault()
         e.stopPropagation()
       }}
-      style={{ position: 'fixed', top: position.top, left: position.left, zIndex: 50 }}
+      style={{ position: 'fixed', top: position.top, left: position.left, zIndex: ebene }}
       className={cn(
         'overflow-y-auto rounded-md border border-linie bg-panel p-1 text-tinte shadow-md',
         className,

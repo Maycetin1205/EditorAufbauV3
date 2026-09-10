@@ -20,7 +20,7 @@ import type { Editor } from '../../state/Editor'
 import { wendeProps } from '../../state/propsPatch'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
-import { fensterStandVon, oeffneFensterImEditor } from './fensterStand'
+import { oeffneFensterImEditor } from './fensterStand'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 import { oeffneDatencenter } from '../zentrale/oeffnen'
 import { FieldPicker, type PickerGruppe } from './FieldPicker'
@@ -169,8 +169,7 @@ export function useFeldBindung({
 
   const oeffneFenster = (platz: number): void => {
     if (!element || suchFenster === undefined) return
-    const stand = fensterStandVon(editor, block, suchFenster, platz)
-    if (stand) oeffneFensterImEditor(element, stand)
+    oeffneFensterImEditor(editor, element, block.id, suchFenster, platz)
   }
 
   const gruppen = pickerGruppen(quellen)

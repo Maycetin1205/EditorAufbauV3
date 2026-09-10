@@ -26,7 +26,7 @@ import { useDataSources } from '../../state/useDataSources'
 import { AuswahlLeiste } from './AuswahlLeiste'
 import { SpaltenBedienung } from './SpaltenBedienung'
 import { useFeldBindung } from './FeldBindung'
- import { fensterStandVon, oeffneFensterImEditor } from './fensterStand'
+import { oeffneFensterImEditor } from './fensterStand'
 import { useBlockResize } from './useBlockResize'
 import { useLitElement } from './useLitElement'
 
@@ -130,14 +130,11 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
       onClick={(e) => {
         const platz = aufFensterStelle(e)
         const fenster = def?.suchFenster
-        if (platz !== null && fenster !== undefined && elementRef.current) {
-          const stand = fensterStandVon(editor, block, fenster, platz)
-          if (stand) {
-            e.stopPropagation()
-            oeffneFensterImEditor(elementRef.current, stand)
-            onSelect?.(false)
-            return
-          }
+        if (platz !== null && fenster !== undefined && elementRef.current
+          && oeffneFensterImEditor(editor, elementRef.current, block.id, fenster, platz)) {
+          e.stopPropagation()
+          onSelect?.(false)
+          return
         }
         onClick(e)
       }}
