@@ -4,15 +4,19 @@ import { pruefeDatenquellen, type DataSource } from '../core/data/dataSources'
 import {
   BEREICH_QUELLEN,
   BEREICH_RELATIONEN,
-  mitBereich,
-  type EintragProblem,
   type LadeProblem,
 } from '../core/data/ladeProblem'
 import { pruefeRelationsVorlagen, type RelationTemplate } from '../core/data/relations'
 import { downloadFile } from '../lib/dateiDownload'
+import {
+  BIBLIOTHEK_DATEI_ART,
+  bibliothekPruefen,
+  ohneErrechnetes,
+  problemText,
+} from './bibliothekDatei'
 import { dataSourceStore } from './DataSourceStore'
 import type { Editor } from './Editor'
-import { ersteAbweichung, keinVerlust, pruefeBaumStand } from './ladeKette'
+import { pruefeBaumStand } from './ladeKette'
 import { meldungen } from './meldungen'
 import { CURRENT_SCHEMA_VERSION } from './migrations'
 import { type EntfernGrund } from './migrationenRoh'
@@ -81,59 +85,12 @@ export async function ladeMaskeAusDatei(editor: Editor, datei: File): Promise<vo
   }
   const ergebnis = packeMaskeAus(text)
   if (!ergebnis.ok) {
-    const liste = ergebnis.probleme.slice(0, 10)
-      .map((p) => `• ${p.bereich}${p.stelle === '' ? '' : ` (${p.stelle})`}: ${p.grund}`)
-    const rest = ergebnis.probleme.length - liste.length
-    meldungen.melde([
-      ergebnis.grund,
-      ...(liste.length > 0 ? ['', ...liste] : []),
-      ...(rest > 0 ? [`… und ${rest} weitere.`] : []),
-    ].join('\n'))
+    meldungen.melde(problemText(ergebnis.grund, ergebnis.probleme))
     return
   }
   editor.ersetzeMaske(ergebnis.inhalt)
   meldeVerworfeneTypen(ergebnis.verworfen)
   meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
-}
-
-// Aeltere Masken speicherten in der Hol-Relation eine Feldliste mit. Die
-// errechnet der Export aus den benutzten Feldern, ohne sie geht nichts verloren.
-function ohneErrechnetes(eintrag: unknown): unknown {
-  if (!eintrag || typeof eintrag !== 'object') return eintrag
-  const e = eintrag as Record<string, unknown>
-  if (!e.ladeRelation || typeof e.ladeRelation !== 'object') return eintrag
-  const lade = { ...(e.ladeRelation as Record<string, unknown>) }
-  delete lade.zusatzFelder
-  return { ...e, ladeRelation: lade }
-}
-
-function bibliothekPruefen<T>(
-  roh: unknown,
-  pruefe: (raw: unknown) => { liste: T[]; probleme: EintragProblem[] },
-  klarname: string,
-  bereinige: (eintrag: unknown) => unknown = (eintrag) => eintrag,
-): { ok: true; liste: T[] } | { ok: false; grund: string; probleme: LadeProblem[] } {
-  if (!Array.isArray(roh)) {
-    return {
-      ok: false,
-      grund: `Die Datei ist beschädigt: der Abschnitt „${klarname}" fehlt oder ist unlesbar.`,
-      probleme: [{ bereich: klarname, stelle: '', grund: 'der Abschnitt fehlt oder ist unlesbar' }],
-    }
-  }
-  const bereinigt = roh.map(bereinige)
-  const { liste, probleme } = pruefe(bereinigt)
-  if (!keinVerlust(bereinigt, liste)) {
-    const stelle = ersteAbweichung(bereinigt, liste)
-    return {
-      ok: false,
-      grund: `Die Datei ist beschädigt: im Abschnitt „${klarname}" stimmt eine Angabe nicht: `
-        + `${stelle}. Sie wird nicht geladen, damit nicht unbemerkt Teile deiner Maske verlorengehen.`,
-      probleme: probleme.length > 0
-        ? mitBereich(klarname, probleme)
-        : [{ bereich: klarname, stelle: '', grund: stelle }],
-    }
-  }
-  return { ok: true, liste }
 }
 
 function packeMaskeAus(text: string): AuspackErgebnis {
@@ -160,6 +117,12 @@ function auspacken(text: string): AuspackErgebnis {
   }
   const o = roh as Record<string, unknown>
 
+  if (o.art === BIBLIOTHEK_DATEI_ART) {
+    return abgelehnt(
+      'Das ist eine Bibliotheksdatei (nur Datenquellen und Relationen, ohne '
+      + 'Bausteine). Sie wird im Datencenter über „Bibliothek laden…" geladen.',
+    )
+  }
   if (o.art !== MASKEN_DATEI_ART) {
     return abgelehnt(
       'Das ist keine Maskendatei des Aufbau-Editors. (Die exportierten '

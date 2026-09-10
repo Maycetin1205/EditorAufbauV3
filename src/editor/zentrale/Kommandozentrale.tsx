@@ -1,9 +1,12 @@
 // Das Datencenter: Datenquellen und Relationen der Maske.
-import { useState } from 'react'
-import { Database, Link2 } from '@/ui/zeichen'
+import { useRef, useState } from 'react'
+import { Database, FolderOpen, Link2, Save } from '@/ui/zeichen'
 import { Dialog } from '@/ui/werkbank/Dialog'
 import { Eintrag } from '@/ui/werkbank/Eintrag'
+import { Knopf } from '@/ui/werkbank/Knopf'
+import { ladeBibliothekAusDatei, speichereBibliothekAlsDatei } from '../../state/bibliothekDatei'
 import { useDataSources } from '../../state/useDataSources'
+import { useEditor } from '../../state/useEditor'
 import { useRelations } from '../../state/useRelations'
 import { DatenquellenBereich } from './DatenquellenBereich'
 import { RelationenBereich } from './RelationenBereich'
@@ -43,9 +46,47 @@ export function Kommandozentrale({ onClose }: { onClose: () => void }) {
   )
 
   return (
-    <Dialog randlos titel="Datencenter" onClose={onClose}>
+    <Dialog randlos titel="Datencenter" aktionen={<BibliothekAktionen />} onClose={onClose}>
       {bereich === 'datenquellen' && <DatenquellenBereich bereiche={bereichsleiste} />}
       {bereich === 'relationen' && <RelationenBereich bereiche={bereichsleiste} />}
     </Dialog>
+  )
+}
+
+// Beide Listen zusammen als eigene Datei, ohne Bausteine. Ohne Rueckfrage:
+// Laden ergaenzt nur, und Strg+Z nimmt es zurueck.
+function BibliothekAktionen() {
+  const ed = useEditor()
+  const dateiRef = useRef<HTMLInputElement>(null)
+
+  return (
+    <>
+      <input
+        ref={dateiRef}
+        type="file"
+        accept=".json,application/json"
+        className="hidden"
+        onChange={(e) => {
+          const datei = e.target.files?.[0]
+          try {
+            if (datei) void ladeBibliothekAusDatei(ed, datei)
+          } finally {
+            e.target.value = ''
+          }
+        }}
+      />
+      <Knopf
+        title="Datenquellen und Relationen als eigene Datei speichern — ohne die Bausteine"
+        onClick={() => speichereBibliothekAlsDatei()}
+      >
+        <Save size={14} /> Bibliothek speichern
+      </Knopf>
+      <Knopf
+        title="Datenquellen und Relationen aus einer Bibliotheksdatei ergänzen — nichts wird gelöscht"
+        onClick={() => dateiRef.current?.click()}
+      >
+        <FolderOpen size={14} /> Bibliothek laden…
+      </Knopf>
+    </>
   )
 }

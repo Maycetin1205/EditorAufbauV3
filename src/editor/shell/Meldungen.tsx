@@ -1,5 +1,6 @@
 // Die Meldungskaesten am unteren Rand des Editors.
 import { X } from '@/ui/zeichen'
+import { cn } from '@/lib/utils'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { useMeldungen } from '../../state/useMeldungen'
 
@@ -19,7 +20,11 @@ export function Meldungen() {
         <div
           key={m.id}
           role="alert"
-          className="pointer-events-auto flex items-start gap-1 rounded border border-linie border-l-2 border-l-fehler bg-panel p-2 pl-3 shadow-overlay"
+          className={cn(
+            'pointer-events-auto flex items-start gap-1 rounded border border-linie border-l-2',
+            'bg-panel p-2 pl-3 shadow-overlay',
+            m.art === 'fehler' ? 'border-l-fehler' : 'border-l-akzent',
+          )}
         >
           <p className="min-w-0 flex-1 whitespace-pre-line text-ui leading-relaxed text-tinte">
             {m.text}

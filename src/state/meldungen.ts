@@ -1,9 +1,13 @@
 // Die Meldungen im Balken: sammeln und wieder wegnehmen.
 import { Subject } from './Subject'
 
+// Ein Hinweis sagt, was gelungen ist; ein Fehler traegt die rote Kante.
+export type MeldungsArt = 'fehler' | 'hinweis'
+
 export interface Meldung {
   id: number
   text: string
+  art: MeldungsArt
 }
 
 // Hoechstens so viele auf einmal: die aeltesten weichen, sonst wachsen die
@@ -23,8 +27,8 @@ class Meldungsstelle extends Subject<Meldungsstelle> {
     super.notify(data)
   }
 
-  melde(text: string): void {
-    this._liste = [...this._liste, { id: this.naechsteId++, text }].slice(-HOECHSTENS)
+  melde(text: string, art: MeldungsArt = 'fehler'): void {
+    this._liste = [...this._liste, { id: this.naechsteId++, text, art }].slice(-HOECHSTENS)
     this.notify(this)
   }
 
