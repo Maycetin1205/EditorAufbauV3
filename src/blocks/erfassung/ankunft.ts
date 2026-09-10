@@ -13,7 +13,7 @@ export interface GesendeteZeile {
 
 // SoftEngine gibt eine getippte 7 als „7,000" zurueck; ein reiner Textvergleich
 // faende die Zeile darum nie wieder.
-function gleich(a: string, b: string): boolean {
+export function wertGleich(a: string, b: string): boolean {
   const x = a.trim()
   const y = b.trim()
   if (x === y) return true
@@ -45,7 +45,7 @@ export function ankunftPruefen(
   gesendet.forEach((zeile, i) => {
     if (zeile.satz === '') return
     nimm(lieferung.zeilen.findIndex(
-      (z, k) => frei[k] && gleich(lieferung.satzVon(z), zeile.satz),
+      (z, k) => frei[k] && wertGleich(lieferung.satzVon(z), zeile.satz),
     ), i)
   })
 
@@ -63,10 +63,35 @@ export function ankunftPruefen(
       return
     }
     nimm(lieferung.zeilen.findIndex((z, k) => frei[k]
-      && pruefbar.every((f) => gleich(lieferung.lies(z, f.feld), zeile.werte[f.platz] ?? ''))), i)
+      && pruefbar.every((f) => wertGleich(lieferung.lies(z, f.feld), zeile.werte[f.platz] ?? ''))), i)
   })
 
   return angekommen
+}
+
+// Eine geaenderte Zeile stand schon vorher im Beleg; ihre Satznummer beweist
+// darum nichts. Verglichen wird gegen den Wert, der VOR dem Senden dort stand:
+// steht er noch da, ist nichts geschehen. Gegen den gesendeten Wert zu
+// vergleichen ginge schief, sobald die ERP ihn umformt - sie rundet auf die
+// Stellen des Feldes, kuerzt Text auf die Feldlaenge und schreibt Datum um.
+// Eine angekommene Aenderung gaelte dann fuer immer als abgelehnt.
+export function aenderungAngekommen(
+  satz: string,
+  geaendert: readonly { feld: string; vorher: string }[],
+  lieferung: Lieferung,
+): boolean {
+  const zeile = lieferung.zeilen.find((z) => wertGleich(lieferung.satzVon(z), satz))
+  // Die Zeile steht nicht mehr im Beleg: die Aenderung hat kein Ziel mehr, und
+  // die Kette wuerde sie auch nicht noch einmal senden.
+  if (zeile === undefined) return true
+  // Nichts zu vergleichen: geaendert wurden nur Spalten ohne Feldcode.
+  if (geaendert.length === 0) return true
+  return geaendert.every((f) => !wertGleich(lieferung.lies(zeile, f.feld), f.vorher))
+}
+
+// Beim Loeschen beweist die Satznummer alles: ist sie fort, ist die Zeile fort.
+export function loeschungAngekommen(satz: string, lieferung: Lieferung): boolean {
+  return !lieferung.zeilen.some((z) => wertGleich(lieferung.satzVon(z), satz))
 }
 
 export interface FehlendeZeile {
@@ -81,13 +106,38 @@ export interface FehlendeZeile {
 // die letzte lesbar.
 const HOECHSTENS = 3
 
-export function fehlenMeldung(fehlende: readonly FehlendeZeile[]): string {
+function aufzaehlung(
+  fehlende: readonly FehlendeZeile[],
+  einzahl: string,
+  mehrzahl: string,
+): string {
   if (fehlende.length === 0) return ''
   const namen = fehlende.slice(0, HOECHSTENS)
     .map((f) => 'Position ' + f.nr + (f.artikel === '' ? '' : ' (' + f.artikel + ')'))
   const rest = fehlende.length - namen.length
   return namen.join(', ')
     + (rest > 0 ? ' und ' + String(rest) + ' weitere' : '')
-    + (fehlende.length === 1 ? ' ist' : ' sind')
-    + ' nicht im Beleg angekommen.'
+    + ' ' + (fehlende.length === 1 ? einzahl : mehrzahl)
+}
+
+export function fehlenMeldung(fehlende: readonly FehlendeZeile[]): string {
+  return aufzaehlung(
+    fehlende,
+    'ist nicht im Beleg angekommen.',
+    'sind nicht im Beleg angekommen.',
+  )
+}
+
+// Anderer Satz als beim Erfassen: die Zeile IST im Beleg, sie traegt nur die
+// Aenderung nicht.
+export function nichtGeaendertMeldung(fehlende: readonly FehlendeZeile[]): string {
+  return aufzaehlung(
+    fehlende,
+    'ist im Beleg unverändert geblieben.',
+    'sind im Beleg unverändert geblieben.',
+  )
+}
+
+export function nichtGeloeschtMeldung(fehlende: readonly FehlendeZeile[]): string {
+  return aufzaehlung(fehlende, 'steht noch im Beleg.', 'stehen noch im Beleg.')
 }

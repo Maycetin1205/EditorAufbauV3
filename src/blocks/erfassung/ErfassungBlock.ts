@@ -46,6 +46,12 @@ import { LaufStand, type ZeilenZeichen } from './zeilenStatus'
 
 const NICHT_ANGEKOMMEN = 'Nicht im Beleg angekommen.'
 
+// Die geaenderte Zeile steht im Beleg, sie traegt nur die Aenderung nicht; die
+// geloeschte steht ueberhaupt noch da. Zwei andere Saetze als beim Erfassen.
+const NICHT_GEAENDERT = 'Im Beleg unverändert geblieben.'
+
+const NICHT_GELOESCHT = 'Steht noch im Beleg.'
+
 export class ErfassungBlock extends TabelleBlock {
   static override readonly blockType = 'erfassung'
   static override readonly tagName = 'ff-erfassung'
@@ -157,13 +163,24 @@ export class ErfassungBlock extends TabelleBlock {
   // Der Vertrag der Faehigkeit haeltGesendete: die Lieferung entscheidet, welche
   // hinausgeschickte Zeile im Beleg steht. Die fehlenden bleiben vorgemerkt und
   // tragen die Fehlermarke, bis der naechste Lauf sie noch einmal versucht.
+  // Erfasste, geaenderte und geloeschte Zeilen nach derselben Regel.
   pruefeAnkunft(lieferung: Lieferung | null): void {
     const bericht = this._erfassung.pruefeAnkunft(lieferung, this.spaltenListe())
     for (const kennung of bericht.fehlende) {
       this._lauf.gescheitert('erfasst', kennung, NICHT_ANGEKOMMEN)
     }
-    if (bericht.meldung !== '') meldeFehler(bericht.meldung)
-    if (bericht.geaendert) this.requestUpdate()
+    const gebuchte = this._zeilen.pruefeAnkunft(lieferung)
+    for (const satz of gebuchte.aenderungFehlt) {
+      this._lauf.gescheitert('geaendert', satz, NICHT_GEAENDERT)
+    }
+    for (const satz of gebuchte.loeschungFehlt) {
+      this._lauf.gescheitert('geloescht', satz, NICHT_GELOESCHT)
+    }
+    // Der Balken traegt eine Zeile: was diese Lieferung entschieden hat, geht
+    // in einem Stueck hinaus, sonst ueberschriebe die zweite Meldung die erste.
+    const meldung = [bericht.meldung, gebuchte.meldung].filter((text) => text !== '').join(' ')
+    if (meldung !== '') meldeFehler(meldung)
+    if (bericht.geaendert || gebuchte.bewegt) this.requestUpdate()
   }
 
   protected override setzeAbgeleitetesZurueck(): void {
