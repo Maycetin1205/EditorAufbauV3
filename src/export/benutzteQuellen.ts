@@ -188,18 +188,36 @@ export function benutzteFelderJeQuelle(
   return felder
 }
 
+// Woher eine holende Quelle ihren Beleg nimmt, steht als „Auswahl folgen" am
+// Baustein. Die Schluesselfelder muessen trotzdem bei der GEBER-Quelle bestellt
+// werden, sonst ginge der Parameter der Relation leer hinaus.
 export function holSchluesselJeGeber(
-  used: readonly DataSource[],
+  tree: BlockTree,
+  sources: readonly DataSource[],
 ): Map<string, string[]> {
   const proGeber = new Map<string, string[]>()
-  for (const source of used) {
-    const lade = ladeRelationFor(source)
-    if (!lade) continue
-    const codes = proGeber.get(lade.geberQuelleId) ?? []
-    for (const code of [lade.belegartFeld, lade.belegnummerFeld, lade.jahrFeld, lade.archivFeld]) {
-      if (code !== '' && !codes.includes(code)) codes.push(code)
-    }
-    proGeber.set(lade.geberQuelleId, codes)
+  const merke = (geberId: string, codes: readonly string[]): void => {
+    if (geberId === '') return
+    const liste = proGeber.get(geberId) ?? []
+    for (const code of codes) if (code !== '' && !liste.includes(code)) liste.push(code)
+    proGeber.set(geberId, liste)
   }
+  const visit = (node: BlockNode | undefined): void => {
+    if (!node) return
+    const quelle = sources.find((s) => s.id === auswahlQuelleIdVon(node))
+    const lade = quelle ? ladeRelationFor(quelle) : null
+    if (lade) {
+      // Ohne Feldpaare ist die Folge fuer den Filter unbrauchbar, fuer die
+      // Holung reicht sie: die Schluessel nennt die Relation selbst.
+      for (const folge of auswahlFolgenAus(node.props[AUSWAHL_FOLGE_PROP])) {
+        merke(
+          auswahlQuelleIdVon(tree[folge.geberId]),
+          [lade.belegartFeld, lade.belegnummerFeld, lade.jahrFeld, lade.archivFeld],
+        )
+      }
+    }
+    node.childIds.forEach((id) => visit(tree[id]))
+  }
+  visit(tree[ROOT_ID])
   return proGeber
 }

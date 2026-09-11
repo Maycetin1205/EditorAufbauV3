@@ -1,10 +1,11 @@
-// Die Hol-Relation einer Quelle: welche Relation ihre Zeilen liefert.
+// Die Hol-Relation einer Quelle: welche Relation ihre Zeilen liefert. WOHER die
+// Zeile kommt, auf die sie sich bezieht, steht nicht hier, sondern als
+// „Auswahl folgen" am Baustein, der die Quelle zeigt - wie bei jedem anderen
+// Baustein auch.
 import { artFuer, type DataSourceKind } from './quellenArten'
 
 export interface LadeRelation {
   nr: string
-
-  geberQuelleId: string
 
   belegartFeld: string
   belegnummerFeld: string
@@ -60,7 +61,6 @@ export function pruefeLadeRelation(raw: unknown): LadeRelation | null {
   const e = raw as Record<string, unknown>
   const text = (v: unknown): string => (typeof v === 'string' ? v.trim() : '')
   const nr = text(e.nr)
-  const geberQuelleId = text(e.geberQuelleId)
   const belegartFeld = text(e.belegartFeld)
   const belegnummerFeld = text(e.belegnummerFeld)
   const jahrFeld = text(e.jahrFeld)
@@ -69,10 +69,9 @@ export function pruefeLadeRelation(raw: unknown): LadeRelation | null {
     ? e.endeFelder.filter((f): f is string => typeof f === 'string' && POS_LEN.test(f))
     : []
   if (!NUR_ZIFFERN.test(nr)) return null
-  if (geberQuelleId === '') return null
   if (!POS_LEN.test(belegartFeld) || !POS_LEN.test(belegnummerFeld)) return null
   if (jahrFeld !== '' && !POS_LEN.test(jahrFeld)) return null
   if (archivFeld !== '' && !POS_LEN.test(archivFeld)) return null
   if (endeFelder.length === 0) return null
-  return { nr, geberQuelleId, belegartFeld, belegnummerFeld, jahrFeld, archivFeld, endeFelder }
+  return { nr, belegartFeld, belegnummerFeld, jahrFeld, archivFeld, endeFelder }
 }

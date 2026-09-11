@@ -6,13 +6,14 @@ import { QUELLE_PROP } from '../../core/blocks/quelleProp'
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 import { hasSeData, onSeDaten, seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, isRecord } from '../../softengine/data'
+import { meldeFehler } from '../../softengine/meldung'
 import { ladeZeilenPerRelation } from '../../softengine/relationLader'
 import { holeWertQuelle } from '../../softengine/wertLader'
 import {
   aufAuswahlHoeren,
   auswahlFuer,
+  auswahlGeberVon,
   auswahlNummer,
-  geberIdVon,
   merkmalVon,
 } from './auswahl'
 
@@ -21,6 +22,9 @@ const letzterAbdruck = new Map<string, string>()
 // schon geladen wurden. Ohne sie schaukeln sich zwei Geber derselben Quelle
 // gegenseitig hoch und fragen im Halbsekundentakt gegen das ERP.
 const stillGeladen = new Map<string, Set<string>>()
+// Je Quelle einmal gemeldet: die Pruefung laeuft bei jedem Klick, der Satz
+// bliebe aber derselbe.
+const ohneGeberGemeldet = new Set<string>()
 let verdrahtet = false
 
 export function defsMitSatzWahl(): Map<string, BlockDefinition> {
@@ -46,27 +50,33 @@ function quellenAttrFuer(el: Element, def: BlockDefinition): string {
   return (aktiv ? wahl.quelleProp ?? QUELLE_PROP : QUELLE_PROP).toLowerCase()
 }
 
-// Der letzte Klick gewinnt: zeigen mehrere Bausteine dieselbe Quelle, gilt die
-// juengste Auswahl, nicht der erste Baustein in DOM-Reihenfolge.
+// Die Zeile, fuer die eine holende Quelle fragt: die Auswahl der Bausteine, denen
+// die Bausteine dieser Quelle folgen. Der letzte Klick gewinnt — zeigen mehrere
+// Bausteine dieselbe Quelle, gilt die juengste Auswahl, nicht der erste Baustein
+// in DOM-Reihenfolge. `geber` sagt, ob ueberhaupt einer eingestellt ist; ohne ihn
+// koennte die Quelle nie etwas holen.
 export function gewaehlteZeileDerQuelle(
   quelleId: string,
   defsJeTag: Map<string, BlockDefinition>,
   wurzel: ParentNode | undefined = typeof document === 'undefined' ? undefined : document,
-): unknown {
-  if (quelleId === '' || wurzel === undefined) return undefined
+): { zeile: unknown; geber: boolean } {
+  if (quelleId === '' || wurzel === undefined) return { zeile: undefined, geber: false }
   let juengste: { zeile: unknown; nummer: number } | null = null
+  let geber = false
   for (const el of Array.from(wurzel.querySelectorAll(`[${ACTION_VALUE_ID_ATTR}]`))) {
     const def = defsJeTag.get(el.tagName.toLowerCase())
     if (!def) continue
     const attr = quellenAttrFuer(el, def)
     if (attr === '' || el.getAttribute(attr) !== quelleId) continue
-    const geberId = geberIdVon(el)
-    const zeile = auswahlFuer(geberId)
-    if (zeile === undefined) continue
-    const nummer = auswahlNummer(geberId)
-    if (juengste === null || nummer > juengste.nummer) juengste = { zeile, nummer }
+    for (const geberId of auswahlGeberVon(el as HTMLElement)) {
+      geber = true
+      const zeile = auswahlFuer(geberId)
+      if (zeile === undefined) continue
+      const nummer = auswahlNummer(geberId)
+      if (juengste === null || nummer > juengste.nummer) juengste = { zeile, nummer }
+    }
   }
-  return juengste?.zeile
+  return { zeile: juengste?.zeile, geber }
 }
 
 // Eine Bedienung laedt immer und beginnt die Spur neu; eine Programm-Meldung
@@ -93,7 +103,20 @@ function pruefeHolendeQuellen(durchBedienung: boolean): void {
     if (!isRecord(eintrag) || typeof eintrag.id !== 'string') continue
     const quelle = findRuntimeDataSource(liste, eintrag.id)
     if (!quelle?.ladeRelation) continue
-    const zeile = gewaehlteZeileDerQuelle(quelle.ladeRelation.geberQuelleId, defsJeTag)
+    const { zeile, geber } = gewaehlteZeileDerQuelle(quelle.id, defsJeTag)
+    // Ohne Geber wartet die Quelle auf einen Klick, den es nie gibt. Still
+    // bliebe die Tabelle leer und niemand saehe warum.
+    if (!geber) {
+      if (!ohneGeberGemeldet.has(quelle.id)) {
+        ohneGeberGemeldet.add(quelle.id)
+        meldeFehler(
+          `„${quelle.name}" holt ihre Zeilen erst auf einen Klick hin, aber an keinem `
+          + 'Baustein mit dieser Quelle steht, wessen Auswahl er folgt. '
+          + 'Im Editor am Baustein unter „Auswahl folgen" die Belegliste wählen.',
+        )
+      }
+      continue
+    }
     if (!darfLaden(quelle.id, merkmalVon(zeile), durchBedienung)) continue
     ladeZeilenPerRelation(quelle, quelle.ladeRelation, zeile)
   }

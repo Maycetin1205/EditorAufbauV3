@@ -662,7 +662,12 @@
         "rasterW": 10,
         "rasterH": 8,
         "weitereQuellen": [],
-        "folgtAuswahl": [],
+        "folgtAuswahl": [
+          {
+            "geberId": "1ad177b5-27d1-4898-8e5c-d2a8c730fa6c",
+            "keyPairs": []
+          }
+        ],
         "source": "57d71a71-85f3-4844-aa9c-e158eb86e8a3",
         "spalten": [
           {
@@ -1348,7 +1353,6 @@
       "kopfsatzIndex": "BEL_0_11",
       "ladeRelation": {
         "nr": "69",
-        "geberQuelleId": "5c6c3be6-dbed-44d6-92cf-24ba89e59c31",
         "belegartFeld": "2_1",
         "belegnummerFeld": "3_8",
         "jahrFeld": "0_1",

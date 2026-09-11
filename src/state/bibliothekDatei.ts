@@ -30,12 +30,16 @@ export type BibliothekErgebnis =
 
 // Aeltere Masken speicherten in der Hol-Relation eine Feldliste mit. Die
 // errechnet der Export aus den benutzten Feldern, ohne sie geht nichts verloren.
+// Und sie nannten dort die Geber-QUELLE; heute steht der Geber als
+// „Auswahl folgen" am Baustein. Eine solche Datei laedt weiter — der Geber ist
+// am Baustein einmal neu zu waehlen.
 export function ohneErrechnetes(eintrag: unknown): unknown {
   if (!eintrag || typeof eintrag !== 'object') return eintrag
   const e = eintrag as Record<string, unknown>
   if (!e.ladeRelation || typeof e.ladeRelation !== 'object') return eintrag
   const lade = { ...(e.ladeRelation as Record<string, unknown>) }
   delete lade.zusatzFelder
+  delete lade.geberQuelleId
   return { ...e, ladeRelation: lade }
 }
 

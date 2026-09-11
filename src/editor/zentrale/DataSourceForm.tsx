@@ -19,7 +19,6 @@ import {
   kopfsatzFromInput,
   LADE_RELATION_STANDARD,
   QUELLEN_ARTEN,
-  quellenKennung,
   relationNrFromInput,
   tabellenKennungNoetig,
   type DataSource,
@@ -31,7 +30,6 @@ import { useRelations } from '../../state/useRelations'
 import { ParameterZeile } from './ParameterZeile'
 import type { ParameterWahlen } from './parameter/wahlen'
 import { RelationAuswahl } from './RelationAuswahl'
-import { PickerControl } from '../inspector/controls/PickerControl'
 import { SelectControl } from '../inspector/controls/SelectControl'
 import { FeldListe } from './FeldListe'
 import { quellenWorte } from './beschriftungen'
@@ -68,7 +66,6 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   const lade = source?.ladeRelation
   const [zeilenWeg, setZeilenWeg] = useState<'geschoben' | 'holen'>(lade ? 'holen' : 'geschoben')
   const [relationNr, setRelationNr] = useState(lade?.nr ?? LADE_RELATION_STANDARD.nr)
-  const [geberQuelleId, setGeberQuelleId] = useState(lade?.geberQuelleId ?? '')
   const feldZuordnung = {
     belegartFeld: lade?.belegartFeld ?? LADE_RELATION_STANDARD.belegartFeld,
     belegnummerFeld: lade?.belegnummerFeld ?? LADE_RELATION_STANDARD.belegnummerFeld,
@@ -224,12 +221,9 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
   const relationNrFehler = holtZeilen && relationNrFromInput(relationNr) === ''
     ? 'Relationsnummer fehlt — nur Ziffern.'
     : ''
-  const geberFehler = holtZeilen && geberQuelleId === ''
-    ? 'Wähle die Quelle, in der der Beleg angeklickt wird.'
-    : ''
   const alleFehler = [
     nameFehler, kennungFehler, kopfsatzFehler, doppeltFehler,
-    relationNrFehler, geberFehler, holFehler,
+    relationNrFehler, holFehler,
     ...zeilenFehler,
   ]
 
@@ -259,7 +253,6 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
         ? {
             ladeRelation: {
               nr: relationNrFromInput(relationNr),
-              geberQuelleId,
               ...feldZuordnung,
             },
           }
@@ -369,24 +362,10 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
                 />
               )}
             </Zeile>
-            {/* Keine Leer-Option: eine leere Quelle ist hier ein Fehler
-                (geberFehler), also darf sie nicht wählbar sein. */}
-            <PickerControl
-              label="Beleg kommt aus"
-              bezeichnung="Beleg kommt aus"
-              fehler={zeigeFehler && geberFehler !== '' ? geberFehler : undefined}
-              gruppen={[{
-                key: 'quellen',
-                eintraege: geberOptionen.map((s) => ({
-                  wert: s.id,
-                  name: s.name,
-                  kennung: quellenKennung(s),
-                })),
-              }]}
-              wert={geberQuelleId}
-              platzhalter="— Quelle wählen —"
-              onWaehle={setGeberQuelleId}
-            />
+            <p className="text-dicht text-matt">
+              Welche Zeile gemeint ist, stellst du am Baustein ein:
+              „Auswahl folgen“ → die Tabelle mit den Belegen.
+            </p>
           </>
         )}
 

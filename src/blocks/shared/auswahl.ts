@@ -119,6 +119,12 @@ function folgenAusAttribut(el: HTMLElement): AuswahlFolge[] {
     .map((e) => ({ geberId: e.id, keyPairs: e.keyPairs }))
 }
 
+// Die Bausteine, deren Auswahl dieser hier folgt. Der Filter braucht dazu die
+// Feldpaare, eine holende Quelle nur die Zeile selbst.
+export function auswahlGeberVon(el: HTMLElement): string[] {
+  return folgenAusAttribut(el).map((f) => f.geberId).filter((id) => id !== '')
+}
+
 export function zeilenNachAuswahl(
   el: HTMLElement,
   rows: unknown[],

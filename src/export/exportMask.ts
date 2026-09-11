@@ -226,7 +226,7 @@ export function exportMask(
 
   const benutzteFelder = benutzteFelderJeQuelle(tree, sources)
 
-  const holSchluessel = holSchluesselJeGeber(used)
+  const holSchluessel = holSchluesselJeGeber(tree, used)
   const usedRelations = collectRelations(tree, relations, used)
 
   const tokensCss = stripCssComments(tokensCssRaw)

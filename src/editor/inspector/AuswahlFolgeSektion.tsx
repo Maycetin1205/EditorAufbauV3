@@ -9,7 +9,7 @@ import {
   folgeBrauchbar,
   type AuswahlFolge,
 } from '../../core/data/auswahlFolge'
-import { quellenKennung } from '../../core/data/dataSources'
+import { ladeRelationFor, quellenKennung } from '../../core/data/dataSources'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
 import { bausteinName } from '../../core/blocks/bausteinName'
@@ -40,6 +40,11 @@ export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
   const geberNode = folge ? ed.tree[folge.geberId] : undefined
   const geberQuelle = quelleVon(geberNode)
 
+  // Eine holende Quelle fragt fuer die gewaehlte Zeile; die Schluessel dafuer
+  // nennt ihre Relation selbst. Verbindende Felder sind dort kein Muss, sondern
+  // ein zusaetzlicher Filter ueber das Geholte.
+  const holtZeilen = eigeneQuelle !== undefined && ladeRelationFor(eigeneQuelle) !== null
+
   const eintrag = (n: BlockNode): ListeEintrag => {
     const q = quelleVon(n)
     return q
@@ -55,11 +60,10 @@ export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
       setze([])
       return
     }
+    const keyPairs = folge && folge.keyPairs.length > 0 ? folge.keyPairs : []
     setze([{
       geberId: v,
-      keyPairs: folge && folge.keyPairs.length > 0
-        ? folge.keyPairs
-        : [{ fromField: '', toField: '' }],
+      keyPairs: holtZeilen || keyPairs.length > 0 ? keyPairs : [{ fromField: '', toField: '' }],
     }])
   }
   return (
@@ -76,6 +80,12 @@ export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
       />
       {folge && (
         <>
+          {holtZeilen && (
+            <p className="text-dicht text-matt">
+              Diese Quelle holt ihre Zeilen zum hier gewählten Satz. Verbindende
+              Felder sind kein Muss — gesetzt, filtern sie das Geholte zusätzlich.
+            </p>
+          )}
           <SchluesselPaarZeilen
             frage="Verbindende Felder"
             paare={folge.keyPairs}
@@ -90,7 +100,7 @@ export function AuswahlFolgeSektion({ block }: AuswahlFolgeSektionProps) {
           {(!geberQuelle || !eigeneQuelle) && (
             <p className="text-dicht text-matt">Beide Bausteine brauchen eine Datenquelle.</p>
           )}
-          {geberQuelle && eigeneQuelle && !folgeBrauchbar(folge) && (
+          {geberQuelle && eigeneQuelle && !holtZeilen && !folgeBrauchbar(folge) && (
             <p className="text-dicht text-matt">Ein Feldpaar ist noch halb leer.</p>
           )}
         </>

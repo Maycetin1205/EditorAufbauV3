@@ -34,7 +34,6 @@ const SATZ = 'x'.repeat(11) + 'ABC'
 function lade(zusatzFelder: readonly string[] = []): RuntimeLadeRelation {
   return {
     nr: '69',
-    geberQuelleId: 'q-bel',
     belegartFeld: '2_1',
     belegnummerFeld: '3_8',
     jahrFeld: '',
