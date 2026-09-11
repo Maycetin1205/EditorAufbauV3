@@ -40,6 +40,7 @@ import {
   zeileFromField,
   zeileGefuellt,
   zeilenCode,
+  zeilenZeichen,
   type FeldZeile,
 } from './feldZeile'
 import { FormularKarte } from './FormularKarte'
@@ -267,10 +268,14 @@ export function DataSourceForm({ source, onClose }: DataSourceFormProps) {
       ...(holtWert && holRelationId !== ''
         ? { holWert: { relationId: holRelationId, params: holParams } }
         : {}),
-      fields: zeilen.map((z) => ({
-        code: zeilenCode(z, vorsatz, art.spaltenNamen),
-        label: z.label.trim(),
-      })),
+      fields: zeilen.map((z) => {
+        const zeichen = zeilenZeichen(z)
+        return {
+          code: zeilenCode(z, vorsatz, art.spaltenNamen),
+          label: z.label.trim(),
+          ...(zeichen === undefined ? {} : { zeichen }),
+        }
+      }),
     }
     if (source) store.update(source.id, daten)
     else store.add(daten)

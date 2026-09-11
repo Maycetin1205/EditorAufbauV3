@@ -36,10 +36,19 @@ export {
   spaltenNameFromInput,
 } from './quellenEingabe'
 
+// Weiter oben hoert der Wert auf, eine Breite zu sein, und faengt an, eine
+// Tabelle zu sprengen.
+export const ZEICHEN_MAX = 200
+
 export interface DataSourceField {
   code: string
 
   label: string
+
+  // Wie breit eine Spalte auf dieses Feld beim Anlegen wird, in Zeichen. Nur
+  // ein Startwert: danach ist es eine gewoehnliche Spaltenbreite zum Ziehen.
+  // Fehlt sie, bekommt die Spalte wie bisher den mittleren Anteil.
+  zeichen?: number
 }
 
 export interface DataSource {
@@ -272,7 +281,15 @@ export function pruefeDatenquellen(
         continue
       }
 
-      fields.push({ code: ff.code, label: ff.label })
+      const zeichen = typeof ff.zeichen === 'number' && Number.isFinite(ff.zeichen)
+        && ff.zeichen >= 1
+        ? Math.min(ZEICHEN_MAX, Math.round(ff.zeichen))
+        : undefined
+      fields.push({
+        code: ff.code,
+        label: ff.label,
+        ...(zeichen === undefined ? {} : { zeichen }),
+      })
     }
 
     const ladeRelation = e.ladeRelation === undefined ? null : pruefeLadeRelation(e.ladeRelation)

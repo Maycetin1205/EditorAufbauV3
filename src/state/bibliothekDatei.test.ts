@@ -117,3 +117,28 @@ test('Maskendatei und Bibliotheksdatei zeigen aufeinander statt still zu scheite
   expect(meldungsText()).toContain('Bibliothek laden')
   expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a'])
 })
+
+test('die Spaltenbreite am Feld uebersteht den Weg durch die Datei', async () => {
+  await ladeBibliothekAusDatei(ed, bibliothek([{
+    ...QUELLE_B,
+    fields: [
+      { code: '3_8', label: 'Nummer', zeichen: 8 },
+      { code: '45_60', label: 'Bezeichnung' },
+    ],
+  }], []))
+
+  const felder = dataSourceStore.list.find((q) => q.id === 'q-b')?.fields ?? []
+  expect(felder.map((f) => f.zeichen)).toEqual([8, undefined])
+})
+
+// Eine unmoegliche Breite wird NICHT stillschweigend weggeworfen: der Lader
+// nennt die Stelle und laedt gar nicht, sonst faende der Bediener den Verlust nie.
+test('eine unmoegliche Spaltenbreite laesst die Datei stehen und sagt wo', async () => {
+  await ladeBibliothekAusDatei(ed, bibliothek([{
+    ...QUELLE_B,
+    fields: [{ code: '3_8', label: 'Nummer', zeichen: 0 }],
+  }], []))
+
+  expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a'])
+  expect(meldungsText()).toContain('zeichen')
+})

@@ -32,7 +32,6 @@ export function fensterBreiteFuer(spalten: number): number {
 // Leer heisst Automatik: eine Spalte, mit eigenem Anzeigefeld zwei.
 export const NACHSCHLAG_SPALTEN_BINDUNG: ListenBindung = {
   prop: 'nachschlagSpalten',
-  zeichenGrenzeKey: 'maxZeichen',
   titelKey: 'titel',
   feldKey: 'feld',
   standardTitel: STANDARD_TITEL,

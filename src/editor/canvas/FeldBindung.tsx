@@ -20,6 +20,7 @@ import type { Editor } from '../../state/Editor'
 import { wendeProps } from '../../state/propsPatch'
 import { quellenTraeger } from '../../state/quellenOps'
 import { useDataSources } from '../../state/useDataSources'
+import { breiteAusZeichen, zeichenVon } from './feldBreite'
 import { oeffneFensterImEditor } from './fensterStand'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 import { oeffneDatencenter } from '../zentrale/oeffnen'
@@ -256,11 +257,6 @@ export function useFeldBindung({
             key={listenPicker.index}
             spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
             gruppen={listenGruppen}
-            zeichenGrenze={listenBindung.zeichenGrenzeKey === undefined ? undefined : {
-              wert: typeof eintrag[listenBindung.zeichenGrenzeKey] === 'number'
-                ? eintrag[listenBindung.zeichenGrenzeKey] as number : undefined,
-              onAendern: (wert) => schreibeInEintrag(listenPicker, { [listenBindung.zeichenGrenzeKey!]: wert }),
-            }}
             titel={{
               wert: titelJetzt,
               standard: standardTitel,
@@ -324,8 +320,17 @@ export function useFeldBindung({
                   ? (quelleAusProp.fields.find((f) => f.code === feldWert)?.label ?? '')
                   : klarnameVon(feldWert, quellen)) || feldWert
 
+                // Die Breite kommt vom Feld MIT, wenn es eine nennt. Nennt es
+                // keine, bleibt die Spalte, wie der Bauer sie gezogen hat: ein
+                // Feld ohne Angabe hat zur Breite keine Meinung.
+                const zeichen = proQuelle
+                  ? quelleAusProp.fields.find((f) => f.code === wert)?.zeichen
+                  : zeichenVon(wert, quellen)
+                const breite = breiteAusZeichen(zeichen)
+
                 ziel[listenBindung.titelKey] = wert === '' ? standardTitel : klarname(wert)
                 ziel[listenBindung.feldKey] = wert
+                if (breite !== undefined) ziel.breite = breite
                 editor.updateProperty(block.id, listenBindung.prop, next)
               })
           // Das Fenster bleibt OFFEN: es ist die Einstellflaeche der Spalte, kein

@@ -27,6 +27,7 @@ import {
   type FensterStand,
   type OffenesFenster,
 } from './fensterStand'
+import { breiteAusZeichen } from './feldBreite'
 import { FieldPicker, type PickerGruppe } from './FieldPicker'
 
 // An jeder Kopfkante gehoeren ein paar Pixel dem Breiten-Griff der Maske; die
@@ -261,8 +262,6 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
           ebene={EBENE_UEBER_MASKENFENSTER}
           spotLabel={spalteDesPickers.titel === '' ? standardTitel : spalteDesPickers.titel}
           gruppen={gruppen}
-          zeichenGrenze={{ wert: spalteDesPickers.maxZeichen,
-            onAendern: (maxZeichen) => aendere(gewaehlt, { maxZeichen }) }}
           titel={{
             wert: spalteDesPickers.titel,
             standard: standardTitel,
@@ -279,10 +278,13 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
           // Die Feldwahl setzt den Titel IMMER auf den Klarnamen des Feldes, wie
           // am Kopf der Erfassungszeile. Umbenennen geht danach jederzeit.
           onPick={(wert) => {
-            const klarname = quelle?.fields.find((f) => f.code === wert)?.label ?? ''
+            const feld = quelle?.fields.find((f) => f.code === wert)
+            const klarname = feld?.label ?? ''
+            const breite = breiteAusZeichen(feld?.zeichen)
             aendere(gewaehlt, {
               feld: wert,
               titel: wert === '' ? standardTitel : (klarname !== '' ? klarname : wert),
+              ...(breite === undefined ? {} : { breite }),
             })
           }}
           entfernenLabel="Spalte entfernen"

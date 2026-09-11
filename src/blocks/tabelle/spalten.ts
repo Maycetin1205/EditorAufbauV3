@@ -10,7 +10,6 @@ export interface Spalte {
   feld: string
 
   breite?: number
-  maxZeichen?: number
 
   summe?: boolean
 
@@ -85,8 +84,6 @@ function alsSpalte(x: unknown, index: number): Spalte {
   if (x && typeof x === 'object') {
     const o = x as Record<string, unknown>
     const breite = o.breite === undefined ? undefined : alsBreite(o.breite)
-    const maxZeichen = typeof o.maxZeichen === 'number' && Number.isFinite(o.maxZeichen)
-      && o.maxZeichen >= 1 ? Math.min(500, Math.round(o.maxZeichen)) : undefined
     const formel = formelVonRoh(o.formel)
     return {
       kennung: typeof o.kennung === 'string' ? o.kennung.trim() : '',
@@ -94,7 +91,6 @@ function alsSpalte(x: unknown, index: number): Spalte {
       feld: typeof o.feld === 'string' ? o.feld : '',
 
       ...(breite === undefined ? {} : { breite }),
-      ...(maxZeichen === undefined ? {} : { maxZeichen }),
 
       ...(typeof o.summe === 'boolean' ? { summe: o.summe } : {}),
 
@@ -143,11 +139,7 @@ export function spaltenRaster(
   const mittel = gesetzt.length === 0
     ? 1
     : Math.max(1, Math.round(gesetzt.reduce((a, b) => a + b, 0) / gesetzt.length))
-  return eigene.map((w, i) => {
-    const max = spalten[i].maxZeichen
-    return max === undefined ? `minmax(0, ${w ?? mittel}fr)`
-      : `minmax(0, calc(${max}ch + 2 * var(--se-zell-x, 10px)))`
-  }).join(' ')
+  return eigene.map((w) => `minmax(0, ${w ?? mittel}fr)`).join(' ')
 }
 
 // Die neue Spalte bekommt den mittleren Anteil, das Raster fuellt die Tabelle

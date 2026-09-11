@@ -1,11 +1,13 @@
-// Die Feldliste einer Datenquelle im Formular: Klarname, Position, Laenge.
+// Die Feldliste einer Datenquelle im Formular: Klarname, Position, Laenge,
+// Spaltenbreite in Zeichen.
 import { Plus, X } from '@/ui/zeichen'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
+import { ZEICHEN_MAX } from '../../core/data/dataSources'
 import { LEERE_ZEILE, type FeldZeile } from './feldZeile'
 
-const SPALTEN = 'grid grid-cols-[minmax(0,1fr)_72px_72px_auto] items-center gap-x-2'
-const SPALTEN_NAMEN = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-2'
+const SPALTEN = 'grid grid-cols-[minmax(0,1fr)_72px_72px_64px_auto] items-center gap-x-2'
+const SPALTEN_NAMEN = 'grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_64px_auto] items-center gap-x-2'
 
 interface FeldListeProps {
   zeilen: FeldZeile[]
@@ -44,6 +46,7 @@ export function FeldListe({
         {spaltenNamen
           ? <span>{spaltenLabel}</span>
           : <><span>Position</span><span>Länge</span></>}
+        <span title="Wie breit eine Spalte auf dieses Feld beim Anlegen wird. Leer: wie bisher.">Zeichen</span>
         <span />
       </div>
       {zeilen.map((z, i) => (
@@ -78,6 +81,17 @@ export function FeldListe({
                 />
               </>
             )}
+            <Feld
+              type="number"
+              min={1}
+              max={ZEICHEN_MAX}
+              step={1}
+              aria-label={`Feld ${i + 1}: Spaltenbreite in Zeichen`}
+              title="Nur der Startwert einer neuen Spalte. Ziehen geht danach wie immer."
+              value={z.zeichen}
+              placeholder="—"
+              onChange={(e) => setZeile(i, { zeichen: e.target.value })}
+            />
             <Knopf
               nurZeichen
               aria-label={`Feld ${i + 1} entfernen`}

@@ -67,6 +67,8 @@ export const tabelleStil = css`
         flex: none;
         background: var(--se-panel-2);
         border-bottom: var(--se-border) solid var(--se-line);
+        font-size: var(--se-fs-kopf);
+        font-weight: 600;
         color: var(--se-muted);
       }
 
@@ -159,8 +161,6 @@ export const tabelleStil = css`
       .kopf > div.z { justify-content: flex-end; text-align: right; }
 
       .kopf > div {
-        font-size: var(--se-fs-kopf);
-        font-weight: 600;
         display: flex;
         align-items: center;
         line-height: 1.25;

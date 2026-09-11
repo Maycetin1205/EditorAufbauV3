@@ -53,7 +53,6 @@ export const SPALTEN_BINDUNG: ListenBindung = {
   titelKey: 'titel',
   feldKey: 'feld',
   kennungKey: 'kennung',
-  zeichenGrenzeKey: 'maxZeichen',
   standardTitel: STANDARD_TITEL,
 
   eintragNeu: (props) => {
