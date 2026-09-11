@@ -6,7 +6,7 @@ export interface ErfassungsSpalte extends Spalte {
 
   fuellFeld?: string
 
-  // Das Suchfenster dieser Zelle (F4). LEER heisst Automatik: das Fenster nimmt
+  // Das Suchfenster dieser Zelle (F5). LEER heisst Automatik: das Fenster nimmt
   // die Spalten der Tabelle, die auf dieselbe Hilfsquelle zeigen.
   fensterSpalten?: Spalte[]
 

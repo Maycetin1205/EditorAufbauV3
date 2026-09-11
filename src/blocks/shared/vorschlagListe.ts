@@ -41,6 +41,7 @@ export function passendeVorschlaege<T extends Vorschlag>(
   eintraege: readonly T[],
   getippt: string,
   max: number = VORSCHLAEGE_MAX,
+  reihenfolgeBehalten = false,
 ): T[] {
   if (getippt.trim() === '') return []
   // Alle Treffer sammeln und erst dann kuerzen: sonst faellt der beste weg, nur
@@ -49,7 +50,7 @@ export function passendeVorschlaege<T extends Vorschlag>(
   for (const eintrag of eintraege) {
     if (zeilePasst([eintrag.anzeige, eintrag.wert], getippt)) treffer.push(eintrag)
   }
-  return ordneVorschlaege(treffer, getippt).slice(0, max)
+  return (reihenfolgeBehalten ? treffer : ordneVorschlaege(treffer, getippt)).slice(0, max)
 }
 
 // Die Liste darf breiter werden als ihr Halter, bleibt links verankert und

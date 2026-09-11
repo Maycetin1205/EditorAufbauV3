@@ -70,6 +70,7 @@ export class ErfassungsAnschluss {
   umfeld(el: HTMLElement, spalten: readonly ErfassungsSpalte[], quelleId: string): ErfassungsUmfeld {
     const verknuepfungen = verknuepfungenVon(el)
     return {
+      baustein: el,
       spalten,
       quelleId,
       paareZu: (id) => verknuepfungen.find((v) => v.quelleId === id)?.keyPairs ?? [],

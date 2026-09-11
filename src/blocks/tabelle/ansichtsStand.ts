@@ -197,8 +197,9 @@ export class AnsichtsStand {
     this._suchtext = ''
     this._sortSpalte = -1
     this._sortAuf = true
-    this._gemerkteGelesen = true
-    this.merkeSortierung()
+    // Das erstmalige Setzen der Datenherkunft ist noch kein Zweckwechsel.
+    // Vor dem ersten Lesen darf es den gespeicherten Stand nicht loeschen.
+    if (this._gemerkteGelesen) this.merkeSortierung()
     this.nachPush()
     this._fokusZeile = null
     this._fokusHolen = false

@@ -24,10 +24,10 @@ export type TastenFolge =
   | 'leeren'
   | 'nichts'
 
-// Alt+Pfeil-runter ist das zweite F4: auf manchen Tastaturen liegt F4 auf einer
+// Alt+Pfeil-runter ist das zweite F5: auf manchen Tastaturen liegt F5 auf einer
 // Zweitbelegung.
 export function tasteVon(e: KeyboardEvent): string {
-  return e.key === 'ArrowDown' && e.altKey ? 'F4' : e.key
+  return e.key === 'ArrowDown' && e.altKey ? 'F5' : e.key
 }
 
 export interface TastenLage {
@@ -68,8 +68,8 @@ function tastenFolge(taste: string, l: TastenLage & {
     if (l.listeOffen && eindeutig) return 'uebernehmen'
     return l.springt ? 'weiter' : 'nichts'
   }
-  if (taste === 'F4') {
-    return l.nachschlagbar && l.hatSaetze() ? 'fenster' : 'nichts'
+  if (taste === 'F5') {
+    return l.nachschlagbar ? 'fenster' : 'nichts'
   }
   if (taste === 'Escape') {
     if (l.listeOffen) return 'liste-zu'

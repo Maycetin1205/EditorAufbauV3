@@ -5,13 +5,14 @@ import {
   type Eintrag,
 } from '../tabelle/nachschlagen'
 import { getField } from '../../softengine/data'
-import { passendeVorschlaege, VORSCHLAEGE_MAX } from '../shared/vorschlagListe'
+import { vorschlaegeImFensterStand } from '../tabelle/nachschlagStand'
 import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
 import { rechneFormel, zahlStreng, zahlText } from '../../core/data/rechnung'
 import { alsZahl } from '../tabelle/sortierung'
 import { spalteMitKennung } from './erfassungsSpalte'
 import {
   anzeigeSpalteIn,
+  fensterSpaltenIn,
   passendeSaetze,
   verknuepfteQuellenIn,
   zellenzielVon,
@@ -330,9 +331,9 @@ export class ErfassungsLauf {
     if (getippt === '') {
       // Aufgemacht heisst alles zeigen, sonst bleibt die Liste dem Getippten vorbehalten.
       if (this._listeAuf !== index) return []
-      return this.eintraege(umfeld, index).slice(0, VORSCHLAEGE_MAX)
     }
-    return passendeVorschlaege(this.eintraege(umfeld, index), getippt)
+    return vorschlaegeImFensterStand(this.eintraege(umfeld, index), getippt,
+      fensterSpaltenIn(umfeld, index), umfeld.baustein, umfeld.spalten[index]?.kennung)
   }
 
   // Dieselben Eintraege fuer Liste und Fenster. Nachgeschlagen wird nur in einer

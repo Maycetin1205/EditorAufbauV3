@@ -11,7 +11,9 @@ import type {
   SuchFenster,
 } from '../../core/blocks/BlockDefinition'
 import { geberIdVon, klareAuswahl, setzeAuswahl } from '../shared/auswahl'
-import { passendeVorschlaege, VORSCHLAEGE_MAX, vorschlagStil } from '../shared/vorschlagListe'
+import { vorschlagStil } from '../shared/vorschlagListe'
+import { vorschlaegeImFensterStand } from '../tabelle/nachschlagStand'
+import { automatikSpalten } from '../tabelle/nachschlagen'
 import { tasteVon, VorschlagStand } from '../shared/vorschlagStand'
 import { eingabeStelleTpl } from '../shared/zellenEingabe'
 import { FELD_EIGENSCHAFTEN } from './feldEigenschaften'
@@ -301,15 +303,15 @@ export class FormFeldBlock extends BasicBlock {
     // Aufgemacht heisst alles zeigen, sonst bleibt die Liste dem Getippten
     // vorbehalten.
     const getippt = this.getippt ?? ''
-    if (getippt === '') {
-      return this.liste.aufgemacht ? ergebnis.eintraege.slice(0, VORSCHLAEGE_MAX) : []
-    }
-    return passendeVorschlaege(ergebnis.eintraege, getippt)
+    if (getippt === '' && !this.liste.aufgemacht) return []
+    return vorschlaegeImFensterStand(ergebnis.eintraege, getippt,
+      this.nachschlagSpalten.length > 0 ? this.nachschlagSpalten : automatikSpalten(this), this)
   }
 
   // Escape kommt hier NICHT an, wenn ein Fenster offen ist: dessen Rahmen hoert
   // am window in der Abfang-Phase und schliesst sich selbst.
   private onNachschlagTaste(e: KeyboardEvent): void {
+    if (e.key === 'F5' && !this.imEditor) e.preventDefault()
     if (this.imEditor) return
     const folge = this.liste.folgeFuer(tasteVon(e), {
       listeOffen: this.liste.offen,

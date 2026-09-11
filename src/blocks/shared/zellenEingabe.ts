@@ -12,8 +12,8 @@ export interface EingabeStelleLage {
   // Beschriftung fuer die Vorlesehilfe; die Zelle nimmt ihren Spaltentitel.
   titel: string
 
-  // Leer heisst keiner. In der Zelle erscheint er erst, wenn der Bediener in der
-  // Zeile steht; das Formularfeld zeichnet seinen eigenen darueber.
+  // Leer heisst keiner. Die naechste Erfassungszeile zeigt ihn dauerhaft;
+  // das Formularfeld zeichnet seinen eigenen darueber.
   platzhalter: string
 
   // Die Klasse des Eingabefeldes: die Zelle traegt darin ihren Zustand, das
@@ -111,6 +111,13 @@ export function geheInZelle(feld: HTMLInputElement | null | undefined): boolean 
 }
 
 export const zellenEingabeStil = css`
+      .zell-beschriftung {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
       .zell-halter {
         position: relative;
         display: flex;
@@ -142,6 +149,7 @@ export const zellenEingabeStil = css`
       .zell-eingabe:focus { outline: none; }
 
       .zell-eingabe::placeholder { color: transparent; }
+      .zeile.erfassung .zell-eingabe::placeholder { color: var(--se-faint); }
       .zeile:focus-within .zell-eingabe::placeholder { color: var(--se-faint); }
 
       .zell-eingabe.geaendert {

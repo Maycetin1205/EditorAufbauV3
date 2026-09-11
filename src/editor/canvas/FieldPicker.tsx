@@ -65,6 +65,7 @@ interface FieldPickerProps {
   gruppen: readonly PickerGruppe[]
 
   titel?: PickerTitel
+  zeichenGrenze?: { wert?: number; onAendern: (wert: number | undefined) => void }
 
   schalter?: readonly PickerSchalter[]
 
@@ -191,6 +192,7 @@ export function FieldPicker({
   spotLabel,
   gruppen,
   titel,
+  zeichenGrenze,
   schalter,
   weitereFelder,
   quellenWahl,
@@ -310,6 +312,23 @@ export function FieldPicker({
         )}
 
         {feldZeile(ziele[0])}
+        {zeichenGrenze && (
+          <label className="flex items-center gap-3 px-1.5 text-ui text-matt">
+            <span className="flex-1">Max. Breite in Zeichen</span>
+            <Feld
+              type="number" min={1} max={500} step={1}
+              aria-label="Maximale Spaltenbreite in Zeichen"
+              title="Leer: Restplatz nutzen. Zeichenbreite ist ein Richtmaß für die Anzeige, keine Eingabegrenze."
+              placeholder="Flexibel"
+              value={zeichenGrenze.wert ?? ''}
+              className="w-24"
+              onChange={(e) => {
+                const wert = e.currentTarget.valueAsNumber
+                zeichenGrenze.onAendern(Number.isFinite(wert) ? Math.max(1, Math.min(500, Math.round(wert))) : undefined)
+              }}
+            />
+          </label>
+        )}
 
         {/* Das Fuellfeld steht OFFEN und gleichrangig neben dem Hauptfeld: es
             ist der halbe Sinn der Spalte, nicht eine seltene Zusatzeinstellung.

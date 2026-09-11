@@ -5,13 +5,14 @@ import { styleMap } from 'lit/directives/style-map.js'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { ListenBindung, SatzWahl } from '../../core/blocks/BlockDefinition'
-import { geberIdVon } from '../shared/auswahl'
+import { geberIdVon, setzeAuswahl } from '../shared/auswahl'
 import { LEER_TEXT_STANDARD, leerStil } from '../shared/leerZustand'
 import { OHNE_SCHMUCK, type Unterzeilen, type Zeilenschmuck } from '../shared/zeilenNaehte'
 import {
   connectTable,
   disconnectTable,
   leiteZeilenAb,
+  zeilenIndexVon,
   type BereitgestellteZeile,
   type Datenbesitz,
 } from './seRuntime'
@@ -31,6 +32,9 @@ import { tabelleAnsicht, zeigtEchteDaten } from './tabelleAnsicht'
 import { SPALTEN_BINDUNG, TABELLE_EIGENSCHAFTEN } from './tabelleEigenschaften'
 import { tabelleFuss, tabelleKoerper } from './tabelleKoerper'
 import { tabelleStil } from './tabelleStil'
+import { parseBlockEvents } from '../../core/data/aktionen'
+import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
+import { fokussierterRohIndex } from './zeilenAktivierung'
 
 export class TabelleBlock extends BasicBlock {
   // Als string, nicht als Literal: die Erfassung erbt und traegt eigene Namen.
@@ -47,6 +51,7 @@ export class TabelleBlock extends BasicBlock {
   static readonly blockEvents = [
     { key: 'onRowClick', name: 'Zeile gewählt' },
     { key: 'onRowDblClick', name: 'Zeile doppelt geklickt' },
+    { key: 'onF4', name: 'F4 – Aktion an der Zeile' },
   ]
 
   static readonly listenBindung: ListenBindung = SPALTEN_BINDUNG
@@ -216,8 +221,26 @@ export class TabelleBlock extends BasicBlock {
     )
   }
 
+  private readonly aktionsTaste = (e: KeyboardEvent): void => {
+    if (this.imEditor || e.defaultPrevented || e.key !== 'F4'
+      || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
+    if (!parseBlockEvents(this.getAttribute('data-ff-aktionen')).onF4?.length) return
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.repeat) return
+    const fokus = fokussierterRohIndex(this.shadowRoot)
+    // Die leere Erfassungszeile darf nicht versehentlich die vorherige Auswahl meinen.
+    const platz = fokus === undefined ? this._zeilenWahl.platzIn(this.rohzeilen) : fokus
+    const zeile = platz === null ? undefined : this.rohzeilen[platz]
+    if (zeile === undefined) return
+    setzeAuswahl(geberIdVon(this), zeile, true)
+    const satz = zeilenIndexVon(this, zeile)
+    runEvent(this, 'onF4', { PINDEX: satz, DROP_PINDEX: satz }).catch(meldeKettenFehler)
+  }
+
   override connectedCallback(): void {
     super.connectedCallback()
+    this.addEventListener('keydown', this.aktionsTaste)
     if (this._besitz === 'softengine') connectTable(this)
     this._ansicht.beobachte()
   }
@@ -239,6 +262,7 @@ export class TabelleBlock extends BasicBlock {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback()
+    this.removeEventListener('keydown', this.aktionsTaste)
     this._wahl.loese()
     this._ansicht.loese()
     disconnectTable(this)

@@ -44,6 +44,7 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
   const spalten = fensterSpaltenIn(umfeld, index)
   oeffneNachschlagen({
     el: wirt.baustein,
+    stelle: spalte.kennung,
     quelleId: ziel.quelleId,
     speicherFeld: ziel.code,
     speicherTitel: spalte.titel,
@@ -79,6 +80,7 @@ export function springe(wirt: ErfassungsWirt, index: number, taste: string): boo
 }
 
 function taste(wirt: ErfassungsWirt, index: number, e: KeyboardEvent): void {
+  if (e.key === 'F5') e.preventDefault()
   // Shift+Tab setzt den Fokus selbst zurueck: der Browser-Weg durch die
   // Schatten-Wurzeln ist nicht verlaesslich.
   if (e.key === 'Tab' && e.shiftKey) {

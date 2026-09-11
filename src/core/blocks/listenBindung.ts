@@ -11,6 +11,7 @@ export interface ListenBindung {
   // Gesetzt: jeder Eintrag traegt hier eine dauerhafte Kennung, und Ketten und
   // Formulare zeigen auf SIE statt auf den Platz, der beim Loeschen verrutscht.
   kennungKey?: string
+  zeichenGrenzeKey?: string
 
   standardTitel: string
 
@@ -184,4 +185,3 @@ export function listeFuerExport(roh: unknown, b: ListenBindung): unknown {
     return kopie
   })
 }
-

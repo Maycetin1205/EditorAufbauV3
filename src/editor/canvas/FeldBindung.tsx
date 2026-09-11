@@ -256,6 +256,11 @@ export function useFeldBindung({
             key={listenPicker.index}
             spotLabel={titelJetzt === '' ? standardTitel : titelJetzt}
             gruppen={listenGruppen}
+            zeichenGrenze={listenBindung.zeichenGrenzeKey === undefined ? undefined : {
+              wert: typeof eintrag[listenBindung.zeichenGrenzeKey] === 'number'
+                ? eintrag[listenBindung.zeichenGrenzeKey] as number : undefined,
+              onAendern: (wert) => schreibeInEintrag(listenPicker, { [listenBindung.zeichenGrenzeKey!]: wert }),
+            }}
             titel={{
               wert: titelJetzt,
               standard: standardTitel,

@@ -12,6 +12,7 @@ import {
   type DialogRahmen,
 } from '../shared/DialogRahmen'
 import { coerceSpalten, STANDARD_TITEL, type Spalte } from './spalten'
+import { nachschlagKennung, nachschlagSpalten } from './nachschlagStand'
 import type { TabelleBlock } from './TabelleBlock'
 import {
   ZEILE_AKTIVIERT_EVENT,
@@ -31,6 +32,7 @@ export function fensterBreiteFuer(spalten: number): number {
 // Leer heisst Automatik: eine Spalte, mit eigenem Anzeigefeld zwei.
 export const NACHSCHLAG_SPALTEN_BINDUNG: ListenBindung = {
   prop: 'nachschlagSpalten',
+  zeichenGrenzeKey: 'maxZeichen',
   titelKey: 'titel',
   feldKey: 'feld',
   standardTitel: STANDARD_TITEL,
@@ -57,6 +59,7 @@ export function fensterSpaltenOder(gestellt: unknown, automatik: () => Spalte[])
 }
 
 export interface NachschlagenArgs {
+  stelle?: string
   el: HTMLElement
   quelleId: string
   speicherFeld: string
@@ -227,13 +230,12 @@ type SpaltenQuelle = Pick<NachschlagenArgs, 'speicherFeld' | 'speicherTitel'>
 // der Lupe ein; die erste davon ist dann, was im Feld steht.
 export function automatikSpalten(args: SpaltenQuelle): Spalte[] {
   const titel = args.speicherTitel !== '' ? args.speicherTitel : 'Wert'
-  // Ohne Kennung: die Fenster-Spalten des Formularfelds adressiert nichts.
-  return [{ kennung: '', titel, feld: args.speicherFeld }]
+  return [{ kennung: `feld:${args.speicherFeld}`, titel, feld: args.speicherFeld }]
 }
 
 function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[]): TemplateResult {
   const eigene = coerceNachschlagSpalten([...args.spalten])
-  const spalten = fensterSpaltenOder(eigene, () => automatikSpalten(args))
+  const spalten = nachschlagSpalten(fensterSpaltenOder(eigene, () => automatikSpalten(args)))
 
   // Im Editor gibt es keine Zeilen zu zeigen. bereitgestellteZeilen gar nicht
   // erst zu setzen ist der Unterschied zwischen „Striche" und „Diese Quelle hat
@@ -257,6 +259,7 @@ function laufzeitTabelleTpl(args: NachschlagenArgs, eintraege: readonly Eintrag[
   // Das Fenster IST eine Tabelle: Spalten wegnehmen und sortieren gilt auch hier,
   // und beides ueberlebt das Schliessen.
   return html`<ff-tabelle
+    data-ff-block-id=${nachschlagKennung(args.el, args.stelle)}
     fuellt
     suche="ja"
     spaltenwahl="ja"

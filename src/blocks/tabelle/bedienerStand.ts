@@ -2,16 +2,16 @@
 import { ACTION_VALUE_ID_ATTR } from '../../core/data/aktionen'
 
 export interface BedienerStand<T> {
-  lies: (el: HTMLElement) => T | null
+  lies: (el: HTMLElement, kennung?: string) => T | null
 
   merke: (el: HTMLElement, stand: T | null) => void
 }
 
 // Je Maske und Tabelle eigen; nicht jede Tabelle traegt eine Baustein-Kennung,
 // darum der Platz im Dokument als Rueckfall.
-function schluesselVon(vorsatz: string, el: HTMLElement): string {
+function schluesselVon(vorsatz: string, el: HTMLElement, kennung?: string): string {
   const titel = typeof document === 'undefined' ? '' : document.title
-  const id = el.getAttribute(ACTION_VALUE_ID_ATTR)
+  const id = kennung ?? el.getAttribute(ACTION_VALUE_ID_ATTR)
   if (id !== null && id !== '') return `${vorsatz}${titel}|${id}`
   const gleiche = Array.from(el.ownerDocument?.querySelectorAll(el.tagName) ?? [])
   return `${vorsatz}${titel}|#${Math.max(0, gleiche.indexOf(el))}`
@@ -25,8 +25,8 @@ export function macheBedienerStand<T>(
 ): BedienerStand<T> {
   const imGedaechtnis = new Map<string, T | null>()
 
-  const lies = (el: HTMLElement): T | null => {
-    const schluessel = schluesselVon(vorsatz, el)
+  const lies = (el: HTMLElement, kennung?: string): T | null => {
+    const schluessel = schluesselVon(vorsatz, el, kennung)
     if (imGedaechtnis.has(schluessel)) return imGedaechtnis.get(schluessel) ?? null
     try {
       const roh = localStorage.getItem(schluessel)

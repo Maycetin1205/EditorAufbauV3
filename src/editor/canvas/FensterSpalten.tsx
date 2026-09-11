@@ -33,10 +33,7 @@ import { FieldPicker, type PickerGruppe } from './FieldPicker'
 // Schicht laesst sie frei.
 const GRIFF_RAND = 6
 
-// „Spalte anfuegen" sitzt am rechten Ende der Kopfzeile und ueberdeckt dort das
-// Ende der letzten Spalte. Nur so schmal, damit die anklickbar bleibt. Eine
-// eigene Spalte darf der Knopf NICHT sein: die naehme den echten Spalten Breite
-// weg und zoege einen Strich-Streifen durch alle Zeilen.
+// Die Editor-Schaltflaeche sitzt neben der Suche, ausserhalb des Spaltenrasters.
 const PLUS_BREITE = 26
 
 interface Kopf {
@@ -207,11 +204,7 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
       >
         {mass.koepfe.map((kopf) => {
           const links = kopf.left + GRIFF_RAND
-          // Das rechte Ende der letzten Spalte gehoert dem Plus-Knopf.
-          const rechts = Math.min(
-            kopf.left + kopf.width - GRIFF_RAND,
-            plus === null ? Infinity : plus.rechts - PLUS_BREITE,
-          )
+          const rechts = kopf.left + kopf.width - GRIFF_RAND
           return (
             <div
               key={kopf.platz}
@@ -237,19 +230,19 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
         })}
 
         {plus !== null && (
-          <div
-            role="button"
+          <button
+            type="button"
             aria-label="Spalte anfügen"
             title="Spalte anfügen"
             className={cn(
-              'pointer-events-auto absolute grid cursor-pointer place-items-center',
+              'pointer-events-auto absolute grid cursor-pointer place-items-center rounded border border-[hsl(var(--wb-auswahl)/0.3)] bg-panel shadow-sm',
               'text-[hsl(var(--wb-auswahl))] hover:bg-[hsl(var(--wb-auswahl)/0.16)]',
             )}
             style={{
               left: plus.rechts - PLUS_BREITE,
-              top: plus.top,
+              top: plus.top - 29,
               width: PLUS_BREITE,
-              height: plus.height,
+              height: 24,
             }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
@@ -258,7 +251,7 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
             }}
           >
             <Plus size={13} />
-          </div>
+          </button>
         )}
       </div>
 
@@ -268,6 +261,8 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
           ebene={EBENE_UEBER_MASKENFENSTER}
           spotLabel={spalteDesPickers.titel === '' ? standardTitel : spalteDesPickers.titel}
           gruppen={gruppen}
+          zeichenGrenze={{ wert: spalteDesPickers.maxZeichen,
+            onAendern: (maxZeichen) => aendere(gewaehlt, { maxZeichen }) }}
           titel={{
             wert: spalteDesPickers.titel,
             standard: standardTitel,

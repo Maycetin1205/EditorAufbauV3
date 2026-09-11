@@ -50,7 +50,7 @@ export function erfassungsZeileTpl(
         return html`<div
           class=${spalte.versteckt === true ? 'versteckt' : nothing}
           role="cell"
-        >${ZELLE_PLATZHALTER}</div>`
+        ><span class="zell-beschriftung">${spalte.titel || ZELLE_PLATZHALTER}</span></div>`
       }
       const platz = lage.plaetze[i]
       // Eine freie Zelle hat nichts nachzuschlagen; ihre Liste bliebe leer.
@@ -88,6 +88,7 @@ export interface Zellenziel {
 }
 
 export interface ErfassungsUmfeld {
+  baustein?: HTMLElement
   spalten: readonly ErfassungsSpalte[]
 
   quelleId: string
@@ -157,7 +158,7 @@ function automatikSpaltenIn(umfeld: ErfassungsUmfeld, index: number): Spalte[] {
     const anderes = zellenzielVon(spalte, umfeld.quelleId)
     if (anderes.quelleId !== ziel.quelleId || anderes.code === '') continue
     if (raus.some((s) => s.feld === anderes.code)) continue
-    raus.push({ kennung: '', titel: spalte.titel, feld: anderes.code })
+    raus.push({ kennung: `feld:${anderes.code}`, titel: spalte.titel, feld: anderes.code })
   }
   return raus
 }
