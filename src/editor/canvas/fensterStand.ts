@@ -216,6 +216,38 @@ export function fensterImEditorVergessen(): void {
   if (offen !== null) melde(null)
 }
 
+// Die Kantengriffe der Tabelle melden beim Loslassen ihre ganze Spaltenliste,
+// wie jeder Baustein im Editor. Am Fenster haengt kein Wirt, der das hoert —
+// hier ist er. Uebernommen wird daraus NUR der Anteil: Titel und Feld gehoeren
+// dem Feldwaehler. Eine automatische Liste steht danach als Stellung im Baum,
+// aber Wort fuer Wort so, wie das Fenster sie zeigte.
+function verdrahteBreiten(
+  rahmen: DialogRahmen,
+  ed: Editor,
+  blockId: string,
+  fenster: SuchFenster,
+  platz: number,
+): void {
+  rahmen.querySelector('ff-tabelle')?.addEventListener('ff-prop-change', (ereignis) => {
+    const detail = (ereignis as CustomEvent<{ attr?: string; value?: unknown }>).detail
+    if (detail?.attr !== 'spalten') return
+    const gezogen = coerceNachschlagSpalten(detail.value)
+    // Frisch gelesen: zwischen Aufmachen und Loslassen kann eine Feldwahl die
+    // Liste schon geaendert haben.
+    const stand = fensterStandVon(ed, blockId, fenster, platz)
+    if (stand === null || gezogen.length !== stand.spalten.length) return
+    let anders = false
+    const neu = stand.spalten.map((s, i) => {
+      const breite = gezogen[i]?.breite
+      if (breite === undefined || breite === s.breite) return s
+      anders = true
+      return { ...s, breite }
+    })
+    // Dieselben Anteile noch einmal sind kein Schritt in der Historie.
+    if (anders) stand.setzeSpalten(neu)
+  })
+}
+
 // Dieselbe Flaeche wie beim Bediener, nur ohne Saetze und mit den zwei
 // Zieh-Anfassern: was der Bauer hier zieht oder waehlt, steht danach als
 // Eigenschaft im Baum, also nimmt Strg+Z es zurueck.
@@ -241,7 +273,9 @@ export function oeffneFensterImEditor(
     setzeMass: stand.setzeMass,
     onUebernehmen: () => {},
   })
-  if (fensterRahmenImEditor() === null) return false
+  const rahmen = fensterRahmenImEditor()
+  if (rahmen === null) return false
+  verdrahteBreiten(rahmen, ed, blockId, fenster, platz)
   melde({ blockId, fenster, platz })
   return true
 }
