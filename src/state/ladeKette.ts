@@ -1,6 +1,7 @@
 // Einen gespeicherten Stand laden: Rohdaten, Schemastufen, Pruefung, Verlustmeldung.
 import { ROOT_ID, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
+import { BELEG_RAHMEN_PROP } from '../core/blocks/belegRahmen'
 import { MASKEN_NAME_PROP } from '../core/blocks/maskenName'
 import { sanitizeBlockEvents } from '../core/data/aktionen'
 import { BEREICH_AUFBAU, type LadeProblem } from '../core/data/ladeProblem'
@@ -32,6 +33,10 @@ import {
 import { topologieProbleme } from './topologie'
 import { createEmptyTree, normalizeProps } from './treeOps'
 
+// Was die Maskenwurzel traegt. Alles andere an ihr ist nicht vorgesehen und
+// reist nicht mit; die Verlustpruefung meldet es beim Laden.
+const WURZEL_PROPS: readonly string[] = [MASKEN_NAME_PROP, BELEG_RAHMEN_PROP]
+
 export function sanitizeTree(
   raw: Record<string, unknown>,
   meldungen?: {
@@ -44,13 +49,15 @@ export function sanitizeTree(
   const src = raw as Record<string, { type?: unknown; props?: unknown; childIds?: unknown; events?: unknown }>
   const onDropType = meldungen?.typVerworfen
 
-  // Die Wurzel traegt genau eine Eigenschaft, die mitreist: den Maskennamen.
   const rohWurzelProps = src[ROOT_ID]?.props
-  const rohName = rohWurzelProps && typeof rohWurzelProps === 'object'
-    ? (rohWurzelProps as Record<string, unknown>)[MASKEN_NAME_PROP]
-    : undefined
-  if (typeof rohName === 'string' && rohName.trim() !== '') {
-    tree[ROOT_ID].props[MASKEN_NAME_PROP] = rohName
+  if (rohWurzelProps && typeof rohWurzelProps === 'object') {
+    const props = rohWurzelProps as Record<string, unknown>
+    for (const schluessel of WURZEL_PROPS) {
+      const wert = props[schluessel]
+      // Auch der leere Text reist mit: sonst faende die Verlustpruefung beim
+      // naechsten Laden eine Abweichung, wo der Bediener nur das Feld leerte.
+      if (typeof wert === 'string') tree[ROOT_ID].props[schluessel] = wert
+    }
   }
   migrateAnzeigeFeldAufSpalten(src)
   migrateErfassungsRollenWeg(src)
@@ -286,12 +293,19 @@ function verlustProbleme(
     const roh = rohKnoten as Record<string, unknown>
 
     if (id === ROOT_ID) {
-      if (keinVerlust(roh.childIds, rein?.childIds)) continue
-      raus.push({
-        bereich: BEREICH_AUFBAU,
-        stelle: ROOT_ID,
-        grund: 'im Masken-Aufbau fehlen Beziehungen zwischen Bausteinen',
-      })
+      if (!keinVerlust(roh.childIds, rein?.childIds)) {
+        raus.push({
+          bereich: BEREICH_AUFBAU,
+          stelle: ROOT_ID,
+          grund: 'im Masken-Aufbau fehlen Beziehungen zwischen Bausteinen',
+        })
+      } else if (!keinVerlust(roh.props, rein?.props)) {
+        raus.push({
+          bereich: BEREICH_AUFBAU,
+          stelle: ROOT_ID,
+          grund: 'an der Maske selbst stimmen Angaben nicht',
+        })
+      }
       continue
     }
 

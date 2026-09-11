@@ -1,6 +1,7 @@
 // Die Werkzeugleiste des Editors: Maskenname, Seiten, Datencenter, Export.
 import {
   Download,
+  FileText,
   FolderOpen,
   MoreHorizontal,
   Redo2,
@@ -10,6 +11,12 @@ import {
   Undo2,
 } from '@/ui/zeichen'
 import { useRef, useState } from 'react'
+import {
+  BELEG_RAHMEN_PROP,
+  RAHMEN_STELLEN,
+  belegDateinamen,
+  rahmenNummerVon,
+} from '../../core/blocks/belegRahmen'
 import { ROOT_ID } from '../../core/blocks/BlockData'
 import { MASKEN_NAME_PROP, MASKEN_NAME_STANDARD, maskenNameVon } from '../../core/blocks/maskenName'
 import { exportMask } from '../../export/exportMask'
@@ -27,15 +34,35 @@ import { Popover } from '@/ui/werkbank/Popover'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useEingabeSitzung } from '../inspector/controls/eingabeSitzung'
 
+const MASKEN_NAMEN = {
+  html: 'index.basis.source.html',
+  sevariablen: 'index.basis.SEvariablen.json',
+}
+
+const RAHMEN_TITEL = 'Nummer des Layoutrahmens — nur für den Beleg-Export.'
+  + ' Leer heißt: diese Maske ist kein Belegrahmen.'
+
+const RAHMEN_FEHLT = 'Beleg-Export — braucht die Nummer des Layoutrahmens im Feld davor'
+
+function belegTitel(nummer: string): string {
+  const namen = belegDateinamen(nummer)
+  return `Beleg-Export — ${namen.html} und ${namen.sevariablen}`
+}
+
 export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   const ed = useEditor()
 
   // Der Maskenname wird wie jede Eigenschaft im Baum gefuehrt; eine Tipp-Sitzung
   // ist EIN Undo-Schritt.
   const nameSitzung = useEingabeSitzung(() => ed.beginTransaction(), () => ed.endTransaction())
+  const rahmenSitzung = useEingabeSitzung(() => ed.beginTransaction(), () => ed.endTransaction())
   const maskenName = String(ed.tree[ROOT_ID]?.props[MASKEN_NAME_PROP] ?? '')
+  const rahmenRoh = String(ed.tree[ROOT_ID]?.props[BELEG_RAHMEN_PROP] ?? '')
+  const rahmen = rahmenNummerVon(ed.tree)
 
-  const handleExport = () => {
+  // Dieselbe Maske, nur unter anderem Dateinamen: ein Layoutrahmen der
+  // Belegerfassung heisst Rahmen<Nummer>, jede andere Maske index.
+  const handleExport = (namen: { html: string; sevariablen: string }) => {
     const sources = dataSourceStore.list
     const relations = relationStore.list
     const { html, sevariablen } = exportMask(
@@ -50,8 +77,8 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
       return
     }
 
-    downloadFile('index.basis.source.html', html, 'text/html')
-    downloadFile('index.basis.SEvariablen.json', sevariablen, 'application/json')
+    downloadFile(namen.html, html, 'text/html')
+    downloadFile(namen.sevariablen, sevariablen, 'application/json')
   }
 
   return (
@@ -78,6 +105,21 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
         onBlur={nameSitzung.beenden}
       />
 
+      <Feld
+        value={rahmenRoh}
+        placeholder="Nr."
+        inputMode="numeric"
+        maxLength={RAHMEN_STELLEN}
+        aria-label="Nummer des Belegerfassungs-Layoutrahmens"
+        title={RAHMEN_TITEL}
+        className="w-16"
+        onChange={(e) => {
+          rahmenSitzung.beginnen()
+          ed.updateProperty(ROOT_ID, BELEG_RAHMEN_PROP, e.currentTarget.value)
+        }}
+        onBlur={rahmenSitzung.beenden}
+      />
+
       <Knopf
         onClick={onDatencenter}
         title="Datencenter — Datenquellen und Relationen der Maske"
@@ -86,10 +128,19 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
       </Knopf>
 
       <Knopf
+        aria-label="Als Belegerfassungs-Layoutrahmen exportieren"
+        title={rahmen === '' ? RAHMEN_FEHLT : belegTitel(rahmen)}
+        onClick={() => handleExport(belegDateinamen(rahmen))}
+        disabled={ed.blockCount === 0 || rahmen === ''}
+      >
+        <FileText size={14} /> Beleg-Export
+      </Knopf>
+
+      <Knopf
         art="primaer"
         aria-label="Als SoftEngine-Maske exportieren"
         title="Export — Maskendatei und SEvariablen, beide in denselben Ordner"
-        onClick={handleExport}
+        onClick={() => handleExport(MASKEN_NAMEN)}
         disabled={ed.blockCount === 0}
       >
         <Download size={14} /> Exportieren

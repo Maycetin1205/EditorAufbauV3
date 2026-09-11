@@ -4,6 +4,7 @@ import { ROOT_ID, ROOT_TYPE } from '../core/blocks/BlockData'
 import { type EintragProblem } from '../core/data/ladeProblem'
 import { meldungen } from './meldungen'
 import { CURRENT_SCHEMA_VERSION } from './migrations'
+import { pruefeBaumStand } from './ladeKette'
 import { backupKeyFor } from './notfallkopie'
 import { loadFromStorage, STORAGE_KEY } from './persistence'
 import { VorlagenStore, type VorlagenBauplan } from './VorlagenStore'
@@ -111,6 +112,51 @@ test('Kanban-Karten ohne Zielspalte werden beim Laden gemeldet', () => {
 
   expect(loadFromStorage()).not.toBeNull()
   expect(meldungsText()).toContain('2 Kanban-Karte(n)')
+})
+
+test('Maskenname und Rahmennummer ueberstehen den Weg durch den Speicher', () => {
+  const tree = {
+    ...wurzelBaum(['t1']),
+    [ROOT_ID]: {
+      id: ROOT_ID,
+      type: ROOT_TYPE,
+      props: { maskenName: 'Belegerfassung', belegRahmen: '00001' },
+      parentId: '',
+      childIds: ['t1'],
+    },
+    t1: { id: 't1', type: 'text', props: {}, parentId: ROOT_ID, childIds: [] },
+  }
+  speicher.setItem(STORAGE_KEY, JSON.stringify({
+    schemaVersion: CURRENT_SCHEMA_VERSION, tree, selectedId: null,
+  }))
+
+  const geladen = loadFromStorage()
+  expect(geladen?.tree[ROOT_ID]?.props).toEqual({
+    maskenName: 'Belegerfassung',
+    belegRahmen: '00001',
+  })
+  expect(meldungsText()).toBe('')
+})
+
+// Eine Angabe an der Maske selbst darf nicht stillschweigend verschwinden: die
+// Maskendatei wird gar nicht geladen und nennt die Stelle, sonst faende der
+// Bediener den Verlust erst in SoftEngine.
+test('eine unbekannte Angabe an der Maske laesst die Datei stehen und sagt es', () => {
+  const mitProp = (props: Record<string, unknown>) => ({
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    tree: {
+      [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props, parentId: '', childIds: ['t1'] },
+      t1: { id: 't1', type: 'text', props: {}, parentId: ROOT_ID, childIds: [] },
+    },
+  })
+
+  const heil = pruefeBaumStand(mitProp({ maskenName: 'Maske', belegRahmen: '00001' }))
+  expect(heil.art).toBe('ok')
+
+  const fremd = pruefeBaumStand(mitProp({ maskenName: 'Maske', wasAuchImmer: 'ja' }))
+  expect(fremd.art).toBe('abgelehnt')
+  expect(fremd.art === 'abgelehnt' && fremd.probleme[0]?.grund)
+    .toContain('an der Maske selbst stimmen Angaben nicht')
 })
 
 test('eine aufgeloeste Zeile meldet nichts — ihr Inhalt bleibt an Ort und Stelle', () => {
