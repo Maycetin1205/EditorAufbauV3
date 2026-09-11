@@ -147,7 +147,7 @@ export class TabelleBlock extends BasicBlock {
   }
 
   set bereitgestellteZeilen(zeilen: readonly BereitgestellteZeile[]) {
-    const abgeleitet = leiteZeilenAb(zeilen)
+    const abgeleitet = leiteZeilenAb(zeilen, this.spaltenListe())
     this.rohzeilen = abgeleitet.rohzeilen
     this.datenzeilen = abgeleitet.datenzeilen
     this.datenGeliefert = true

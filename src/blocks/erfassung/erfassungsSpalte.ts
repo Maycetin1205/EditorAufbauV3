@@ -62,9 +62,3 @@ export function tryCoerceErfassungsSpalten(v: string): ErfassungsSpalte[] {
     return standardSpalten()
   }
 }
-
-export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): number {
-  const t = kennung.trim()
-  if (t === '') return -1
-  return spalten.findIndex((s) => s.kennung === t)
-}

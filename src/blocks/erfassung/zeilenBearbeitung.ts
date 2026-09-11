@@ -3,6 +3,7 @@ import type { Lieferung, VormerkArt } from '../../core/blocks/BlockDefinition'
 import { geheInZelle, zellenFelder } from '../shared/zellenEingabe'
 import { zeilenIndexVon } from '../tabelle/seRuntime'
 import type { Spalte } from '../tabelle/spalten'
+import { zellWertGerechnet } from '../tabelle/zeilenRechnung'
 import {
   aenderungAngekommen,
   loeschungAngekommen,
@@ -296,7 +297,32 @@ export class ZeilenBearbeitung {
     // die Aenderung waere zurueckgenommen worden.
     const unterwegs = this.gesendet.wert(satz, spaltenIndex)
     if (unterwegs !== undefined) return unterwegs
+    const gerechnet = this.gerechneteZelle(rohIndex, satz, spaltenIndex)
+    if (gerechnet !== null) return gerechnet
     return this.wirt.datenzeilen()[rohIndex]?.[spaltenIndex] ?? ''
+  }
+
+  // Eine Formelspalte folgt dem, was JETZT in der Zeile steht; in der Lieferung
+  // steht das Ergebnis von vorhin. null heisst: hier ist nichts nachzurechnen —
+  // die Lieferung hat schon gerechnet, und ohne Vormerkung aendert sich nichts.
+  private gerechneteZelle(
+    rohIndex: number,
+    satz: string,
+    spaltenIndex: number,
+  ): string | null {
+    if (this.aenderungen.anzahl === 0 && this.gesendet.anzahl === 0) return null
+    if (!this.aenderungen.hatSatz(satz) && !this.gesendet.hatSatz(satz)) return null
+    const spalten = this.wirt.spalten()
+    if (spalten[spaltenIndex]?.formel === undefined) return null
+    const zeile = this.wirt.datenzeilen()[rohIndex]
+    return zellWertGerechnet(spalten, spaltenIndex, (platz) => {
+      // Was die Lieferung in einer Formelspalte zeigt, ist selbst gerechnet und
+      // darf die neue Rechnung nicht vorwegnehmen.
+      if (spalten[platz]?.formel !== undefined) return ''
+      return this.aenderungen.wert(satz, platz)
+        ?? this.gesendet.wert(satz, platz)
+        ?? zeile?.[platz] ?? ''
+    })
   }
 
   istGeaendert(rohIndex: number, spaltenIndex: number): boolean {
@@ -432,6 +458,15 @@ export class AenderungsSpeicher {
       if (!raus.includes(satz)) raus.push(satz)
     }
     return raus
+  }
+
+  // Traegt diese Zeile ueberhaupt eine Vormerkung? Billiger als ueber alle
+  // Spalten zu fragen.
+  hatSatz(satz: string): boolean {
+    if (satz === '') return false
+    const anfang = satz + TRENNER
+    for (const k of this.werte.keys()) if (k.startsWith(anfang)) return true
+    return false
   }
 
   nimmSatzZurueck(satz: string): boolean {

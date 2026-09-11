@@ -64,6 +64,14 @@ export function neueSpalte(index: number): Spalte {
   return { kennung: '', titel: standardTitelFuer(index), feld: '' }
 }
 
+// Der Platz der Spalte mit DIESER Kennung, -1 wenn keine sie traegt. Formeln
+// und Ketten finden ihre Spalte nur so wieder.
+export function spalteMitKennung(spalten: readonly Spalte[], kennung: string): number {
+  const t = kennung.trim()
+  if (t === '') return -1
+  return spalten.findIndex((s) => s.kennung === t)
+}
+
 export function mitKennungen(spalten: readonly Spalte[]): Spalte[] {
   const kennungen = kennungenVergeben(spalten.map((s) => s.kennung))
   return spalten.map((s, i) => (s.kennung === kennungen[i] ? s : { ...s, kennung: kennungen[i] }))

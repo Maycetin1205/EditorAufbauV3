@@ -7,6 +7,7 @@ import { auswahlWiederfinden, geberIdVon, zeilenNachAuswahl } from '../shared/au
 import { macheDatenAnschluss } from '../shared/datenAnschluss'
 import { holeDatenVorspann, type DatenVorspann } from '../shared/datenVorspann'
 import { tryCoerceSpalten, type Spalte } from './spalten'
+import { zeileGerechnet } from './zeilenRechnung'
 
 export interface RuntimeTableElement extends HTMLElement {
   datenzeilen: string[][]
@@ -70,7 +71,13 @@ function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
   el.datenGeliefert = true
   el.rohzeilen = rows
   el.durchAuswahlGefiltert = gefiltert
-  el.datenzeilen = rows.map((row) => spalten.map((s) => (s.feld === '' ? '' : lies(row, s.feld))))
+  el.datenzeilen = rows.map((row) => zeileGerechnet(
+    spalten,
+    (platz) => {
+      const feld = spalten[platz]?.feld ?? ''
+      return feld === '' ? '' : lies(row, feld)
+    },
+  ))
 }
 
 const anschluss = macheDatenAnschluss<RuntimeTableElement>({ hydriere: hydrateTable })
@@ -91,9 +98,12 @@ export interface AbgeleiteteZeilen {
   datenzeilen: string[][]
 }
 
-export function leiteZeilenAb(zeilen: readonly BereitgestellteZeile[]): AbgeleiteteZeilen {
+export function leiteZeilenAb(
+  zeilen: readonly BereitgestellteZeile[],
+  spalten: readonly Spalte[],
+): AbgeleiteteZeilen {
   return {
     rohzeilen: zeilen.map((z) => z.rohzeile),
-    datenzeilen: zeilen.map((z) => [...z.zellen]),
+    datenzeilen: zeilen.map((z) => zeileGerechnet(spalten, (platz) => z.zellen[platz] ?? '')),
   }
 }

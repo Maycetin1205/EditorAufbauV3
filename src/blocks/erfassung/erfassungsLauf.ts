@@ -9,7 +9,7 @@ import { vorschlaegeImFensterStand } from '../tabelle/nachschlagStand'
 import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
 import { rechneFormel, zahlStreng, zahlText } from '../../core/data/rechnung'
 import { alsZahl } from '../tabelle/sortierung'
-import { spalteMitKennung } from './erfassungsSpalte'
+import { spalteMitKennung } from '../tabelle/spalten'
 import {
   anzeigeSpalteIn,
   fensterSpaltenIn,
