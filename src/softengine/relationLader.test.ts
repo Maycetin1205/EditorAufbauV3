@@ -67,6 +67,16 @@ test('ein vollstaendiger Lauf veroeffentlicht die Zeilen', async () => {
   expect(anstoesse).toBe(1)
 })
 
+// Leer bleibt die Tabelle so oder so; nur sagt sie jetzt, woran es liegt.
+test('eine Zeile ohne Belegnummer laedt nichts und sagt es', async () => {
+  ladeZeilenPerRelation(QUELLE, lade(), { '2_1': 'A' })
+  await abwarten()
+
+  expect(geholteZeilenFuer('POS')).toEqual([])
+  expect(gemeldet.join(' ')).toContain('Belegnummer (3_8)')
+  expect(gemeldet.join(' ')).not.toContain('Belegart')
+})
+
 // Ein gescheiterter Ruf liefert einen LEEREN Satz. Der sieht aus wie das Ende
 // der Liste: ohne diese Pruefung schnitte ein Timeout die restlichen Positionen
 // stumm ab und die halbe Liste ginge als ganze durch.

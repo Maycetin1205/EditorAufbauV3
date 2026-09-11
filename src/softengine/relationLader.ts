@@ -80,8 +80,20 @@ export function ladeZeilenPerRelation(
     archiv: lade.archivFeld === '' ? '' : getField(geberZeile, lade.archivFeld),
   }
 
+  // Ohne Belegart und Belegnummer ist die Relation nicht zu fragen. Still
+  // leerraeumen hiesse: die Tabelle bleibt leer und niemand sagt warum.
   if (schluessel.belegart === '' || schluessel.belegnummer === '') {
     leereQuelle(quelle.name)
+    const fehlt = [
+      schluessel.belegart === '' ? `Belegart (${lade.belegartFeld})` : '',
+      schluessel.belegnummer === '' ? `Belegnummer (${lade.belegnummerFeld})` : '',
+    ].filter((t) => t !== '').join(' und ')
+    meldeFehler(
+      `Positionen laden: die angeklickte Zeile hat keine ${fehlt}. `
+      + `Relation Nr. ${lade.nr} kann so nicht gefragt werden — zeigt der `
+      + 'angeklickte Baustein wirklich die Belegliste, die unter "Beleg kommt '
+      + 'aus" steht?',
+    )
     return
   }
 
