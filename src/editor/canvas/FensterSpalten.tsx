@@ -8,7 +8,12 @@ import { EBENE_UEBER_MASKENFENSTER } from '@/ui/molecules/auswahl-fenster'
 import { Plus } from '@/ui/zeichen'
 import type { DialogRahmen } from '../../blocks/shared/DialogRahmen'
 import type { TabelleBlock } from '../../blocks/tabelle/TabelleBlock'
-import { neueSpalte, STANDARD_TITEL, type Spalte } from '../../blocks/tabelle/spalten'
+import {
+  neueSpalte,
+  SPALTEN_MAX,
+  STANDARD_TITEL,
+  type Spalte,
+} from '../../blocks/tabelle/spalten'
 import { quellenKennung } from '../../core/data/dataSources'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
@@ -17,7 +22,6 @@ import {
   beiFensterWechsel,
   fensterImEditorVergessen,
   fensterRahmenImEditor,
-  fensterSpaltenMitLeerem,
   fensterStandVon,
   offenesFensterImEditor,
   type FensterStand,
@@ -28,6 +32,12 @@ import { FieldPicker, type PickerGruppe } from './FieldPicker'
 // An jeder Kopfkante gehoeren ein paar Pixel dem Breiten-Griff der Maske; die
 // Schicht laesst sie frei.
 const GRIFF_RAND = 6
+
+// „Spalte anfuegen" sitzt am rechten Ende der Kopfzeile und ueberdeckt dort das
+// Ende der letzten Spalte. Nur so schmal, damit die anklickbar bleibt. Eine
+// eigene Spalte darf der Knopf NICHT sein: die naehme den echten Spalten Breite
+// weg und zoege einen Strich-Streifen durch alle Zeilen.
+const PLUS_BREITE = 26
 
 interface Kopf {
   // Der Platz in der Spaltenliste des Fensters, aus dem Attribut und nicht aus
@@ -40,26 +50,39 @@ interface Kopf {
   height: number
 }
 
+interface Messung {
+  koepfe: readonly Kopf[]
+
+  // Die Kopfzeile selbst; ihr rechtes Ende traegt den Plus-Knopf.
+  zeile: { rechts: number; top: number; height: number } | null
+}
+
+const NICHTS: Messung = { koepfe: [], zeile: null }
+
 function tabelleIn(rahmen: DialogRahmen): TabelleBlock | null {
   return rahmen.querySelector<TabelleBlock>('ff-tabelle')
 }
 
-function messe(rahmen: DialogRahmen): Kopf[] {
-  const wurzel = tabelleIn(rahmen)?.shadowRoot
-  if (!wurzel) return []
-  return Array.from(wurzel.querySelectorAll<HTMLElement>('.kopf > [data-ff-eintrag]')).map(
-    (el, i) => {
-      const r = el.getBoundingClientRect()
-      const roh = Number(el.getAttribute('data-ff-eintrag'))
-      return {
-        platz: Number.isInteger(roh) ? roh : i,
-        left: r.left,
-        top: r.top,
-        width: r.width,
-        height: r.height,
-      }
-    },
-  )
+function messe(rahmen: DialogRahmen): Messung {
+  const zeile = tabelleIn(rahmen)?.shadowRoot?.querySelector('.kopf')
+  if (zeile == null) return NICHTS
+  const zr = zeile.getBoundingClientRect()
+  return {
+    koepfe: Array.from(zeile.querySelectorAll<HTMLElement>(':scope > [data-ff-eintrag]')).map(
+      (el, i) => {
+        const r = el.getBoundingClientRect()
+        const roh = Number(el.getAttribute('data-ff-eintrag'))
+        return {
+          platz: Number.isInteger(roh) ? roh : i,
+          left: r.left,
+          top: r.top,
+          width: r.width,
+          height: r.height,
+        }
+      },
+    ),
+    zeile: { rechts: zr.right, top: zr.top, height: zr.height },
+  }
 }
 
 interface Mass {
@@ -72,7 +95,7 @@ interface Mass {
 function trageNach(rahmen: DialogRahmen, stand: FensterStand, vorher: Mass | null): void {
   const tabelle = tabelleIn(rahmen)
   if (tabelle !== null) {
-    const spalten = fensterSpaltenMitLeerem(stand)
+    const spalten = [...stand.spalten]
     if (JSON.stringify(tabelle.spalten) !== JSON.stringify(spalten)) tabelle.spalten = spalten
   }
   // Das Mass nur, wenn der BAUM sich geaendert hat: waehrend eines Zugs steht am
@@ -92,7 +115,7 @@ export function FensterSpalten() {
 function Koepfe({ offen }: { offen: OffenesFenster }) {
   const ed = useEditor()
   const bibliothek = useDataSources().list
-  const [koepfe, setKoepfe] = useState<Kopf[]>([])
+  const [mass, setMass] = useState<Messung>(NICHTS)
   const [gewaehlt, setGewaehlt] = useState<number | null>(null)
   const schichtRef = useRef<HTMLDivElement | null>(null)
   const tippSitzung = useEingabeSitzung(
@@ -112,13 +135,13 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
     return () => mo.disconnect()
   }, [offen])
 
-  // Die Koepfe werden gemessen und ueber Resize- und MutationObserver
-  // nachgefuehrt, nie im Rendern: das Fenster ist ziehbar, die Liste aendert sich.
+  // Gemessen und ueber Resize- und MutationObserver nachgefuehrt, nie im
+  // Rendern: das Fenster ist ziehbar, die Spaltenliste aendert sich.
   useEffect(() => {
     const rahmen = fensterRahmenImEditor()
     const tabelle = rahmen === null ? null : tabelleIn(rahmen)
     if (rahmen === null || tabelle?.shadowRoot == null) return
-    const nachmessen = (): void => setKoepfe(messe(rahmen))
+    const nachmessen = (): void => setMass(messe(rahmen))
     const ro = new ResizeObserver(nachmessen)
     ro.observe(tabelle)
     const mo = new MutationObserver(nachmessen)
@@ -158,8 +181,8 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
     stand.setzeSpalten(stand.spalten.map((s, i) => (i === platz ? { ...s, ...teil } : s)))
   }
 
-  // Der leere Kopf rechts fuegt an und macht den Waehler der neuen Spalte auf:
-  // eine Spalte ohne Feld hat noch nichts zu zeigen.
+  // Anfuegen macht den Waehler der neuen Spalte gleich auf: eine Spalte ohne
+  // Feld hat noch nichts zu zeigen.
   const anfuegen = (): void => {
     const platz = stand.spalten.length
     stand.setzeSpalten([...stand.spalten, neueSpalte(platz)])
@@ -168,9 +191,11 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
 
   const kopfDesPickers = gewaehlt === null
     ? undefined
-    : koepfe.find((k) => k.platz === gewaehlt)
+    : mass.koepfe.find((k) => k.platz === gewaehlt)
   const spalteDesPickers = gewaehlt === null ? undefined : stand.spalten[gewaehlt]
   const standardTitel = STANDARD_TITEL.replace('{n}', String((gewaehlt ?? 0) + 1))
+
+  const plus = stand.spalten.length < SPALTEN_MAX ? mass.zeile : null
 
   return createPortal(
     <>
@@ -180,43 +205,61 @@ function Koepfe({ offen }: { offen: OffenesFenster }) {
         className="pointer-events-none fixed inset-0"
         style={{ zIndex: EBENE_UEBER_MASKENFENSTER }}
       >
-        {koepfe.map((kopf) => {
-          const leer = kopf.platz >= stand.spalten.length
+        {mass.koepfe.map((kopf) => {
+          const links = kopf.left + GRIFF_RAND
+          // Das rechte Ende der letzten Spalte gehoert dem Plus-Knopf.
+          const rechts = Math.min(
+            kopf.left + kopf.width - GRIFF_RAND,
+            plus === null ? Infinity : plus.rechts - PLUS_BREITE,
+          )
           return (
             <div
               key={kopf.platz}
               className={cn(
-                'pointer-events-auto absolute flex cursor-pointer items-center justify-center',
-                'gap-0.5 overflow-hidden text-dicht',
+                'pointer-events-auto absolute cursor-pointer',
                 'hover:bg-[hsl(var(--wb-auswahl)/0.16)]',
                 gewaehlt === kopf.platz && 'bg-[hsl(var(--wb-auswahl)/0.16)]',
-                leer && 'text-[hsl(var(--wb-auswahl))]',
               )}
               style={{
-                left: kopf.left + GRIFF_RAND,
+                left: links,
                 top: kopf.top,
-                width: Math.max(0, kopf.width - 2 * GRIFF_RAND),
+                width: Math.max(0, rechts - links),
                 height: kopf.height,
               }}
-              title={leer
-                ? 'Spalte anfügen'
-                : 'Feld und Titel dieser Spalte im Suchfenster'}
+              title="Feld und Titel dieser Spalte im Suchfenster"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation()
-                if (leer) anfuegen()
-                else setGewaehlt((v) => (v === kopf.platz ? null : kopf.platz))
+                setGewaehlt((v) => (v === kopf.platz ? null : kopf.platz))
               }}
-            >
-              {leer && (
-                <>
-                  <Plus size={11} />
-                  <span className="truncate">Spalte</span>
-                </>
-              )}
-            </div>
+            />
           )
         })}
+
+        {plus !== null && (
+          <div
+            role="button"
+            aria-label="Spalte anfügen"
+            title="Spalte anfügen"
+            className={cn(
+              'pointer-events-auto absolute grid cursor-pointer place-items-center',
+              'text-[hsl(var(--wb-auswahl))] hover:bg-[hsl(var(--wb-auswahl)/0.16)]',
+            )}
+            style={{
+              left: plus.rechts - PLUS_BREITE,
+              top: plus.top,
+              width: PLUS_BREITE,
+              height: plus.height,
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              anfuegen()
+            }}
+          >
+            <Plus size={13} />
+          </div>
+        )}
       </div>
 
       {kopfDesPickers !== undefined && spalteDesPickers !== undefined && gewaehlt !== null && (

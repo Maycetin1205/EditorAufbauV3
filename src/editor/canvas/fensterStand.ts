@@ -11,7 +11,7 @@ import {
   oeffneNachschlagen,
 } from '../../blocks/tabelle/nachschlagen'
 import { DIALOG_RAHMEN_TAG, type DialogRahmen } from '../../blocks/shared/DialogRahmen'
-import { SPALTEN_MAX, type Spalte } from '../../blocks/tabelle/spalten'
+import type { Spalte } from '../../blocks/tabelle/spalten'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { zerlegeBindung, type SuchFenster } from '../../core/blocks/BlockDefinition'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
@@ -176,15 +176,6 @@ export function fensterStandVon(
     : standJeEintrag(ed, block, fenster, platz)
 }
 
-// Der leere Kopf rechts: er gehoert keiner Spalte, sein Klick fuegt die naechste
-// an. Nur im Editor, darum steht er hier und nicht im Baustein.
-const LEERER_KOPF: Spalte = { kennung: '', titel: '', feld: '' }
-
-export function fensterSpaltenMitLeerem(stand: FensterStand): Spalte[] {
-  const spalten = [...stand.spalten]
-  return spalten.length >= SPALTEN_MAX ? spalten : [...spalten, { ...LEERER_KOPF }]
-}
-
 // Das eine Fenster, das im Editor offen ist: nachschlagen.ts macht das vorige
 // immer zu. Seine Spaltenkoepfe bedient die Shell, nicht der Wirt des
 // Bausteins — darum eine Anmeldestelle und kein Zustand im BlockHost.
@@ -242,7 +233,7 @@ export function oeffneFensterImEditor(
     quelleId: stand.quelleId,
     speicherFeld: stand.speicherFeld,
     speicherTitel: stand.speicherTitel,
-    spalten: fensterSpaltenMitLeerem(stand),
+    spalten: stand.spalten,
     titel: stand.titel,
     breite: stand.breite,
     hoehe: stand.hoehe,
