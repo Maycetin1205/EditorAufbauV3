@@ -148,6 +148,12 @@ export const zellenEingabeStil = css`
 
       .zell-eingabe:focus { outline: none; }
 
+      /* Eine Zahl sitzt rechts, in der Eingabezelle wie in jeder anderen Zelle
+         der Tabelle. Nur unter dem Schreibzeiger nicht: „1," ist noch keine
+         Zahl, die Schrift spraenge beim Komma hin und her. */
+      .zahl > .zell-halter > .zell-eingabe { text-align: right; }
+      .zahl > .zell-halter > .zell-eingabe:focus { text-align: left; }
+
       .zell-eingabe::placeholder { color: transparent; }
       .zeile.erfassung .zell-eingabe::placeholder { color: var(--se-faint); }
       .zeile:focus-within .zell-eingabe::placeholder { color: var(--se-faint); }

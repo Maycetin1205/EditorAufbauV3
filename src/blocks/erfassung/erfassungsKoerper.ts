@@ -13,8 +13,14 @@ export function tippZelleTpl(
   platz: number,
   spalte: Spalte,
 ): TemplateResult {
-  return html`<div class="tippbar" role="cell">${eingabeStelleTpl({
-    wert: stand.zellWert(rohIndex, platz),
+  // Dieselbe Zahlenkante wie an einer Zelle ohne Eingabefeld: sonst stuenden in
+  // derselben Spalte die gebuchten Zeilen links und die erfassten rechts.
+  const wert = stand.zellWert(rohIndex, platz)
+  return html`<div
+    class=${alsZahl(wert) !== null ? 'tippbar zahl' : 'tippbar'}
+    role="cell"
+  >${eingabeStelleTpl({
+    wert,
     titel: spalte.titel,
     platzhalter: '',
     klasse: zellenKlasse(stand.istGeaendert(rohIndex, platz) ? 'geaendert' : 'ruhig'),

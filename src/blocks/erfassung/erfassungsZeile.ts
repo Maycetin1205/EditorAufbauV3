@@ -4,6 +4,7 @@ import { styleMap } from 'lit/directives/style-map.js'
 import type { Vorschlag } from '../shared/vorschlagListe'
 import { eingabeStelleTpl, zellenKlasse } from '../shared/zellenEingabe'
 import { fensterSpaltenOder } from '../tabelle/nachschlagen'
+import { alsZahl } from '../tabelle/sortierung'
 import { ZELLE_PLATZHALTER, type Spalte } from '../tabelle/spalten'
 import type { ErfassungsSpalte } from './erfassungsSpalte'
 import { zerlegeBindung } from '../../core/blocks/BlockDefinition'
@@ -56,8 +57,13 @@ export function erfassungsZeileTpl(
       // Eine freie Zelle hat nichts nachzuschlagen; ihre Liste bliebe leer.
       const frei = zellenzielVon(spalte, lage.quelleId).art === 'frei'
       const liste = !frei && lage.tippSpalte === platz
-      return html`<div role="cell">${eingabeStelleTpl({
-        wert: lage.wert(platz),
+      const wert = lage.wert(platz)
+      // Dieselbe Zahlenkante wie in einer gebuchten Zeile.
+      return html`<div
+        class=${alsZahl(wert) !== null ? 'zahl' : nothing}
+        role="cell"
+      >${eingabeStelleTpl({
+        wert,
         titel: spalte.titel,
         platzhalter: spalte.titel,
         klasse: zellenKlasse(lage.automatisch(platz) ? 'automatisch' : 'ruhig'),
