@@ -366,3 +366,31 @@ export function migrateRechnungAlsFormel(src: Record<string, RohKnoten>): void {
     }
   }
 }
+
+export function migrateEigenesKanbanMuster(src: Record<string, RohKnoten>): void {
+  for (const [boardId, board] of Object.entries(src)) {
+    if (!board || board.type !== 'kanban' || !Array.isArray(board.childIds)) continue
+    if (board.childIds.some((id) => typeof id === 'string' && src[id]?.type === 'kanban-muster')) continue
+    const gesehen = new Set<string>()
+    const suche = (id: string): { id: string; eltern: RohKnoten } | null => {
+      if (gesehen.has(id)) return null
+      gesehen.add(id)
+      const eltern = src[id]
+      if (!eltern || !Array.isArray(eltern.childIds)) return null
+      for (const kindId of eltern.childIds) {
+        if (typeof kindId !== 'string') continue
+        if (src[kindId]?.type === 'card') return { id: kindId, eltern }
+        const tiefer = suche(kindId)
+        if (tiefer) return tiefer
+      }
+      return null
+    }
+    const karte = suche(boardId)
+    if (!karte) continue
+    let musterId = `${boardId}-muster`
+    for (let n = 2; src[musterId]; n++) musterId = `${boardId}-muster-${n}`
+    src[musterId] = { type: 'kanban-muster', props: {}, childIds: [karte.id] }
+    karte.eltern.childIds = (karte.eltern.childIds as unknown[]).filter((id) => id !== karte.id)
+    board.childIds = [musterId, ...board.childIds]
+  }
+}

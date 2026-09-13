@@ -22,10 +22,8 @@ import { MASKEN_NAME_PROP, MASKEN_NAME_STANDARD, maskenNameVon } from '../../cor
 import { exportMask } from '../../export/exportMask'
 import { failedChecks, validateMaskHtml } from '../../export/validator'
 import { downloadFile } from '../../lib/dateiDownload'
-import { dataSourceStore } from '../../state/DataSourceStore'
 import { ladeMaskeAusDatei, speichereMaskeAlsDatei } from '../../state/maskenDatei'
 import { meldungen } from '../../state/meldungen'
-import { relationStore } from '../../state/RelationStore'
 import { useEditor } from '../../state/useEditor'
 import { Feld } from '@/ui/werkbank/Feld'
 import { Knopf } from '@/ui/werkbank/Knopf'
@@ -63,8 +61,8 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   // Dieselbe Maske, nur unter anderem Dateinamen: ein Layoutrahmen der
   // Belegerfassung heisst Rahmen<Nummer>, jede andere Maske index.
   const handleExport = (namen: { html: string; sevariablen: string }) => {
-    const sources = dataSourceStore.list
-    const relations = relationStore.list
+    const sources = ed.datenquellen.list
+    const relations = ed.relationen.list
     const { html, sevariablen } = exportMask(
       ed.tree, maskenNameVon(ed.tree), sources, relations,
     )
@@ -82,7 +80,7 @@ export function Toolbar({ onDatencenter }: { onDatencenter: () => void }) {
   }
 
   return (
-    <div className="flex items-center gap-1.5 justify-self-end">
+    <div className="flex shrink-0 items-center gap-1.5">
       <WeitereAktionen
         onClearAll={() => ed.clear()}
         clearDisabled={ed.blockCount === 0}
@@ -194,6 +192,12 @@ function WeitereAktionen({
 
   return (
     <>
+      <Knopf onClick={onSpeichern} title="Maskendatei speichern (Strg+S)">
+        <Save size={14} /> Speichern
+      </Knopf>
+      <Knopf onClick={() => dateiRef.current?.click()} title="Gespeicherte Maske laden">
+        <FolderOpen size={14} /> Laden
+      </Knopf>
       <Knopf
         ref={knopf}
         nurZeichen
@@ -229,27 +233,6 @@ function WeitereAktionen({
           onClose={() => setOffen(false)}
         >
           <div role="menu" className="flex flex-col">
-            <MenueZeile
-              role="menuitem"
-              zeichen={<Save size={14} />}
-              onClick={() => {
-                setOffen(false)
-                onSpeichern()
-              }}
-            >
-              Maske speichern (Strg+S)
-            </MenueZeile>
-            <MenueZeile
-              role="menuitem"
-              zeichen={<FolderOpen size={14} />}
-              onClick={() => {
-                setOffen(false)
-                dateiRef.current?.click()
-              }}
-            >
-              Maske laden…
-            </MenueZeile>
-            <Trenner className="my-1" />
             <MenueZeile
               role="menuitem"
               art="gefahr"

@@ -30,7 +30,8 @@ export function freierSeitenName(vergeben: readonly string[], basis: string): st
 }
 
 export function aktiveSeitenWurzel(tree: BlockTree, activePageId: string): string {
-  return tree[activePageId] ? activePageId : ROOT_ID
+  return activePageId === ROOT_ID || (tree[activePageId] && istSeitenBaustein(tree[activePageId]))
+    ? activePageId : ROOT_ID
 }
 
 export function seiteVon(tree: BlockTree, id: string): string {

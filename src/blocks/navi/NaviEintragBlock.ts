@@ -33,7 +33,6 @@ export class NaviEintragBlock extends BasicBlock {
       description: 'Welche Seite dieser Maske der Eintrag zeigt.',
       kind: 'seite',
       klarnameProp: 'seitename',
-      nurImEditor: true,
     },
     statusVariantProperty('ton', 'Farbe des Zeichens vor dem Namen.', 'Farbe'),
   ]
@@ -42,12 +41,16 @@ export class NaviEintragBlock extends BasicBlock {
     BasicBlock.styles,
     farbweltStil,
     css`
-      :host {
+      :host { display: block; margin: 2px 6px; }
+      button {
         display: flex;
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
         align-items: center;
         gap: 13px;
         box-sizing: border-box;
-        margin: 2px 6px;
         padding: 10px 11px;
         border-radius: var(--se-r-md);
         font-family: var(--se-font);
@@ -57,9 +60,12 @@ export class NaviEintragBlock extends BasicBlock {
         white-space: nowrap;
         cursor: pointer;
       }
-      :host(:hover) { background: var(--se-muted); }
+      button:hover { background: var(--se-muted); }
 
-      :host([aktiv]) { background: var(--se-accent); color: var(--se-panel); }
+      :host([aktiv]) button { background: var(--se-accent); color: var(--se-panel); }
+
+      button:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+      button:disabled { opacity: .5; cursor: not-allowed; }
 
       .zeichen {
         width: 22px;
@@ -67,8 +73,12 @@ export class NaviEintragBlock extends BasicBlock {
         flex: none;
         border-radius: 50%;
         background: var(--fw-stark);
+        display: grid;
+        place-items: center;
+        color: var(--se-panel);
+        font-size: var(--se-fs-xs);
       }
-      :host([aktiv]) .zeichen { background: var(--se-panel); }
+      :host([aktiv]) .zeichen { background: var(--se-panel); color: var(--se-accent); }
 
       .name { display: none; }
       :host([breit]) .name {
@@ -83,13 +93,12 @@ export class NaviEintragBlock extends BasicBlock {
   @property() seitename = ''
   @property() ton = 'info'
 
-  constructor() {
-    super()
-    this.addEventListener('click', () => this.melde())
-  }
+  @property({ type: Boolean }) aktiv = false
+  @property({ type: Boolean }) ungueltig = false
 
   private melde(): void {
-    const detail: SeitenWechselDetail = { ansicht: this.seitename }
+    if (this.imEditor) return
+    const detail: SeitenWechselDetail = { seite: this.seite, ansicht: this.seitename }
     this.dispatchEvent(new CustomEvent<SeitenWechselDetail>(SEITEN_WECHSEL_EVENT, {
       detail,
       bubbles: true,
@@ -98,8 +107,14 @@ export class NaviEintragBlock extends BasicBlock {
   }
 
   override render(): TemplateResult {
-    return html`<span class="zeichen v-${coerceStatusVariant(this.ton)}"></span>
-      <span class="name">${this.seitename === '' ? '—' : this.seitename}</span>`
+    const name = this.seitename || 'Seite wählen'
+    return html`<button type="button" @click=${() => this.melde()}
+      aria-label=${name} aria-current=${this.aktiv ? 'page' : 'false'}
+      title=${this.ungueltig ? `${name}: Zielseite fehlt` : name}
+      ?disabled=${!this.imEditor && this.ungueltig}>
+      <span aria-hidden="true" class="zeichen v-${coerceStatusVariant(this.ton)}">${name.slice(0, 2).toLocaleUpperCase('de-DE')}</span>
+      <span class="name">${name}</span>
+    </button>`
   }
 }
 

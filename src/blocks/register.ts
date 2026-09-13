@@ -1,6 +1,5 @@
 // Meldet alle Bausteine an; ohne diese Datei kennt die Maske keinen.
 import './ansicht/AnsichtBlock'
-import './bild/BildBlock'
 import './button/ButtonBlock'
 import './card/CardBlock'
 import './datum/DatumBlock'
@@ -14,4 +13,3 @@ import './navi/NaviEintragBlock'
 import './popup/PopupBlock'
 import './tabelle/TabelleBlock'
 import './text/TextBlock'
-import './trenner/TrennerBlock'

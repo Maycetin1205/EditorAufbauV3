@@ -61,6 +61,7 @@ export class KanbanSpalteBlock extends BasicBlock {
 
     {
       attributeName: 'wert',
+      bearbeitung: 'inspector',
       name: 'Wert im ERP',
       description: 'Steht im Statusfeld, wenn eine Karte hier liegt. Leer: der Titel.',
       kind: 'text',
@@ -69,7 +70,7 @@ export class KanbanSpalteBlock extends BasicBlock {
     {
       attributeName: 'zimmerField',
       name: 'Unterteilen nach',
-      description: 'Feld, das das Zimmer bestimmt. Wirkt nur mit Zimmern.',
+      description: 'Wähle das Datenfeld für die Zimmer, z. B. Mitarbeiter oder Raum. Trage an jedem Zimmer den passenden ERP-Wert ein. Unbekannte Werte landen im ersten Zimmer.',
       kind: 'field',
     },
   ]

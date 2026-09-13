@@ -88,15 +88,17 @@ function ladeAusSpeicher<T extends VorlagenEintrag>(bauplan: VorlagenBauplan<T>)
 export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenStore<T>> {
   private readonly bauplan: VorlagenBauplan<T>
   private _eintraege: T[]
+  private readonly eigenerSpeicher: boolean
   private _version = 0
   private _planer = new SpeicherPlaner(() => { this.schreibeJetzt() }, SPEICHER_VERZOEGERUNG_MS)
 
   private _hydrated = false
 
-  constructor(bauplan: VorlagenBauplan<T>) {
+  constructor(bauplan: VorlagenBauplan<T>, bestand?: readonly T[], eigenerSpeicher = true) {
     super()
     this.bauplan = bauplan
-    this._eintraege = ladeAusSpeicher(bauplan)
+    this.eigenerSpeicher = eigenerSpeicher
+    this._eintraege = bestand !== undefined ? deepClone(bestand) as T[] : ladeAusSpeicher(bauplan)
       ?? (bauplan.startbestand ? deepClone(bauplan.startbestand) as T[] : [])
     this._hydrated = true
   }
@@ -123,7 +125,7 @@ export class VorlagenStore<T extends VorlagenEintrag> extends Subject<VorlagenSt
   override notify(data: VorlagenStore<T>): void {
     this._version++
     super.notify(data)
-    if (this._hydrated) this.planeSpeichern()
+    if (this._hydrated && this.eigenerSpeicher) this.planeSpeichern()
   }
 
   add(data: Omit<T, 'id'>): T {

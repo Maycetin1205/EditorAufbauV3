@@ -1,17 +1,4 @@
-// Was jedes Baustein-Element koennen muss, damit Editor und Maske es benutzen koennen.
-import type {
-  ActionValueSpot,
-  BindableSpot,
-  BlockEventSpec,
-  DefaultChildSpec,
-  ErfassungsFaehigkeit,
-  ListenBindung,
-  QuellenFaehigkeit,
-  SatzWahl,
-  SuchFenster,
-} from './BlockDefinition'
-import type { FlowDirection, FlowWidth } from './flowLayout'
-import type { RasterSpec } from './rasterLayout'
+import type { BlockDefinition } from './BlockDefinition'
 import type { PropertyDescription } from './PropertyDescription'
 
 export type BlockCategory = 'eingabe' | 'anzeige' | 'layout'
@@ -20,60 +7,10 @@ export interface BlockComponent {
   get customProperties(): PropertyDescription[]
 }
 
-export interface BlockComponentStatic {
+type KlassenAngaben = Omit<BlockDefinition, 'type' | 'acceptsChildren' | 'resizableWidth' | 'resizableHeight'>
+  & Partial<Pick<BlockDefinition, 'acceptsChildren' | 'resizableWidth' | 'resizableHeight'>>
+
+export interface BlockComponentStatic extends Readonly<KlassenAngaben> {
   readonly blockType: string
-  readonly tagName: string
-  readonly displayName: string
-  readonly category: BlockCategory
-  readonly defaultProps: Record<string, unknown>
-  readonly customProperties: PropertyDescription[]
-
-  readonly acceptsChildren?: boolean
-
-  readonly resizableWidth?: boolean
-
-  readonly resizableHeight?: boolean
-
-  readonly allowedChildTypes?: readonly string[]
-
-  readonly allowedParentTypes?: readonly string[]
-  readonly lockedWidth?: FlowWidth
-  readonly defaultChildren?: readonly DefaultChildSpec[]
-  readonly childDirection?: FlowDirection
-  readonly showInPalette?: boolean
-  readonly templateChild?: { type: string; label: string }
-  readonly containerHint?: boolean
-  readonly addChildButton?: { label: string; childType: string }
-
-  readonly acceptsDataSource?: QuellenFaehigkeit
-
-  readonly satzWahl?: SatzWahl
-  readonly kannAuswahlFolgen?: boolean
-
-  readonly kannErfassen?: ErfassungsFaehigkeit
-
-  readonly aenderungsSchluessel?: string
-
-  readonly kannLoeschen?: ErfassungsFaehigkeit
-
-  readonly suchFenster?: SuchFenster
-
-  readonly haeltGesendete?: boolean
-
-  readonly bindableSpots?: readonly BindableSpot[]
-
-  readonly actionValueSpots?: readonly ActionValueSpot[]
-
-  readonly listenBindung?: ListenBindung
-
-  readonly blockEvents?: readonly BlockEventSpec[]
-
-  readonly pageBlock?: boolean
-
-  readonly flaechenSeite?: boolean
-
-  readonly maskenRand?: boolean
-
-  readonly raster?: Partial<RasterSpec>
   new(): BlockComponent
 }

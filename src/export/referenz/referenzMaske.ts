@@ -93,7 +93,7 @@ function knoten(
 export function referenzBaum(): BlockTree {
   const tree: BlockTree = {
     [ROOT_ID]: knoten(ROOT_ID, ROOT_TYPE, '', {}, [
-      't1', 't2', 'f1', 'b1', 'c1', 'k1', 'n1', 'tx1', 'bi1', 'd1', 'tr1', 'p1',
+      't1', 't2', 'f1', 'b1', 'k1', 'n1', 'tx1', 'd1', 'p1',
     ]),
     t1: knoten('t1', 'erfassung', ROOT_ID, {
       rasterX: 0, rasterY: 3, rasterW: 16, rasterH: 22,
@@ -134,12 +134,13 @@ export function referenzBaum(): BlockTree {
     b1: knoten('b1', 'button', ROOT_ID, {
       rasterX: 26, rasterY: 0, rasterW: 8, rasterH: 3, label: 'Schreiben',
     }),
-    c1: knoten('c1', 'card', ROOT_ID, {
+    c1: knoten('c1', 'card', 'km1', {
       rasterX: 0, rasterY: 25, rasterW: 12, rasterH: 12, heading: 'Karte', headingField: '45_60',
     }),
     k1: knoten('k1', 'kanban', ROOT_ID, {
       rasterX: 18, rasterY: 3, rasterW: 30, rasterH: 22, source: 'q-pos', statusField: '18_25',
-    }, ['ks1']),
+    }, ['km1', 'ks1']),
+    km1: knoten('km1', 'kanban-muster', 'k1', {}, ['c1']),
     ks1: knoten('ks1', 'kanban-spalte', 'k1', {
       heading: 'Offen', wert: 'ART-B', variant: 'info',
     }, ['kz1']),
@@ -147,9 +148,7 @@ export function referenzBaum(): BlockTree {
     n1: knoten('n1', 'navi', ROOT_ID, {}, ['ne1']),
     ne1: knoten('ne1', 'navi-eintrag', 'n1', {}),
     tx1: knoten('tx1', 'text', ROOT_ID, { rasterX: 34, rasterY: 0, rasterW: 14, rasterH: 3 }),
-    bi1: knoten('bi1', 'bild', ROOT_ID, { rasterX: 12, rasterY: 25, rasterW: 6, rasterH: 12 }),
     d1: knoten('d1', 'datum', ROOT_ID, { rasterX: 0, rasterY: 0, rasterW: 10, rasterH: 3 }),
-    tr1: knoten('tr1', 'trenner', ROOT_ID, { rasterX: 18, rasterY: 25, rasterW: 2, rasterH: 12 }),
     p1: knoten('p1', 'popup', ROOT_ID, { name: 'Hinweis' }, ['tx2']),
     tx2: knoten('tx2', 'text', 'p1', {}),
   }

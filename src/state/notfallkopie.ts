@@ -74,7 +74,7 @@ export function meldeSpeicherPanne(
     `„${bezeichnung}" konnte nicht im Browser gespeichert werden.\n\n`
     + 'Das heißt: Änderungen von jetzt an sind beim Schließen des Fensters '
     + 'verloren. Der Editor läuft weiter, aber ohne Sicherung.\n\n'
-    + 'Was hilft: die Maske exportieren, damit die Arbeit als Datei '
+    + 'Was hilft: mit „Speichern“ eine Maskendatei herunterladen, damit die Arbeit als Datei '
     + 'vorliegt — und Speicherplatz des Browsers freiräumen. Gelingt das '
     + 'Speichern wieder, meldet sich der Editor erst bei der nächsten '
     + 'Störung erneut.',

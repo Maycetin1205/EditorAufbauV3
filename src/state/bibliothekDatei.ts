@@ -9,11 +9,9 @@ import {
 } from '../core/data/ladeProblem'
 import { pruefeRelationsVorlagen, type RelationTemplate } from '../core/data/relations'
 import { downloadFile } from '../lib/dateiDownload'
-import { dataSourceStore } from './DataSourceStore'
 import type { Editor } from './Editor'
 import { ersteAbweichung, keinVerlust } from './ladeKette'
 import { meldungen } from './meldungen'
-import { relationStore } from './RelationStore'
 
 export const BIBLIOTHEK_DATEI_ART = 'aufbau-editor-bibliothek'
 
@@ -97,10 +95,10 @@ function packeBibliothek(inhalt: BibliothekInhalt): string {
   ) + '\n'
 }
 
-export function speichereBibliothekAlsDatei(): void {
+export function speichereBibliothekAlsDatei(editor: Editor): void {
   const text = packeBibliothek({
-    datenquellen: [...dataSourceStore.list],
-    relationen: [...relationStore.list],
+    datenquellen: [...editor.datenquellen.list],
+    relationen: [...editor.relationen.list],
   })
   const heute = new Date().toISOString().slice(0, 10)
   downloadFile(`aufbau-bibliothek-${heute}.json`, text, 'application/json')
@@ -208,16 +206,16 @@ export async function ladeBibliothekAusDatei(editor: Editor, datei: File): Promi
     return
   }
 
-  const quellen = fuegeEin(dataSourceStore.list, ergebnis.inhalt.datenquellen)
-  const relationen = fuegeEin(relationStore.list, ergebnis.inhalt.relationen)
-  if (quellen.liste === dataSourceStore.list && relationen.liste === relationStore.list) {
+  const quellen = fuegeEin(editor.datenquellen.list, ergebnis.inhalt.datenquellen)
+  const relationen = fuegeEin(editor.relationen.list, ergebnis.inhalt.relationen)
+  if (quellen.liste === editor.datenquellen.list && relationen.liste === editor.relationen.list) {
     meldungen.melde('Alles aus der Bibliotheksdatei war schon da — nichts geändert.', 'hinweis')
     return
   }
 
   editor.transaktion(() => {
-    if (quellen.liste !== dataSourceStore.list) dataSourceStore.ersetzeAlle(quellen.liste)
-    if (relationen.liste !== relationStore.list) relationStore.ersetzeAlle(relationen.liste)
+    if (quellen.liste !== editor.datenquellen.list) editor.datenquellen.ersetzeAlle(quellen.liste)
+    if (relationen.liste !== editor.relationen.list) editor.relationen.ersetzeAlle(relationen.liste)
   })
 
   meldungen.melde([

@@ -1,4 +1,5 @@
 // Die Registry der Bausteintypen: anmelden und wiederfinden.
+import { ROOT_TYPE } from './BlockData'
 import type { BlockDefinition } from './BlockDefinition'
 
 const registry = new Map<string, BlockDefinition>()
@@ -28,11 +29,12 @@ export function definitionFuerTag(tagName: string): BlockDefinition | undefined 
 
 export function canContain(parentType: string, childType: string): boolean {
   const child = registry.get(childType)
+  if (!child) return false
   if (child?.allowedParentTypes && !child.allowedParentTypes.includes(parentType)) {
     return false
   }
   const def = registry.get(parentType)
-  if (!def) return true
+  if (!def) return parentType === ROOT_TYPE
   if (!def.acceptsChildren) return false
   if (!def.allowedChildTypes) return true
   return def.allowedChildTypes.includes(childType)

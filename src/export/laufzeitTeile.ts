@@ -1,5 +1,5 @@
 // Die Laufzeit der Maske: die Basis und je benutztem Baustein ein Teil, als ein Skript.
-import verzeichnisRoh from './generated/teile.json?raw'
+import verzeichnisRoh from './generated/laufzeit.json?raw'
 
 interface TeilEintrag {
   name: string
@@ -9,6 +9,7 @@ interface TeilEintrag {
 }
 
 interface Verzeichnis {
+  inhalte: Record<string, string>
   basisDatei: string
   // In Ladereihenfolge: wer ein Modul eines anderen Teils benutzt, steht danach.
   teile: TeilEintrag[]
@@ -16,14 +17,8 @@ interface Verzeichnis {
 
 const verzeichnis = JSON.parse(verzeichnisRoh) as Verzeichnis
 
-const inhalte = import.meta.glob('./generated/ff-*.js', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
-
 function inhaltVon(datei: string): string {
-  const gefunden = inhalte['./generated/' + datei]
+  const gefunden = verzeichnis.inhalte[datei]
   if (gefunden === undefined) {
     throw new Error(`Die Laufzeitdatei ${datei} fehlt. "npm run build:runtime" baut sie.`)
   }

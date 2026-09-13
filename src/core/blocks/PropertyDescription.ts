@@ -15,13 +15,9 @@ export type PropertyKind =
 // SEFILELOOP, sonst bliebe das Fenster in der fertigen Maske leer.
   | 'quelle'
   | 'relation'
-// seite speichert die id einer Seite DIESER Maske. Die id bleibt daheim; was die
-// fertige Maske braucht, ist der Klarname, und der wandert ueber klarnameProp.
+// seite speichert die feste Kennung. klarnameProp haelt den lesbaren Seitennamen.
   | 'seite'
-// bild speichert eine Bilddatei als eingebetteten Daten-URI: die Maske laedt nie
-// etwas nach. Waehlen und Verkleinern macht das Inspector-Control, damit kein
-// Dateidialog im Runtime-Buendel landet.
-  | 'bild'
+
 
 export interface PropertySelectOption {
   value: string
@@ -66,6 +62,8 @@ export interface PropertyDescription {
   unit?: string
   min?: number
   max?: number
+
+  bearbeitung?: 'inline' | 'inspector'
 
   inspectorRow?: string
   visibleWhen?: PropertyVisibilityCondition

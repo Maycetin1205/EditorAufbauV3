@@ -7,7 +7,6 @@ import { useDataSources } from '../../state/useDataSources'
 import { useRelations } from '../../state/useRelations'
 import { useEditor } from '../../state/useEditor'
 import type { ListeGruppe } from '@/ui/werkbank/Liste'
-import { BildControl } from './controls/BildControl'
 import { KachelControl } from './controls/KachelControl'
 import { ColorTileControl } from './controls/ColorTileControl'
 import { NumberControl } from './controls/NumberControl'
@@ -83,7 +82,9 @@ export function PropControl({
   }
 
   if (property.requiresDataSource && !sourceInReach) return null
-  if (kind === 'field' && !feldQuelle) return null
+  if (kind === 'field' && !feldQuelle) {
+    return <p className="text-dicht text-matt">{property.name}: zuerst eine passende Datenquelle verbinden.</p>
+  }
 
   // Erst NACH den Sperren oben: eine Kachel ohne Datenquelle waere ein Schalter
   // fuer etwas, das es nicht gibt.
@@ -104,7 +105,7 @@ export function PropControl({
               kennung: quellenKennung(q),
             })),
           }],
-          wert: typeof value === 'string' && quellen.get(value) ? value : '',
+          wert: typeof value === 'string' ? value : '',
           leerText: 'Keine',
           onWaehle: (neueId) => {
             if (neueId === String(value ?? '')) return
@@ -166,7 +167,7 @@ export function PropControl({
             key: 'seiten',
             eintraege: seiten.map((s) => ({ wert: s.id, name: s.name })),
           }],
-          wert: seiten.some((s) => s.id === value) ? String(value) : '',
+          wert: typeof value === 'string' ? value : '',
           leerText: 'Keine',
           onWaehle: (id) => {
             ed.transaktion(() => {
@@ -191,7 +192,7 @@ export function PropControl({
               kennung: r.nr,
             })),
           }],
-          wert: typeof value === 'string' && relations.get(value) ? value : '',
+          wert: typeof value === 'string' ? value : '',
           leerText: 'Keine',
           onWaehle: set,
         }
@@ -220,8 +221,6 @@ export function PropControl({
     case 'textarea':
       return <TextareaControl property={property} value={String(value ?? '')} onChange={set} {...sitzung} />
 
-    case 'bild':
-      return <BildControl property={property} value={String(value ?? '')} onChange={set} />
     case 'number':
       return <NumberControl label={property.name} property={property} value={value} onChange={set} {...sitzung} />
     case 'segment':

@@ -1,5 +1,5 @@
 // Welcher Baustein als naechster gewaehlt wird (Escape, Loeschen).
-import { ROOT_ID, type BlockNode, type BlockTree } from '../core/blocks/BlockData'
+import { ROOT_ID, type BlockTree } from '../core/blocks/BlockData'
 import { istSeitenBaustein, seiteVon } from './pageOps'
 
 export function auswahlAufSeite(
@@ -23,14 +23,6 @@ export function elternZiel(tree: BlockTree, id: string): string | null {
 export function auswahlZiel(
   tree: BlockTree,
   getroffenId: string,
-  selectedId: string | null,
-  aufStelle: boolean,
 ): string | null {
-  const node = tree[getroffenId]
-  if (!node || getroffenId === ROOT_ID) return null
-  if (aufStelle || selectedId !== getroffenId) return getroffenId
-
-  const eltern: BlockNode | undefined = node.parentId ? tree[node.parentId] : undefined
-  if (!eltern || eltern.id === ROOT_ID || istSeitenBaustein(eltern)) return getroffenId
-  return eltern.id
+  return tree[getroffenId] && getroffenId !== ROOT_ID ? getroffenId : null
 }

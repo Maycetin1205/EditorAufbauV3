@@ -34,7 +34,7 @@ interface BlockHostProps {
   block: BlockNode
   selected?: boolean
 
-  onSelect?: (aufStelle: boolean) => void
+  onSelect?: () => void
 
   raster?: boolean
 
@@ -122,7 +122,6 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
   const eltern = block.parentId ? editor.getNode(block.parentId) : undefined
   const amRand = rand || (eltern ? istRandBaustein(eltern) : false)
 
-  const templateMark = editor.templateMarkFor(block.id)
 
   return (
     <div
@@ -133,7 +132,7 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
         if (platz !== null && fenster !== undefined && elementRef.current
           && oeffneFensterImEditor(editor, elementRef.current, block.id, fenster, platz)) {
           e.stopPropagation()
-          onSelect?.(false)
+          onSelect?.()
           return
         }
         onClick(e)
@@ -183,13 +182,13 @@ export function BlockHost({ block, selected, onSelect, raster = false, children 
           onSelect={onSelect}
         />
       )}
-      {selected && !templateMark && (
+      {selected && (
         <AuswahlLeiste
           block={block}
           def={def}
           wirt={rootRef}
           amRand={amRand}
-          onEntfernen={() => loescheBaustein(editor, blockRef.current.id)}
+          onEntfernen={editor.isRemoveProtected(block.id) ? undefined : () => loescheBaustein(editor, blockRef.current.id)}
         />
       )}
 

@@ -27,8 +27,6 @@ import {
 } from '../core/data/dataSources'
 import type { RelationTemplate } from '../core/data/relations'
 import { WEITERE_QUELLEN_PROP } from '../core/data/sourceLinks'
-import { dataSourceStore } from '../state/DataSourceStore'
-import { relationStore } from '../state/RelationStore'
 import { seitenDerMaske } from '../state/pageOps'
 import { istRasterFlaeche } from '../state/rasterOps'
 import {
@@ -174,8 +172,11 @@ function nodeToHtml(
 
   const fuelltAttr = rasterEbene && def.pageBlock !== true ? ' fuellt' : ''
 
+  const seitenAttr = def.flaechenSeite === true
+    ? ` data-ff-seite-id="${escapeHtmlAttr(node.id)}"`
+    : node.parentId === ROOT_ID && !def.pageBlock && !def.maskenRand ? ' data-ff-hauptinhalt' : ''
   const verborgenAttr = def.flaechenSeite === true ? ' hidden' : ''
-  const open = `${pad}<${def.tagName}${attrs}${aktionenAttr}${kennungAttr}${fuelltAttr}${verborgenAttr}${styleAttr(node, parentDirection, def.lockedWidth, rasterEbene, def.pageBlock === true)}>`
+  const open = `${pad}<${def.tagName}${attrs}${aktionenAttr}${kennungAttr}${seitenAttr}${fuelltAttr}${verborgenAttr}${styleAttr(node, parentDirection, def.lockedWidth, rasterEbene, def.pageBlock === true)}>`
   if (!def.acceptsChildren || node.childIds.length === 0) {
     return `${open}</${def.tagName}>`
   }
@@ -203,9 +204,9 @@ export function exportMask(
   tree: BlockTree,
   title = 'Maske',
 
-  sources: readonly DataSource[] = dataSourceStore.list,
+  sources: readonly DataSource[] = [],
 
-  relations: readonly RelationTemplate[] = relationStore.list,
+  relations: readonly RelationTemplate[] = [],
 ): MaskExport {
   const root = tree[ROOT_ID]
 

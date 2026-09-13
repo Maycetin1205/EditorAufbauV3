@@ -77,7 +77,7 @@ function BibliothekAktionen() {
       />
       <Knopf
         title="Datenquellen und Relationen als eigene Datei speichern — ohne die Bausteine"
-        onClick={() => speichereBibliothekAlsDatei()}
+        onClick={() => speichereBibliothekAlsDatei(ed)}
       >
         <Save size={14} /> Bibliothek speichern
       </Knopf>

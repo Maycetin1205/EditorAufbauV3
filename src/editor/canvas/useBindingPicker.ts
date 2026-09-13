@@ -18,7 +18,7 @@ interface BindingPickerArgs {
 
   hatAngebot: boolean
 
-  onSelect?: (aufStelle: boolean) => void
+  onSelect?: () => void
 }
 
 export function useBindingPicker({
@@ -63,21 +63,12 @@ export function useBindingPicker({
     }
   }
 
-  function aufBedienstelle(e: ReactMouseEvent<HTMLDivElement>): boolean {
-    for (const t of e.nativeEvent.composedPath()) {
-      if (t === e.currentTarget) return false
-      if (t instanceof HTMLElement
-        && (t.hasAttribute('data-ff-spot') || t.hasAttribute('data-ff-editable'))) return true
-    }
-    return false
-  }
-
   function onClick(e: ReactMouseEvent<HTMLDivElement>) {
     e.stopPropagation()
-    onSelect?.(aufBedienstelle(e))
+    onSelect?.()
     clearPickerTimer()
 
-    if (!selected || !hatAngebot) return
+    if (!hatAngebot) return
     if (e.detail > 1) return
     const hit = spotAt(e)
     if (!hit) return
@@ -98,7 +89,7 @@ export function useBindingPicker({
 
   function onDoubleClick(e: ReactMouseEvent<HTMLDivElement>) {
     clearPickerTimer()
-    if (!selected || !hatAngebot) return
+    if (!hatAngebot) return
     const hit = spotAt(e)
     if (!hit || bindingCode(blockRef.current.props, hit.spot) === '') return
     e.stopPropagation()

@@ -128,7 +128,7 @@ function CanvasNode({ node, index, parentId, listDirection, raster = false }: Ca
     <BlockHost
       block={node}
       selected={ed.selectedId === node.id}
-      onSelect={(aufStelle) => ed.waehleGetroffenen(node.id, aufStelle)}
+      onSelect={() => ed.waehleGetroffenen(node.id)}
       raster={raster}
     >
       {isContainer && <NodeList parentId={node.id} direction={childDirection} />}
@@ -152,6 +152,7 @@ function CanvasNode({ node, index, parentId, listDirection, raster = false }: Ca
 
   return (
     <div
+      slot={def?.editorSlot}
       draggable
       onDragStart={onDragStart}
       onDragOver={onDragOver}

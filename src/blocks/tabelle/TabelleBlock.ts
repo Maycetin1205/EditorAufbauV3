@@ -13,6 +13,7 @@ import {
   disconnectTable,
   leiteZeilenAb,
   zeilenIndexVon,
+  zeilenMerkmalVon,
   type BereitgestellteZeile,
   type Datenbesitz,
 } from './seRuntime'
@@ -233,7 +234,7 @@ export class TabelleBlock extends BasicBlock {
     const platz = fokus === undefined ? this._zeilenWahl.platzIn(this.rohzeilen) : fokus
     const zeile = platz === null ? undefined : this.rohzeilen[platz]
     if (zeile === undefined) return
-    setzeAuswahl(geberIdVon(this), zeile, true)
+    setzeAuswahl(geberIdVon(this), zeile, true, zeilenMerkmalVon(this, zeile))
     const satz = zeilenIndexVon(this, zeile)
     runEvent(this, 'onF4', { PINDEX: satz, DROP_PINDEX: satz }).catch(meldeKettenFehler)
   }

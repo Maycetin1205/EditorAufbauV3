@@ -1,6 +1,6 @@
 // Baut die Laufzeit der Maske in Teile: eine Basisdatei und je Baustein eine.
 // Aufruf: node tools/laufzeitBauen.mjs [--ziel <ordner>]
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -244,10 +244,20 @@ async function baueLaufzeit(ziel) {
 
   // Erst am Ende raeumen, nie vorher: ein parallel offener Editor uebernaehme
   // sonst per HMR einen Zwischenstand ohne Laufzeit.
-  const gehoertDazu = new Set([plan.basisDatei, ...plan.teile.map((t) => t.datei), 'teile.json'])
+  const gehoertDazu = new Set([plan.basisDatei, ...plan.teile.map((t) => t.datei), 'teile.json', 'laufzeit.json'])
   for (const name of readdirSync(ziel)) {
     if (!gehoertDazu.has(name)) rmSync(path.join(ziel, name))
   }
+
+  // Der Editor liest genau einen vollstaendigen Stand. Waehrend eines Neubaus
+  // bleiben Manifest und Code zusammen, auch wenn schon einzelne Teile fertig sind.
+  const inhalte = Object.fromEntries(
+    [plan.basisDatei, ...plan.teile.map((t) => t.datei)]
+      .map((datei) => [datei, readFileSync(path.join(ziel, datei), 'utf8')]),
+  )
+  const temporaer = path.join(ziel, 'laufzeit.json.tmp')
+  writeFileSync(temporaer, JSON.stringify({ ...verzeichnis, inhalte }) + '\n')
+  renameSync(temporaer, path.join(ziel, 'laufzeit.json'))
 
   for (const datei of [plan.basisDatei, ...plan.teile.map((t) => t.datei)]) {
     const kb = (readFileSync(path.join(ziel, datei)).length / 1024).toFixed(1)

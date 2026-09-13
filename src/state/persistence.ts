@@ -1,4 +1,6 @@
 // Der Browserspeicher: Stand sichern, laden, und melden, wenn etwas fehlt.
+import { pruefeDatenquellen, type DataSource } from '../core/data/dataSources'
+import { pruefeRelationsVorlagen, type RelationTemplate } from '../core/data/relations'
 import { type BlockTree } from '../core/blocks/BlockData'
 import { baumAusRohdaten } from './ladeKette'
 import { meldungen } from './meldungen'
@@ -26,13 +28,19 @@ try {
   // Speicher gesperrt — dann bleibt der tote Schluessel eben liegen.
 }
 
-interface PersistedState {
+interface MaskenBibliotheken {
+  datenquellen: readonly DataSource[]
+  relationen: readonly RelationTemplate[]
+  activePageId?: string
+}
+
+interface PersistedState extends Partial<MaskenBibliotheken> {
   schemaVersion: number
   tree: BlockTree
   selectedId: string | null
 }
 
-export interface LoadedState {
+export interface LoadedState extends Partial<MaskenBibliotheken> {
   tree: BlockTree
   selectedId: string | null
 
@@ -49,8 +57,9 @@ export function meldeVerworfeneTypen(verworfen: Map<string, number>): void {
   const typen = [...verworfen.keys()].map((t) => `"${t}"`).join(', ')
   meldungen.melde(
     `Beim Laden entfernt: ${anzahl} Baustein(e) der nicht mehr vorhandenen Typen ${typen}.\n`
-    + 'Diese Bausteintypen gibt es im Editor nicht mehr. Ihr Inhalt wurde — '
-    + 'falls vorhanden — an ihrer Stelle eingegliedert; der Rest der Maske ist unverändert.',
+    + 'Diese Bausteintypen gibt es im Editor nicht mehr. Enthaltene Bausteine wurden '
+    + 'an ihrer Stelle eingegliedert. Eigene Inhalte entfernter Bausteine, etwa Bilder, '
+    + 'werden nicht übernommen. Die ursprüngliche Maskendatei bleibt unverändert.',
   )
 }
 
@@ -122,8 +131,25 @@ export function loadFromStorage(): LoadedState | null {
       tree?: unknown
       blocks?: unknown
       selectedId?: unknown
+      activePageId?: unknown
+      datenquellen?: unknown
+      relationen?: unknown
     }
 
+    let bibliotheken: Partial<MaskenBibliotheken> = {}
+    if ('datenquellen' in parsed || 'relationen' in parsed) {
+      if (!Array.isArray(parsed.datenquellen) || !Array.isArray(parsed.relationen)) {
+        backupUnreadableState(raw)
+        return null
+      }
+      const quellen = pruefeDatenquellen(parsed.datenquellen)
+      const relationen = pruefeRelationsVorlagen(parsed.relationen)
+      if (quellen.probleme.length > 0 || relationen.probleme.length > 0) {
+        backupUnreadableState(raw)
+        return null
+      }
+      bibliotheken = { datenquellen: quellen.liste, relationen: relationen.liste }
+    }
     const schemaVersion = typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1
     if (schemaVersion > CURRENT_SCHEMA_VERSION) {
       meldeZukunftsStand(raw, schemaVersion)
@@ -147,9 +173,11 @@ export function loadFromStorage(): LoadedState | null {
     meldeAbsichtlichEntfernte(baum.absichtlichEntfernt)
     meldeVerloreneKetten(baum.verloreneKetten)
     return {
+      ...bibliotheken,
+      activePageId: typeof parsed.activePageId === 'string' ? parsed.activePageId : undefined,
       tree: baum.tree,
       selectedId: baum.selectedId,
-      resaveNeeded: baum.schemaAdvanced,
+      resaveNeeded: baum.schemaAdvanced || schemaVersion < CURRENT_SCHEMA_VERSION,
     }
   } catch (error) {
     console.error('Editor: gespeicherter Stand nicht lesbar', error)
@@ -158,9 +186,10 @@ export function loadFromStorage(): LoadedState | null {
   }
 }
 
-export function persistState(tree: BlockTree, selectedId: string | null): void {
+export function persistState(tree: BlockTree, selectedId: string | null, bibliotheken?: MaskenBibliotheken): void {
   try {
     const state: PersistedState = {
+      ...bibliotheken,
       schemaVersion: CURRENT_SCHEMA_VERSION,
       tree,
       selectedId,

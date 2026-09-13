@@ -11,19 +11,26 @@ import { referenzBaum, REFERENZ_QUELLEN, REFERENZ_RELATIONEN } from './referenz/
 const HTML_PFAD = fileURLToPath(new URL('./referenz/referenz.html', import.meta.url))
 const SV_PFAD = fileURLToPath(new URL('./referenz/referenz.sevariablen.json', import.meta.url))
 
-// Erneuern (nur bei ABSICHTLICHER Exportänderung, im eigenen Commit):
-//   REFERENZ_ERNEUERN=1 npx vitest run src/export/referenzabzug.test.ts
+// Die Strukturreferenz enthaelt keine kompilierte Laufzeit. Deren reproduzierbarer
+// Bau wird separat in runtimeBuendel.test.ts geprueft.
+function ohneLaufzeit(html: string): string {
+  const start = html.lastIndexOf('<script>')
+  const ende = html.indexOf('</script>', start)
+  if (start < 0 || ende < 0) throw new Error('Der Export enthaelt keine Laufzeit')
+  return html.slice(0, start) + '<!-- Laufzeit separat geprüft -->' + html.slice(ende + '</script>'.length)
+}
+
 const erneuern = process.env.REFERENZ_ERNEUERN === '1'
 
-test('der Export der Referenzmaske ist byte-gleich zur eingecheckten Referenz', () => {
+test('Struktur und ERP-Konfiguration entsprechen der Referenz', () => {
   const { html, sevariablen } = exportMask(
     referenzBaum(), 'Referenzmaske', REFERENZ_QUELLEN, REFERENZ_RELATIONEN,
   )
   if (erneuern) {
-    writeFileSync(HTML_PFAD, html)
+    writeFileSync(HTML_PFAD, ohneLaufzeit(html))
     writeFileSync(SV_PFAD, sevariablen)
   }
-  expect(html).toBe(readFileSync(HTML_PFAD, 'utf8'))
+  expect(ohneLaufzeit(html)).toBe(readFileSync(HTML_PFAD, 'utf8'))
   expect(sevariablen).toBe(readFileSync(SV_PFAD, 'utf8'))
 })
 

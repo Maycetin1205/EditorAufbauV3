@@ -14,14 +14,12 @@ import {
   ohneErrechnetes,
   problemText,
 } from './bibliothekDatei'
-import { dataSourceStore } from './DataSourceStore'
 import type { Editor } from './Editor'
 import { pruefeBaumStand } from './ladeKette'
 import { meldungen } from './meldungen'
 import { CURRENT_SCHEMA_VERSION } from './migrations'
 import { type EntfernGrund } from './migrationenRoh'
 import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from './persistence'
-import { relationStore } from './RelationStore'
 
 const MASKEN_DATEI_ART = 'aufbau-editor-maske'
 
@@ -66,8 +64,8 @@ function packeMaske(inhalt: MaskenInhalt): string {
 export function speichereMaskeAlsDatei(editor: Editor): void {
   const text = packeMaske({
     tree: editor.tree,
-    datenquellen: [...dataSourceStore.list],
-    relationen: [...relationStore.list],
+    datenquellen: [...editor.datenquellen.list],
+    relationen: [...editor.relationen.list],
   })
   const heute = new Date().toISOString().slice(0, 10)
   downloadFile(`aufbau-maske-${heute}.json`, text, 'application/json')

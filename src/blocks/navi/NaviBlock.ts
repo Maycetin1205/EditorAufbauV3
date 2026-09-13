@@ -1,25 +1,29 @@
 // Baustein Navi: die Leiste, die zwischen den Ansichten der Maske umschaltet.
 import { css, html, type TemplateResult } from 'lit'
+import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
-import { ROOT_TYPE } from '../../core/blocks/BlockData'
+import { ROOT_ID, ROOT_TYPE } from '../../core/blocks/BlockData'
 import { RAND } from '../../core/blocks/maskenRand'
 import { NaviEintragBlock } from './NaviEintragBlock'
-import { naviAktualisiert, verbindeNavi, zeigeBreite } from './seRuntime'
+import { naviAktualisiert, trenneNavi, verbindeNavi, zeigeBreite } from './seRuntime'
 
 const EINTRAG = NaviEintragBlock.blockType
 
 export class NaviBlock extends BasicBlock {
   static readonly blockType = 'navi'
   static readonly tagName = 'ff-navi'
-  static readonly displayName = 'Navi'
+  static readonly displayName = 'Navigation'
   static readonly category: BlockCategory = 'layout'
   static readonly acceptsChildren = true
   static readonly allowedChildTypes = [EINTRAG]
   static readonly addChildButton = { label: 'Eintrag', childType: EINTRAG }
   static readonly containerHint = false
   static readonly defaultProps = {}
+  static readonly defaultChildren = [
+    { type: EINTRAG, props: { seite: ROOT_ID, seitename: 'Hauptseite' } },
+  ]
   static override readonly customProperties: PropertyDescription[] = []
 
   static readonly maskenRand = true
@@ -89,9 +93,16 @@ export class NaviBlock extends BasicBlock {
     `,
   ]
 
+  @property({ type: Boolean, reflect: true }) offen = false
+
   override connectedCallback(): void {
     super.connectedCallback()
     verbindeNavi(this)
+  }
+
+  override disconnectedCallback(): void {
+    trenneNavi(this)
+    super.disconnectedCallback()
   }
 
   private klappen(): void {
@@ -100,12 +111,13 @@ export class NaviBlock extends BasicBlock {
   }
 
   override render(): TemplateResult {
-    return html`<div class="leiste">
+    return html`<nav class="leiste" aria-label="Seiten">
         <div class="kopf">
           <button
             class="schalter"
             type="button"
-            aria-label="Navi auf- und zuklappen"
+            aria-label="Navigation auf- und zuklappen"
+            aria-expanded=${String(this.offen)}
             @click=${() => this.klappen()}
           >
             <span class="balken"></span>
@@ -116,7 +128,7 @@ export class NaviBlock extends BasicBlock {
         <div class="eintraege">
           <slot @slotchange=${() => naviAktualisiert(this)}></slot>
         </div>
-      </div>`
+      </nav>`
   }
 }
 

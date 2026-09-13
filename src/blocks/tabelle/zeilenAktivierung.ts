@@ -2,11 +2,10 @@
 import {
   auswahlFuer,
   geberIdVon,
-  merkmalVon,
   waehleAuswahl,
 } from '../shared/auswahl'
 import { meldeKettenFehler, runEvent } from '../shared/seAktionen'
-import { zeilenIndexVon } from './seRuntime'
+import { zeilenIndexVon, zeilenMerkmalVon } from './seRuntime'
 
 export const ZEILE_AKTIVIERT_EVENT = 'ff-zeile-aktiviert'
 
@@ -51,7 +50,7 @@ export class ZeilenWahl {
 
   private get merkmal(): string {
     const id = this.geberId
-    return id === '' ? this.eigenesMerkmal : merkmalVon(auswahlFuer(id))
+    return id === '' ? this.eigenesMerkmal : zeilenMerkmalVon(this.baustein, auswahlFuer(id))
   }
 
   platzIn(zeilen: readonly unknown[]): number {
@@ -61,21 +60,21 @@ export class ZeilenWahl {
     if (letzter !== null && letzter.zeilen === zeilen && letzter.merkmal === merkmal) {
       return letzter.platz
     }
-    const platz = zeilen.findIndex((zeile) => merkmalVon(zeile) === merkmal)
+    const platz = zeilen.findIndex((zeile) => zeilenMerkmalVon(this.baustein, zeile) === merkmal)
     this.letzterPlatz = { zeilen, merkmal, platz }
     return platz
   }
 
   // Dieselbe Zeile noch einmal nimmt die Wahl zurueck. Antwort: steht sie jetzt.
   schalte(zeile: unknown): boolean {
-    const merkmal = merkmalVon(zeile)
+    const merkmal = zeilenMerkmalVon(this.baustein, zeile)
     const id = this.geberId
     if (id === '') {
       this.eigenesMerkmal = this.eigenesMerkmal === merkmal ? '' : merkmal
       return this.eigenesMerkmal !== ''
     }
-    waehleAuswahl(id, zeile)
-    return merkmal !== '' && merkmalVon(auswahlFuer(id)) === merkmal
+    waehleAuswahl(id, zeile, merkmal)
+    return merkmal !== '' && zeilenMerkmalVon(this.baustein, auswahlFuer(id)) === merkmal
   }
 
   vergiss(): void {

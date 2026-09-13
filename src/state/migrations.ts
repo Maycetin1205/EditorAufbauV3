@@ -10,7 +10,7 @@ import {
 import { istSeitenBaustein, istFlaechenSeite } from './pageOps'
 import { createEmptyTree, normalizeProps } from './treeOps'
 
-export const CURRENT_SCHEMA_VERSION = 7
+export const CURRENT_SCHEMA_VERSION = 8
 
 export const DEMO_CLEANUP_BEFORE_SCHEMA = 5
 

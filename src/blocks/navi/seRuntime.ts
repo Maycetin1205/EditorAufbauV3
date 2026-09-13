@@ -1,85 +1,97 @@
-// Die Navi in der fertigen Maske: aktiven Punkt halten und die Ansicht wechseln.
+import { ROOT_ID } from '../../core/blocks/BlockData'
 import { SEITEN_WECHSEL_EVENT, type SeitenWechselDetail } from '../../core/blocks/seitenWechsel'
-import { AnsichtBlock } from '../ansicht/AnsichtBlock'
 import { NaviEintragBlock } from './NaviEintragBlock'
 
-const AKTIV = 'aktiv'
+const verbindungen = new WeakMap<Element, () => void>()
+const aktiveSeiten = new WeakMap<Element, string>()
 
 function eintraegeVon(navi: Element): NaviEintragBlock[] {
   return Array.from(navi.querySelectorAll(NaviEintragBlock.tagName))
 }
 
-function haltePunktAktiv(navi: Element, gewaehlt?: Element): void {
-  const eintraege = eintraegeVon(navi)
-  const ziel = gewaehlt ?? eintraege.find((e) => e.hasAttribute(AKTIV)) ?? eintraege[0]
-  for (const e of eintraege) {
-    if (e === ziel) e.setAttribute(AKTIV, '')
-    else e.removeAttribute(AKTIV)
+function wurzelVon(navi: Element): Element | null {
+  return navi.closest('.ff-root')
+}
+
+function seitenVon(wurzel: Element): Element[] {
+  return Array.from(wurzel.children).filter((el) => el.hasAttribute('data-ff-seite-id'))
+}
+
+function zielVon(wurzel: Element, eintrag: Pick<NaviEintragBlock, 'seite' | 'seitename'>): string | null {
+  if (eintrag.seite === ROOT_ID) return ROOT_ID
+  const seiten = seitenVon(wurzel)
+  if (eintrag.seite !== '') {
+    return seiten.some((el) => el.getAttribute('data-ff-seite-id') === eintrag.seite) ? eintrag.seite : null
+  }
+  // Alte Eintraege ohne Kennung sind nur bei eindeutigem Namen zuordenbar.
+  if (eintrag.seitename === 'Hauptseite') return ROOT_ID
+  const passende = seiten.filter((el) => el.getAttribute('name') === eintrag.seitename)
+  return passende.length === 1 ? passende[0].getAttribute('data-ff-seite-id') : null
+}
+
+function aktualisiereEintraege(navi: Element): void {
+  const wurzel = wurzelVon(navi)
+  if (!wurzel || navi.hasAttribute('data-ff-editor')) return
+  const aktiv = aktiveSeiten.get(wurzel) ?? ROOT_ID
+  for (const eintrag of eintraegeVon(navi)) {
+    const ziel = zielVon(wurzel, eintrag)
+    eintrag.toggleAttribute('aktiv', ziel === aktiv)
+    eintrag.toggleAttribute('ungueltig', ziel === null)
   }
 }
 
 export function zeigeBreite(navi: Element): void {
-  const breit = navi.hasAttribute('offen')
-  for (const e of eintraegeVon(navi)) e.toggleAttribute('breit', breit)
+  for (const eintrag of eintraegeVon(navi)) eintrag.toggleAttribute('breit', navi.hasAttribute('offen'))
 }
 
-function nameVon(ansicht: Element): string {
-  return ansicht.getAttribute('name') ?? String(AnsichtBlock.defaultProps.name)
-}
-
-function astVon(navi: Element, flaeche: Element): Element | null {
-  let cur: Element | null = navi
-  while (cur && cur.parentElement !== flaeche) cur = cur.parentElement
-  return cur
-}
-
-function schalteUm(navi: Element, ansichtsName: string): void {
-  const doc = navi.ownerDocument
-  const alle = Array.from(doc.querySelectorAll(AnsichtBlock.tagName))
-
-  const flaeche = alle[0]?.parentElement ?? null
-  if (!flaeche) return
-  const eigenerAst = astVon(navi, flaeche)
-  if (!eigenerAst) return
-  const ziel = alle.find((a) => nameVon(a) === ansichtsName) ?? null
-  for (const kind of Array.from(flaeche.children)) {
-    if (kind === eigenerAst) continue
-    const istAnsicht = alle.includes(kind as AnsichtBlock)
-    const sichtbar = istAnsicht ? kind === ziel : ziel === null
-    if (sichtbar) kind.removeAttribute('hidden')
-    else kind.setAttribute('hidden', '')
+function schalteUm(wurzel: Element, seite: string): void {
+  aktiveSeiten.set(wurzel, seite)
+  for (const el of Array.from(wurzel.children)) {
+    if (el.hasAttribute('data-ff-seite-id')) {
+      el.toggleAttribute('hidden', el.getAttribute('data-ff-seite-id') !== seite)
+    } else if (el.hasAttribute('data-ff-hauptinhalt')) {
+      el.toggleAttribute('hidden', seite !== ROOT_ID)
+    }
   }
+  for (const navi of wurzel.querySelectorAll('ff-navi')) aktualisiereEintraege(navi)
 }
-
-const gestartet = new WeakSet<Element>()
 
 export function verbindeNavi(navi: Element): void {
-  const auf = (e: Event): void => {
-    const detail = (e as CustomEvent<SeitenWechselDetail>).detail
-    if (!detail) return
-    haltePunktAktiv(navi, e.target instanceof Element ? e.target : undefined)
-
+  trenneNavi(navi)
+  const auf = (event: Event): void => {
+    if (navi.hasAttribute('data-ff-editor')) return
+    const detail = (event as CustomEvent<SeitenWechselDetail>).detail
+    const wurzel = wurzelVon(navi)
+    if (!detail || !wurzel) return
+    const ziel = zielVon(wurzel, { seite: detail.seite ?? '', seitename: detail.ansicht })
+    if (ziel === null) return
+    schalteUm(wurzel, ziel)
     navi.removeAttribute('offen')
     zeigeBreite(navi)
-    if (navi.hasAttribute('data-ff-editor')) return
-    schalteUm(navi, detail.ansicht)
   }
+  const start = (): void => naviAktualisiert(navi)
   navi.addEventListener(SEITEN_WECHSEL_EVENT, auf)
+  navi.ownerDocument.addEventListener('DOMContentLoaded', start, { once: true })
+  verbindungen.set(navi, () => {
+    navi.removeEventListener(SEITEN_WECHSEL_EVENT, auf)
+    navi.ownerDocument.removeEventListener('DOMContentLoaded', start)
+  })
+  queueMicrotask(() => { if (navi.isConnected && verbindungen.has(navi)) start() })
+}
+
+export function trenneNavi(navi: Element): void {
+  verbindungen.get(navi)?.()
+  verbindungen.delete(navi)
 }
 
 export function naviAktualisiert(navi: Element): void {
-  haltePunktAktiv(navi)
-
   zeigeBreite(navi)
-  if (navi.hasAttribute('data-ff-editor') || gestartet.has(navi)) return
-  const erster = eintraegeVon(navi)[0]
-  if (!erster) return
-  gestartet.add(navi)
-
-  const start = (): void => schalteUm(navi, erster.seitename)
-  if (navi.ownerDocument.readyState === 'loading') {
-    navi.ownerDocument.addEventListener('DOMContentLoaded', start, { once: true })
+  const wurzel = wurzelVon(navi)
+  if (!wurzel || navi.hasAttribute('data-ff-editor')) return
+  if (!aktiveSeiten.has(wurzel)) {
+    const start = eintraegeVon(navi).map((e) => zielVon(wurzel, e)).find((ziel) => ziel !== null)
+    schalteUm(wurzel, start ?? ROOT_ID)
   } else {
-    queueMicrotask(start)
+    aktualisiereEintraege(navi)
   }
 }

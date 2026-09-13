@@ -17,9 +17,7 @@ const BAUPLAN: VorlagenBauplan<RelationTemplate> = {
 }
 
 export class RelationStore extends VorlagenStore<RelationTemplate> {
-  constructor() {
-    super(BAUPLAN)
+  constructor(bestand?: readonly RelationTemplate[], eigenerSpeicher = true) {
+    super(BAUPLAN, bestand, eigenerSpeicher)
   }
 }
-
-export const relationStore = new RelationStore()

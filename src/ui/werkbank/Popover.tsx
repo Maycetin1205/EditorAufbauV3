@@ -1,5 +1,8 @@
 // Ein Fenster, das unter seinem Anker haengt und sich selbst hinmisst.
 import {
+  createContext,
+  useContext,
+  useId,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -11,6 +14,8 @@ import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 
 const RAND = 8
+const Familie = createContext<readonly string[]>([])
+const offeneFenster: string[] = []
 
 export interface PopoverProps {
   bezeichnung: string
@@ -38,7 +43,17 @@ export function Popover({
   onClose,
   children,
 }: PopoverProps) {
+  const id = useId()
+  const vorfahren = useContext(Familie)
+  const familie = [...vorfahren, id]
   const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    offeneFenster.push(id)
+    return () => {
+      const platz = offeneFenster.indexOf(id)
+      if (platz >= 0) offeneFenster.splice(platz, 1)
+    }
+  }, [id])
   const [platz, setPlatz] = useState<{ top: number; left: number } | null>(null)
 
   useLayoutEffect(() => {
@@ -66,15 +81,19 @@ export function Popover({
   useEffect(() => {
     const drauf = (e: PointerEvent) => {
       const ziel = e.target as Node
+      if (e.composedPath().some((el) => el instanceof HTMLElement
+        && el.dataset.ffPopoverFamilie?.split(' ').includes(id))) return
       if (ref.current?.contains(ziel) || anker.current?.contains(ziel)) return
       onClose()
     }
     const gerollt = (e: Event) => {
+      if (e.composedPath().some((el) => el instanceof HTMLElement
+        && el.dataset.ffPopoverFamilie?.split(' ').includes(id))) return
       if (ref.current && e.target instanceof Node && ref.current.contains(e.target)) return
       onClose()
     }
     const taste = (e: Event) => {
-      if (!(e instanceof KeyboardEvent) || e.key !== 'Escape') return
+      if (!(e instanceof KeyboardEvent) || e.key !== 'Escape' || offeneFenster.at(-1) !== id) return
       if (escapeAbfangen) {
         e.stopImmediatePropagation()
         e.stopPropagation()
@@ -90,14 +109,16 @@ export function Popover({
       document.removeEventListener('scroll', gerollt, true)
       tastenZiel.removeEventListener('keydown', taste, true)
     }
-  }, [anker, onClose, escapeAbfangen])
+  }, [anker, onClose, escapeAbfangen, id])
 
   return createPortal(
     <div
       ref={ref}
       role="dialog"
+      tabIndex={-1}
       aria-label={bezeichnung}
       data-ff-editor-helper
+      data-ff-popover-familie={familie.join(' ')}
       draggable={false}
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
@@ -120,7 +141,7 @@ export function Popover({
         platz === null && 'opacity-0',
       )}
     >
-      {children}
+      <Familie.Provider value={familie}>{children}</Familie.Provider>
     </div>,
     document.body,
   )

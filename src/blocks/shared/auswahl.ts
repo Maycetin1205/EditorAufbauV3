@@ -7,7 +7,11 @@ import { paarListeAusAttribut } from './paarListe'
 export function merkmalVon(zeile: unknown): string {
   if (zeile == null) return ''
   try {
-    return JSON.stringify(zeile) ?? ''
+    return JSON.stringify(zeile, (_key, wert: unknown) => {
+      if (!wert || typeof wert !== 'object' || Array.isArray(wert)) return wert
+      const objekt = wert as Record<string, unknown>
+      return Object.fromEntries(Object.keys(objekt).sort().map((key) => [key, objekt[key]]))
+    }) ?? ''
   } catch {
     return ''
   }
@@ -73,21 +77,30 @@ export function auswahlWiederfinden<T>(
   geberId: string,
   kandidaten: readonly T[],
   zeileVon: (kandidat: T) => unknown,
+  schluesselVon?: (kandidat: T) => string,
 ): number[] {
   if (geberId === '') return []
   const merkmal = auswahlMerkmal(geberId)
   if (merkmal === '') return []
   const treffer: number[] = []
   kandidaten.forEach((kandidat, i) => {
-    if (merkmalVon(zeileVon(kandidat)) === merkmal) treffer.push(i)
+    if ((schluesselVon?.(kandidat) || merkmalVon(zeileVon(kandidat))) === merkmal) treffer.push(i)
   })
   if (treffer.length === 0) klareAuswahl(geberId)
+  else {
+    const alt = zustand.get(geberId)
+    const zeile = zeileVon(kandidaten[treffer[0]])
+    if (alt && merkmalVon(alt.zeile) !== merkmalVon(zeile)) {
+      zustand.set(geberId, { ...alt, zeile })
+      melde(false)
+    }
+  }
   return treffer
 }
 
-export function waehleAuswahl(geberId: string, zeile: unknown): void {
+export function waehleAuswahl(geberId: string, zeile: unknown, schluessel = ''): void {
   if (geberId === '') return
-  const merkmal = merkmalVon(zeile)
+  const merkmal = schluessel || merkmalVon(zeile)
   if (merkmal === '') return
   const alt = zustand.get(geberId)
   if (alt && alt.merkmal === merkmal) zustand.delete(geberId)
@@ -97,9 +110,9 @@ export function waehleAuswahl(geberId: string, zeile: unknown): void {
 
 // Setzt die Auswahl ohne Umschalten. `durchBedienung` sagt, ob ein Mensch den
 // Satz gewaehlt hat; die Hydrierung laesst es weg.
-export function setzeAuswahl(geberId: string, zeile: unknown, durchBedienung = false): void {
+export function setzeAuswahl(geberId: string, zeile: unknown, durchBedienung = false, schluessel = ''): void {
   if (geberId === '') return
-  const merkmal = merkmalVon(zeile)
+  const merkmal = schluessel || merkmalVon(zeile)
   if (merkmal === '') return
   if (zustand.get(geberId)?.merkmal === merkmal) return
   zustand.set(geberId, { zeile, merkmal, nummer: ++wahlZaehler })

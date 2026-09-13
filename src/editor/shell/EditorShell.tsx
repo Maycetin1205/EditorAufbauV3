@@ -2,6 +2,7 @@
 import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useKeyboardShortcuts } from '../../state/useKeyboardShortcuts'
+import { AuswahlPfad } from '../canvas/AuswahlPfad'
 import { Canvas } from '../canvas/Canvas'
 import { FensterSpalten } from '../canvas/FensterSpalten'
 import { SeitenLeiste } from '../canvas/SeitenLeiste'
@@ -49,16 +50,19 @@ export function EditorShell() {
 
   return (
     <div className="flex h-screen w-screen flex-col bg-grund text-tinte">
-      <header className="grid h-9 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-linie bg-panel px-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 truncate text-ui font-semibold text-tinte">Aufbau-Editor</span>
+      <header className="flex shrink-0 flex-col border-b border-linie bg-panel">
+        <div className="flex min-h-11 items-center gap-3 overflow-x-auto px-3 py-1">
+          <span className="shrink-0 text-ui font-semibold">Aufbau-Editor</span>
           <Trenner senkrecht />
           <VerlaufKnoepfe />
+          <div className="flex-1" />
+          <Toolbar onDatencenter={() => setDatencenterOffen(true)} />
         </div>
-        <div className="justify-self-center">
+        <div className="flex min-h-9 items-center gap-4 border-t border-linie px-3">
           <SeitenLeiste />
+          <Trenner senkrecht />
+          <AuswahlPfad />
         </div>
-        <Toolbar onDatencenter={() => setDatencenterOffen(true)} />
       </header>
 
       {datencenterOffen && <Kommandozentrale onClose={() => setDatencenterOffen(false)} />}

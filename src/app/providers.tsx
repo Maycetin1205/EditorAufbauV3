@@ -1,9 +1,7 @@
 // Die Kontexte, in denen der Editor laeuft.
 import { useEffect, useState, type ReactNode } from 'react'
-import { dataSourceStore } from '../state/DataSourceStore'
 import { Editor } from '../state/Editor'
 import { EditorProvider } from '../state/EditorProvider'
-import { relationStore } from '../state/RelationStore'
 import { Fehlergrenze } from './Fehlergrenze'
 
 interface ProvidersProps {
@@ -16,8 +14,6 @@ export function Providers({ children }: ProvidersProps) {
   useEffect(() => {
     const rette = (): void => {
       editor.speichereJetzt()
-      dataSourceStore.speichereJetzt()
-      relationStore.speichereJetzt()
     }
     const beiVerborgen = (): void => {
       if (document.visibilityState === 'hidden') rette()

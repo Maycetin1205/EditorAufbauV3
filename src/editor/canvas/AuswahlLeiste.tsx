@@ -1,11 +1,16 @@
 // Die Werkzeugleiste am gewaehlten Baustein: Kind anlegen, Eintrag anfuegen, entfernen.
-import { useLayoutEffect, useRef, type RefObject } from 'react'
-import { Minus, Plus } from '@/ui/zeichen'
+import { useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { Minus, Plus, SlidersHorizontal, Trash2 } from '@/ui/zeichen'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import { listeLesen, type BlockDefinition } from '../../core/blocks/BlockDefinition'
 import { useEditorInstance } from '../../state/EditorContext'
 import { wendeProps } from '../../state/propsPatch'
+import { firstDescendantOfType } from '../../core/blocks/treeQuery'
+import { eigenschaftenFuer } from '../../core/blocks/eigenschaftsOrt'
+import { elternZiel } from '../../state/selectionOps'
+import { Popover } from '@/ui/werkbank/Popover'
+import { PropControl } from '../inspector/PropControl'
 
 interface AuswahlLeisteProps {
   block: BlockNode
@@ -62,8 +67,17 @@ const halt = (e: { stopPropagation: () => void }): void => e.stopPropagation()
 
 // Zeichnete die Tabelle eigene Knoepfe in die Maske, staenden sie bei schmalen
 // Spalten ueber den Titeln.
-export function AuswahlLeiste({ block, def, wirt, amRand }: AuswahlLeisteProps) {
+export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: AuswahlLeisteProps) {
   const editor = useEditorInstance()
+  const [gestalten, setGestalten] = useState(false)
+  const anker = useRef<HTMLButtonElement>(null)
+  const sitzung = useMemo(() => ({
+    onBeginBearbeitung: () => editor.beginTransaction(),
+    onEndeBearbeitung: () => editor.endTransaction(),
+  }), [editor])
+  const eigenschaften = def ? eigenschaftenFuer(block, def, 'inline') : []
+  const eltern = elternZiel(editor.tree, block.id)
+  const muster = def?.templateChild ? firstDescendantOfType(editor.tree, block.id, def.templateChild.type) : undefined
   // Die Lage wird gemessen und direkt ans Element geschrieben: kein Zustand,
   // kein zweiter Render.
   const leisteRef = useRef<HTMLDivElement | null>(null)
@@ -80,9 +94,6 @@ export function AuswahlLeiste({ block, def, wirt, amRand }: AuswahlLeisteProps) 
   const eintraege = liste ? listeLesen(block.props[liste.prop], liste) : []
   const wegMoeglich = weg !== undefined && eintraege.length > 1
 
-  if (!kind && !neu && !weg) {
-    return null
-  }
 
   return (
     <div
@@ -95,6 +106,36 @@ export function AuswahlLeiste({ block, def, wirt, amRand }: AuswahlLeisteProps) 
       onDoubleClick={halt}
       onDragStart={(e) => { e.preventDefault(); e.stopPropagation() }}
     >
+      {eigenschaften.length > 0 && (
+        <Knopf ref={anker} className="h-6 px-1.5 text-dicht"
+          aria-expanded={gestalten} aria-haspopup="dialog"
+          onClick={() => setGestalten((offen) => !offen)}>
+          <SlidersHorizontal size={12} /> Gestalten
+        </Knopf>
+      )}
+      {muster && (
+        <Knopf className="h-6 px-1.5 text-dicht" onClick={() => editor.selectBlock(muster)}>Kartenmuster</Knopf>
+      )}
+      {eltern && (
+        <Knopf className="h-6 px-1.5 text-dicht" title="Übergeordneten Baustein auswählen (Escape)"
+          onClick={() => editor.selectBlock(eltern)}>↑ Eltern</Knopf>
+      )}
+      {onEntfernen && (
+        <Knopf nurZeichen className="h-6 w-6" title="Baustein löschen" aria-label="Baustein löschen"
+          onClick={onEntfernen}><Trash2 size={12} /></Knopf>
+      )}
+      {gestalten && (
+        <Popover bezeichnung={`${def?.displayName ?? 'Baustein'} gestalten`} anker={anker}
+          breite={280} maxHoehe={420} escapeAbfangen onClose={() => setGestalten(false)}>
+          <div className="flex flex-col gap-3 p-2">
+            <strong className="text-ui">{def?.displayName} gestalten</strong>
+            {eigenschaften.map((property) => (
+              <PropControl key={property.attributeName} block={block} property={property}
+                sourceInReach={editor.dataSourceFor(block.id)} sitzung={sitzung} />
+            ))}
+          </div>
+        </Popover>
+      )}
       {kind && (
         <Knopf
           className="h-6 px-1.5 text-dicht"

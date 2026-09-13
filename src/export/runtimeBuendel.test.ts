@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, rmSync } from 'node:fs'
 import path from 'node:path'
 import { expect, test } from 'vitest'
 
-const EINGECHECKT = 'src/export/generated'
+const EXPORT_LAUFZEIT = 'src/export/generated'
 
 // Gebaut wird in einen Wegwerf-Ordner, NIE nach src/export/generated: ein
 // parallel offener Dev-Server uebernaehme den kurzen Zwischenzustand per HMR
@@ -26,19 +26,19 @@ function baueFrisch(): void {
   )
 }
 
-test('die eingecheckte Laufzeit ist der frische Bau', () => {
+test('die bereitgestellte Laufzeit ist reproduzierbar', () => {
   baueFrisch()
   const frisch = readdirSync(WEGWERF).sort()
-  const eingecheckt = readdirSync(EINGECHECKT).sort()
-  expect(eingecheckt, 'andere Laufzeitdateien als der frische Bau').toEqual(frisch)
+  const bereitgestellt = readdirSync(EXPORT_LAUFZEIT).sort()
+  expect(bereitgestellt, 'andere Laufzeitdateien als der frische Bau').toEqual(frisch)
 
   for (const name of frisch) {
     const a = readFileSync(path.join(WEGWERF, name))
-    const b = readFileSync(path.join(EINGECHECKT, name))
+    const b = readFileSync(path.join(EXPORT_LAUFZEIT, name))
     expect(
       a.equals(b),
       `build:runtime vergessen: ${name} weicht vom frischen Bau ab `
-      + `(eingecheckt ${b.length} Bytes, frisch ${a.length} Bytes). `
+      + `(bereitgestellt ${b.length} Bytes, frisch ${a.length} Bytes). `
       + 'Die exportierte Maske traegt dann alten Baustein-Code.',
     ).toBe(true)
   }

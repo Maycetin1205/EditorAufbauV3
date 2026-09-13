@@ -223,6 +223,8 @@ export interface BlockDefinition {
 
   templateChild?: { type: string; label: string }
 
+  editorSlot?: string
+
   containerHint?: boolean
 
   addChildButton?: { label: string; childType: string }

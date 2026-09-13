@@ -302,21 +302,29 @@ export async function laufeSchritte(
   return { geschrieben, fehler: '', mitschrift: mitschrift() }
 }
 
+export interface AktionsErgebnis {
+  ausgefuehrt: boolean
+  geschrieben: boolean
+  abgebrochen: boolean
+  beschaeftigt: boolean
+}
+
 export async function runEvent(
   el: HTMLElement,
   eventKey: string,
   context: RelationContext,
-): Promise<void> {
-  if (el.hasAttribute('data-ff-editor')) return
+): Promise<AktionsErgebnis> {
+  const leer = { ausgefuehrt: false, geschrieben: false, abgebrochen: false, beschaeftigt: false }
+  if (el.hasAttribute('data-ff-editor')) return leer
   const steps = parseBlockEvents(el.getAttribute('data-ff-aktionen'))[eventKey]
-  if (!steps || steps.length === 0) return
+  if (!steps || steps.length === 0) return leer
 
   let locks = laufend.get(el)
   if (!locks) {
     locks = new Set()
     laufend.set(el, locks)
   }
-  if (locks.has(eventKey)) return
+  if (locks.has(eventKey)) return { ...leer, beschaeftigt: true }
   locks.add(eventKey)
   try {
     const abschnitte = abschnitteVon(steps)
@@ -391,6 +399,7 @@ export async function runEvent(
     for (const { traeger, art, fertige } of berichte) traeger.laufFertig?.(art, fertige)
     // Geschrieben heisst: der Stand auf dem Schirm ist von gestern.
     if (geschrieben) frischeDatenAnfordern()
+    return { ausgefuehrt: true, geschrieben, abgebrochen, beschaeftigt: false }
   } finally {
     locks.delete(eventKey)
   }

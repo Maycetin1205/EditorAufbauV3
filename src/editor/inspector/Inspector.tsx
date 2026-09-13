@@ -1,9 +1,9 @@
 // Der Inspector: die Einstellungen des gewaehlten Bausteins.
 import { useMemo, type ReactNode } from 'react'
 import { Copy, MousePointer2 } from '@/ui/zeichen'
-import { bindingProp } from '../../core/blocks/BlockDefinition'
+import { eigenschaftenFuer } from '../../core/blocks/eigenschaftsOrt'
 import { getBlockDefinition } from '../../core/blocks/blockRegistry'
-import { propertySichtbar, type PropertyDescription } from '../../core/blocks/PropertyDescription'
+import { type PropertyDescription } from '../../core/blocks/PropertyDescription'
 import { darfAuswahlFolgen, kannRechnen, traegtEigeneQuelle } from '../../core/blocks/treeQuery'
 import { useDataSources } from '../../state/useDataSources'
 import { useEditor } from '../../state/useEditor'
@@ -102,19 +102,7 @@ export function Inspector() {
     />
   )
 
-  const amBausteinGebunden = new Set<string>(
-    (def.bindableSpots ?? []).map((spot) => bindingProp(spot.prop)),
-  )
-
-  const klarnameProps = new Set<string>(
-    def.customProperties.map((p) => p.klarnameProp).filter((n): n is string => n !== undefined),
-  )
-  const visibleProps = def.customProperties.filter((p) => {
-    if (amBausteinGebunden.has(p.attributeName)) return false
-    if (klarnameProps.has(p.attributeName)) return false
-
-    return propertySichtbar(p.visibleWhen, block.props)
-  })
+  const visibleProps = eigenschaftenFuer(block, def, 'inspector')
 
   // Nach unten wandert nur, was WIRKLICH auf ein Feld, eine Quelle oder eine
   // Relation zeigt. `requiresDataSource` gehoert nicht dazu: es steckt auch an
@@ -130,8 +118,7 @@ export function Inspector() {
   const kachelProps = generalProps.filter((p) => p.kind === 'jaNein')
   const wertProps = generalProps.filter((p) => p.kind !== 'jaNein')
 
-  const showDataSection = traegtEigeneQuelle(block)
-    || dataProps.some((p) => p.quelleProp !== undefined || sourceInReach !== undefined)
+  const showDataSection = traegtEigeneQuelle(block) || dataProps.length > 0
 
   const hatAktionen = def.blockEvents !== undefined && def.blockEvents.length > 0
 
@@ -144,6 +131,7 @@ export function Inspector() {
           aria-label="Duplizieren (Ctrl+D)"
           title="Duplizieren (Ctrl+D)"
           onClick={() => ed.duplicateBlock(block.id)}
+          disabled={ed.isRemoveProtected(block.id)}
         >
           <Copy size={14} />
         </Knopf>
@@ -206,7 +194,7 @@ export function Inspector() {
           && !darfAuswahlFolgen(block) && (
             // Sonst steht der Bediener vor einer leeren Flaeche und weiss nicht,
             // ob der Baustein nichts kann oder der Editor kaputt ist.
-          <p className="text-ui text-matt">Keine Einstellungen.</p>
+          <p className="text-ui text-matt">Gestaltung direkt am Baustein. Hier sind keine weiteren Daten- oder Verhaltenseinstellungen nötig.</p>
         )}
 
       </div>

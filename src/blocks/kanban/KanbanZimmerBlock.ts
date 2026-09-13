@@ -37,6 +37,7 @@ export class KanbanZimmerBlock extends BasicBlock {
   static override readonly customProperties: PropertyDescription[] = [
     {
       attributeName: 'wert',
+      bearbeitung: 'inspector',
       name: 'Wert im ERP',
       description: 'Steht im Feld der Unterteilung, wenn eine Karte hier liegt. Leer: der Titel.',
       kind: 'text',

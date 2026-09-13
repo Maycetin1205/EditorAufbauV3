@@ -3,7 +3,7 @@ import type { GesendeteZeilenElement } from '../../core/blocks/BlockDefinition'
 import { definitionFuerTag } from '../../core/blocks/blockRegistry'
 import { seGlobal } from '../../softengine/bridge'
 import { findRuntimeDataSource, satzIndexVon } from '../../softengine/data'
-import { auswahlWiederfinden, geberIdVon, zeilenNachAuswahl } from '../shared/auswahl'
+import { auswahlWiederfinden, geberIdVon, merkmalVon, zeilenNachAuswahl } from '../shared/auswahl'
 import { macheDatenAnschluss } from '../shared/datenAnschluss'
 import { holeDatenVorspann, type DatenVorspann } from '../shared/datenVorspann'
 import { tryCoerceSpalten, type Spalte } from './spalten'
@@ -43,6 +43,12 @@ export function zeilenIndexVon(el: HTMLElement, rohzeile: unknown): string {
   return source ? satzIndexVon(source, rohzeile) : ''
 }
 
+export function zeilenMerkmalVon(el: HTMLElement, rohzeile: unknown): string {
+  if (rohzeile == null) return ''
+  const satz = zeilenIndexVon(el, rohzeile)
+  return satz === '' ? merkmalVon(rohzeile) : JSON.stringify([el.getAttribute('source'), satz])
+}
+
 export function hatSatzNummer(el: HTMLElement): boolean {
   const source = findRuntimeDataSource(
     seGlobal().FF_DATA_SOURCES,
@@ -64,7 +70,7 @@ function hydrateTable(el: RuntimeTableElement, lieferung: boolean): void {
   const { rows, gefiltert } = zeilenNachAuswahl(el, vorspann.zeilen)
 
   // Ist die gewaehlte Zeile aus der Liste gefallen, faellt hier die Wahl.
-  auswahlWiederfinden(geberIdVon(el), rows, (r) => r)
+  auswahlWiederfinden(geberIdVon(el), rows, (r) => r, (r) => zeilenMerkmalVon(el, r))
 
   const lies = vorspann.lies
 

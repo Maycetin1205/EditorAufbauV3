@@ -1,0 +1,20 @@
+import type { BlockNode } from './BlockData'
+import { bindingProp, type BlockDefinition } from './BlockDefinition'
+import { propertySichtbar, type PropertyDescription } from './PropertyDescription'
+
+export function eigenschaftenFuer(
+  block: BlockNode,
+  def: BlockDefinition,
+  ort: 'inline' | 'inspector',
+): PropertyDescription[] {
+  const direktGebunden = new Set((def.bindableSpots ?? []).map((s) => bindingProp(s.prop)))
+  const klarnamen = new Set(def.customProperties.map((p) => p.klarnameProp))
+  return def.customProperties.filter((p) => {
+    if (direktGebunden.has(p.attributeName) || klarnamen.has(p.attributeName)) return false
+    if (!propertySichtbar(p.visibleWhen, block.props)) return false
+    const ziel = p.bearbeitung ?? (
+      p.kind === 'field' || p.kind === 'quelle' || p.kind === 'relation' ? 'inspector' : 'inline'
+    )
+    return ziel === ort
+  })
+}

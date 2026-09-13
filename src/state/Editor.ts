@@ -6,13 +6,13 @@ import { rasterSpecOf } from '../core/blocks/rasterLayout'
 import { type BlockEventsMap } from '../core/data/aktionen'
 import { type DataSource } from '../core/data/dataSources'
 import { type QuelleInReichweite } from '../core/data/sourceLinks'
-import { dataSourceStore } from './DataSourceStore'
+import { DataSourceStore } from './DataSourceStore'
 import { ersteQuelleInReichweite, quellenInReichweite } from './quellenOps'
 import { gestenKlammer, Historie, type EditorSnapshot, type GestenKlammer } from './history'
 import type { MaskenInhalt } from './maskenDatei'
 import { meldungen } from './meldungen'
 import { loadFromStorage, persistState, SAVE_DEBOUNCE_MS } from './persistence'
-import { relationStore } from './RelationStore'
+import { RelationStore } from './RelationStore'
 import { gestricheneKennungen, ohneSpaltenZeiger } from './spaltenAufraeumen'
 import { SpeicherPlaner } from './speicherPlaner'
 import { Subject } from './Subject'
@@ -43,6 +43,9 @@ import { auswahlAufSeite, auswahlZiel } from './selectionOps'
 import { deepClone } from '../lib/deepClone'
 
 export class Editor extends Subject<Editor> {
+  readonly datenquellen: DataSourceStore
+  readonly relationen: RelationStore
+
   private _tree: BlockTree = createEmptyTree()
   private _selectedId: string | null = null
 
@@ -51,7 +54,11 @@ export class Editor extends Subject<Editor> {
   private _historie = new Historie()
 
   private _planer = new SpeicherPlaner(
-    () => persistState(this._tree, this._selectedId),
+    () => persistState(this._tree, this._selectedId, {
+      datenquellen: this.datenquellen.list,
+      relationen: this.relationen.list,
+      activePageId: this.activePageId,
+    }),
     SAVE_DEBOUNCE_MS,
   )
   private _hydrated = false
@@ -60,19 +67,25 @@ export class Editor extends Subject<Editor> {
   // Historien-Eintrag erzeugen.
   private _stelltWiederHer = false
 
-  constructor() {
+  constructor(inhalt?: MaskenInhalt) {
     super()
-    const persisted = loadFromStorage()
-    this._tree = persisted ? persisted.tree : createEmptyTree()
+    const persisted = inhalt ? null : loadFromStorage()
+    this.datenquellen = new DataSourceStore(inhalt?.datenquellen ?? persisted?.datenquellen, false)
+    this.relationen = new RelationStore(inhalt?.relationen ?? persisted?.relationen, false)
+    this._tree = inhalt?.tree ?? persisted?.tree ?? createEmptyTree()
+    this._activePageId = persisted?.activePageId ?? ROOT_ID
     this._selectedId = this.auswahlAufAktiverSeite(persisted?.selectedId ?? null)
     this._hydrated = true
     if (persisted?.resaveNeeded) this._planer.plane()
 
     // Die Bibliotheken gehoeren zur Maske: jede Aenderung daran wird hier
     // festgehalten, damit Strg+Z sie zuruecknimmt.
-    for (const store of [dataSourceStore, relationStore]) {
+    for (const store of [this.datenquellen, this.relationen]) {
       store.beobachteVorAenderung(() => {
         if (!this._stelltWiederHer) this.pushHistory()
+      })
+      store.subscribe(() => {
+        if (!this._stelltWiederHer) this.notify(this)
       })
     }
   }
@@ -94,7 +107,7 @@ export class Editor extends Subject<Editor> {
   }
 
   setActivePage(id: string): void {
-    const next = id === ROOT_ID || this._tree[id] ? id : ROOT_ID
+    const next = aktiveSeitenWurzel(this._tree, id)
     if (next === this._activePageId) return
     this._activePageId = next
     this._selectedId = null
@@ -147,16 +160,17 @@ export class Editor extends Subject<Editor> {
     return {
       tree: deepClone(this._tree),
       selectedId: this._selectedId,
-      datenquellen: dataSourceStore.list,
-      relationen: relationStore.list,
+      activePageId: this.activePageId,
+      datenquellen: this.datenquellen.list,
+      relationen: this.relationen.list,
     }
   }
 
   private setzeBibliotheken(stand: Pick<EditorSnapshot, 'datenquellen' | 'relationen'>): void {
     this._stelltWiederHer = true
     try {
-      if (dataSourceStore.list !== stand.datenquellen) dataSourceStore.ersetzeAlle(stand.datenquellen)
-      if (relationStore.list !== stand.relationen) relationStore.ersetzeAlle(stand.relationen)
+      if (this.datenquellen.list !== stand.datenquellen) this.datenquellen.ersetzeAlle(stand.datenquellen)
+      if (this.relationen.list !== stand.relationen) this.relationen.ersetzeAlle(stand.relationen)
     } finally {
       this._stelltWiederHer = false
     }
@@ -197,6 +211,7 @@ export class Editor extends Subject<Editor> {
   private stelleHer(stand: EditorSnapshot): void {
     this.setzeBibliotheken(stand)
     this._tree = stand.tree
+    this._activePageId = stand.activePageId ?? ROOT_ID
     this._selectedId = this.auswahlAufAktiverSeite(stand.selectedId)
     this.notify(this)
   }
@@ -264,17 +279,17 @@ export class Editor extends Subject<Editor> {
     this.notify(this)
   }
 
-  waehleGetroffenen(getroffenId: string, aufStelle: boolean): void {
-    const ziel = auswahlZiel(this._tree, getroffenId, this._selectedId, aufStelle)
+  waehleGetroffenen(getroffenId: string): void {
+    const ziel = auswahlZiel(this._tree, getroffenId)
     if (ziel !== null) this.selectBlock(ziel)
   }
 
   dataSourceFor(id: string): DataSource | undefined {
-    return ersteQuelleInReichweite(this._tree, id, dataSourceStore.list)
+    return ersteQuelleInReichweite(this._tree, id, this.datenquellen.list)
   }
 
   quellenFor(id: string): QuelleInReichweite[] {
-    return quellenInReichweite(this._tree, id, dataSourceStore.list)
+    return quellenInReichweite(this._tree, id, this.datenquellen.list)
   }
 
   templateMarkFor(id: string): string | undefined {
@@ -350,6 +365,7 @@ export class Editor extends Subject<Editor> {
   }
 
   duplicateBlock(id: string): BlockNode | null {
+    if (this.isRemoveProtected(id)) return null
     const res = dupliziereTeilbaum(this._tree, id)
     if (!res) return null
     this.pushHistory()
@@ -360,6 +376,7 @@ export class Editor extends Subject<Editor> {
   }
 
   moveNode(id: string, newParentId: string, index: number): void {
+    if (this.isRemoveProtected(id)) return
     const next = verschiebeInContainer(this._tree, id, newParentId, index)
     if (!next) return
     this.pushHistory()
@@ -420,4 +437,3 @@ export class Editor extends Subject<Editor> {
     this._planer.sofort()
   }
 }
-

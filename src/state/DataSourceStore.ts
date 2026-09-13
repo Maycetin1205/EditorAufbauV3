@@ -12,9 +12,7 @@ const BAUPLAN: VorlagenBauplan<DataSource> = {
 }
 
 export class DataSourceStore extends VorlagenStore<DataSource> {
-  constructor() {
-    super(BAUPLAN)
+  constructor(bestand?: readonly DataSource[], eigenerSpeicher = true) {
+    super(BAUPLAN, bestand, eigenerSpeicher)
   }
 }
-
-export const dataSourceStore = new DataSourceStore()

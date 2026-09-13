@@ -28,7 +28,7 @@ interface SpaltenBedienungProps {
   wirt: RefObject<HTMLElement | null>
 
   container: RefObject<HTMLElement | null>
-  onSelect?: (aufStelle: boolean) => void
+  onSelect?: () => void
 }
 
 const ZUG_SCHWELLE = 5
@@ -87,7 +87,7 @@ export function SpaltenBedienung({
   }, [element, wirt, selektor])
 
   const oeffnePicker = (index: number): void => {
-    onSelect?.(true)
+    onSelect?.()
     const ziel = container.current
     const rahmen = wirt.current
     const s = stellen[index]

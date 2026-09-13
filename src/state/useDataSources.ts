@@ -1,11 +1,10 @@
-// Der Zugang der Oberflaeche zur Datenquellen-Bibliothek.
-import { useSyncExternalStore } from 'react'
-import { dataSourceStore } from './DataSourceStore'
-
-const abonniere = (cb: () => void) => dataSourceStore.subscribe(cb)
-const standVon = () => dataSourceStore.version
+import { useCallback, useSyncExternalStore } from 'react'
+import { useEditorInstance } from './EditorContext'
 
 export function useDataSources() {
+  const store = useEditorInstance().datenquellen
+  const abonniere = useCallback((cb: () => void) => store.subscribe(cb), [store])
+  const standVon = useCallback(() => store.version, [store])
   useSyncExternalStore(abonniere, standVon)
-  return dataSourceStore
+  return store
 }

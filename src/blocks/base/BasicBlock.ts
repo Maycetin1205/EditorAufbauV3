@@ -47,6 +47,7 @@ function beschreibe(BlockClass: BlockComponentStatic): void {
     childDirection: BlockClass.childDirection,
     showInPalette: BlockClass.showInPalette,
     templateChild: BlockClass.templateChild,
+    editorSlot: BlockClass.editorSlot,
     containerHint: BlockClass.containerHint,
     addChildButton: BlockClass.addChildButton,
     acceptsDataSource: BlockClass.acceptsDataSource,

@@ -44,7 +44,7 @@ interface FeldBindungArgs {
   // Das Lit-Element selbst, kein Ref: das Suchfenster braucht es als Anker.
   element: HTMLElement | null
 
-  onSelect?: (aufStelle: boolean) => void
+  onSelect?: () => void
 }
 
 function pickerGruppen(quellen: readonly QuelleInReichweite[]): PickerGruppe[] {

@@ -8,6 +8,7 @@ import type { RelationTemplate } from '../core/data/relations'
 export interface EditorSnapshot {
   tree: BlockTree
   selectedId: string | null
+  activePageId?: string
   datenquellen: readonly DataSource[]
   relationen: readonly RelationTemplate[]
 }

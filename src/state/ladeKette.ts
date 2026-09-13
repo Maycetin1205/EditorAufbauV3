@@ -24,6 +24,7 @@ import {
   migrateErfassungsRollenWeg,
   migrateFarbwerteAufFarbwelten,
   migrateKanbanVorlage,
+  migrateEigenesKanbanMuster,
   migrateKnopfAusTabelle,
   migrateRechnungAlsFormel,
   migrateSpaltenKennungen,
@@ -73,9 +74,12 @@ export function sanitizeTree(
   }
   migrateErfassungAlsBaustein(src)
   migrateRechnungAlsFormel(src)
+  migrateEigenesKanbanMuster(src)
 
+  const gesehen = new Set<string>([ROOT_ID])
   const addChild = (parentId: string, childId: unknown): void => {
-    if (typeof childId !== 'string' || tree[childId]) return
+    if (typeof childId !== 'string' || gesehen.has(childId)) return
+    gesehen.add(childId)
     const node = src[childId]
     if (!node || typeof node !== 'object') return
     if (typeof node.type !== 'string') return

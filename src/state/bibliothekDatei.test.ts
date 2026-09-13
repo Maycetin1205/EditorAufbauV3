@@ -3,11 +3,10 @@ import '../blocks/register'
 import type { DataSource } from '../core/data/dataSources'
 import type { RelationTemplate } from '../core/data/relations'
 import { BIBLIOTHEK_DATEI_ART, ladeBibliothekAusDatei } from './bibliothekDatei'
-import { dataSourceStore } from './DataSourceStore'
+import { createEmptyTree } from './treeOps'
 import { Editor } from './Editor'
 import { ladeMaskeAusDatei } from './maskenDatei'
 import { meldungen } from './meldungen'
-import { relationStore } from './RelationStore'
 
 // Hier haengt, dass eine geladene Bibliothek nur ergaenzt: was im Editor steht
 // und nicht in der Datei, darf nicht verschwinden.
@@ -49,11 +48,9 @@ let ed: Editor
 beforeEach(() => {
   vi.stubGlobal('localStorage', new SpeicherStub())
   meldungen.leere()
-  dataSourceStore.ersetzeAlle([QUELLE_A])
-  relationStore.ersetzeAlle([{
+  ed = new Editor({ tree: createEmptyTree(), datenquellen: [QUELLE_A], relationen: [{
     id: 'standard-put', name: 'Standard-Schreiben (PUT)', verb: 'PUT_RELATION', nr: '174', params: ['{VALUE}'],
-  }])
-  ed = new Editor()
+  }] })
 })
 
 afterEach(() => {
@@ -65,41 +62,42 @@ test('Laden ergaenzt nach Kennung und loescht nichts', async () => {
   const geaendert = { ...QUELLE_A, name: 'Artikelstamm' }
   await ladeBibliothekAusDatei(ed, bibliothek([geaendert, QUELLE_B], [REL_NEU]))
 
-  expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a', 'q-b'])
-  expect(dataSourceStore.get('q-a')?.name).toBe('Artikelstamm')
-  expect(relationStore.list.map((r) => r.id)).toEqual(['standard-put', 'r-neu'])
+  expect(ed.datenquellen.list.map((q) => q.id)).toEqual(['q-a', 'q-b'])
+  expect(ed.datenquellen.get('q-a')?.name).toBe('Artikelstamm')
+  expect(ed.relationen.list.map((r) => r.id)).toEqual(['standard-put', 'r-neu'])
   expect(meldungsText()).toContain('Datenquellen: 1 neu, 1 aktualisiert')
   expect(meldungsText()).toContain('Relationen: 1 neu')
 })
 
 test('dieselbe Datei ein zweites Mal aendert nichts und legt keinen Undo-Schritt an', async () => {
   await ladeBibliothekAusDatei(ed, bibliothek([QUELLE_B], []))
-  const stand = dataSourceStore.version
+  ed.speichereJetzt()
   meldungen.leere()
   const zweiter = new Editor()
+  const stand = zweiter.datenquellen.version
 
   await ladeBibliothekAusDatei(zweiter, bibliothek([QUELLE_B], []))
 
-  expect(dataSourceStore.version).toBe(stand)
+  expect(zweiter.datenquellen.version).toBe(stand)
   expect(zweiter.canUndo).toBe(false)
   expect(meldungsText()).toContain('nichts geändert')
 })
 
 test('Strg+Z nimmt beide Bibliotheken in einem Schritt zurueck', async () => {
   await ladeBibliothekAusDatei(ed, bibliothek([QUELLE_B], [REL_NEU]))
-  expect(dataSourceStore.list).toHaveLength(2)
+  expect(ed.datenquellen.list).toHaveLength(2)
 
   ed.undo()
 
-  expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a'])
-  expect(relationStore.list.map((r) => r.id)).toEqual(['standard-put'])
+  expect(ed.datenquellen.list.map((q) => q.id)).toEqual(['q-a'])
+  expect(ed.relationen.list.map((r) => r.id)).toEqual(['standard-put'])
   expect(ed.canUndo).toBe(false)
 })
 
 test('eine beschaedigte Bibliotheksdatei laedt auch ihren heilen Teil nicht', async () => {
   await ladeBibliothekAusDatei(ed, bibliothek([QUELLE_B, { id: 'q-c', name: 'Ohne Art' }], []))
 
-  expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a'])
+  expect(ed.datenquellen.list.map((q) => q.id)).toEqual(['q-a'])
   expect(meldungsText()).toContain('beschädigt')
   expect(meldungsText()).toContain('die Art der Datenquelle fehlt oder ist unbekannt')
 })
@@ -115,7 +113,7 @@ test('Maskendatei und Bibliotheksdatei zeigen aufeinander statt still zu scheite
   meldungen.leere()
   await ladeMaskeAusDatei(ed, bibliothek([], []))
   expect(meldungsText()).toContain('Bibliothek laden')
-  expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a'])
+  expect(ed.datenquellen.list.map((q) => q.id)).toEqual(['q-a'])
 })
 
 test('die Spaltenbreite am Feld uebersteht den Weg durch die Datei', async () => {
@@ -127,7 +125,7 @@ test('die Spaltenbreite am Feld uebersteht den Weg durch die Datei', async () =>
     ],
   }], []))
 
-  const felder = dataSourceStore.list.find((q) => q.id === 'q-b')?.fields ?? []
+  const felder = ed.datenquellen.list.find((q) => q.id === 'q-b')?.fields ?? []
   expect(felder.map((f) => f.zeichen)).toEqual([8, undefined])
 })
 
@@ -139,6 +137,6 @@ test('eine unmoegliche Spaltenbreite laesst die Datei stehen und sagt wo', async
     fields: [{ code: '3_8', label: 'Nummer', zeichen: 0 }],
   }], []))
 
-  expect(dataSourceStore.list.map((q) => q.id)).toEqual(['q-a'])
+  expect(ed.datenquellen.list.map((q) => q.id)).toEqual(['q-a'])
   expect(meldungsText()).toContain('zeichen')
 })

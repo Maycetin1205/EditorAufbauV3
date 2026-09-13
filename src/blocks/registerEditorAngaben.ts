@@ -13,7 +13,6 @@ import {
   ZeichenSchaltflaeche,
   ZeichenTabelle,
   ZeichenText,
-  ZeichenTrenner,
 } from '../ui/bausteinZeichen'
 import { ButtonBlock } from './button/ButtonBlock'
 import { CardBlock } from './card/CardBlock'
@@ -26,7 +25,6 @@ import { NaviEintragBlock } from './navi/NaviEintragBlock'
 import { PopupBlock } from './popup/PopupBlock'
 import { TabelleBlock } from './tabelle/TabelleBlock'
 import { TextBlock } from './text/TextBlock'
-import { TrennerBlock } from './trenner/TrennerBlock'
 
 // Sie stehen hier und nicht am Baustein, damit die Maske keinen Editor-Code traegt.
 const SYMBOLE = [
@@ -41,7 +39,6 @@ const SYMBOLE = [
   [PopupBlock.blockType, ZeichenPopup],
   [TabelleBlock.blockType, ZeichenTabelle],
   [TextBlock.blockType, ZeichenText],
-  [TrennerBlock.blockType, ZeichenTrenner],
 ] as const
 
 for (const [typ, symbol] of SYMBOLE) ergaenzeEditorAngaben(typ, { symbol })
