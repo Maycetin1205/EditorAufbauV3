@@ -83,7 +83,7 @@ const KETTE: ActionStep[] = [
 function knoten(
   id: string,
   type: string,
-  parentId: string,
+  parentId: string | null,
   props: Record<string, unknown>,
   childIds: string[] = [],
 ): BlockNode {
@@ -92,8 +92,8 @@ function knoten(
 
 export function referenzBaum(): BlockTree {
   const tree: BlockTree = {
-    [ROOT_ID]: knoten(ROOT_ID, ROOT_TYPE, '', {}, [
-      't1', 't2', 'f1', 'b1', 'k1', 'n1', 'tx1', 'd1', 'p1',
+    [ROOT_ID]: knoten(ROOT_ID, ROOT_TYPE, null, {}, [
+      't1', 't2', 'f1', 'b1', 'k1', 'n1', 'tx1', 'd1', 'tr1', 'p1',
     ]),
     t1: knoten('t1', 'erfassung', ROOT_ID, {
       rasterX: 0, rasterY: 3, rasterW: 16, rasterH: 22,
@@ -149,6 +149,10 @@ export function referenzBaum(): BlockTree {
     ne1: knoten('ne1', 'navi-eintrag', 'n1', {}),
     tx1: knoten('tx1', 'text', ROOT_ID, { rasterX: 34, rasterY: 0, rasterW: 14, rasterH: 3 }),
     d1: knoten('d1', 'datum', ROOT_ID, { rasterX: 0, rasterY: 0, rasterW: 10, rasterH: 3 }),
+    tr1: knoten('tr1', 'trenner', ROOT_ID, {
+      rasterX: 18, rasterY: 25, rasterW: 2, rasterH: 12,
+      richtung: 'senkrecht', stil: 'dashed', staerke: 2, farbe: 'akzent',
+    }),
     p1: knoten('p1', 'popup', ROOT_ID, { name: 'Hinweis' }, ['tx2']),
     tx2: knoten('tx2', 'text', 'p1', {}),
   }

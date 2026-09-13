@@ -70,13 +70,12 @@ export class Editor extends Subject<Editor> {
   constructor(inhalt?: MaskenInhalt) {
     super()
     const persisted = inhalt ? null : loadFromStorage()
-    this.datenquellen = new DataSourceStore(inhalt?.datenquellen ?? persisted?.datenquellen, false)
-    this.relationen = new RelationStore(inhalt?.relationen ?? persisted?.relationen, false)
+    this.datenquellen = new DataSourceStore(inhalt?.datenquellen ?? persisted?.datenquellen)
+    this.relationen = new RelationStore(inhalt?.relationen ?? persisted?.relationen)
     this._tree = inhalt?.tree ?? persisted?.tree ?? createEmptyTree()
     this._activePageId = persisted?.activePageId ?? ROOT_ID
     this._selectedId = this.auswahlAufAktiverSeite(persisted?.selectedId ?? null)
     this._hydrated = true
-    if (persisted?.resaveNeeded) this._planer.plane()
 
     // Die Bibliotheken gehoeren zur Maske: jede Aenderung daran wird hier
     // festgehalten, damit Strg+Z sie zuruecknimmt.

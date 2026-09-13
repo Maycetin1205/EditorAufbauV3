@@ -26,7 +26,6 @@ export class KanbanSpalteBlock extends BasicBlock {
   static readonly acceptsChildren = true
 
   static readonly allowedChildTypes: string[] = [
-    CardBlock.blockType,
     KanbanZimmerBlock.blockType,
   ]
 

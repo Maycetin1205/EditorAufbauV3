@@ -1,23 +1,8 @@
-// Die Relations-Bibliothek der Maske.
-import {
-  BUILTIN_RELATION_TEMPLATES,
-  pruefeRelationsVorlagen,
-  type RelationTemplate,
-} from '../core/data/relations'
-import { VorlagenStore, type VorlagenBauplan } from './VorlagenStore'
-
-const BAUPLAN: VorlagenBauplan<RelationTemplate> = {
-  schluessel: 'aufbau_editor_relationen_v1',
-  huelle: 'relations',
-  klarnameLesen: 'Relations-Vorlagen',
-
-  klarnameSchreiben: 'Relationen',
-  pruefe: pruefeRelationsVorlagen,
-  startbestand: BUILTIN_RELATION_TEMPLATES,
-}
+import { BUILTIN_RELATION_TEMPLATES, type RelationTemplate } from '../core/data/relations'
+import { VorlagenStore } from './VorlagenStore'
 
 export class RelationStore extends VorlagenStore<RelationTemplate> {
-  constructor(bestand?: readonly RelationTemplate[], eigenerSpeicher = true) {
-    super(BAUPLAN, bestand, eigenerSpeicher)
+  constructor(bestand: readonly RelationTemplate[] = BUILTIN_RELATION_TEMPLATES) {
+    super(bestand)
   }
 }

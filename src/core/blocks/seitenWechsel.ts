@@ -2,6 +2,5 @@
 export const SEITEN_WECHSEL_EVENT = 'ff-seiten-wechsel'
 
 export interface SeitenWechselDetail {
-  seite?: string
-  ansicht: string
+  seite: string
 }

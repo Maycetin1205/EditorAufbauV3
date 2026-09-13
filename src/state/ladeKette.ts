@@ -1,196 +1,71 @@
-// Einen gespeicherten Stand laden: Rohdaten, Schemastufen, Pruefung, Verlustmeldung.
-import { ROOT_ID, type BlockTree } from '../core/blocks/BlockData'
+import { ROOT_ID, ROOT_TYPE, type BlockTree } from '../core/blocks/BlockData'
 import { getBlockDefinition } from '../core/blocks/blockRegistry'
 import { BELEG_RAHMEN_PROP } from '../core/blocks/belegRahmen'
 import { MASKEN_NAME_PROP } from '../core/blocks/maskenName'
 import { sanitizeBlockEvents } from '../core/data/aktionen'
 import { BEREICH_AUFBAU, type LadeProblem } from '../core/data/ladeProblem'
-import {
-  CURRENT_SCHEMA_VERSION,
-  DEMO_CLEANUP_BEFORE_SCHEMA,
-  migrateFlatBlocks,
-  migrateFlowToRaster,
-  migratePopupInhaltAufRaster,
-  migrateRasterBreitenReparatur,
-  migrateRasterFeiner,
-  migrateRasterHoehenReset,
-  migrateRootKanbanToViewportFill,
-  putzeAlteKartenDemos,
-  weggefalleneProps,
-} from './migrations'
-import {
-  migrateAnzeigeFeldAufSpalten,
-  migrateErfassungAlsBaustein,
-  migrateErfassungsRollenWeg,
-  migrateFarbwerteAufFarbwelten,
-  migrateKanbanVorlage,
-  migrateEigenesKanbanMuster,
-  migrateKnopfAusTabelle,
-  migrateRechnungAlsFormel,
-  migrateSpaltenKennungen,
-  migrateZeileAufloesen,
-  type EntfernGrund,
-} from './migrationenRoh'
+import { CURRENT_SCHEMA_VERSION } from './maskenSchema'
 import { topologieProbleme } from './topologie'
-import { createEmptyTree, normalizeProps } from './treeOps'
+import { normalizeProps } from './treeOps'
 
-// Was die Maskenwurzel traegt. Alles andere an ihr ist nicht vorgesehen und
-// reist nicht mit; die Verlustpruefung meldet es beim Laden.
-const WURZEL_PROPS: readonly string[] = [MASKEN_NAME_PROP, BELEG_RAHMEN_PROP]
-
-export function sanitizeTree(
-  raw: Record<string, unknown>,
-  meldungen?: {
-    typVerworfen?: (type: string) => void
-    absichtlichEntfernt?: (id: string, grund: EntfernGrund) => void
-    ketteVerloren?: (blockId: string, ereignis: string) => void
-  },
-): BlockTree {
-  const tree = createEmptyTree()
-  const src = raw as Record<string, { type?: unknown; props?: unknown; childIds?: unknown; events?: unknown }>
-  const onDropType = meldungen?.typVerworfen
-
-  const rohWurzelProps = src[ROOT_ID]?.props
-  if (rohWurzelProps && typeof rohWurzelProps === 'object') {
-    const props = rohWurzelProps as Record<string, unknown>
-    for (const schluessel of WURZEL_PROPS) {
-      const wert = props[schluessel]
-      // Auch der leere Text reist mit: sonst faende die Verlustpruefung beim
-      // naechsten Laden eine Abweichung, wo der Bediener nur das Feld leerte.
-      if (typeof wert === 'string') tree[ROOT_ID].props[schluessel] = wert
-    }
-  }
-  migrateAnzeigeFeldAufSpalten(src)
-  migrateErfassungsRollenWeg(src)
-  migrateFarbwerteAufFarbwelten(src)
-  migrateSpaltenKennungen(src)
-  const rohEntfernt = [
-    ...migrateKanbanVorlage(src),
-    ...migrateKnopfAusTabelle(src),
-    ...migrateZeileAufloesen(src),
-  ]
-  for (const { id, grund } of rohEntfernt) {
-    meldungen?.absichtlichEntfernt?.(id, grund)
-  }
-  migrateErfassungAlsBaustein(src)
-  migrateRechnungAlsFormel(src)
-  migrateEigenesKanbanMuster(src)
-
-  const gesehen = new Set<string>([ROOT_ID])
-  const addChild = (parentId: string, childId: unknown): void => {
-    if (typeof childId !== 'string' || gesehen.has(childId)) return
-    gesehen.add(childId)
-    const node = src[childId]
-    if (!node || typeof node !== 'object') return
-    if (typeof node.type !== 'string') return
-    const def = getBlockDefinition(node.type)
-    if (!def) {
-      onDropType?.(node.type)
-
-      const kids = Array.isArray(node.childIds) ? node.childIds : []
-      for (const k of kids) addChild(parentId, k)
-      return
-    }
-
-    const events = sanitizeBlockEvents(node.events, (def.blockEvents ?? []).map((e) => e.key))
-    // Eine Kette, die die Pruefung nicht besteht, faellt KOMPLETT weg. Still darf
-    // das nicht passieren: der Knopf bliebe im Baum und taete nichts.
-    if (node.events && typeof node.events === 'object' && !Array.isArray(node.events)) {
-      for (const [key, kette] of Object.entries(node.events as Record<string, unknown>)) {
-        if (Array.isArray(kette) && kette.length > 0 && events?.[key] === undefined) {
-          meldungen?.ketteVerloren?.(childId, key)
-        }
-      }
-    }
-    tree[childId] = {
-      id: childId,
-      type: node.type,
-      props: normalizeProps(node.type, node.props && typeof node.props === 'object' ? node.props as Record<string, unknown> : {}),
-      ...(events ? { events } : {}),
-      parentId,
-      childIds: [],
-    }
-    tree[parentId].childIds.push(childId)
-    const grand = Array.isArray(node.childIds) ? node.childIds : []
-    for (const g of grand) addChild(childId, g)
-  }
-
-  const rootSrc = src[ROOT_ID]
-  const rootChildren = rootSrc && Array.isArray(rootSrc.childIds) ? rootSrc.childIds : []
-  for (const cid of rootChildren) addChild(ROOT_ID, cid)
-  return tree
+function objekt(wert: unknown): wert is Record<string, unknown> {
+  return wert !== null && typeof wert === 'object' && !Array.isArray(wert)
 }
 
-export interface BaumErgebnis {
-  tree: BlockTree
-  selectedId: string | null
+export type LadeAusgang =
+  | { art: 'ok'; baum: { tree: BlockTree; selectedId: string | null } }
+  | { art: 'abgelehnt'; ursache: 'version' | 'unlesbar' | 'verlust'; probleme: LadeProblem[] }
 
-  schemaAdvanced: boolean
-
-  absichtlichGeleert: ReadonlySet<string>
-
-  absichtlichEntfernt: ReadonlyMap<string, EntfernGrund>
-
-  verworfen: Map<string, number>
-
-  verloreneKetten: number
-}
-
-export function baumAusRohdaten(parsed: {
-  schemaVersion?: unknown
+export function pruefeBaumStand(roh: {
+  schemaVersion: number
   tree?: unknown
-  blocks?: unknown
   selectedId?: unknown
-}, putzeDemos = true): BaumErgebnis | null {
-  let tree: BlockTree | null = null
-
-  const verworfen = new Map<string, number>()
-  const absichtlichGeleert = new Set<string>()
-  const absichtlichEntfernt = new Map<string, EntfernGrund>()
-  let verloreneKetten = 0
-  if (parsed.tree && typeof parsed.tree === 'object') {
-    tree = sanitizeTree(parsed.tree as Record<string, unknown>, {
-      typVerworfen: (type) => {
-        verworfen.set(type, (verworfen.get(type) ?? 0) + 1)
-      },
-      absichtlichEntfernt: (id, grund) => absichtlichEntfernt.set(id, grund),
-      ketteVerloren: () => { verloreneKetten += 1 },
-    })
-
-    if (putzeDemos) for (const p of putzeAlteKartenDemos(tree)) absichtlichGeleert.add(p)
-
-    for (const p of weggefalleneProps(parsed.tree as Record<string, unknown>)) {
-      absichtlichGeleert.add(p)
+}): LadeAusgang {
+  if (roh.schemaVersion !== CURRENT_SCHEMA_VERSION) {
+    return { art: 'abgelehnt', ursache: 'version', probleme: [{
+      bereich: BEREICH_AUFBAU, stelle: '',
+      grund: `Maskenformat ${roh.schemaVersion} wird nicht unterstützt. Dieser Editor verwendet Format ${CURRENT_SCHEMA_VERSION}.`,
+    }] }
+  }
+  if (!objekt(roh.tree) || !objekt(roh.tree[ROOT_ID])) {
+    return { art: 'abgelehnt', ursache: 'unlesbar', probleme: [] }
+  }
+  const tree: BlockTree = Object.create(null) as BlockTree
+  const probleme: LadeProblem[] = []
+  const fund = (stelle: string, grund: string): void => { probleme.push({ bereich: BEREICH_AUFBAU, stelle, grund }) }
+  for (const [id, node] of Object.entries(roh.tree)) {
+    if (!objekt(node) || node.id !== id || typeof node.type !== 'string'
+      || !objekt(node.props) || !Array.isArray(node.childIds)
+      || !node.childIds.every((kind): kind is string => typeof kind === 'string')
+      || !(node.parentId === null || typeof node.parentId === 'string')) {
+      fund(id, `der Baustein „${id}“ ist unlesbar`)
+      continue
     }
-  } else if (Array.isArray(parsed.blocks)) {
-    tree = migrateFlatBlocks(parsed.blocks)
+    const def = getBlockDefinition(node.type)
+    if (id !== ROOT_ID && !def) {
+      fund(id, `der Bausteintyp „${node.type}“ wird nicht unterstützt`)
+      continue
+    }
+    if (id === ROOT_ID && (node.type !== ROOT_TYPE || node.parentId !== null)) {
+      fund(id, 'die Wurzel des Masken-Aufbaus ist ungültig')
+    }
+    const props = id === ROOT_ID
+      ? Object.fromEntries(Object.entries(node.props).filter(([key, wert]) =>
+        [MASKEN_NAME_PROP, BELEG_RAHMEN_PROP].includes(key) && typeof wert === 'string'))
+      : normalizeProps(node.type, node.props)
+    const events = sanitizeBlockEvents(node.events, (def?.blockEvents ?? []).map((event) => event.key))
+    if (!keinVerlust(node.props, props)) {
+      fund(id, id === ROOT_ID ? 'an der Maske selbst stimmen Angaben nicht' : `am Baustein „${id}“ stimmen Angaben nicht`)
+    }
+    if (!keinVerlust(node.events, events)) fund(id, `eine Aktion am Baustein „${id}“ ist unlesbar`)
+    tree[id] = { id, type: node.type, parentId: node.parentId, props,
+      childIds: [...node.childIds], ...(events ? { events } : {}) }
   }
-
-  if (!tree) return null
-
-  const schemaVersion = typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : 1
-  let schemaAdvanced = false
-  // Ausser der Reihe zuerst: Stufe 7 rechnet die gespeicherten Spaltenzahlen in
-  // das feine Raster um. Die aelteren Stufen bilden ihre Positionen aus den
-  // Bausteinen, die schon im feinen Raster stehen, und wuerden doppelt zaehlen.
-  if (schemaVersion < 7) schemaAdvanced = migrateRasterFeiner(tree) || schemaAdvanced
-  if (schemaVersion < 2) schemaAdvanced = migrateRootKanbanToViewportFill(tree) || schemaAdvanced
-  if (schemaVersion < 3) schemaAdvanced = migrateFlowToRaster(tree) || schemaAdvanced
-
-  if (schemaVersion < 4) schemaAdvanced = migrateRasterBreitenReparatur(tree) || schemaAdvanced
-
-  if (schemaVersion < 5) schemaAdvanced = migrateRasterHoehenReset(tree) || schemaAdvanced
-
-  if (schemaVersion < 6) schemaAdvanced = migratePopupInhaltAufRaster(tree) || schemaAdvanced
-
-  const selectedId =
-    typeof parsed.selectedId === 'string' && tree[parsed.selectedId] && parsed.selectedId !== ROOT_ID
-      ? parsed.selectedId
-      : null
-  return {
-    tree, selectedId, schemaAdvanced, absichtlichGeleert, absichtlichEntfernt, verworfen,
-    verloreneKetten,
-  }
+  if (probleme.length === 0) probleme.push(...topologieProbleme(tree))
+  if (probleme.length > 0) return { art: 'abgelehnt', ursache: 'verlust', probleme }
+  return { art: 'ok', baum: { tree, selectedId:
+    typeof roh.selectedId === 'string' && roh.selectedId !== ROOT_ID && tree[roh.selectedId] ? roh.selectedId : null,
+  } }
 }
 
 export function keinVerlust(roh: unknown, rein: unknown): boolean {
@@ -234,140 +109,3 @@ export function ersteAbweichung(roh: unknown, rein: unknown): string {
   return `${JSON.stringify(roh)} wird als ${JSON.stringify(rein)} gelesen`
 }
 
-function ohneGeleerte(
-  props: unknown,
-  bausteinId: string,
-  geleert: ReadonlySet<string>,
-): unknown {
-  if (geleert.size === 0 || !props || typeof props !== 'object' || Array.isArray(props)) {
-    return props
-  }
-  const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(props as Record<string, unknown>)) {
-    if (!geleert.has(`${bausteinId}.${k}`)) out[k] = v
-  }
-  return out
-}
-
-function strukturProbleme(rohBaum: Record<string, unknown>): LadeProblem[] {
-  const raus: LadeProblem[] = []
-  for (const [id, knoten] of Object.entries(rohBaum)) {
-    const kinder = knoten && typeof knoten === 'object'
-      ? (knoten as Record<string, unknown>).childIds
-      : undefined
-    if (!knoten || typeof knoten !== 'object' || (kinder !== undefined && !Array.isArray(kinder))) {
-      raus.push({ bereich: BEREICH_AUFBAU, stelle: id, grund: `der Baustein „${id}" ist unlesbar` })
-      continue
-    }
-    for (const kind of Array.isArray(kinder) ? kinder : []) {
-      if (typeof kind !== 'string' || !(kind in rohBaum)) {
-        raus.push({
-          bereich: BEREICH_AUFBAU,
-          stelle: id,
-          grund: 'ein Baustein verweist auf einen anderen, den der Stand nicht enthält',
-        })
-      }
-    }
-  }
-  return raus
-}
-
-function verlustProbleme(
-  rohBaum: Record<string, unknown>,
-  baum: BaumErgebnis,
-): LadeProblem[] {
-  const raus: LadeProblem[] = []
-
-  const rohKnoten = Object.keys(rohBaum)
-    .filter((id) => id !== ROOT_ID && !baum.absichtlichEntfernt.has(id)).length
-  const reinKnoten = Object.keys(baum.tree).filter((id) => id !== ROOT_ID).length
-  const bekanntVerworfen = [...baum.verworfen.values()].reduce((a, b) => a + b, 0)
-  if (rohKnoten > reinKnoten + bekanntVerworfen) {
-    raus.push({
-      bereich: BEREICH_AUFBAU,
-      stelle: '',
-      grund: 'im Masken-Aufbau fehlen Bausteine '
-        + `(${rohKnoten - reinKnoten - bekanntVerworfen} von ${rohKnoten})`,
-    })
-  }
-
-  if (baum.schemaAdvanced || bekanntVerworfen > 0 || baum.absichtlichEntfernt.size > 0) return raus
-  for (const [id, rohKnoten] of Object.entries(rohBaum)) {
-    const rein = baum.tree[id]
-    const roh = rohKnoten as Record<string, unknown>
-
-    if (id === ROOT_ID) {
-      if (!keinVerlust(roh.childIds, rein?.childIds)) {
-        raus.push({
-          bereich: BEREICH_AUFBAU,
-          stelle: ROOT_ID,
-          grund: 'im Masken-Aufbau fehlen Beziehungen zwischen Bausteinen',
-        })
-      } else if (!keinVerlust(roh.props, rein?.props)) {
-        raus.push({
-          bereich: BEREICH_AUFBAU,
-          stelle: ROOT_ID,
-          grund: 'an der Maske selbst stimmen Angaben nicht',
-        })
-      }
-      continue
-    }
-
-    if (!rein || rein.type !== roh.type
-      || !keinVerlust(ohneGeleerte(roh.props, id, baum.absichtlichGeleert), rein.props)
-      || !keinVerlust(roh.events, rein.events)
-      || !keinVerlust(roh.childIds, rein.childIds)) {
-      raus.push({
-        bereich: BEREICH_AUFBAU,
-        stelle: id,
-        grund: `am Baustein „${id}" stimmen Angaben nicht`,
-      })
-    }
-  }
-  return raus
-}
-
-export type AblehnGrund =
-
-  | 'zukunft'
-  // Gueltiges JSON, aber kein verwertbarer Masken-Aufbau.
-  | 'unlesbar'
-  // Beim Laden waere etwas verlorengegangen.
-  | 'verlust'
-
-export type LadeAusgang =
-  | { art: 'ok'; baum: BaumErgebnis }
-  // Heil, aber eine Schemastufe lief: der Stand muss neu gespeichert werden.
-  | { art: 'migriert'; baum: BaumErgebnis }
-  | { art: 'abgelehnt'; ursache: AblehnGrund; probleme: LadeProblem[] }
-
-export function pruefeBaumStand(
-  roh: { schemaVersion: number; tree?: unknown; blocks?: unknown; selectedId?: unknown },
-): LadeAusgang {
-  if (roh.schemaVersion > CURRENT_SCHEMA_VERSION) {
-    return {
-      art: 'abgelehnt',
-      ursache: 'zukunft',
-      probleme: [{
-        bereich: BEREICH_AUFBAU,
-        stelle: '',
-        grund: `gespeichert unter Aufbau-Version ${roh.schemaVersion}, `
-          + `dieser Editor kennt ${CURRENT_SCHEMA_VERSION}`,
-      }],
-    }
-  }
-
-  const baum = baumAusRohdaten(roh, roh.schemaVersion < DEMO_CLEANUP_BEFORE_SCHEMA)
-  if (!baum) return { art: 'abgelehnt', ursache: 'unlesbar', probleme: [] }
-
-  const probleme: LadeProblem[] = []
-  if (roh.tree && typeof roh.tree === 'object') {
-    const rohBaum = roh.tree as Record<string, unknown>
-    probleme.push(...strukturProbleme(rohBaum), ...verlustProbleme(rohBaum, baum))
-  }
-
-  probleme.push(...topologieProbleme(baum.tree))
-  if (probleme.length > 0) return { art: 'abgelehnt', ursache: 'verlust', probleme }
-
-  return { art: baum.schemaAdvanced ? 'migriert' : 'ok', baum }
-}

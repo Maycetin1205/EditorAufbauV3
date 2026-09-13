@@ -48,11 +48,11 @@ Maske.
   Relationen). Kennt keinen Baustein.
 - `src/export/`: schreibt die Maske, eine HTML plus die SEvariablen. Die
   Laufzeit steht als ein Skript darin: `ff-basis` und je benutztem Baustein
-  ein Teil aus `src/export/generated/` (`laufzeitTeile.ts`, gebaut von
+  ein Teil aus `src/export/generated/` (`laufzeit.json`, gebaut von
   `tools/laufzeitBauen.mjs`). `validator.ts` prueft nur die Dateiform
   (SE-Marker, LF, ASCII), nie Fachliches.
 - `src/state/`: der Editor-Zustand (`Editor.ts`, Historie, Speichern,
-  Migration alter Staende).
+  Pruefen des aktuellen Maskenformats).
 - `src/editor/`: die Bedienoberflaeche (React), `src/ui/werkbank/` ihre
   Bauteile. Editor-Hilfen leben im BlockHost, nie im Baustein.
 - Masken-Design in `src/design/masken-tokens.css` (`--se-*`), Editor-Design

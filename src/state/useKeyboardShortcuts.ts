@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import { useEditorInstance } from './EditorContext'
 import { loescheBaustein } from './loescheBaustein'
 import { speichereMaskeAlsDatei } from './maskenDatei'
-import { elternZiel } from './selectionOps'
 
 function inEingabefeld(e: KeyboardEvent): boolean {
   for (const ziel of e.composedPath()) {
@@ -44,11 +43,9 @@ export function useKeyboardShortcuts() {
         return
       }
 
-  // Escape: eine Ebene hoch, oben angekommen die Auswahl aufheben. So ist jeder
-  // Container erreichbar, auch wenn seine Kinder ihn ganz bedecken.
       if (!mod && e.key === 'Escape') {
         if (editor.selectedId === null || fensterOffen()) return
-        editor.selectBlock(elternZiel(editor.tree, editor.selectedId))
+        editor.selectBlock(null)
         return
       }
 

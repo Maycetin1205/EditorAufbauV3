@@ -172,11 +172,10 @@ function hydrate(board: HTMLElement, lieferung: boolean): void {
   let template = templates.get(board)
   if (!template) {
     const tpl = board.querySelector<HTMLTemplateElement>('template[data-ff-template]')
-    const source = tpl?.content.firstElementChild ?? board.querySelector(CARD_TAG)
+    const source = tpl?.content.firstElementChild
     if (source) {
       template = source.cloneNode(true) as HTMLElement
       templates.set(board, template)
-      if (!tpl) source.remove()
     }
   }
   if (!template) return

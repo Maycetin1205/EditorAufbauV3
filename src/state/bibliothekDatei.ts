@@ -26,26 +26,10 @@ export type BibliothekErgebnis =
   | { ok: true; inhalt: BibliothekInhalt }
   | { ok: false; grund: string; probleme: readonly LadeProblem[] }
 
-// Aeltere Masken speicherten in der Hol-Relation eine Feldliste mit. Die
-// errechnet der Export aus den benutzten Feldern, ohne sie geht nichts verloren.
-// Und sie nannten dort die Geber-QUELLE; heute steht der Geber als
-// „Auswahl folgen" am Baustein. Eine solche Datei laedt weiter — der Geber ist
-// am Baustein einmal neu zu waehlen.
-export function ohneErrechnetes(eintrag: unknown): unknown {
-  if (!eintrag || typeof eintrag !== 'object') return eintrag
-  const e = eintrag as Record<string, unknown>
-  if (!e.ladeRelation || typeof e.ladeRelation !== 'object') return eintrag
-  const lade = { ...(e.ladeRelation as Record<string, unknown>) }
-  delete lade.zusatzFelder
-  delete lade.geberQuelleId
-  return { ...e, ladeRelation: lade }
-}
-
 export function bibliothekPruefen<T>(
   roh: unknown,
   pruefe: (raw: unknown) => { liste: T[]; probleme: EintragProblem[] },
   klarname: string,
-  bereinige: (eintrag: unknown) => unknown = (eintrag) => eintrag,
 ): { ok: true; liste: T[] } | { ok: false; grund: string; probleme: LadeProblem[] } {
   if (!Array.isArray(roh)) {
     return {
@@ -54,10 +38,9 @@ export function bibliothekPruefen<T>(
       probleme: [{ bereich: klarname, stelle: '', grund: 'der Abschnitt fehlt oder ist unlesbar' }],
     }
   }
-  const bereinigt = roh.map(bereinige)
-  const { liste, probleme } = pruefe(bereinigt)
-  if (!keinVerlust(bereinigt, liste)) {
-    const stelle = ersteAbweichung(bereinigt, liste)
+  const { liste, probleme } = pruefe(roh)
+  if (!keinVerlust(roh, liste)) {
+    const stelle = ersteAbweichung(roh, liste)
     return {
       ok: false,
       grund: `Die Datei ist beschädigt: im Abschnitt „${klarname}" stimmt eine Angabe nicht: `
@@ -139,7 +122,7 @@ export function packeBibliothekAus(text: string): BibliothekErgebnis {
   }
 
   const quellen = bibliothekPruefen(
-    o.datenquellen, pruefeDatenquellen, BEREICH_QUELLEN, ohneErrechnetes,
+    o.datenquellen, pruefeDatenquellen, BEREICH_QUELLEN,
   )
   if (!quellen.ok) return { ok: false, grund: quellen.grund, probleme: quellen.probleme }
   const relationen = bibliothekPruefen(o.relationen, pruefeRelationsVorlagen, BEREICH_RELATIONEN)

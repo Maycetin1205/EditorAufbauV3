@@ -11,15 +11,12 @@ import { downloadFile } from '../lib/dateiDownload'
 import {
   BIBLIOTHEK_DATEI_ART,
   bibliothekPruefen,
-  ohneErrechnetes,
   problemText,
 } from './bibliothekDatei'
 import type { Editor } from './Editor'
 import { pruefeBaumStand } from './ladeKette'
 import { meldungen } from './meldungen'
-import { CURRENT_SCHEMA_VERSION } from './migrations'
-import { type EntfernGrund } from './migrationenRoh'
-import { meldeAbsichtlichEntfernte, meldeVerworfeneTypen } from './persistence'
+import { CURRENT_SCHEMA_VERSION } from './maskenSchema'
 
 const MASKEN_DATEI_ART = 'aufbau-editor-maske'
 
@@ -35,8 +32,6 @@ export type AuspackErgebnis =
   | {
     ok: true
     inhalt: MaskenInhalt
-    verworfen: Map<string, number>
-    absichtlichEntfernt: ReadonlyMap<string, EntfernGrund>
   }
   | { ok: false; grund: string; probleme: readonly LadeProblem[] }
 
@@ -87,8 +82,6 @@ export async function ladeMaskeAusDatei(editor: Editor, datei: File): Promise<vo
     return
   }
   editor.ersetzeMaske(ergebnis.inhalt)
-  meldeVerworfeneTypen(ergebnis.verworfen)
-  meldeAbsichtlichEntfernte(ergebnis.absichtlichEntfernt)
 }
 
 function packeMaskeAus(text: string): AuspackErgebnis {
@@ -136,8 +129,8 @@ function auspacken(text: string): AuspackErgebnis {
       + 'nicht geladen werden.',
     )
   }
-  if (dateiVersion < 1) {
-    return abgelehnt('Die Datei ist beschädigt: die Formatangabe fehlt.')
+  if (dateiVersion !== MASKEN_DATEI_VERSION) {
+    return abgelehnt('Dieses Maskendateiformat wird nicht unterstützt.')
   }
 
   if (typeof o.schemaVersion !== 'number') {
@@ -156,11 +149,10 @@ function auspacken(text: string): AuspackErgebnis {
 
   const stand = pruefeBaumStand({ schemaVersion, tree: o.tree })
   if (stand.art === 'abgelehnt') {
-    if (stand.ursache === 'zukunft') {
+    if (stand.ursache === 'version') {
       return {
         ok: false,
-        grund: 'Diese Datei stammt aus einer neueren Version des Editors und kann hier '
-          + 'nicht geladen werden.',
+        grund: 'Dieses Maskenformat wird nicht unterstützt. Die Datei wurde nicht verändert.',
         probleme: stand.probleme,
       }
     }
@@ -172,7 +164,7 @@ function auspacken(text: string): AuspackErgebnis {
   }
   const baum = stand.baum
 
-  const quellen = bibliothekPruefen(o.datenquellen, pruefeDatenquellen, BEREICH_QUELLEN, ohneErrechnetes)
+  const quellen = bibliothekPruefen(o.datenquellen, pruefeDatenquellen, BEREICH_QUELLEN)
   if (!quellen.ok) return { ok: false, grund: quellen.grund, probleme: quellen.probleme }
   const relationen = bibliothekPruefen(o.relationen, pruefeRelationsVorlagen, BEREICH_RELATIONEN)
   if (!relationen.ok) return { ok: false, grund: relationen.grund, probleme: relationen.probleme }
@@ -184,8 +176,5 @@ function auspacken(text: string): AuspackErgebnis {
       datenquellen: quellen.liste,
       relationen: relationen.liste,
     },
-
-    verworfen: baum.verworfen,
-    absichtlichEntfernt: baum.absichtlichEntfernt,
   }
 }

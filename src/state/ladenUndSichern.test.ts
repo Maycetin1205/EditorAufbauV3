@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import '../blocks/register'
 import { ROOT_ID, ROOT_TYPE } from '../core/blocks/BlockData'
-import { type EintragProblem } from '../core/data/ladeProblem'
 import { meldungen } from './meldungen'
-import { CURRENT_SCHEMA_VERSION } from './migrations'
+import { CURRENT_SCHEMA_VERSION } from './maskenSchema'
 import { pruefeBaumStand } from './ladeKette'
 import { backupKeyFor } from './notfallkopie'
 import { loadFromStorage, STORAGE_KEY } from './persistence'
-import { VorlagenStore, type VorlagenBauplan } from './VorlagenStore'
 
 // Hier haengt, dass kein gespeicherter Stand stumm verschwindet: was der Editor
 // nicht lesen kann, muss er sichern — und was er meldet, muss stimmen.
@@ -52,7 +50,7 @@ function meldungsText(): string {
 
 function wurzelBaum(kinder: string[]): Record<string, unknown> {
   return {
-    [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props: {}, parentId: '', childIds: kinder },
+    [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props: {}, parentId: null, childIds: kinder },
   }
 }
 
@@ -98,7 +96,7 @@ test('ein Stand aus einem neueren Editor wird gesichert, gemeldet und nicht gela
   expect(meldungsText()).toContain('neueren Version')
 })
 
-test('Kanban-Karten ohne Zielspalte werden beim Laden gemeldet', () => {
+test('ein entfernter Kanban-Bausteintyp wird ohne Teilimport abgelehnt', () => {
   const tree = {
     ...wurzelBaum(['kb']),
     kb: { id: 'kb', type: 'kanban', props: {}, parentId: ROOT_ID, childIds: ['vor'] },
@@ -108,10 +106,13 @@ test('Kanban-Karten ohne Zielspalte werden beim Laden gemeldet', () => {
   }
   speicher.setItem(STORAGE_KEY, JSON.stringify({
     schemaVersion: CURRENT_SCHEMA_VERSION, tree, selectedId: null,
+    datenquellen: [], relationen: [], activePageId: ROOT_ID,
   }))
 
-  expect(loadFromStorage()).not.toBeNull()
-  expect(meldungsText()).toContain('2 Kanban-Karte(n)')
+  const original = speicher.getItem(STORAGE_KEY)
+  expect(loadFromStorage()).toBeNull()
+  expect(speicher.getItem(STORAGE_KEY)).toBe(original)
+  expect(meldungsText()).toContain('kanban-vorlage')
 })
 
 test('Maskenname und Rahmennummer ueberstehen den Weg durch den Speicher', () => {
@@ -121,13 +122,14 @@ test('Maskenname und Rahmennummer ueberstehen den Weg durch den Speicher', () =>
       id: ROOT_ID,
       type: ROOT_TYPE,
       props: { maskenName: 'Belegerfassung', belegRahmen: '00001' },
-      parentId: '',
+      parentId: null,
       childIds: ['t1'],
     },
     t1: { id: 't1', type: 'text', props: {}, parentId: ROOT_ID, childIds: [] },
   }
   speicher.setItem(STORAGE_KEY, JSON.stringify({
     schemaVersion: CURRENT_SCHEMA_VERSION, tree, selectedId: null,
+    datenquellen: [], relationen: [], activePageId: ROOT_ID,
   }))
 
   const geladen = loadFromStorage()
@@ -145,7 +147,7 @@ test('eine unbekannte Angabe an der Maske laesst die Datei stehen und sagt es', 
   const mitProp = (props: Record<string, unknown>) => ({
     schemaVersion: CURRENT_SCHEMA_VERSION,
     tree: {
-      [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props, parentId: '', childIds: ['t1'] },
+      [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props, parentId: null, childIds: ['t1'] },
       t1: { id: 't1', type: 'text', props: {}, parentId: ROOT_ID, childIds: [] },
     },
   })
@@ -159,7 +161,7 @@ test('eine unbekannte Angabe an der Maske laesst die Datei stehen und sagt es', 
     .toContain('an der Maske selbst stimmen Angaben nicht')
 })
 
-test('eine aufgeloeste Zeile meldet nichts — ihr Inhalt bleibt an Ort und Stelle', () => {
+test('ein entfernter Container wird nicht mehr still aufgeloest', () => {
   const tree = {
     ...wurzelBaum(['z1']),
     z1: { id: 'z1', type: 'zeile', props: {}, parentId: ROOT_ID, childIds: ['t1'] },
@@ -167,14 +169,16 @@ test('eine aufgeloeste Zeile meldet nichts — ihr Inhalt bleibt an Ort und Stel
   }
   speicher.setItem(STORAGE_KEY, JSON.stringify({
     schemaVersion: CURRENT_SCHEMA_VERSION, tree, selectedId: null,
+    datenquellen: [], relationen: [], activePageId: ROOT_ID,
   }))
 
-  const geladen = loadFromStorage()
-  expect(geladen?.tree.t1?.parentId).toBe(ROOT_ID)
-  expect(meldungsText()).toBe('')
+  const original = speicher.getItem(STORAGE_KEY)
+  expect(loadFromStorage()).toBeNull()
+  expect(speicher.getItem(STORAGE_KEY)).toBe(original)
+  expect(meldungsText()).toContain('zeile')
 })
 
-test('ein Stand aus dem groben Raster kommt im feinen doppelt so breit an', () => {
+test('alte Rasterformate werden gesichert und ohne Konvertierung abgelehnt', () => {
   const tree = {
     ...wurzelBaum(['t1', 'b1']),
     t1: {
@@ -188,9 +192,10 @@ test('ein Stand aus dem groben Raster kommt im feinen doppelt so breit an', () =
   }
   speicher.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, tree, selectedId: null }))
 
-  const geladen = loadFromStorage()
-  expect(geladen?.tree.t1?.props).toMatchObject({ rasterX: 0, rasterW: 48, rasterY: 3, rasterH: 14 })
-  expect(geladen?.tree.b1?.props).toMatchObject({ rasterX: 40, rasterW: 8, rasterY: 0, rasterH: 2 })
+  const original = speicher.getItem(STORAGE_KEY)
+  expect(loadFromStorage()).toBeNull()
+  expect(speicher.getItem(STORAGE_KEY)).toBe(original)
+  expect(kopien(STORAGE_KEY).map((k) => speicher.getItem(k))).toEqual([original])
 })
 
 test('ein Stand im feinen Raster wird nicht noch einmal verdoppelt', () => {
@@ -201,46 +206,20 @@ test('ein Stand im feinen Raster wird nicht noch einmal verdoppelt', () => {
   }
   speicher.setItem(STORAGE_KEY, JSON.stringify({
     schemaVersion: CURRENT_SCHEMA_VERSION, tree, selectedId: null,
+    datenquellen: [], relationen: [], activePageId: ROOT_ID,
   }))
 
   expect(loadFromStorage()?.tree.b1?.props).toMatchObject(props)
 })
 
-interface TestEintrag { id: string; name?: string }
+test('ein unlesbarer Bibliothekseintrag verhindert einen gekuerzten Maskenstand', () => {
+  const roh = JSON.stringify({
+    schemaVersion: CURRENT_SCHEMA_VERSION, tree: wurzelBaum([]), selectedId: null,
+    datenquellen: [{ name: 'ohne Kennung' }], relationen: [], activePageId: ROOT_ID,
+  })
+  speicher.setItem(STORAGE_KEY, roh)
 
-const TEST_BAUPLAN: VorlagenBauplan<TestEintrag> = {
-  schluessel: 'test_vorlagen',
-  huelle: 'eintraege',
-  klarnameLesen: 'Testvorlagen',
-  klarnameSchreiben: 'Testvorlagen',
-  pruefe: (roh) => {
-    const liste: TestEintrag[] = []
-    const probleme: EintragProblem[] = []
-    for (const e of Array.isArray(roh) ? roh : []) {
-      if (e && typeof e === 'object' && typeof (e as { id?: unknown }).id === 'string') {
-        liste.push(e as TestEintrag)
-      } else {
-        probleme.push({ stelle: 'Eintrag 2', grund: 'die Kennung fehlt' })
-      }
-    }
-    return { liste, probleme }
-  },
-}
-
-test('uebergangene Vorlagen-Eintraege werden gemeldet und vor dem Kuerzen gesichert', () => {
-  const roh = JSON.stringify({ eintraege: [{ id: 'a' }, { name: 'ohne Kennung' }] })
-  speicher.setItem(TEST_BAUPLAN.schluessel, roh)
-
-  const store = new VorlagenStore(TEST_BAUPLAN)
-  expect(store.list).toHaveLength(1)
-  expect(meldungsText()).toContain('die Kennung fehlt')
-
-  const kopie = kopien(TEST_BAUPLAN.schluessel)
-  expect(kopie).toHaveLength(1)
-  expect(speicher.getItem(kopie[0])).toBe(roh)
-
-  store.add({ name: 'neu' })
-  store.speichereJetzt()
-  expect(speicher.getItem(TEST_BAUPLAN.schluessel)).not.toBe(roh)
-  expect(speicher.getItem(kopie[0])).toBe(roh)
+  expect(loadFromStorage()).toBeNull()
+  expect(speicher.getItem(STORAGE_KEY)).toBe(roh)
+  expect(kopien(STORAGE_KEY).map((k) => speicher.getItem(k))).toEqual([roh])
 })

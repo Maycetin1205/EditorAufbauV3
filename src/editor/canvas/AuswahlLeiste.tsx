@@ -8,7 +8,6 @@ import { useEditorInstance } from '../../state/EditorContext'
 import { wendeProps } from '../../state/propsPatch'
 import { firstDescendantOfType } from '../../core/blocks/treeQuery'
 import { eigenschaftenFuer } from '../../core/blocks/eigenschaftsOrt'
-import { elternZiel } from '../../state/selectionOps'
 import { Popover } from '@/ui/werkbank/Popover'
 import { PropControl } from '../inspector/PropControl'
 
@@ -76,7 +75,6 @@ export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: Auswahl
     onEndeBearbeitung: () => editor.endTransaction(),
   }), [editor])
   const eigenschaften = def ? eigenschaftenFuer(block, def, 'inline') : []
-  const eltern = elternZiel(editor.tree, block.id)
   const muster = def?.templateChild ? firstDescendantOfType(editor.tree, block.id, def.templateChild.type) : undefined
   // Die Lage wird gemessen und direkt ans Element geschrieben: kein Zustand,
   // kein zweiter Render.
@@ -93,7 +91,6 @@ export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: Auswahl
   const neuMoeglich = neu !== undefined && Object.keys(neu(block.props)).length > 0
   const eintraege = liste ? listeLesen(block.props[liste.prop], liste) : []
   const wegMoeglich = weg !== undefined && eintraege.length > 1
-
 
   return (
     <div
@@ -115,10 +112,6 @@ export function AuswahlLeiste({ block, def, wirt, amRand, onEntfernen }: Auswahl
       )}
       {muster && (
         <Knopf className="h-6 px-1.5 text-dicht" onClick={() => editor.selectBlock(muster)}>Kartenmuster</Knopf>
-      )}
-      {eltern && (
-        <Knopf className="h-6 px-1.5 text-dicht" title="Übergeordneten Baustein auswählen (Escape)"
-          onClick={() => editor.selectBlock(eltern)}>↑ Eltern</Knopf>
       )}
       {onEntfernen && (
         <Knopf nurZeichen className="h-6 w-6" title="Baustein löschen" aria-label="Baustein löschen"

@@ -51,8 +51,7 @@ export function weitereQuellenAus(roh: unknown): BausteinQuelle[] {
     }
     acc.push({
       quelleId: e.quelleId,
-    // Alte Masken kennen die Angabe nicht: leer heisst Hauptquelle, also das,
-    // was sie ohne sie meinen.
+      // Ohne ausdruecklichen Partner verbinden die Paare mit der Hauptquelle.
       partnerId: typeof e.partnerId === 'string' ? e.partnerId : '',
       keyPairs: keyPairs.slice(0, MAX_SCHLUESSELPAARE),
     })

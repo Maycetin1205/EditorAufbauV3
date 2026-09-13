@@ -81,20 +81,6 @@ export function rasterItemStyle(pos: RasterPos): Record<string, string | number>
   }
 }
 
-export function stapeleUntereinander(
-  groessen: readonly { w: number; h: number }[],
-): RasterPos[] {
-  const out: RasterPos[] = []
-  let y = 0
-  for (const g of groessen) {
-    const w = Math.max(1, Math.floor(g.w))
-    const h = Math.max(1, Math.floor(g.h))
-    out.push({ x: 0, y, w, h })
-    y += h
-  }
-  return out
-}
-
 export function naechsteFreieZeile(positionen: readonly RasterPos[]): number {
   return positionen.reduce((max, p) => Math.max(max, p.y + p.h), 0)
 }

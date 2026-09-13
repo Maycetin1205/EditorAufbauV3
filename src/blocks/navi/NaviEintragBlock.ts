@@ -98,7 +98,7 @@ export class NaviEintragBlock extends BasicBlock {
 
   private melde(): void {
     if (this.imEditor) return
-    const detail: SeitenWechselDetail = { seite: this.seite, ansicht: this.seitename }
+    const detail: SeitenWechselDetail = { seite: this.seite }
     this.dispatchEvent(new CustomEvent<SeitenWechselDetail>(SEITEN_WECHSEL_EVENT, {
       detail,
       bubbles: true,

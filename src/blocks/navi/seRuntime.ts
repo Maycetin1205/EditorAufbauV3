@@ -17,16 +17,9 @@ function seitenVon(wurzel: Element): Element[] {
   return Array.from(wurzel.children).filter((el) => el.hasAttribute('data-ff-seite-id'))
 }
 
-function zielVon(wurzel: Element, eintrag: Pick<NaviEintragBlock, 'seite' | 'seitename'>): string | null {
-  if (eintrag.seite === ROOT_ID) return ROOT_ID
-  const seiten = seitenVon(wurzel)
-  if (eintrag.seite !== '') {
-    return seiten.some((el) => el.getAttribute('data-ff-seite-id') === eintrag.seite) ? eintrag.seite : null
-  }
-  // Alte Eintraege ohne Kennung sind nur bei eindeutigem Namen zuordenbar.
-  if (eintrag.seitename === 'Hauptseite') return ROOT_ID
-  const passende = seiten.filter((el) => el.getAttribute('name') === eintrag.seitename)
-  return passende.length === 1 ? passende[0].getAttribute('data-ff-seite-id') : null
+function zielVon(wurzel: Element, seite: string): string | null {
+  if (seite === ROOT_ID) return ROOT_ID
+  return seitenVon(wurzel).some((el) => el.getAttribute('data-ff-seite-id') === seite) ? seite : null
 }
 
 function aktualisiereEintraege(navi: Element): void {
@@ -34,7 +27,7 @@ function aktualisiereEintraege(navi: Element): void {
   if (!wurzel || navi.hasAttribute('data-ff-editor')) return
   const aktiv = aktiveSeiten.get(wurzel) ?? ROOT_ID
   for (const eintrag of eintraegeVon(navi)) {
-    const ziel = zielVon(wurzel, eintrag)
+    const ziel = zielVon(wurzel, eintrag.seite)
     eintrag.toggleAttribute('aktiv', ziel === aktiv)
     eintrag.toggleAttribute('ungueltig', ziel === null)
   }
@@ -63,7 +56,7 @@ export function verbindeNavi(navi: Element): void {
     const detail = (event as CustomEvent<SeitenWechselDetail>).detail
     const wurzel = wurzelVon(navi)
     if (!detail || !wurzel) return
-    const ziel = zielVon(wurzel, { seite: detail.seite ?? '', seitename: detail.ansicht })
+    const ziel = zielVon(wurzel, detail.seite)
     if (ziel === null) return
     schalteUm(wurzel, ziel)
     navi.removeAttribute('offen')
@@ -89,7 +82,7 @@ export function naviAktualisiert(navi: Element): void {
   const wurzel = wurzelVon(navi)
   if (!wurzel || navi.hasAttribute('data-ff-editor')) return
   if (!aktiveSeiten.has(wurzel)) {
-    const start = eintraegeVon(navi).map((e) => zielVon(wurzel, e)).find((ziel) => ziel !== null)
+    const start = eintraegeVon(navi).map((e) => zielVon(wurzel, e.seite)).find((ziel) => ziel !== null)
     schalteUm(wurzel, start ?? ROOT_ID)
   } else {
     aktualisiereEintraege(navi)

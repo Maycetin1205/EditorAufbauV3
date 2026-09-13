@@ -2,7 +2,6 @@
 import { useEffect, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Trenner } from '@/ui/werkbank/Trenner'
 import { useKeyboardShortcuts } from '../../state/useKeyboardShortcuts'
-import { AuswahlPfad } from '../canvas/AuswahlPfad'
 import { Canvas } from '../canvas/Canvas'
 import { FensterSpalten } from '../canvas/FensterSpalten'
 import { SeitenLeiste } from '../canvas/SeitenLeiste'
@@ -60,8 +59,6 @@ export function EditorShell() {
         </div>
         <div className="flex min-h-9 items-center gap-4 border-t border-linie px-3">
           <SeitenLeiste />
-          <Trenner senkrecht />
-          <AuswahlPfad />
         </div>
       </header>
 

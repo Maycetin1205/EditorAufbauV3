@@ -3,9 +3,8 @@ import { css, html, type TemplateResult } from 'lit'
 import { property } from 'lit/decorators.js'
 import { BasicBlock } from '../base/BasicBlock'
 import type { BlockCategory } from '../../core/blocks/BlockComponent'
-import type { FlowDirection, FlowWidth } from '../../core/blocks/flowLayout'
+import type { FlowWidth } from '../../core/blocks/flowLayout'
 import type { PropertyDescription } from '../../core/blocks/PropertyDescription'
-import { CardBlock } from '../card/CardBlock'
 import { leerStil, leerZustand } from '../shared/leerZustand'
 import { ZIEL_KLASSE, zielStil } from './zielStil'
 import { kartenAbstandStil } from './kartenAbstand'
@@ -19,9 +18,7 @@ export class KanbanZimmerBlock extends BasicBlock {
   static readonly tagName = 'ff-kanban-zimmer'
   static readonly displayName = 'Kanban-Zimmer'
   static readonly category: BlockCategory = 'anzeige'
-  static readonly acceptsChildren = true
-  static readonly allowedChildTypes: string[] = [CardBlock.blockType]
-  static readonly childDirection: FlowDirection = 'column'
+  static readonly acceptsChildren = false
   static readonly showInPalette = false
   static readonly containerHint = false
 

@@ -39,7 +39,7 @@ test('Struktur und ERP-Konfiguration entsprechen der Referenz', () => {
 function alleBausteineBaum(marker: (type: string) => Record<string, unknown>): BlockTree {
   const defs = [...getAllBlockDefinitions()].sort((a, b) => a.type.localeCompare(b.type))
   const tree: BlockTree = {
-    [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props: {}, parentId: '', childIds: [] },
+    [ROOT_ID]: { id: ROOT_ID, type: ROOT_TYPE, props: {}, parentId: null, childIds: [] },
   }
   const instanz = new Map<string, string>()
 

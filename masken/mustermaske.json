@@ -1,7 +1,7 @@
 {
   "art": "aufbau-editor-maske",
   "dateiVersion": 2,
-  "schemaVersion": 6,
+  "schemaVersion": 8,
   "tree": {
     "root": {
       "id": "root",
@@ -23,9 +23,9 @@
       "type": "button",
       "props": {
         "width": "auto",
-        "rasterX": 21,
+        "rasterX": 42,
         "rasterY": 0,
-        "rasterW": 3,
+        "rasterW": 6,
         "rasterH": 2,
         "label": "Speichern"
       },
@@ -319,9 +319,9 @@
       "type": "button",
       "props": {
         "width": "auto",
-        "rasterX": 18,
+        "rasterX": 36,
         "rasterY": 0,
-        "rasterW": 3,
+        "rasterW": 6,
         "rasterH": 2,
         "label": "Position Löschen"
       },
@@ -406,7 +406,7 @@
         "width": "fill",
         "rasterX": 0,
         "rasterY": 2,
-        "rasterW": 24,
+        "rasterW": 48,
         "rasterH": 1,
         "richtung": "waagerecht"
       },
@@ -415,12 +415,12 @@
     },
     "039fea30-1c9d-434c-8d06-8ba88ae6ae88": {
       "id": "039fea30-1c9d-434c-8d06-8ba88ae6ae88",
-      "type": "tabelle",
+      "type": "erfassung",
       "props": {
         "width": "fill",
         "rasterX": 0,
         "rasterY": 3,
-        "rasterW": 24,
+        "rasterW": 48,
         "rasterH": 22,
         "weitereQuellen": [
           {
@@ -518,7 +518,28 @@
             "kennung": "s14",
             "titel": "Abgabemenge",
             "feld": "946_30",
-            "breite": 65
+            "breite": 65,
+            "formel": {
+              "glieder": [
+                {
+                  "spalte": "s11"
+                },
+                {
+                  "spalte": "s8"
+                },
+                {
+                  "spalte": "s5"
+                }
+              ],
+              "zeichen": [
+                "*",
+                "*"
+              ],
+              "runden": {
+                "stellen": 3,
+                "richtung": "kfm"
+              }
+            }
           },
           {
             "kennung": "s11",
@@ -549,13 +570,11 @@
           }
         ],
         "suche": "nein",
-        "erfassung": "ja",
         "blaettern": "nein",
         "loeschbar": "ja",
         "kopfzeile": "ja",
         "spaltenwahl": "nein",
         "tagField": "",
-        "rechnung": "{\"menge\":{\"spalte\":\"s14\",\"runden\":{\"stellen\":3,\"richtung\":\"kfm\"}},\"anzahl\":{\"spalte\":\"s11\",\"runden\":{\"stellen\":0,\"richtung\":\"auf\"}},\"dosis\":{\"spalte\":\"s8\",\"runden\":{\"stellen\":3,\"richtung\":\"kfm\"}},\"tage\":{\"spalte\":\"s5\",\"runden\":{\"stellen\":3,\"richtung\":\"kfm\"}}}",
         "leerText": "Keine Datensätze."
       },
       "parentId": "root",
@@ -568,7 +587,7 @@
         "width": "fill",
         "rasterX": 0,
         "rasterY": 25,
-        "rasterW": 24,
+        "rasterW": 48,
         "rasterH": 1,
         "richtung": "waagerecht"
       },
@@ -582,7 +601,7 @@
         "width": "fill",
         "rasterX": 0,
         "rasterY": 26,
-        "rasterW": 14,
+        "rasterW": 28,
         "rasterH": 21,
         "weitereQuellen": [],
         "folgtAuswahl": [
@@ -640,13 +659,10 @@
           }
         ],
         "suche": "ja",
-        "erfassung": "nein",
         "blaettern": "ja",
-        "loeschbar": "nein",
         "kopfzeile": "ja",
         "spaltenwahl": "nein",
         "tagField": "",
-        "rechnung": "",
         "leerText": "Keine Datensätze."
       },
       "parentId": "root",
@@ -657,9 +673,9 @@
       "type": "tabelle",
       "props": {
         "width": "fill",
-        "rasterX": 14,
+        "rasterX": 28,
         "rasterY": 30,
-        "rasterW": 10,
+        "rasterW": 20,
         "rasterH": 8,
         "weitereQuellen": [],
         "folgtAuswahl": [
@@ -710,13 +726,10 @@
           }
         ],
         "suche": "nein",
-        "erfassung": "nein",
         "blaettern": "nein",
-        "loeschbar": "nein",
         "kopfzeile": "ja",
         "spaltenwahl": "nein",
         "tagField": "",
-        "rechnung": "",
         "leerText": "Keine Datensätze."
       },
       "parentId": "root",
@@ -1360,9 +1373,6 @@
         "endeFelder": [
           "11_6",
           "18_25"
-        ],
-        "zusatzFelder": [
-          "280_12"
         ]
       },
       "fields": [

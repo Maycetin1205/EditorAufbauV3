@@ -22,7 +22,7 @@ export class CardBlock extends BasicBlock {
   static readonly displayName = 'Karte'
   static readonly category: BlockCategory = 'anzeige'
 
-  static readonly allowedParentTypes = ['kanban-muster', 'kanban-spalte', 'kanban-zimmer']
+  static readonly allowedParentTypes = ['kanban-muster']
   static readonly showInPalette = false
 
   static readonly lockedWidth: FlowWidth = 'fill'

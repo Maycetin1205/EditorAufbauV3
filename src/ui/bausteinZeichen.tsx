@@ -25,6 +25,13 @@ function rahmen(kinder: ReactElement[], { size = 16, className }: Props): ReactE
 
 
 
+export function ZeichenTrenner(p: Props): ReactElement {
+  return rahmen([
+    <line key="linie" x1="3" y1="12" x2="21" y2="12" {...U} />,
+    <path key="abstand" d="M8 6h8M8 18h8" stroke={ESPRESSO_ZART} strokeWidth="1" />,
+  ], p)
+}
+
 export function ZeichenPopup(p: Props): ReactElement {
   return rahmen([
     <rect key="h" x="2.6" y="4.6" width="13" height="11" rx="2" fill={SAND} stroke="none" />,
