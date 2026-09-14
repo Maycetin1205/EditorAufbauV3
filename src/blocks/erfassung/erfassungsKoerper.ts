@@ -51,7 +51,7 @@ export function loeschKreuzTpl(geloescht: boolean, schalte: () => void): Templat
 export function kreuzAnzeigeTpl(): TemplateResult {
   return html`<span
     class="zeile-weg zeile-weg-anzeige"
-    title="Zeilen l\u00F6schbar \u2014 in der Maske per Kreuz oder Entf-Taste"
+    title="Zeilen löschbar — in der Maske per Kreuz oder F4"
   >&#x2715;</span>`
 }
 
@@ -86,13 +86,36 @@ export function erfassteZeilenTpl(lage: ErfassteLage, tun: ErfassteHandeln): Tem
     const zeichen = lage.erfasstStand(zeilenIndex)
     // Hinausgeschickt heisst: nicht mehr anfassen, im ERP steht sie schon.
     const fest = zeichen.status === 'geschrieben'
+    const bedienbar = !lage.imEditor
     return html`${zeilenIndex === lage.korrekturPlatz ? lage.erfassung : nothing}<div
       class="zeile erfasst"
       role="row"
+      tabindex=${bedienbar ? 0 : nothing}
       data-status=${zeichen.status}
-      title=${lage.imEditor || fest ? zeichen.titel : `${zeichen.titel} — zum Korrigieren anklicken`}
+      title=${lage.imEditor
+        ? zeichen.titel
+        : fest
+          ? zeichen.titel
+          : `${zeichen.titel} — Enter/Doppelklick korrigiert, F4 entfernt`}
       style=${styleMap(lage.cols)}
-      @click=${lage.imEditor || fest ? nothing : () => tun.holeErfassteZeile(zeilenIndex)}
+      @click=${bedienbar
+        ? (e: MouseEvent) => (e.currentTarget as HTMLElement).focus()
+        : nothing}
+      @dblclick=${bedienbar && !fest ? () => tun.holeErfassteZeile(zeilenIndex) : nothing}
+      @keydown=${bedienbar
+        ? (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && !fest) {
+              e.preventDefault()
+              tun.holeErfassteZeile(zeilenIndex)
+              return
+            }
+            if (e.key === 'F4') {
+              e.preventDefault()
+              e.stopPropagation()
+              if (!fest) tun.nimmErfassteZeile(zeilenIndex)
+            }
+          }
+        : nothing}
     >
       ${lage.spalten.map((_s, i) => {
         const wert = werte[lage.plaetze[i]] ?? ''
