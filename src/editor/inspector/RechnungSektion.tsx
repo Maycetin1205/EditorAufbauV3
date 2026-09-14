@@ -108,7 +108,7 @@ function formelText(
 }
 
 function formelVollstaendig(formel: Formel, zielKennung: string): boolean {
-  if (formel.glieder.length === 0) return false
+  if (formel.glieder.length === 0 || formel.zeichen.length !== formel.glieder.length - 1) return false
   return formel.glieder.every((glied) => {
     if ('zahl' in glied) return Number.isFinite(glied.zahl)
     if ('feld' in glied) return glied.feld.trim() !== ''
@@ -289,7 +289,7 @@ function BerechnungsDialog({
             wert={entwurf.ziel < 0 ? '' : String(entwurf.ziel)}
             leerText="Ergebnis-Spalte auswählen…"
             aria-label="Ergebnis-Spalte"
-            onWaehle={(wert) => onEntwurf({ ...entwurf, ziel: Number(wert) })}
+            onWaehle={(wert) => onEntwurf({ ...entwurf, ziel: wert === '' ? -1 : Number(wert) })}
           />
         </section>
 
@@ -309,6 +309,7 @@ function BerechnungsDialog({
           />
           <p className="text-dicht text-matt">
             Datenfelder lesen den Wert aus dem in dieser Zeile gewählten oder verknüpften Datensatz.
+            Multiplikation und Division werden vor Addition und Subtraktion gerechnet.
           </p>
         </section>
 
