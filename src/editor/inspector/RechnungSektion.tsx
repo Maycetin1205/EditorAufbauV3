@@ -1,4 +1,5 @@
 // Die Formeln der Erfassung einstellen: welche Spalte sich woraus rechnet.
+import { useState } from 'react'
 import { Gruppe } from '@/ui/werkbank/Gruppe'
 import { Knopf } from '@/ui/werkbank/Knopf'
 import { Segment, type SegmentOption } from '@/ui/werkbank/Segment'
@@ -8,6 +9,7 @@ import { X } from '@/ui/zeichen'
 import { coerceErfassungsSpalten } from '../../blocks/erfassung/erfassungsSpalte'
 import { coerceSpalten, type Spalte } from '../../blocks/tabelle/spalten'
 import type { BlockNode } from '../../core/blocks/BlockData'
+import { bindungMitQuelle } from '../../core/blocks/bindung'
 import {
   formelAlsText,
   neueFormel,
@@ -19,6 +21,7 @@ import {
   type Rechenzeichen,
   type RundungsRichtung,
 } from '../../core/data/rechnung'
+import type { QuelleInReichweite } from '../../core/data/sourceLinks'
 import { useEditor } from '../../state/useEditor'
 import { useAbschnitt } from './abschnittStand'
 
@@ -38,8 +41,8 @@ const ZEICHEN: SegmentOption[] = [
   { wert: '/', name: 'geteilt', zeichen: '÷' },
 ]
 
-// Der Eintrag der Spaltenwahl, der eine feste Zahl statt einer Spalte meint.
 const FESTE_ZAHL = '#zahl'
+const FELD_PREFIX = '#feld:'
 
 function spaltenName(spalte: Spalte): string {
   return (spalte.titel === '' ? spalte.kennung : spalte.titel)
@@ -50,6 +53,32 @@ function mitFormel(spalte: Spalte, formel: Formel | undefined): Spalte {
   const ohne: Spalte = { ...spalte }
   delete ohne.formel
   return formel === undefined ? ohne : { ...ohne, formel }
+}
+
+function feldBindung(quelle: QuelleInReichweite, code: string, istHauptquelle: boolean): string {
+  return istHauptquelle ? code : bindungMitQuelle(quelle.source.id, code)
+}
+
+function feldOptionen(quellen: readonly QuelleInReichweite[]): WahlOption[] {
+  return quellen.flatMap((quelle, quellenIndex) => quelle.source.fields.map((feld) => ({
+    wert: `${FELD_PREFIX}${feldBindung(quelle, feld.code, quellenIndex === 0)}`,
+    name: `Daten · ${quelle.source.name} · ${feld.label || feld.code}`,
+  })))
+}
+
+function feldTitel(
+  bindung: string,
+  quellen: readonly QuelleInReichweite[],
+): string {
+  for (let quellenIndex = 0; quellenIndex < quellen.length; quellenIndex++) {
+    const quelle = quellen[quellenIndex]
+    for (const feld of quelle.source.fields) {
+      if (feldBindung(quelle, feld.code, quellenIndex === 0) === bindung) {
+        return `${quelle.source.name} · ${feld.label || feld.code}`
+      }
+    }
+  }
+  return ''
 }
 
 function FesteZahl({ wert, onWert }: { wert: number; onWert: (zahl: number) => void }) {
@@ -70,22 +99,31 @@ function FesteZahl({ wert, onWert }: { wert: number; onWert: (zahl: number) => v
   )
 }
 
-function FormelZeilen({ spalten, index, onFormel }: {
+function FormelZeilen({ spalten, quellen, index, onFormel }: {
   spalten: readonly Spalte[]
+  quellen: readonly QuelleInReichweite[]
   index: number
   onFormel: (formel: Formel | undefined) => void
 }) {
   const spalte = spalten[index]
   const formel = spalte.formel
   if (formel === undefined) return null
+
   const andere: WahlOption[] = spalten
     .filter((s, i) => i !== index && s.kennung !== '')
-    .map((s) => ({ wert: s.kennung, name: spaltenName(s) }))
-  const optionen: WahlOption[] = [...andere, { wert: FESTE_ZAHL, name: 'Zahl…' }]
+    .map((s) => ({ wert: s.kennung, name: `Spalte · ${spaltenName(s)}` }))
+  const optionen: WahlOption[] = [
+    ...andere,
+    ...feldOptionen(quellen),
+    { wert: FESTE_ZAHL, name: 'Zahl…' },
+  ]
+
   const titelVon = (kennung: string): string => {
     const s = spalten.find((sp) => sp.kennung === kennung)
     return s === undefined ? '' : (s.titel === '' ? s.kennung : s.titel)
   }
+  const feldTitelVon = (bindung: string): string => feldTitel(bindung, quellen)
+  const formelText = formelAlsText(formel, titelVon, feldTitelVon)
 
   const setzeGlied = (i: number, glied: Glied): void => {
     onFormel({ ...formel, glieder: formel.glieder.map((g, k) => (k === i ? glied : g)) })
@@ -108,16 +146,26 @@ function FormelZeilen({ spalten, index, onFormel }: {
       zeichen: [...formel.zeichen, '*'],
     })
   }
+  const gliedWert = (glied: Glied): string => {
+    if ('zahl' in glied) return FESTE_ZAHL
+    if ('feld' in glied) return `${FELD_PREFIX}${glied.feld}`
+    return glied.spalte
+  }
+  const gliedAusWert = (wert: string): Glied => {
+    if (wert === FESTE_ZAHL) return { zahl: 1 }
+    if (wert.startsWith(FELD_PREFIX)) return { feld: wert.slice(FELD_PREFIX.length) }
+    return { spalte: wert }
+  }
 
   return (
     <div className="flex flex-col gap-1.5 rounded border border-linie p-2">
       <div className="flex items-center justify-between gap-2">
-        <span className="min-w-0 truncate text-ui" title={formelAlsText(formel, titelVon)}>
+        <span className="min-w-0 truncate text-ui" title={formelText}>
           <span className="font-medium">{spaltenName(spalte)}</span>
           {' = '}
-          {formelAlsText(formel, titelVon)}
+          {formelText}
         </span>
-        <Knopf nurZeichen aria-label="Formel entfernen" onClick={() => onFormel(undefined)}>
+        <Knopf nurZeichen aria-label="Rechnung entfernen" onClick={() => onFormel(undefined)}>
           <X className="size-3.5" />
         </Knopf>
       </div>
@@ -136,9 +184,9 @@ function FormelZeilen({ spalten, index, onFormel }: {
             )}
           <Wahl
             optionen={optionen}
-            wert={'zahl' in glied ? FESTE_ZAHL : glied.spalte}
-            leerText="Spalte wählen"
-            onWaehle={(wert) => setzeGlied(i, wert === FESTE_ZAHL ? { zahl: 1 } : { spalte: wert })}
+            wert={gliedWert(glied)}
+            leerText="Wert wählen"
+            onWaehle={(wert) => setzeGlied(i, gliedAusWert(wert))}
           />
           {'zahl' in glied && (
             <FesteZahl wert={glied.zahl} onWert={(zahl) => setzeGlied(i, { zahl })} />
@@ -187,7 +235,9 @@ function FormelZeilen({ spalten, index, onFormel }: {
 
 export function RechnungSektion({ block }: { block: BlockNode }) {
   const [offen, schalte] = useAbschnitt('rechnung')
+  const [neuOffen, setNeuOffen] = useState(false)
   const ed = useEditor()
+  const quellen = ed.quellenFor(block.id)
   const spalten = block.type === 'erfassung'
     ? coerceErfassungsSpalten(block.props.spalten)
     : coerceSpalten(block.props.spalten)
@@ -210,8 +260,7 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
     <Gruppe titel="Rechnung" offen={offen} onSchalte={schalte}>
       <div className="flex flex-col gap-3">
         <p className="text-dicht text-matt">
-          Eine Spalte mit Formel rechnet sich aus anderen Spalten, sobald alle
-          Glieder gefüllt sind. Mal und Geteilt gehen vor Plus und Minus.
+          Ergebnis-Spalte wählen und aus Spalten, Datenfeldern oder festen Zahlen rechnen.
           Getipptes geht vor.
         </p>
 
@@ -219,19 +268,31 @@ export function RechnungSektion({ block }: { block: BlockNode }) {
           <FormelZeilen
             key={spalten[index].kennung}
             spalten={spalten}
+            quellen={quellen}
             index={index}
             onFormel={(formel) => setzeFormel(index, formel)}
           />
         ))}
 
-        {ohneFormel.length > 0 && (
-          <Wahl
-            optionen={ohneFormel}
-            wert=""
-            leerText="Formel für Spalte…"
-            onWaehle={(wert) => setzeFormel(Number(wert), neueFormel())}
-          />
-        )}
+        {neuOffen && ohneFormel.length > 0 ? (
+          <div className="flex items-center gap-1.5 rounded border border-linie p-2">
+            <span className="shrink-0 text-dicht text-matt">Ergebnis in</span>
+            <Wahl
+              optionen={ohneFormel}
+              wert=""
+              leerText="Spalte wählen…"
+              onWaehle={(wert) => {
+                setzeFormel(Number(wert), neueFormel())
+                setNeuOffen(false)
+              }}
+            />
+            <Knopf nurZeichen aria-label="Abbrechen" onClick={() => setNeuOffen(false)}>
+              <X className="size-3.5" />
+            </Knopf>
+          </div>
+        ) : ohneFormel.length > 0 ? (
+          <Knopf onClick={() => setNeuOffen(true)}>+ Rechnung</Knopf>
+        ) : null}
       </div>
     </Gruppe>
   )

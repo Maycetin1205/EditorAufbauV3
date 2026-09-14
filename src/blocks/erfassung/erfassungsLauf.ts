@@ -8,6 +8,7 @@ import { getField } from '../../softengine/data'
 import { vorschlaegeImFensterStand } from '../tabelle/nachschlagStand'
 import { VorschlagStand, type TastenFolge } from '../shared/vorschlagStand'
 import { rechneFormel, zahlStreng, zahlText } from '../../core/data/rechnung'
+import { zerlegeBindung } from '../../core/blocks/bindung'
 import { alsZahl } from '../tabelle/sortierung'
 import { spalteMitKennung } from '../tabelle/spalten'
 import {
@@ -80,8 +81,23 @@ export class ErfassungsLauf {
     return zahl === null ? 'fehler' : zahl
   }
 
-  // Jede Formelspalte rechnet aus Gegebenem und aus anderen Formelspalten; ein
-  // Kreis bleibt leer.
+  // Ein Formelglied darf direkt auf ein Feld eines bereits gewaehlten Satzes
+  // zeigen. Leer vor dem Trenner bedeutet die Hauptquelle; weitere Quellen
+  // tragen ihre id in der Bindung.
+  private feldZahl(umfeld: ErfassungsUmfeld, bindung: string): number | null {
+    const { quelleId, code } = zerlegeBindung(bindung)
+    if (code === '') return null
+    const id = quelleId === '' ? umfeld.quelleId : quelleId
+    if (id === '') return null
+    const satz = this.gewaehlt.get(id)
+    if (satz === undefined) return null
+    const wert = getField(satz, code).trim()
+    if (wert === '') return null
+    return alsZahl(wert)
+  }
+
+  // Jede Formelspalte rechnet aus Gegebenem, Datenfeldern und aus anderen
+  // Formelspalten; ein Kreis bleibt leer.
   rechne(umfeld: ErfassungsUmfeld): void {
     this._gerechnet.clear()
     const zahlen = new Map<number, number | null>()
@@ -95,10 +111,14 @@ export class ErfassungsLauf {
       let zahl: number | null = gegeben === 'fehler' ? null : gegeben
       const formel = umfeld.spalten[index]?.formel
       if (gegeben === null && formel !== undefined) {
-        zahl = rechneFormel(formel, (kennung) => {
-          const i = spalteMitKennung(umfeld.spalten, kennung)
-          return i === -1 ? null : zahlVon(i)
-        })
+        zahl = rechneFormel(
+          formel,
+          (kennung) => {
+            const i = spalteMitKennung(umfeld.spalten, kennung)
+            return i === -1 ? null : zahlVon(i)
+          },
+          (bindung) => this.feldZahl(umfeld, bindung),
+        )
         if (zahl !== null) this._gerechnet.set(index, zahlText(zahl, formel.runden.stellen))
       }
       unterwegs.delete(index)
