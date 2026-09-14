@@ -17,6 +17,7 @@ import {
 } from '../core/blocks/treeQuery'
 import { AUSWAHL_FOLGE_PROP, auswahlFolgenAus, folgeBrauchbar } from '../core/data/auswahlFolge'
 import { ladeRelationFor, quellenAusHolWert, type DataSource } from '../core/data/dataSources'
+import { formelVonRoh } from '../core/data/rechnung'
 import {
   quelleBrauchbar,
   vollstaendigePaare,
@@ -124,6 +125,13 @@ export function benutzteFelderJeQuelle(
         // Das Fuellfeld zeigt auf eine HILFSQUELLE; bliebe es aussen vor, faende
         // die Erfassungszeile in SoftEngine nichts zum Vorschlagen.
         for (const { wert } of feldWahlenLesen(b, eintrag)) merkeEintragsFeld(wert)
+
+        // Eine Rechnung kann ein Feld direkt lesen, ohne dass dafuer eine sichtbare
+        // Hilfsspalte existiert. Solche Felder muessen trotzdem bestellt werden.
+        const formel = formelVonRoh(eintrag.formel)
+        for (const glied of formel?.glieder ?? []) {
+          if ('feld' in glied) merkeBindung(glied.feld)
+        }
       }
     }
 
