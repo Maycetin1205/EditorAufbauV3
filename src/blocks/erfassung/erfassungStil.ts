@@ -24,6 +24,10 @@ export const erfassungStil = css`
 
       .zeile.erfasst { flex: none; }
       :host(:not([data-ff-editor])) .zeile.erfasst { cursor: pointer; }
+      :host(:not([data-ff-editor])) .zeile.erfasst:focus {
+        outline: var(--se-border) solid var(--se-line);
+        outline-offset: calc(-1 * var(--se-border));
+      }
 
       /* Platz vor der ersten Zelle fuer den Statuspunkt. */
       .kopf > div:first-of-type,
