@@ -55,13 +55,13 @@ function mitFormel(spalte: Spalte, formel: Formel | undefined): Spalte {
   return formel === undefined ? ohne : { ...ohne, formel }
 }
 
-function feldBindung(quelle: QuelleInReichweite, code: string): string {
-  return quelle.eigene ? code : bindungMitQuelle(quelle.source.id, code)
+function feldBindung(quelle: QuelleInReichweite, code: string, istHauptquelle: boolean): string {
+  return istHauptquelle ? code : bindungMitQuelle(quelle.source.id, code)
 }
 
 function feldOptionen(quellen: readonly QuelleInReichweite[]): WahlOption[] {
-  return quellen.flatMap((quelle) => quelle.source.fields.map((feld) => ({
-    wert: `${FELD_PREFIX}${feldBindung(quelle, feld.code)}`,
+  return quellen.flatMap((quelle, quellenIndex) => quelle.source.fields.map((feld) => ({
+    wert: `${FELD_PREFIX}${feldBindung(quelle, feld.code, quellenIndex === 0)}`,
     name: `Daten · ${quelle.source.name} · ${feld.label || feld.code}`,
   })))
 }
@@ -70,9 +70,10 @@ function feldTitel(
   bindung: string,
   quellen: readonly QuelleInReichweite[],
 ): string {
-  for (const quelle of quellen) {
+  for (let quellenIndex = 0; quellenIndex < quellen.length; quellenIndex++) {
+    const quelle = quellen[quellenIndex]
     for (const feld of quelle.source.fields) {
-      if (feldBindung(quelle, feld.code) === bindung) {
+      if (feldBindung(quelle, feld.code, quellenIndex === 0) === bindung) {
         return `${quelle.source.name} · ${feld.label || feld.code}`
       }
     }
