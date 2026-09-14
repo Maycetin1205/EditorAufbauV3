@@ -146,7 +146,11 @@ export const zellenEingabeStil = css`
         border-radius: var(--se-r-sm);
       }
 
-      .zell-eingabe:focus { outline: none; }
+      .zell-eingabe:focus {
+        outline: none;
+        border-color: var(--se-line);
+        background: var(--se-panel);
+      }
 
       /* Eine Zahl sitzt rechts, in der Eingabezelle wie in jeder anderen Zelle
          der Tabelle. Nur unter dem Schreibzeiger nicht: „1," ist noch keine
@@ -158,16 +162,21 @@ export const zellenEingabeStil = css`
       .zeile.erfassung .zell-eingabe::placeholder { color: var(--se-faint); }
       .zeile:focus-within .zell-eingabe::placeholder { color: var(--se-faint); }
 
-      .zell-eingabe.geaendert {
-        background: var(--se-amber-shell);
-        border-color: var(--se-amber-line);
+      /* Automatisch gefuellt oder vorgemerkt bleibt optisch eine normale Zelle.
+         Der Zustand gehoert an die Zeile (Statuspunkt), nicht in Schriftart und
+         Flaechenfarbe jeder einzelnen Zelle. */
+      .zell-eingabe.geaendert,
+      .zell-eingabe.auto {
         color: var(--se-ink);
-        font-weight: 600;
+        background: transparent;
+        border-color: transparent;
+        font-style: normal;
+        font-weight: inherit;
       }
 
-      .zell-eingabe.auto {
-        color: var(--se-accent);
-        font-style: italic;
-        background: var(--se-accent-soft);
+      .zell-eingabe.geaendert:focus,
+      .zell-eingabe.auto:focus {
+        border-color: var(--se-line);
+        background: var(--se-panel);
       }
 `
