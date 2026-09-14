@@ -51,21 +51,20 @@ export const erfassungStil = css`
 
       .zeile.geloescht > div { text-decoration: line-through; color: var(--se-muted); }
 
-      /* Der Zeilen-Status ist der Punkt vor der ersten Zelle; der Klartext
-         haengt im title. */
-      .zeile[data-status="erfasst"] { background: var(--se-accent-soft); }
+      /* Normale, neue und geschriebene Zeilen behalten dieselbe Flaeche und
+         Typografie. Der Zustand steckt im Punkt links; nur Fehler und Loeschung
+         veraendern die ganze Zeile. */
       .zeile[data-status="erfasst"]::before,
       .zeile[data-status="schreibt"]::before { background: var(--se-accent); }
       .zeile[data-status="geaendert"]::before,
       .zeile[data-status="loeschung"]::before { background: var(--se-amber); }
       .zeile[data-status="loeschung"] { background: var(--se-red-shell); }
-      .zeile[data-status="schreibt"] { animation: se-schreibt 1.1s ease-in-out infinite; }
-      .zeile[data-status="geschrieben"] { color: var(--se-muted); }
+      .zeile[data-status="schreibt"]::before { animation: se-schreibt 1.1s ease-in-out infinite; }
       .zeile[data-status="fehler"] { background: var(--se-red-shell); }
       .zeile[data-status="fehler"]::before { background: var(--se-red); }
-      @keyframes se-schreibt { 50% { opacity: 0.55; } }
+      @keyframes se-schreibt { 50% { opacity: 0.35; } }
       @media (prefers-reduced-motion: reduce) {
-        .zeile[data-status="schreibt"] { animation: none; }
+        .zeile[data-status="schreibt"]::before { animation: none; }
       }
 
       /* Das Kreuz am rechten Rand der Zeile: absolut, sonst schoebe es den
