@@ -92,9 +92,10 @@ function tastenFolge(taste: string, l: TastenLage & {
     if (l.springt) return 'weiter'
     return l.nachschlagbar && l.hatSaetze() ? 'fenster' : 'nichts'
   }
-  // Getippter Text ohne Treffer bleibt stehen: das Fenster belohnte sonst den
-  // Tippfehler und der Bediener verliert seinen Text aus den Augen.
-  if (l.getippt && l.nachschlagbar) return 'nichts'
+
+  // In der Erfassungszeile ist Enter immer eine Navigationstaste. Auch ein
+  // getippter Nachschlagwert ohne Treffer darf darum weitergehen; der Text bleibt
+  // stehen und kann spaeter korrigiert werden.
   return l.springt ? 'weiter' : 'nichts'
 }
 

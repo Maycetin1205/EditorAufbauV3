@@ -65,7 +65,7 @@ function fenster(wirt: ErfassungsWirt, index: number): void {
 
 export function springe(wirt: ErfassungsWirt, index: number, taste: string): boolean {
   const umfeld = wirt.umfeld()
-  if (taste === 'Tab') {
+  if (taste === 'Tab' || taste === 'Enter') {
     const naechste = wirt.lauf.nachbarPlatz(umfeld, index, 1)
     if (naechste !== -1) {
       wirt.fokussiere(naechste)
@@ -73,9 +73,6 @@ export function springe(wirt: ErfassungsWirt, index: number, taste: string): boo
     }
     return wirt.erfasseZeile()
   }
-  const ziel = wirt.lauf.naechsteLeere(umfeld, index)
-  if (ziel !== -1) wirt.fokussiere(ziel)
-  else if (taste === 'Enter') wirt.erfasseZeile()
   return true
 }
 
