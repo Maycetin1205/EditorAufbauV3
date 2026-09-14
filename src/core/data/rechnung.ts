@@ -1,4 +1,5 @@
-// Die Rechnung der Erfassungszeile: je Spalte eine Formel aus anderen Spalten und festen Zahlen.
+// Die Rechnung der Erfassungszeile: je Zielspalte eine Formel aus Spalten,
+// Datenfeldern und festen Zahlen.
 
 export type RundungsRichtung = 'auf' | 'ab' | 'kfm'
 
@@ -11,9 +12,10 @@ export type Rechenzeichen = '+' | '-' | '*' | '/'
 
 export const RECHENZEICHEN: readonly Rechenzeichen[] = ['+', '-', '*', '/']
 
-// Ein Glied zeigt ueber die dauerhafte KENNUNG auf eine Spalte, nie ueber Platz
-// oder Belegfeld, oder es ist eine feste Zahl.
-export type Glied = { spalte: string } | { zahl: number }
+// Eine Spalte wird ueber ihre dauerhafte KENNUNG angesprochen. `feld` ist eine
+// Feldbindung wie bei Nachschlagen: "code" = Hauptquelle,
+// "quelleId::code" = weitere Quelle. Daneben gibt es feste Zahlen.
+export type Glied = { spalte: string } | { feld: string } | { zahl: number }
 
 export interface Formel {
   glieder: readonly Glied[]
@@ -62,15 +64,21 @@ export function zahlText(wert: number, stellen: number): string {
 }
 
 // Mal und Geteilt vor Plus und Minus, wie auf dem Papier. Fehlt ein Glied oder
-// wird durch null geteilt, gibt es keinen Wert.
+// wird durch null geteilt, gibt es keinen Wert. `feldZahlVon` ist optional, damit
+// normale Tabellenformeln ohne Datenquellen unveraendert weiterarbeiten.
 export function rechneFormel(
   formel: Formel,
   zahlVon: (kennung: string) => number | null,
+  feldZahlVon: (bindung: string) => number | null = () => null,
 ): number | null {
   if (formel.glieder.length === 0) return null
   const werte: number[] = []
   for (const glied of formel.glieder) {
-    const wert = 'zahl' in glied ? glied.zahl : zahlVon(glied.spalte)
+    const wert = 'zahl' in glied
+      ? glied.zahl
+      : 'feld' in glied
+        ? feldZahlVon(glied.feld)
+        : zahlVon(glied.spalte)
     if (wert === null || !Number.isFinite(wert)) return null
     werte.push(wert)
   }
@@ -101,12 +109,18 @@ export function rechneFormel(
 
 const ZEICHEN_TEXT: Record<Rechenzeichen, string> = { '+': '+', '-': '−', '*': '×', '/': '÷' }
 
-// Die Formel, wie der Bauer sie liest: Spaltentitel und Zahlen mit Zeichen dazwischen.
-export function formelAlsText(formel: Formel, titelVon: (kennung: string) => string): string {
+// Die Formel, wie der Bauer sie liest: Spalten-/Feldtitel und Zahlen mit Zeichen dazwischen.
+export function formelAlsText(
+  formel: Formel,
+  titelVon: (kennung: string) => string,
+  feldTitelVon: (bindung: string) => string = () => '',
+): string {
   return formel.glieder.map((glied, i) => {
     const text = 'zahl' in glied
       ? zahlText(glied.zahl, STELLEN_MAX)
-      : (titelVon(glied.spalte) || '?')
+      : 'feld' in glied
+        ? (feldTitelVon(glied.feld) || '?')
+        : (titelVon(glied.spalte) || '?')
     return i === 0 ? text : `${ZEICHEN_TEXT[formel.zeichen[i - 1] ?? '*']} ${text}`
   }).join(' ')
 }
@@ -128,6 +142,7 @@ function alsGlied(roh: unknown): Glied | null {
   if (!roh || typeof roh !== 'object') return null
   const o = roh as Record<string, unknown>
   if (typeof o.zahl === 'number' && Number.isFinite(o.zahl)) return { zahl: o.zahl }
+  if (typeof o.feld === 'string') return { feld: o.feld.trim() }
   if (typeof o.spalte === 'string') return { spalte: o.spalte.trim() }
   return null
 }
@@ -152,8 +167,7 @@ export function formelVonRoh(roh: unknown): Formel | undefined {
 }
 
 // Eine gestrichene Spalte darf kein Glied hinterlassen: ihre Kennung kann eine
-// neue Spalte wieder bekommen. Unveraendert kommt dieselbe Formel zurueck,
-// undefined heisst, es bleibt kein Glied.
+// neue Spalte wieder bekommen. Feldglieder sind davon unabhaengig.
 export function ohneGliederAuf(formel: Formel, gestrichen: ReadonlySet<string>): Formel | undefined {
   const weg = (glied: Glied): boolean => 'spalte' in glied && gestrichen.has(glied.spalte)
   if (!formel.glieder.some(weg)) return formel
