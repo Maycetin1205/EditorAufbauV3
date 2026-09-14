@@ -5,6 +5,7 @@ import { Segment, type SegmentOption } from '@/ui/werkbank/Segment'
 import { Wahl, type WahlOption } from '@/ui/werkbank/Wahl'
 import { Zahl } from '@/ui/werkbank/Zahl'
 import { X } from '@/ui/zeichen'
+import { coerceErfassungsSpalten } from '../../blocks/erfassung/erfassungsSpalte'
 import { coerceSpalten, type Spalte } from '../../blocks/tabelle/spalten'
 import type { BlockNode } from '../../core/blocks/BlockData'
 import {
@@ -187,7 +188,9 @@ function FormelZeilen({ spalten, index, onFormel }: {
 export function RechnungSektion({ block }: { block: BlockNode }) {
   const [offen, schalte] = useAbschnitt('rechnung')
   const ed = useEditor()
-  const spalten = coerceSpalten(block.props.spalten)
+  const spalten = block.type === 'erfassung'
+    ? coerceErfassungsSpalten(block.props.spalten)
+    : coerceSpalten(block.props.spalten)
 
   const setzeFormel = (index: number, formel: Formel | undefined): void => {
     ed.updateProperty(
